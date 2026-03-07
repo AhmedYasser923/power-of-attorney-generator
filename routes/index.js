@@ -19,8 +19,7 @@ router.get('/', reflyController.showForm);
 // Preview route for Lufthansa template
 router.get('/preview-lufthansa', lufthansaController.preview);
 
-// Records page
-router.get('/records', reflyController.listRecords);
+
 
 // PDF Generation Routes (Using the exact exported names)
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);

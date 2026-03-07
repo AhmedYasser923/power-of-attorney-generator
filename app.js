@@ -9,14 +9,7 @@ const path = require('path');
 
 const app = express();
 
-mongoose
-  .connect(process.env.DATABASE)
-  .then(() => {
-    console.log(`App is connected to DB`);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+
 
 // View engine setup
 app.set('view engine', 'pug');

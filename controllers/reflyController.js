@@ -1,5 +1,4 @@
 const PDFGenerator = require('../utils/pdfGenerator');
-const PowerOfAttorney = require('../models/PowerOfAttorney');
 const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 
@@ -33,14 +32,6 @@ exports.showForm = (req, res) => {
   res.render('index', { title: 'Generate POA', error: null });
 };
 
-exports.listRecords = async (req, res) => {
-  try {
-    const records = await PowerOfAttorney.find().sort({ createdAt: -1 });
-    res.render('records', { title: 'Records', records });
-  } catch (error) {
-    res.status(500).render('error', { message: 'Error fetching records' });
-  }
-};
 
 exports.generateStandardPDF = async (req, res) => {
   try {
