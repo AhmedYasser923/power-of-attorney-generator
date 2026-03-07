@@ -1,0 +1,177 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 25px 50px 25px 50px ;
+        line-height: 1.5;
+      }
+      .logo-placeholder {
+        width: 100px;
+        height: 40px;
+        border: 1px solid #ccc;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 20px 0;
+      }
+      .row {
+        display: flex;
+        gap:30%;
+        margin-bottom: 5px;
+      }
+      .label {
+        font-size: 10px;
+        color: #666;
+      }
+      hr {
+        margin: 2px 0;
+        border: 0;
+        border-top: 1px solid #000;
+      }
+      .address {
+        font-weight: bold;
+        margin: 10px 0 5px;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 35px;
+      }
+      .bullet {
+        list-style-type: disc;
+        padding: 0;
+        transform: translateX(15px);
+      }
+      .bullet li {
+        margin-bottom: 5px;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* This aligns the bottom of each column */
+        margin-top: 40px;
+      }
+      .signature-column {
+         width: 45%;
+         display: flex;
+         flex-direction: column;
+      }
+      .signature-line {
+          border-bottom: 1px solid #000;
+          margin-top: 5px; /* optional spacing */
+      }
+      .signature-label {
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .signature-date {
+          font-size: 14px;
+          margin-bottom: 2px; /* ensures date sits just above line */
+          text-align: center;
+      }
+      .note {
+        font-style: italic;
+        font-size: 10px;
+        margin-top: 30px;
+      }
+      .margin {
+        margin-bottom: 12px;
+      }
+      .name-pnr {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        line-height: 1.21;
+      }
+      .font {
+        font-size: 14px;
+      }
+      .margin-top {
+        margin-top: 20px;
+      }
+      .blue {
+        color: rgb(51, 128, 204);
+        font-weight:700;
+      }
+      .dark-blue {
+        color : rgb(15, 47, 112);
+        font-weight:600;
+      }
+      .refly-address {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        font-size: 10px;
+        color: #808080;
+      }
+      .signature-column img {
+        max-width: 100%;
+        max-height: 50px;
+        object-fit: contain;
+        margin-bottom: 5px;
+      }
+  body
+    if logo
+      img(src=logo, alt="Logo", style="width:150px")
+    else
+      .logo-placeholder Logo
+    p.dark-blue(style="font-size:12px; font-weight:600;") ReFly Management Limited company
+
+    h1.dark-blue Assignment Form:
+
+    .row
+      div.name-pnr
+        strong.dark-blue #{firstName} #{lastName}
+        .label.font.dark-blue Full name (the "client")
+      div(style="text-align: left;").name-pnr
+        strong.dark-blue #{pnr}
+        .label.font.dark-blue Booking Reference
+
+    hr
+
+    div.name-pnr
+      .address.dark-blue #{address}
+      .label.font.dark-blue Full Address
+
+    hr
+
+    .content.blue
+      p The Client hereby assigns to ReFly Group Ltd full ownership and legal title to his/her Claim, meaning any claim against the airline for monetary and goodwill compensation, damages or refund pursuant to Regulation (EC) No 261/2004, the Montreal Convention 1999 (MC99), the Brazilian Consumer Code and Brazilian Aeronautical Code, UK Air Passenger Rights Law ("UK261"), Turkish "SHY" passenger regulation, Canadian Transportation Act: Air Passenger Protection Regulations, or as a gesture of goodwill in relation to the above operated flight(s) identified by the booking reference pursuant to the T&C.
+      p The Client authorizes ReFly Group Ltd to request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim.
+      p The Client understands that this means that he/she cannot accept any direct contact or payment from the operating carrier.
+      p The Client authorizes ReFly Group Ltd to provide third-party legal assistants with the necessary data to process the claims.
+      p If the assignment pursuant to this assignment form is declared invalid for any reason, the assignment form shall be considered a power of attorney granted by the Client to ReFly Group Ltd, pursuant to which ReFly Group Ltd is granted exclusive power, with full substitution rights to:
+      ul.bullet
+        li Represent the Client legally before third parties in relation to the Claim;
+        li Obtain every type of information required, as well as to initiate information requests with respect to any civil or administrative law proceeding and to initiate complaints with the respective courts or administrative bodies responsible for the enforcement of air passenger rights regulation on behalf of the Client;
+        li Initiate, conduct and undertake every type of negotiations as well as legal - judicial and extrajudicial measures appropriate to collect Client's Claim from the operating carrier;
+        li Request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim;
+        li Collect and receive payments in relation to the Claim on the Client's behalf.
+      p The power of attorney granted, extends to the extra-judicial recovery of outstanding moneys claimed by the signatory against the operating airline.
+      | This includes instructing third parties such as Lawyers of our choice on your behalf to carry out extra-judicial enforcement of claims on your behalf.
+      | You confirm that the facts of this case are true to the best of your knowledge and you authorise us or our lawyers to sign a statement of truth on your behalf.
+
+    .signature-section
+      .signature-column
+        if signature
+            //- The grey background has been removed here!
+            img(src=signature, alt="Signature", style="max-width:180px; max-height:50px; display: block; margin-bottom: 5px;")
+        .signature-line
+        .signature-label Signature
+      .signature-column(style="text-align: right;")
+        if formattedDate
+          .signature-date.dark-blue(style="text-align: center;font-size:16px;")= formattedDate
+        .signature-line
+        .signature-label(style="text-align:left ") Date
+
+    .refly-address
+      p Refly Group Ltd Ltd - 22 Eastcheap, EC3M 1EU, London, UK - legal@refly.org

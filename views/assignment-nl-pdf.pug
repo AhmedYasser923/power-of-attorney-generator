@@ -1,0 +1,159 @@
+doctype html
+html(lang="nl")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Toewijzingsformulier:
+
+    .row
+      .field-container
+        .field-label Volledige naam (de "client")
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label boekingsreferentie
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label volledig adres
+        .field-value #{address}
+
+    .content
+      p De Cliënt draagt hierbij de volledige eigendom en juridische titel van zijn/haar Vordering over aan Refly Group Ltd. wat betekent dat elke vordering tegen de luchtvaartmaatschappij voor financiële en goodwillcompensatie, schadevergoeding of terugbetaling op grond van Verordening (EG) nr. 261/2004, het Verdrag van Montreal 1999 (MC99), de Braziliaanse Consumentenwet en de Braziliaanse Luchtvaartcode, de Britse wetgeving inzake passagiersrechten in de luchtvaart ("UK261"), de Turkse "SHY"passagiersregeling, de Canadese Transportwet: Regels voor de bescherming van luchtvaartpassagiers, of als een gebaar van goodwill met betrekking tot de hierboven genoemde vlucht(en) geïdentificeerd door de boekingsreferentie, wordt overgedragen aan Refly Group Ltd. overeenkomstig de algemene voorwaarden.
+      
+      p De Cliënt machtigt Refly Group Ltd. om de uitvoerende luchtvaartmaatschappij te verzoeken zijn/haar persoonlijke gegevens met betrekking tot de Vordering niet te verwerken op grond van de toepasselijke wetgeving inzake gegevensbescherming, behalve uitsluitend om de Vordering te verifiëren.
+      
+      p De Cliënt begrijpt dat dit betekent dat hij/zij geen direct contact of betaling van de uitvoerende luchtvaartmaatschappij kan accepteren.
+      
+      p De Cliënt machtigt Refly Group Ltd. om derde juridische assistenten te voorzien van de nodige gegevens om de vorderingen te verwerken.
+      
+      p Indien de overdracht op grond van dit overdrachtsformulier om welke reden dan ook ongeldig wordt verklaard, zal het overdrachtsformulier worden beschouwd als een volmacht verleend door de Cliënt aan Refly Group Ltd., waarbij Refly Group Ltd. exclusieve bevoegdheid wordt verleend, met volledige rechten tot substitutie, om:
+      
+      ul
+        li De Cliënt juridisch vertegenwoordigen tegenover derden met betrekking tot de Vordering;
+        li Alle benodigde informatie verkrijgen en informatieverzoeken indienen met betrekking tot civiele of administratieve juridische procedures, evenals klachten indienen bij de bevoegde rechtbanken of administratieve instanties die verantwoordelijk zijn voor de handhaving van de regelgeving inzake passagiersrechten in de luchtvaart namens de Cliënt;
+        li Elke vorm van onderhandelingen voeren en alle juridische – gerechtelijke en buitengerechtelijke – maatregelen nemen die nodig zijn om de Vordering van de Cliënt op de uitvoerende luchtvaartmaatschappij te innen;
+        li De uitvoerende luchtvaartmaatschappij verzoeken om zijn/haar persoonsgegevens niet te verwerken met betrekking tot de Vordering, overeenkomstig de toepasselijke wetgeving inzake gegevensbescherming, behalve uitsluitend om de Vordering te verifiëren;
+        li Betalingen in verband met de Vordering innen en ontvangen namens de Cliënt.
+
+    .signature-section
+      .signature-box
+        .signature-label handtekening
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label datum
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

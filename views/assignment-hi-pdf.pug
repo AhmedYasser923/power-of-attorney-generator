@@ -1,0 +1,159 @@
+doctype html
+html(lang="hi")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, "Nirmala UI", "Mangal", sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 असाइनमेंट फॉर्म:
+
+    .row
+      .field-container
+        .field-label पूरा नाम ('क्लाइंट')
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label बुकिंग संदर्भ
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label पूरा पता
+        .field-value #{address}
+
+    .content
+      p क्लाइंट इसके द्वारा रेफ्लाई ग्रुप लिमिटेड को अपने दावे का पूर्ण स्वामित्व और कानूनी अधिकार सौंपता है, जिसका अर्थ है कि विनियमन (ईसी) संख्या 261/2004, मॉन्ट्रियल कन्वेंशन 1999 (एमसी99), ब्राज़ील के उपभोक्ता संहिता और ब्राज़ील के वैमानिकी संहिता, यूके एयर पैसेंजर राइट्स लॉ ("यूके261"), तुर्की "एसएचवाई" यात्री विनियमन, कनाडाई परिवहन अधिनियम: एयर पैसेंजर प्रोटेक्शन रेगुलेशन, या टीएंडसी के अनुसार बुकिंग संदर्भ द्वारा पहचाने गए उपरोक्त संचालित उड़ान(ओं) के संबंध में सद्भावना के संकेत के रूप में एयरलाइन के खिलाफ मौद्रिक और सद्भावना मुआवजे, क्षति या वापसी के लिए कोई भी दावा।
+      
+      p क्लाइंट रेफ्लाई ग्रुप लिमिटेड को यह अधिकार देता है कि वह ऑपरेटिंग कैरियर से अनुरोध करे कि वह दावे के संबंध में लागू व्यक्तिगत डेटा सुरक्षा कानूनों के अनुसार उसके व्यक्तिगत डेटा को संसाधित न करे, सिवाय केवल दावे को सत्यापित करने के।
+      
+      p क्लाइंट समझता है कि इसका मतलब है कि वह ऑपरेटिंग कैरियर से कोई सीधा संपर्क या भुगतान स्वीकार नहीं कर सकता है।
+      
+      p क्लाइंट रेफ्लाई ग्रुप लिमिटेड को दावों को संसाधित करने के लिए आवश्यक डेटा के साथ तीसरे पक्ष के कानूनी सहायकों को प्रदान करने के लिए अधिकृत करता है।
+      
+      p यदि इस असाइनमेंट फॉर्म के अनुसार असाइनमेंट किसी भी कारण से अमान्य घोषित किया जाता है, तो असाइनमेंट फॉर्म को क्लाइंट द्वारा रेफ्लाई ग्रुप लिमिटेड को दी गई पावर ऑफ अटॉर्नी माना जाएगा, जिसके अनुसार रेफ्लाई ग्रुप लिमिटेड को पूर्ण प्रतिस्थापन अधिकारों के साथ अनन्य शक्ति प्रदान की जाती है:
+      
+      ul
+        li दावे के संबंध में तीसरे पक्ष के समक्ष क्लाइंट का कानूनी रूप से प्रतिनिधित्व करना;
+        li आवश्यक हर प्रकार की जानकारी प्राप्त करना, साथ ही किसी भी नागरिक या प्रशासनिक कानून कार्यवाही के संबंध में सूचना अनुरोध शुरू करना और क्लाइंट की ओर से हवाई यात्री अधिकार विनियमन के प्रवर्तन के लिए जिम्मेदार संबंधित न्यायालयों या प्रशासनिक निकायों के साथ शिकायत शुरू करना;
+        li ऑपरेटिंग कैरियर से क्लाइंट के दावे को इकट्ठा करने के लिए हर प्रकार की बातचीत के साथ-साथ कानूनी-न्यायिक और न्याय्येतर उपायों को शुरू करना, संचालित करना और करना;
+        li ऑपरेटिंग कैरियर से अनुरोध करें कि वह दावे के संबंध में उसके व्यक्तिगत डेटा को लागू व्यक्तिगत डेटा सुरक्षा कानूनों के अनुसार संसाधित न करे, सिवाय दावे को सत्यापित करने के;
+        li क्लाइंट की ओर से दावे के संबंध में भुगतान एकत्र करें और प्राप्त करें।
+
+    .signature-section
+      .signature-box
+        .signature-label हस्ताक्षर
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label दिनांक
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

@@ -1,0 +1,159 @@
+doctype html
+html(lang="pt")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Formulário de Cessão de Direitos:
+
+    .row
+      .field-container
+        .field-label Nome completo (o "Cliente")
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label Referência da Reserva
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label Endereço Completo
+        .field-value #{address}
+
+    .content
+      p O Cliente, por meio deste, cede à Refly Group Ltd. a plena propriedade e titularidade legal de sua Reclamação, ou seja, qualquer reclamação contra a companhia aérea para compensação monetária e de cortesia, danos ou reembolso, nos termos do Regulamento (CE) nº 261/2004, da Convenção de Montreal de 1999 (MC99), do Código de Defesa do Consumidor Brasileiro, do Código Brasileiro de Aeronáutica, da Lei de Direitos dos Passageiros Aéreos do Reino Unido ("UK261"), do Regulamento de Passageiros da Turquia “SHY”, da Lei de Transporte do Canadá: Regulamentos de Proteção aos Passageiros Aéreos, ou como um gesto de cortesia em relação ao(s) voo(s) identificado(s) pela referência de reserva, conforme os Termos e Condições.
+      
+      p O Cliente autoriza a Refly Group Ltd. a solicitar à companhia aérea operadora que não processe seus dados pessoais relacionados à Reclamação, de acordo com as leis aplicáveis de proteção de dados pessoais, exceto apenas para verificar a Reclamação.
+      
+      p O Cliente entende que isso significa que ele/ela não pode aceitar qualquer contato direto ou pagamento da companhia aérea operadora.
+      
+      p O Cliente autoriza a Refly Group Ltd. a fornecer a terceiros auxiliares jurídicos os dados necessários para o processamento das reclamações.
+      
+      p Caso a cessão de direitos prevista neste formulário seja declarada inválida por qualquer motivo, o presente formulário será considerado como procuração concedida pelo Cliente à Refly Group Ltd., por meio da qual a Refly Group Ltd. recebe poderes exclusivos, com plenos direitos de substituição, para:
+      
+      ul
+        li Representar legalmente o Cliente perante terceiros em relação à Reclamação;
+        li Obter qualquer tipo de informação necessária, bem como iniciar pedidos de informação sobre qualquer processo judicial ou administrativo, e registrar queixas junto aos tribunais ou órgãos administrativos responsáveis pela aplicação dos regulamentos de direitos dos passageiros aéreos em nome do Cliente;
+        li Iniciar, conduzir e realizar todos os tipos de negociações, bem como tomar medidas legais - judiciais e extrajudiciais - apropriadas para cobrar a Reclamação do Cliente junto à companhia aérea operadora;
+        li Solicitar à companhia aérea operadora que não processe seus dados pessoais em relação à Reclamação, conforme as leis aplicáveis de proteção de dados pessoais, exceto apenas para verificar a Reclamação;
+        li Cobrar e receber pagamentos relacionados à Reclamação em nome do Cliente.
+
+    .signature-section
+      .signature-box
+        .signature-label Assinatura
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label Data
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

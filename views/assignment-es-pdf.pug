@@ -1,0 +1,161 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px 40px;
+        color: #0F2F70;
+      }
+      .header-meta {
+        text-align: right;
+        font-size: 10px;
+        font-weight: bold;
+        color: #808080;
+        margin-bottom: 10px;
+      }
+      .logo img {
+        width: 150px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 20px 0;
+        font-weight: bold;
+      }
+      h1 span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        border-top: 1px solid #D3D3D3;
+        border-bottom: 1px solid #D3D3D3;
+        padding: 10px 0;
+        margin-bottom: 15px;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-label {
+        font-size: 9px;
+        font-weight: bold;
+      }
+      .info-label span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .info-value {
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+      .content-columns {
+        display: flex;
+        gap: 40px;
+        font-size: 9px;
+        text-align: justify;
+        line-height: 1.4;
+      }
+      .column {
+        flex: 1;
+      }
+      .content-columns p {
+        margin-bottom: 12px;
+      }
+      .content-columns ul {
+        padding-left: 15px;
+        margin-top: -5px;
+      }
+      .content-columns li {
+        margin-bottom: 8px;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+        border-top: 1px solid #D3D3D3;
+        padding-top: 10px;
+      }
+      .sig-box {
+        width: 45%;
+      }
+      .sig-label {
+        font-size: 10px;
+        font-weight: bold;
+      }
+      .sig-label span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .signature-img {
+        max-height: 50px;
+        margin: 10px 0;
+      }
+      .date-value {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 15px 0;
+      }
+
+  body
+    .header-meta ES / EN
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Formulario de Asignación <span>| Assignment Form</span>
+
+    .info-grid
+      .info-item
+        .info-label Nombre completo ("cliente") <span>| Full name ("client")</span>
+        .info-value #{firstName} #{lastName}
+      .info-item
+        .info-label Localizador de reserva <span>| Booking Reference</span>
+        .info-value #{pnr}
+
+    .info-grid(style="border-top: none; margin-top: -15px;")
+      .info-item
+        .info-label Dirección del domicilio <span>| Full Address</span>
+        .info-value #{address}
+
+    .content-columns
+      //- SPANISH COLUMN
+      .column
+        p Por el presente, el Cliente cede y transfiere la plena propiedad de su Reclamación a ReFly. Esta cesión incluye los derechos legales del Cliente a reclamar una compensación por pérdida financiera, daños o reembolso en virtud del Reglamento (CE) N.º 261/2004, el Convenio de Montreal de 1999 (MC99), el Código del Consumidor Brasileño y el Código Aeronáutico Brasileño, la Ley de Derechos de los Pasajeros Aéreos del Reino Unido ("UK261"), la regulación de pasajeros turcos "SHY", la Ley de Transporte Canadiense: Reglamento de Protección de Pasajeros Aéreos, o como gesto de buena voluntad en relación con el(s) vuelo(s) operado(s) mencionado(s) por la referencia de reserva de acuerdo con los Términos y Condiciones.
+        p El Cliente autoriza a ReFly Group Ltd a solicitar al transportista operativo que no procese sus datos personales en relación con el Reclamo de conformidad con las leyes aplicables de protección de datos personales, excepto para verificar el Reclamo.
+        p El Cliente entiende que esto significa que no puede aceptar ningún contacto directo o pago del transportista operativo.
+        p El Cliente autoriza a ReFly Group Ltd a proporcionar a asistentes legales de terceros los datos necesarios para procesar los reclamos.
+        p Si la asignación según este formulario de asignación se declara inválida por cualquier motivo, el formulario de asignación se considerará una carta poder otorgada por el Cliente a ReFly Group Ltd, según la cual ReFly Group Ltd recibe poder exclusivo, con plenos derechos de sustitución para:
+        ul
+          li Representar legalmente al Cliente ante terceros en relación con el Reclamo;
+          li Obtener todo tipo de información necesaria, así como iniciar solicitudes de información con respecto a cualquier procedimiento de derecho civil o administrativo e iniciar quejas ante los tribunales respectivos o los organismos administrativos responsables de la aplicación de la regulación de los derechos de los pasajeros aéreos en nombre del Cliente;
+          li Iniciar, llevar a cabo y emprender todo tipo de negociaciones, así como medidas legales - judiciales y extrajudiciales - apropiadas para recopilar el Reclamo del Cliente del transportista operativo;
+          li Recopilar y recibir pagos en relación con el Reclamo en nombre del Cliente.
+          li Solicitar al transportista operativo que no procese sus datos personales en relación con el Reclamo de conformidad con las leyes aplicables de protección de datos personales, excepto para verificar el Reclamo;
+
+      //- ENGLISH COLUMN
+      .column(style="color: #444;")
+        p The Client hereby assigns to Refly Group Ltd full ownership and legal title to his/her Claim, meaning any claim against the airline for monetary and goodwill compensation, damages or refund pursuant to Regulation (EC) No 261/2004, the Montreal Convention 1999 (MC99), the Brazilian Consumer Code and Brazilian Aeronautical Code, UK Air Passenger Rights Law ("UK261"), Turkish "SHY" passenger regulation, Canadian Transportation Act: Air Passenger Protection Regulations, or as a gesture of goodwill in relation to the above operated flight(s) identified by the booking reference pursuant to the T&C.
+        p The Client authorizes Refly Group Ltd to request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim.
+        p The Client understands that this means that he/she cannot accept any direct contact or payment from the operating carrier.
+        p The Client authorizes Refly Group Ltd to provide third-party legal assistants with the necessary data to process the claims.
+        p If the assignment pursuant to this assignment form is declared invalid for any reason, the assignment form shall be considered a power of attorney granted by the Client to Refly Group Ltd, pursuant to which Refly Group Ltd is granted exclusive power, with full substitution rights to:
+        ul
+          li Represent the Client legally before third parties in relation to the Claim;
+          li Obtain every type of information required, as well as to initiate information requests with respect to any civil or administrative law proceeding and to initiate complaints with the respective courts or administrative bodies responsible for the enforcement of air passenger rights regulation on behalf of the Client;
+          li Initiate, conduct and undertake every type of negotiations as well as legal - judicial and extrajudicial - measures appropriate to collect Client's Claim from the operating carrier;
+          li Collect and receive payments in relation to the Claim on the Client's behalf.
+          li Request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim;
+
+    .signature-section
+      .sig-box
+        .sig-label Firma <span>| Signature</span>
+        if signature
+          img.signature-img(src=signature)
+      .sig-box
+        .sig-label Fecha <span>| Date</span>
+        if formattedDate
+          .date-value= formattedDate

@@ -1,0 +1,159 @@
+doctype html
+html(lang="de")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Zuweisungsformular:
+
+    .row
+      .field-container
+        .field-label Vollständiger Name (der "Kunde")
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label Buchungsreferenz
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label Vollständige Adresse
+        .field-value #{address}
+
+    .content
+      p Hiermit tritt der Kunde sämtliche Rechte und den rechtlichen Anspruch an seiner/ihrer Forderung an die Refly Group Ltd. ab. Dies betrifft jegliche Ansprüche gegen die Fluggesellschaft auf finanzielle und goodwillbezogene Entschädigung, Schadenersatz oder Rückerstattung gemäß der Verordnung (EG) Nr. 261/2004, dem Montrealer Übereinkommen von 1999 (MC99), dem brasilianischen Verbraucherschutzgesetz und dem brasilianischen Luftfahrtgesetz, dem britischen Fluggastrechtegesetz („UK261“), der türkischen „SHY“-Passagierverordnung, dem kanadischen Transportgesetz: Luftverkehrsschutzverordnung oder als Geste des guten Willens in Bezug auf die oben genannten durchgeführten Flüge, die durch die Buchungsreferenz identifiziert wurden, gemäß den AGB.
+      
+      p Der Kunde ermächtigt die Refly Group Ltd., die ausführende Fluggesellschaft aufzufordern, seine/ihre personenbezogenen Daten im Zusammenhang mit der Forderung gemäß den geltenden Datenschutzgesetzen nicht zu verarbeiten, außer zur Überprüfung der Forderung.
+      
+      p Der Kunde versteht, dass dies bedeutet, dass er/sie keinen direkten Kontakt oder eine direkte Zahlung von der ausführenden Fluggesellschaft akzeptieren kann.
+      
+      p Der Kunde ermächtigt die Refly Group Ltd., dritten juristischen Beiständen die notwendigen Daten zur Bearbeitung der Forderungen bereitzustellen.
+      
+      p Falls die Abtretung gemäß diesem Abtretungsformular aus irgendeinem Grund für ungültig erklärt wird, gilt das Abtretungsformular als Vollmacht, die der Kunde der Refly Group Ltd. erteilt. Diese Vollmacht gewährt der Refly Group Ltd. das ausschließliche Recht, mit vollständigen Vertretungs- und Substitutionsrechten zu handeln.
+      
+      ul
+        li Den Kunden rechtlich gegenüber Dritten in Bezug auf die Forderung vertreten;
+        li Jede Art von erforderlichen Informationen einholen sowie Auskunftsersuchen im Zusammenhang mit zivil- oder verwaltungsrechtlichen Verfahren einleiten und Beschwerden bei den zuständigen Gerichten oder Verwaltungsbehörden einreichen, die für die Durchsetzung der Fluggastrechte verantwortlich sind;
+        li Jede Art von Verhandlungen sowie rechtliche – gerichtliche und außergerichtliche – Maßnahmen einleiten, durchführen und übernehmen, die zur Durchsetzung der Forderung des Kunden gegenüber der ausführenden Fluggesellschaft geeignet sind;
+        li Die ausführende Fluggesellschaft auffordern, die Verarbeitung seiner/ihrer personenbezogenen Daten im Zusammenhang mit der Forderung gemäß den geltenden Datenschutzgesetzen zu unterlassen, außer zur Überprüfung der Forderung;
+        li Zahlungen im Zusammenhang mit der Forderung im Namen des Kunden einziehen und entgegennehmen.
+
+    .signature-section
+      .signature-box
+        .signature-label Unterschrift
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label Datum
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

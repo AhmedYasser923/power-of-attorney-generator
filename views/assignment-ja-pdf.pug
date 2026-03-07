@@ -1,0 +1,161 @@
+doctype html
+html(lang="ja")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, "Hiragino Sans", "Meiryo", "Yu Gothic", sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+        font-weight: bold;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 課題フォーム:
+
+    .row
+      .field-container
+        .field-label 氏名（「クライアント」）
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label 予約参照番号
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label 完全住所
+        .field-value #{address}
+
+    .content
+      p クライアントは、本契約により、リフライ・グループ・リミテッドに対し、彼/彼女の請求権（航空会社に対する金銭的および善意による補償、損害賠償、または払い戻しの請求権）を完全に譲渡し、所有権および法的権利を移転するものとします。この請求権は、欧州規則（EC）No:261/2004、モントリオール条約1999（MC99）、ブラジル消費者保護法およびブラジル航空法、英国航空旅客権利法（「UK261」）、トルコ「SHY」旅客規則、カナダ輸送法：航空旅客保護規則、または上記の運航便に関連する善意の申し出に基づくものであり、予約参照番号により特定されるものとします。本譲渡は、T&Cに従うものとします。
+      
+      p お客様は、適用される個人情報保護法に従い、クレームの確認を除き、クレームに関連するお客様の個人情報を処理しないよう運航航空会社に要請することをリフライ・グループ・リミテッドに許可します。
+      
+      p お客様は、これにより運航会社からの直接の連絡や支払いを受け取ることができないことを理解します。
+      
+      p お客様は、リフライ・グループ・リミテッドが請求を処理するために必要なデータを第三者の法律アシスタントに提供することを許可します。
+      
+      p この譲渡書に従った譲渡が何らかの理由で無効と宣言された場合、譲渡書は顧客からリフライ・グループ・リミテッドに付与された委任状とみなされ、これによりリフライ・グループ・リミテッドには以下の完全な代替権を伴う独占的権限が付与されます：
+      
+      ul
+        li クレームに関して第三者の前でクライアントを法的に代理します；
+        li 必要なあらゆる種類の情報を取得し、民事または行政法の手続きに関する情報要求を開始し、クライアントに代わって航空旅客の権利規制の執行を担当する各裁判所または行政機関に苦情を申し立てます；
+        li 運航航空会社からクライアントのクレームを回収するために適切なあらゆる種類の交渉、法的（司法および司法外）措置を開始、実施、および実行します；
+        li 適用される個人データ保護法に従い、クレームの確認を除き、運航航空会社にクレームに関連する個人データを処理しないように要求します；
+        li クライアントに代わってクレームに関連する支払いを収集および受け取ります；
+
+    .signature-section
+      .signature-box
+        .signature-label 署名
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label 日付
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p リフライ・グループ・リミテッド - 22 Eastcheap, EC3M 1EU, ロンドン, 英国 - legal@refly.org

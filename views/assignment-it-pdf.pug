@@ -1,0 +1,161 @@
+doctype html
+html(lang="it")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px 40px;
+        color: #0F2F70;
+      }
+      .header-meta {
+        text-align: right;
+        font-size: 10px;
+        font-weight: bold;
+        color: #808080;
+        margin-bottom: 10px;
+      }
+      .logo img {
+        width: 150px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 20px 0;
+        font-weight: bold;
+      }
+      h1 span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        border-top: 1px solid #D3D3D3;
+        border-bottom: 1px solid #D3D3D3;
+        padding: 10px 0;
+        margin-bottom: 15px;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-label {
+        font-size: 9px;
+        font-weight: bold;
+      }
+      .info-label span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .info-value {
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 4px;
+      }
+      .content-columns {
+        display: flex;
+        gap: 40px;
+        font-size: 9px;
+        text-align: justify;
+        line-height: 1.4;
+      }
+      .column {
+        flex: 1;
+      }
+      .content-columns p {
+        margin-bottom: 12px;
+      }
+      .content-columns ul {
+        padding-left: 15px;
+        margin-top: -5px;
+      }
+      .content-columns li {
+        margin-bottom: 8px;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+        border-top: 1px solid #D3D3D3;
+        padding-top: 10px;
+      }
+      .sig-box {
+        width: 45%;
+      }
+      .sig-label {
+        font-size: 10px;
+        font-weight: bold;
+      }
+      .sig-label span {
+        color: #808080;
+        font-weight: normal;
+      }
+      .signature-img {
+        max-height: 50px;
+        margin: 10px 0;
+      }
+      .date-value {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 15px 0;
+      }
+
+  body
+    .header-meta IT / EN
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Modulo di assegnazione <span>| Assignment Form</span>
+
+    .info-grid
+      .info-item
+        .info-label Nome Completo ("cliente") <span>| Full name ("client")</span>
+        .info-value #{firstName} #{lastName}
+      .info-item
+        .info-label Codice di Prenotazione <span>| Booking Reference</span>
+        .info-value #{pnr}
+
+    .info-grid(style="border-top: none; margin-top: -15px;")
+      .info-item
+        .info-label Indirizzo Completo <span>| Full Address</span>
+        .info-value #{address}
+
+    .content-columns
+      //- ITALIAN COLUMN
+      .column
+        p Il Cliente cede e trasferisce la piena proprietà del proprio Reclamo a ReFly. Questa cessione include i diritti legali del Cliente di richiedere un risarcimento a causa di perdite finanziarie, danni o rimborsi ai sensi del Regolamento (CE) n. 261/2004, della Convenzione di Montreal del 1999 (MC99), del Codice del Consumo Brasiliano e del Codice Aeronautico Brasiliano, della Legge sui Diritti dei Passeggeri Aerei del Regno Unito ("UK261"), del regolamento dei passeggeri turco "SHY", della Legge canadese sui trasporti: Regolamento sulla protezione dei passeggeri aerei, o come gesto di buona volontà in relazione ai voli sopra menzionati identificati dal riferimento della prenotazione ai sensi dei Termini e Condizioni.
+        p Il Cliente autorizza Refly Group Ltd a richiedere al vettore operativo di non elaborare i suoi dati personali in relazione alla Richiesta ai sensi delle leggi applicabili sulla protezione dei dati personali, tranne che per verificare la Richiesta.
+        p Il Cliente comprende che ciò significa che non può accettare alcun contatto diretto o pagamento dal vettore operativo.
+        p Il Cliente autorizza Refly Group Ltd a fornire a terzi assistenti legali i dati necessari per elaborare le richieste.
+        p Se l'assegnazione ai sensi del presente modulo di assegnazione viene dichiarata nulla per qualsiasi motivo, il modulo di assegnazione sarà considerato una procura conferita dal Cliente a Refly Group Ltd, ai sensi della quale Refly Group Ltd è conferita un potere esclusivo, con pieni diritti di sostituzione per:
+        ul
+          li Rappresentare legalmente il Cliente di fronte a terzi in relazione alla Richiesta;
+          li Ottenere ogni tipo di informazione richiesta, nonché avviare richieste di informazioni riguardanti qualsiasi procedimento di diritto civile o amministrativo e avviare reclami presso i rispettivi tribunali o organi amministrativi responsabili dell'applicazione della regolamentazione dei diritti dei passeggeri aerei a nome del Cliente;
+          li Avviare, condurre e intraprendere ogni tipo di negoziazione così come misure legali - giudiziarie ed extragiudiziali - appropriate per riscuotere la Richiesta del Cliente dal vettore operativo;
+          li Raccogliere e ricevere pagamenti relativi alla Richiesta per conto del Cliente.
+          li Richiedere al vettore operativo di non elaborare i suoi dati personali in relazione alla Richiesta ai sensi delle leggi applicabili sulla protezione dei dati personali, tranne che per verificare la Richiesta;
+
+      //- ENGLISH COLUMN
+      .column(style="color: #444;")
+        p The Client hereby assigns to Refly Group Ltd full ownership and legal title to his/her Claim, meaning any claim against the airline for monetary and goodwill compensation, damages or refund pursuant to Regulation (EC) No 261/2004, the Montreal Convention 1999 (MC99), the Brazilian Consumer Code and Brazilian Aeronautical Code, UK Air Passenger Rights Law ("UK261"), Turkish "SHY" passenger regulation, Canadian Transportation Act: Air Passenger Protection Regulations, or as a gesture of goodwill in relation to the above operated flight(s) identified by the booking reference pursuant to the T&C.
+        p The Client authorizes Refly Group Ltd to request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim.
+        p The Client understands that this means that he/she cannot accept any direct contact or payment from the operating carrier.
+        p The Client authorizes Refly Group Ltd to provide third-party legal assistants with the necessary data to process the claims.
+        p If the assignment pursuant to this assignment form is declared invalid for any reason, the assignment form shall be considered a power of attorney granted by the Client to Refly Group Ltd, pursuant to which Refly Group Ltd is granted exclusive power, with full substitution rights to:
+        ul
+          li Represent the Client legally before third parties in relation to the Claim;
+          li Obtain every type of information required, as well as to initiate information requests with respect to any civil or administrative law proceeding and to initiate complaints with the respective courts or administrative bodies responsible for the enforcement of air passenger rights regulation on behalf of the Client;
+          li Initiate, conduct and undertake every type of negotiations as well as legal - judicial and extrajudicial - measures appropriate to collect Client's Claim from the operating carrier;
+          li Collect and receive payments in relation to the Claim on the Client's behalf.
+          li Request the operating carrier not to process his/her personal data in relation to the Claim pursuant to applicable personal data protection laws, except only to verify the Claim;
+
+    .signature-section
+      .sig-box
+        .sig-label Firma <span>| Signature</span>
+        if signature
+          img.signature-img(src=signature)
+      .sig-box
+        .sig-label Data <span>| Date</span>
+        if formattedDate
+          .date-value= formattedDate

@@ -1,0 +1,336 @@
+extends layout
+
+block content
+  //- ==========================================
+  //- LOADER OVERLAY (Glassmorphism & Modern Spinner)
+  //- ==========================================
+  #loader-overlay(style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 999999; flex-direction: column; justify-content: center; align-items: center;")
+    .modern-spinner
+    p(style="margin-top: 24px; font-weight: 600; font-size: 15px; color: #007bff; letter-spacing: 0.5px; animation: pulse-text 1.5s infinite ease-in-out;") Generating PDF... Please wait
+
+  .container(style="max-width: 1000px; position: relative;") 
+    h2 Generate Power of Attorney
+    
+    if error
+      .error-message(style="background: #ffdddd; padding: 10px; margin-bottom: 15px;")= error
+    
+    .form-group
+      label(for="templateSelector" style="font-weight:bold; font-size:16px;") Select Template Format *
+      select#templateSelector(style="width: 100%; padding: 10px; margin-bottom: 20px; font-size:16px;")
+        option(value="standard") Standard ReFly Template (1 Passenger)
+        option(value="lufthansa") Lufthansa Template (Up to 4 Passengers)
+
+    hr(style="margin-bottom:20px;")
+
+    //- ==========================================
+    //- FORM 1: STANDARD REFLY TEMPLATE
+    //- ==========================================
+    form#standardForm(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
+      h3 Standard Form Details
+
+      //- Comprehensive Language Selection
+      .form-group(style="margin-bottom: 20px; background: #f0f7ff; padding: 15px; border-radius: 6px; border: 1px solid #d0e3ff;")
+        label(style="font-weight: bold; display: block; margin-bottom: 8px;") Document Language:
+        select(name="lang" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;")
+          option(value="En" selected) English (En)
+          option(value="Fr") French (Fr)
+          option(value="De") German (De)
+          option(value="Es") Spanish (Es)
+          option(value="It") Italian (It)
+          option(value="Pt") Portuguese (Pt)
+          option(value="Tr") Turkish (Tr)
+          option(value="Ar") Arabic (Ar)
+          option(value="Pl") Polish (Pl)
+          option(value="Sv") Swedish (Sv)
+          option(value="No") Norwegian (No)
+          option(value="Da") Danish (Da)
+          option(value="Fi") Finnish (Fi)
+          option(value="Nl") Dutch (Nl)
+          option(value="Ro") Romanian (Ro)
+          option(value="Hi") Hindi (Hi)
+          option(value="Ja") Japanese (Ja)
+          option(value="He") Hebrew (He)
+          option(value="CH") chienese (Ch)
+          option(value="Al") albanian (Al)
+
+
+      .form-group
+        label First Name *
+        input(type="text", name="firstName", required)
+      .form-group
+        label Last Name *
+        input(type="text", name="lastName", required)
+      .form-group
+        label Address *
+        textarea(name="address", rows="3", required)
+      .form-group
+        label PNR Number *
+        input(type="text", name="pnr", required, pattern="[A-Z0-9]{6}")
+      .form-group
+        label Date *
+        input(type="date", name="date", required)
+      
+      .form-group
+        label Signature Image (optional)
+        .drop-zone
+          p.drop-zone-text Drag & Drop, Paste (Ctrl+V), or Click
+          input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;")
+          img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
+      
+      .form-group(style="display: flex; gap: 10px; align-items: center;")
+        input(type="checkbox", name="removeBg")
+        label(style="margin:0;") Remove signature background (Cloudinary AI)
+      
+      button.btn-primary(type="submit", style="margin-top: 20px;") Generate Standard PDF
+
+    //- ==========================================
+    //- FORM 2: LUFTHANSA TEMPLATE
+    //- ==========================================
+    form#lufthansaForm(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
+      h3 Lufthansa Form Details
+      .form-row
+        .form-group
+          label Flight Number
+          input(type="text", name="flightNumber")
+        .form-group
+          label PNR / Booking Code *
+          input(type="text", name="pnr", required)
+        .form-group
+          label Flight Date *
+          input(type="date", name="flightDate", required)
+
+      .form-row(style="display: flex; gap: 20px; align-items: flex-start; margin-top: 20px;")
+        div(style="flex: 1.2;")
+          h4 Passenger Details
+          p(style="font-size: 13px; color: #555;") Fill out at least Passenger 1. The others are optional.
+          #names-container(style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; gap: 15px;")
+            - for (var i = 1; i <= 4; i++)
+              .form-row(style="margin-bottom: 0; align-items: center;")
+                .form-group(style="flex: 1; margin-bottom: 0;")
+                  label Passenger #{i} Full Name #{i === 1 ? '*' : '(Optional)'}
+                  input(type="text", name=`fullName${i}`, placeholder="e.g. Pamela Nelson", required=(i === 1))
+              if i === 1
+                .form-row(style="margin-bottom: 0; margin-top: 10px;")
+                  .form-group(style="flex: 1; margin-bottom: 0;")
+                    label Main Claimer Address *
+                    textarea(name="address1", rows="2", required=true)
+
+        div(style="flex: 1;")
+          h4 Signatures
+          p(style="font-size: 13px; color: #555;") Upload signatures assigned in order.
+          #signatures-container(style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; gap: 15px;")
+            .form-group(style="margin-bottom: 0;")
+              label Claim Submission Date (System Date) *
+              input(type="date", name="claimDate", required, style="width: 100%;")
+            .drop-zone#lufthansa-drop-zone(style="padding: 20px; text-align: center; border: 2px dashed #ccc; border-radius: 6px; cursor: pointer; background: #fff;")
+              p.drop-zone-text(style="margin: 0; font-size: 14px;") Drag & Drop, Paste, or Click to add multiple signatures
+              input#lufthansa-sig-input(type="file", name="signatures", accept="image/*", multiple=true, style="display: none;")
+            #lufthansa-sig-previews(style="display: flex; gap: 10px; flex-wrap: wrap; min-height: 80px; padding: 10px; border: 1px dashed #e4e7eb; border-radius: 6px; background: #fff; align-items: center;")
+              span#preview-placeholder(style="color: #aaa; font-size: 12px; margin: auto;") Previews appear here...
+            div
+              label(style="font-weight: bold; font-size: 13px; margin-bottom: 10px; display: block;") Background Removal (Cloudinary AI):
+              div(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
+                - for (var i = 1; i <= 4; i++)
+                  .form-group(style="display: flex; gap: 8px; align-items: center; margin-bottom: 0; background: #fff; padding: 8px; border: 1px solid #ddd; border-radius: 4px;")
+                    input(type="checkbox", name=`removeBg${i}`)
+                    label(style="margin:0; font-size: 12px; cursor: pointer;") Sig #{i}
+
+      button.btn-primary(type="submit", style="margin-top: 25px; width: 100%; font-size: 16px; padding: 12px;") Generate Lufthansa PDF
+
+  style.
+    .drop-zone { border: 2px dashed #ccc; padding: 15px; text-align: center; cursor: pointer; background: #fff; margin-top: 5px; border-radius: 5px; transition: all 0.3s; }
+    .drop-zone.dragover { border-color: #007bff; background: #e9f5ff; }
+    .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+    .form-row > .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+    .modern-spinner { width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#0000 10%, #007bff); -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0); mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0); animation: smooth-spin 1s infinite linear; }
+    @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes smooth-spin { to { transform: rotate(1turn); } }
+    
+  script.
+    document.addEventListener('DOMContentLoaded', () => {
+      const selector = document.getElementById('templateSelector');
+      const standardForm = document.getElementById('standardForm');
+      const lufthansaForm = document.getElementById('lufthansaForm');
+      const globalLogo = document.querySelector('img[src*="Screenshot_1"], img[src*="lufthansa_logo"], header img, .navbar img');
+
+      if (selector && standardForm && lufthansaForm) {
+        selector.addEventListener('change', (e) => {
+          const isStandard = e.target.value === 'standard';
+          if (isStandard) {
+            standardForm.style.display = 'block';
+            lufthansaForm.style.display = 'none';
+            lufthansaForm.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+            standardForm.querySelectorAll('input, textarea').forEach(el => el.disabled = false);
+            if (globalLogo) { globalLogo.src = '/images/Screenshot_1.png'; globalLogo.style.height = '40px'; }
+          } else {
+            standardForm.style.display = 'none';
+            lufthansaForm.style.display = 'block';
+            standardForm.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+            lufthansaForm.querySelectorAll('input, textarea').forEach(el => el.disabled = false);
+            if (globalLogo) { globalLogo.src = '/images/Lufthansa_Logo_2018.svg.png'; globalLogo.style.height = '40px'; }
+          }
+        });
+        selector.dispatchEvent(new Event('change'));
+      }
+
+      // Standard Drop Zone
+      document.querySelectorAll('#standardForm .drop-zone').forEach(zone => {
+        const input = zone.querySelector('.sig-file-input');
+        const preview = zone.querySelector('.sig-preview');
+        const text = zone.querySelector('.drop-zone-text');
+
+        if (input && preview && text) {
+          zone.addEventListener('click', () => input.click());
+          zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+          zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
+          zone.addEventListener('drop', e => {
+            e.preventDefault(); 
+            zone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+              input.files = e.dataTransfer.files;
+              showPreview(input.files[0], preview, text);
+            }
+          });
+          input.addEventListener('change', () => {
+            if (input.files.length) showPreview(input.files[0], preview, text);
+          });
+        }
+      });
+
+      function showPreview(file, previewElement, textElement) {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          previewElement.src = e.target.result;
+          previewElement.style.display = 'block';
+          textElement.innerHTML = '<small style="color:green">Loaded! Click/Paste to replace</small>';
+        }
+        reader.readAsDataURL(file);
+      }
+
+      // Lufthansa Unified Drop Zone
+      const lhDropZone = document.getElementById('lufthansa-drop-zone');
+      const lhInput = document.getElementById('lufthansa-sig-input');
+      const lhPreviews = document.getElementById('lufthansa-sig-previews');
+      const placeholder = document.getElementById('preview-placeholder');
+      let lufthansaDataTransfer = new DataTransfer();
+      
+      if (lhDropZone && lhInput && lhPreviews) {
+        lhDropZone.addEventListener('click', () => lhInput.click());
+        lhDropZone.addEventListener('dragover', e => { e.preventDefault(); lhDropZone.classList.add('dragover'); });
+        lhDropZone.addEventListener('dragleave', e => { e.preventDefault(); lhDropZone.classList.remove('dragover'); });
+        lhDropZone.addEventListener('drop', e => {
+          e.preventDefault();
+          lhDropZone.classList.remove('dragover');
+          handleLufthansaFiles(e.dataTransfer.files);
+        });
+        lhInput.addEventListener('change', () => {
+          handleLufthansaFiles(lhInput.files);
+        });
+      }
+
+      function handleLufthansaFiles(files) {
+        for (let file of files) {
+          if (file.type.startsWith('image/') && lufthansaDataTransfer.items.length < 4) {
+            lufthansaDataTransfer.items.add(file);
+          }
+        }
+        lhInput.files = lufthansaDataTransfer.files;
+        renderLufthansaPreviews();
+      }
+
+      function renderLufthansaPreviews() {
+        if (!lhPreviews) return;
+        lhPreviews.innerHTML = '';
+        if (lufthansaDataTransfer.files.length === 0) {
+          lhPreviews.appendChild(placeholder);
+          return;
+        }
+        Array.from(lufthansaDataTransfer.files).forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: #fafafa; position: relative;";
+            const header = document.createElement('div');
+            header.style.cssText = "display: flex; justify-content: space-between; width: 100%; align-items: center;";
+            const label = document.createElement('span');
+            label.innerText = `Sig ${index + 1}`;
+            label.style.cssText = "font-size: 11px; font-weight: bold; color: #444;";
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = "&times;";
+            removeBtn.type = "button";
+            removeBtn.style.cssText = "font-size: 16px; line-height: 1; color: #dc3545; border: none; background: none; cursor: pointer; padding: 0;";
+            removeBtn.onclick = (event) => { event.stopPropagation(); removeLufthansaFile(index); };
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = "height: 45px; width: 120px; object-fit: contain; background: #fff; border: 1px solid #eee; border-radius: 4px;";
+            header.appendChild(label);
+            header.appendChild(removeBtn);
+            wrapper.appendChild(header);
+            wrapper.appendChild(img);
+            lhPreviews.appendChild(wrapper);
+          }
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function removeLufthansaFile(indexToRemove) {
+        const dt = new DataTransfer();
+        const files = Array.from(lufthansaDataTransfer.files);
+        files.splice(indexToRemove, 1);
+        files.forEach(f => dt.items.add(f));
+        lufthansaDataTransfer = dt;
+        lhInput.files = lufthansaDataTransfer.files;
+        renderLufthansaPreviews();
+      }
+
+      // AJAX Logic
+      async function handleFormSubmit(event, formElement, endpoint) {
+        event.preventDefault();
+        document.getElementById('loader-overlay').style.setProperty('display', 'flex', 'important');
+        try {
+          const formData = new FormData(formElement);
+          const response = await fetch(endpoint, { method: 'POST', body: formData });
+          if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+          
+          let filename = 'document.pdf';
+          const disposition = response.headers.get('Content-Disposition');
+          if (disposition && disposition.indexOf('filename=') !== -1) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+            if (matches != null && matches[1]) { 
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+
+          const blob = await response.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(downloadUrl);
+          a.remove();
+          formElement.reset();
+          
+          if (formElement.id === 'standardForm') {
+            const preview = document.querySelector('#standardForm .sig-preview');
+            const text = document.querySelector('#standardForm .drop-zone-text');
+            if(preview) { preview.src = ''; preview.style.display = 'none'; }
+            if(text) text.innerHTML = 'Drag & Drop, Paste (Ctrl+V), or Click';
+          } else if (formElement.id === 'lufthansaForm') {
+            lufthansaDataTransfer = new DataTransfer();
+            if (lhInput) lhInput.files = lufthansaDataTransfer.files;
+            renderLufthansaPreviews();
+          }
+        } catch (error) { 
+          console.error('PDF Generation Error:', error);
+          alert('An error occurred while generating the PDF.'); 
+        } finally { 
+          document.getElementById('loader-overlay').style.setProperty('display', 'none', 'important'); 
+        }
+      }
+
+      if (standardForm) standardForm.addEventListener('submit', (e) => handleFormSubmit(e, standardForm, '/generate-standard'));
+      if (lufthansaForm) lufthansaForm.addEventListener('submit', (e) => handleFormSubmit(e, lufthansaForm, '/generate-lufthansa'));
+    });

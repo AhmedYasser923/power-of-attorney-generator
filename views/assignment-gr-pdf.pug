@@ -1,0 +1,159 @@
+doctype html
+html(lang="el")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Φόρμα Ανάθεσης:
+
+    .row
+      .field-container
+        .field-label Πλήρες όνομα (ο "Πελάτης"):
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label Αριθμός Κράτησης:
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label Πλήρης Διεύθυνση:
+        .field-value #{address}
+
+    .content
+      p Ο Πελάτης εκχωρεί δια του παρόντος στην Refly Group Ltd την πλήρη κυριότητα και νομικό τίτλο της Απαίτησής του/της, δηλαδή κάθε απαίτηση κατά της αεροπορικής εταιρείας για χρηματική αποζημίωση, αποζημίωση λόγω ηθικής βλάβης ή επιστροφή χρημάτων σύμφωνα με τον Κανονισμό (ΕΚ) αριθ. 261/2004, τη Σύμβαση του Μόντρεαλ 1999 (MC99), τον Βραζιλιάνικο Κώδικα Προστασίας Καταναλωτών και τον Βραζιλιάνικο Αεροναυτικό Κώδικα, τη Βρετανική Νομοθεσία περί Δικαιωμάτων Αεροπορικών Επιβατών ("UK261"), τον Τουρκικό Κανονισμό Επιβατών "SHY", τον Καναδικό Νόμο Μεταφορών: Κανονισμοί Προστασίας Επιβατών Αεροπορικών Μεταφορών ή ως πράξη καλής θέλησης, αναφορικά με την/τις ανωτέρω πραγματοποιηθείσα/ες πτήση/πτήσεις που προσδιορίζονται από τον αριθμό κράτησης, σύμφωνα με τους Όρους & Προϋποθέσεις.
+      
+      p Ο Πελάτης εξουσιοδοτεί την Refly Group Ltd να ζητήσει από την εκτελούσα αεροπορική εταιρεία να μην επεξεργάζεται τα προσωπικά του/της δεδομένα σε σχέση με την Απαίτηση, σύμφωνα με την ισχύουσα νομοθεσία περί προστασίας προσωπικών δεδομένων, εκτός μόνο για την επαλήθευση της Απαίτησης.
+      
+      p Ο Πελάτης κατανοεί ότι αυτό σημαίνει πως δεν μπορεί να αποδεχθεί καμία άμεση επικοινωνία ή πληρωμή από την εκτελούσα αεροπορική εταιρεία.
+      
+      p Ο Πελάτης εξουσιοδοτεί την Refly Group Ltd να παρέχει σε τρίτους νομικούς συμβούλους τα απαραίτητα δεδομένα για την επεξεργασία των απαιτήσεων.
+      
+      p Εάν η εκχώρηση της απαίτησης που βασίζεται στην παρούσα φόρμα εκχώρησης κηρυχθεί άκυρη για οποιονδήποτε λόγο, η παρούσα φόρμα εκχώρησης θα θεωρείται ως πληρεξούσιο που παρέχεται από τον Πελάτη στην Refly Group Ltd, δυνάμει του οποίου η Refly Group Ltd λαμβάνει αποκλειστική εξουσία, με πλήρη δικαιώματα αντικατάστασης, για να:
+      
+      ul
+        li Αντιπροσωπεύει νομικά τον Πελάτη έναντι τρίτων σε σχέση με την Απαίτηση.
+        li Λαμβάνει κάθε τύπο απαιτούμενης πληροφορίας, καθώς και να υποβάλλει αιτήματα πληροφόρησης σχετικά με οποιαδήποτε πολιτική ή διοικητική διαδικασία και να υποβάλλει καταγγελίες στα αντίστοιχα δικαστήρια ή διοικητικά όργανα που είναι αρμόδια για την επιβολή των κανονισμών δικαιωμάτων αεροπορικών επιβατών εκ μέρους του Πελάτη.
+        li Εκκινεί, διεξάγει και αναλαμβάνει κάθε είδους διαπραγματεύσεις, καθώς και νομικά – δικαστικά και εξωδικαστικά – μέτρα που είναι κατάλληλα για την είσπραξη της Απαίτησης του Πελάτη από την εκτελούσα αεροπορική εταιρεία.
+        li Ζητήσει από την εκτελούσα αεροπορική εταιρεία να μην επεξεργάζεται τα προσωπικά του/της δεδομένα σε σχέση με την Απαίτηση, σύμφωνα με την ισχύουσα νομοθεσία περί προστασίας προσωπικών δεδομένων, εκτός μόνο για την επαλήθευση της Απαίτησης.
+        li Συλλέξει και να λάβει πληρωμές που σχετίζονται με την Απαίτηση εκ μέρους του Πελάτη.
+
+    .signature-section
+      .signature-box
+        .signature-label Υπογραφή:
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label Ημερομηνία:
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

@@ -1,0 +1,177 @@
+doctype html
+html(lang="da")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 25px 50px 25px 50px ;
+        line-height: 1.5;
+      }
+      .logo-placeholder {
+        width: 100px;
+        height: 40px;
+        border: 1px solid #ccc;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 20px 0;
+      }
+      .row {
+        display: flex;
+        gap:30%;
+        margin-bottom: 5px;
+      }
+      .label {
+        font-size: 10px;
+        color: #666;
+      }
+      hr {
+        margin: 2px 0;
+        border: 0;
+        border-top: 1px solid #000;
+      }
+      .address {
+        font-weight: bold;
+        margin: 10px 0 5px;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 35px;
+      }
+      .bullet {
+        list-style-type: disc;
+        padding: 0;
+        transform: translateX(15px);
+      }
+      .bullet li {
+        margin-bottom: 5px;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* This aligns the bottom of each column */
+        margin-top: 40px;
+      }
+      .signature-column {
+         width: 45%;
+         display: flex;
+         flex-direction: column;
+      }
+      .signature-line {
+          border-bottom: 1px solid #000;
+          margin-top: 5px; /* optional spacing */
+      }
+      .signature-label {
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .signature-date {
+          font-size: 14px;
+          margin-bottom: 2px; /* ensures date sits just above line */
+          text-align: center;
+      }
+      .note {
+        font-style: italic;
+        font-size: 10px;
+        margin-top: 30px;
+      }
+      .margin {
+        margin-bottom: 12px;
+      }
+      .name-pnr {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        line-height: 1.21;
+      }
+      .font {
+        font-size: 14px;
+      }
+      .margin-top {
+        margin-top: 20px;
+      }
+      .blue {
+        color: rgb(51, 128, 204);
+        font-weight:700;
+      }
+      .dark-blue {
+        color : rgb(15, 47, 112);
+        font-weight:600;
+      }
+      .refly-address {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        font-size: 10px;
+        color: #808080;
+      }
+      .signature-column img {
+        max-width: 100%;
+        max-height: 50px;
+        object-fit: contain;
+        margin-bottom: 5px;
+      }
+  body
+    if logo
+      img(src=logo, alt="Logo", style="width:150px")
+    else
+      .logo-placeholder Logo
+    p.dark-blue(style="font-size:12px; font-weight:600;") ReFly Management Limited company
+
+    h1.dark-blue Tildelingsformular:
+
+    .row
+      div.name-pnr
+        strong.dark-blue #{firstName} #{lastName}
+        .label.font.dark-blue Fulde navn ("klienten")
+      div(style="text-align: left;").name-pnr
+        strong.dark-blue #{pnr}
+        .label.font.dark-blue Reservationsreference
+
+    hr
+
+    div.name-pnr
+      .address.dark-blue #{address}
+      .label.font.dark-blue Fuld adresse
+
+    hr
+
+    .content.blue
+      p Klienten overdrager hermed fuldt ejerskab og juridisk ejendomsret til sit krav til Refly Group Ltd., hvilket betyder ethvert krav mod flyselskabet for monetær og goodwill-kompensation, skader eller refusion i henhold til Forordning (EF) Nr. 261/2004, Montre-konventionen af 1999 (MC99), den brasilianske forbrugerlov og brasilianske luftfartslov, britisk lov om passagerrettigheder ("UK261"), den tyrkiske "SHY"-passagerforordning, den canadiske transportlov: Forordninger om beskyttelse af flypassagerer, eller som en goodwillgestus i forbindelse med ovennævnte gennemførte flyvning(er) identificeret ved bookingreferencen i henhold til vilkårene og betingelserne (T&C).
+      p Klienten autoriserer Refly Group Ltd. til at anmode det opererende flyselskab om ikke at behandle hans/hendes personoplysninger i relation til kravet i henhold til gældende lovgivning om beskyttelse af persondata, undtagen kun for at verificere kravet.
+      p Klienten forstår, at dette betyder, at han/hun ikke kan acceptere nogen direkte kontakt eller betaling fra det opererende flyselskab.
+      p Klienten autoriserer Refly Group Ltd. til at give tredjeparters juridiske assistenter de nødvendige oplysninger for at behandle kravene.
+      p Hvis overdragelsen i henhold til denne overdragelsesformular erklæres ugyldig af nogen grund, skal overdragelsesformularen betragtes som en fuldmagt givet af klienten til Refly Group Ltd., hvorved Refly Group Ltd. tildeles enekompetence, med fuld substitutionsret til:
+      ul.bullet
+        li Repræsentere klienten juridisk over for tredjeparter i relation til kravet;
+        li Indhente alle nødvendige oplysninger samt igangsætte informationsanmodninger i forbindelse med enhver civil- eller forvaltningsretlig sag og indgive klager til de respektive domstole eller administrative organer, der er ansvarlige for håndhævelse af luftpassagerrettighedsregler på vegne af klienten;
+        li Igangsætte, føre og gennemføre enhver form for forhandlinger samt juridiske - retlige og udenretslige - tiltag, der er passende for at inddrive klientens krav fra det opererende flyselskab;
+        li Anmode det opererende flyselskab om ikke at behandle hans/hendes personoplysninger i relation til kravet i henhold til gældende lovgivning om beskyttelse af persondata, undtagen kun for at verificere kravet;
+        li Indsamle og modtage betalinger i relation til kravet på klientens vegne.
+      p Den tildelte fuldmagt omfatter udenretslig inddrivelse af udestående beløb, som underskriveren har gjort krav på over for det opererende flyselskab.
+      | Dette inkluderer at instruere tredjeparter, såsom advokater efter vores valg, på dine vegne til at udføre udenretslig håndhævelse af krav på dine vegne.
+      | Du bekræfter, at kendsgerningerne i denne sag er sande efter din bedste overbevisning, og du bemyndiger os eller vores advokater til at underskrive en sandhedserklæring på dine vegne.
+
+    .signature-section
+      .signature-column
+        if signature
+            //- The grey background has been removed here!
+            img(src=signature, alt="Signature", style="max-width:180px; max-height:50px; display: block; margin-bottom: 5px;")
+        .signature-line
+        .signature-label Underskrift
+      .signature-column(style="text-align: right;")
+        if formattedDate
+          .signature-date.dark-blue(style="text-align: center;font-size:16px;")= formattedDate
+        .signature-line
+        .signature-label(style="text-align:left ") Dato
+
+    .refly-address
+      p Refly Group Ltd Ltd - 22 Eastcheap, EC3M 1EU, London, UK - legal@refly.org

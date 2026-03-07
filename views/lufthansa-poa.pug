@@ -1,0 +1,310 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    title Power of Attorney - Lufthansa
+    style.
+      /* Reset & Base Fonts */
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10px;
+        color: #333;
+        margin: 0;
+        padding: 15px 40px;
+        background: #fff;
+        -webkit-print-color-adjust: exact;
+        /* Forces background colors to print */
+        print-color-adjust: exact;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      /* Header & Footer Logos */
+      .header {
+        text-align: right;
+        
+        
+      }
+      .header img {
+        width:300px;
+        background-color:white;
+      }
+      .footer-logo {
+        text-align: right;
+        display:flex;
+        justify-content:end;
+        align-items:center;
+        gap:3px;
+      }
+      .footer-logo img {
+        height: 30px;
+      }
+
+      /* Typography */
+      h1 {
+        font-size: 13px;
+        font-weight: bold;
+        color: #000;
+        margin: 0 0 4px 0;
+      }
+      p {
+        margin: 0 0 10px 0;
+        line-height: 1.3;
+        font-size: 10px;
+        color: #444;
+      }
+      .bold {
+        font-weight: bold;
+        color: #000;
+      }
+
+      /* Dividers */
+      hr {
+        border: none;
+        border-top: 1px solid #999;
+        margin: 12px 0;
+      }
+
+      /* Grid Systems */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+      .grid-checkbox {
+        display: grid;
+        grid-template-columns: 50px 1fr;
+        gap: 10px;
+        margin-top: 8px;
+        align-items: start;
+      }
+
+      /* Form Fields */
+      .section-title {
+        font-weight: bold;
+        font-size: 10px;
+        margin-bottom: 6px;
+        color: #000;
+      }
+      .field-wrapper {
+        margin-bottom: 8px;
+      }
+      .field-width{
+        width:50%;
+      }
+      .input-box {
+        background-color: #e4e7eb;
+        /* Exact Lufthansa gray */
+        padding: 6px 8px;
+        font-weight: bold;
+        color: #333;
+        min-height: 12px;
+        line-height: 1.2;
+        white-space: pre-wrap;
+        font-size:12px;
+      }
+      .address-box {
+        min-height: 80px;
+      }
+      .sub-label {
+        font-size: 11px;
+        /* Slightly smaller to match the delicate proportions */
+        font-weight: normal;
+        color: #757575;
+        /* A softer, more accurate light grey */
+        margin-top: 4px;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Custom Checkboxes */
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      .box {
+        width: 10px;
+        height: 10px;
+        border: 1px solid #777;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+        font-size: 9px;
+        font-weight: bold;
+        color: #000;
+      }
+
+      /* Original Signature Area (Kept for fallback/reference if needed) */
+      .signature-area {
+        display: flex;
+        gap: 10px;
+        height: 40px;
+        align-items: flex-end;
+      }
+      .signature-img {
+        max-height: 45px;
+        max-width: 100px;
+        object-fit: contain;
+      }
+      .signature-line {
+        border-top: 1px solid #999;
+        margin-top: 2px;
+        padding-top: 3px;
+      }
+      .border-top-left{
+        border-right:1px solid #999;
+        border-top:1px solid #999;
+        padding: 8px;
+      }
+
+      /* NEW: BULLETPROOF SIGNATURE LAYOUT */
+      .signatures-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      
+        align-items: end; /* This is the magic rule that forces horizontal symmetry */
+      }
+      .sig-images-wrapper {
+        height: 45px;
+        /* Locked height so it won't jump when images are added */
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+      }
+      .sig-line {
+        border-bottom: 1px solid #999;
+        margin-top: 2px;
+        padding-bottom: 3px;
+      }
+
+  body
+    .container
+      //- Header
+      .header
+        if lufthansaLogo
+          img(src=lufthansaLogo, alt="Lufthansa")
+
+      //- Intro Section
+      h1 Power of authority / attorney
+      p
+        | A power of attorney (PoA) or letter of attorney is a written authorization to represent or act on another's behalf in private affairs, business, or some other legal matter. Please return the fully completed form together with the description of the occurrence to 
+        span.bold customer.relations@lufthansa.com
+      p
+        | Email communication with 
+        span.bold customer.relations@lufthansa.com
+        |  is not encrypted. Please use our feedback form on 
+        span.bold lufthansa.com/feedback
+        |  for a secure data entry.
+
+      //- Passenger Names
+      .section-title.border-top-left
+        p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Full name of all passenger(s) involved:
+        .grid-2
+          .field-wrapper
+            .input-box= (passengers && passengers[0]) ? passengers[0].fullName : ''
+            .sub-label Last name, First name
+          .field-wrapper
+            .input-box= (passengers && passengers[1]) ? passengers[1].fullName : ''
+            .sub-label Last name, First name
+        .grid-2
+          .field-wrapper
+            .input-box= (passengers && passengers[2]) ? passengers[2].fullName : ''
+            .sub-label Last name, First name
+          .field-wrapper
+            .input-box= (passengers && passengers[3]) ? passengers[3].fullName : ''
+            .sub-label Last name, First name
+
+      //- Passenger Addresses (Main Claimer Only - Full Width)
+      .section-title(style="margin-top:20px").border-top-left
+        p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Passenger address(es):
+        .div(style="display:flex;justify-content:space-between;gap:10px")
+          .field-wrapper(style="width:50%")
+            .input-box.address-box= (passengers && passengers[0]) ? passengers[0].address : ''
+          .field-wrapper(style="width:50%")
+            .input-box.address-box
+
+      //- Authorized Person
+      .grid-2(style="margin-top:20px").border-top-left
+        .column
+          .section-title 
+            p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Name of the authorized person:
+          .field-wrapper
+           
+            .input-box Ackermann, Henry
+            .sub-label Last name, First name
+          .field-wrapper(style="margin-top: 10px;")
+            .input-box
+            .sub-label For travel agencies: IATA number
+        .column
+          .section-title 
+            p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Address of the authorized person:
+          .field-wrapper
+            .input-box.address-box Refly Management Limited<br>54 Bath Street, JE1 1FW, St Helier, Jersey
+
+      //- Flight Details
+      .section-title(style="margin-top:20px").border-top-left 
+        p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Flight number and date of the journey to which the claim refers:
+        .grid-2
+          .field-wrapper
+          
+            .input-box= flightNumber || ''
+            .sub-label Flight
+          .field-wrapper
+            //- Swapped for formattedFlightDate
+            .input-box= formattedFlightDate || ''
+            .sub-label Date
+        .grid-2
+          .field-wrapper
+            .input-box= bookingCode || ''
+            .sub-label Booking code
+          .field-wrapper
+          //- Empty to match the layout
+
+      //- Feedback ID
+      .section-title(style="margin-top:20px").border-top-left  
+        p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Feedback ID (if available):
+        .grid-2
+          .field-wrapper
+          
+            .input-box
+          .field-wrapper
+          //- Empty right side
+
+      //- Authorizations
+      div(style="margin-top:20px").border-top-left
+        p(style="margin-bottom: 5px;") I/We hereby confirm that I/we authorize the above-mentioned persons or agency employees to communicate with the airline in reference to the incident that caused complaint.
+        .grid-checkbox
+          .checkbox-column
+            .checkbox-item
+              .box x
+              span Yes
+            .checkbox-item
+              .box &nbsp;
+              span No
+          .text-column
+            p I/We hereby confirm that I/we authorize the above-mentioned persons or agency employees to accept any due payments on my/our behalf.
+            
+        //- SYMMETRIC SIGNATURES (Bottom - Using the new bulletproof grid)
+        .signatures-grid
+          .field-wrapper(style="margin-bottom: 0;")
+            //- Swapped for formattedClaimDate
+            .input-box= formattedClaimDate || ''
+            .sub-label.bold(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Place, Date
+          
+          .field-wrapper(style="margin-bottom: 0;")
+            .sig-images-wrapper
+              if passengers
+                each passenger in passengers
+              
+                  if passenger.signature
+                    img.signature-img(src=passenger.signature, alt="Signature")
+            .sig-line
+            .sub-label.bold(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Passenger signature(s)
+        .footer-logo
+          p(style="margin:0;") A Star Alliance Member
+          img(src="images/star-alliance.png")

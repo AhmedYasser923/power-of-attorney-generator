@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  .container
+    h2 Error
+    .error-message= message
+    if error
+      pre= error
+    a(href="/", class="btn-primary") Return to Home

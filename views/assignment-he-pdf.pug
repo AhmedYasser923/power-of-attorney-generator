@@ -1,0 +1,164 @@
+doctype html
+html(lang="he" dir="rtl")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+        text-align: right;
+      }
+      .logo {
+        text-align: left; /* Keep logo on the left */
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-right: 12px; /* Adjusted for RTL */
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        right: 0; /* Adjusted for RTL */
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+        direction: ltr; /* Keeps English address reading properly */
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 טופס המחאת תביעה:
+
+    .row
+      .field-container
+        .field-label שם מלא (הלקוח):
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label מספר הזמנה:
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label כתובת מלאה:
+        .field-value #{address}
+
+    .content
+      p הלקוח ממחה בזאת לחברת Refly Group Ltd את הבעלות המלאה וזכויותיו המשפטיות בתביעתו, לרבות כל תביעה נגד חברת התעופה לפיצוי כספי ו/או פיצוי על בסיס מחווה של רצון טוב, נזקים או החזר כספי, בהתאם לתקנה (EC) מס' 261/2004, אמנת מונטריאול 1999 (MC99), קוד הצרכן הברזילאי והקוד האווירי הברזילאי, חוק זכויות הנוסעים האווירי בבריטניה ("UK261"), תקנת הנוסעים הטורקית "SHY", חוק התחבורה הקנדי: תקנות הגנת הנוסעים האוויריים, או כמחווה של רצון טוב, בכל הנוגע לטיסה(ות) שזוהו על פי מספר ההזמנה, בהתאם לתנאים וההגבלות (T&C).
+      
+      p הלקוח מאשר לחברת Refly Group Ltd לבקש מחברת התעופה המפעילה שלא לעבד את נתוניו האישיים בנוגע לתביעה, בהתאם לחוקי הגנת הפרטיות החלים, למעט לצורך אימות התביעה בלבד.
+      
+      p הלקוח מבין כי משמעות הדבר היא כי אין באפשרותו לקבל כל פנייה ישירה או תשלום מחברת התעופה המפעילה.
+      
+      p הלקוח מאשר לחברת Refly Group Ltd לספק מידע רלוונטי לגורמים משפטיים חיצוניים לצורך עיבוד התביעה.
+      
+      p במידה והמחאת הזכויות בטופס זה תוכרז כבלתי תקפה מכל סיבה שהיא, ייחשב טופס זה כייפוי כוח שניתן על ידי הלקוח לחברת Refly Group Ltd, במסגרתו מוענקת לה סמכות בלעדית, עם זכות למינוי מחליפים, לבצע את הפעולות הבאות:
+      
+      ul
+        li לייצג את הלקוח משפטית מול צדדים שלישיים בקשר לתביעה;
+        li לקבל כל מידע נדרש וכן להגיש בקשות למידע בקשר להליכים משפטיים או מנהליים, ולהגיש תלונות בפני בתי המשפט או הרשויות המנהליות האחראיות על אכיפת תקנות זכויות הנוסעים האוויריים בשם הלקוח;
+        li ליזום, לנהל ולבצע כל סוג של משא ומתן וכן צעדים משפטיים – שיפוטיים וחוץ-שיפוטיים – המתאימים לגביית תביעת הלקוח מחברת התעופה המפעילה;
+        li לבקש מחברת התעופה המפעילה שלא לעבד את נתוניו האישיים בנוגע לתביעה, למעט לצורך אימות התביעה בלבד;
+        li לגבות ולקבל תשלומים הקשורים לתביעה בשם הלקוח.
+
+    .signature-section
+      .signature-box
+        .signature-label חתימה:
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label תאריך:
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

@@ -1,0 +1,169 @@
+doctype html
+html(lang="sq")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 25px 50px 25px 50px;
+        line-height: 1.5;
+      }
+      .logo-placeholder {
+        width: 100px;
+        height: 40px;
+        border: 1px solid #ccc;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 20px 0;
+      }
+      .row {
+        display: flex;
+        gap: 30%;
+        margin-bottom: 25px;
+        margin-top: 30px;
+      }
+      .field-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .field-value {
+        font-size: 14px;
+        font-weight: bold;
+        min-height: 20px;
+      }
+      hr {
+        margin: 2px 0;
+        border: 0;
+        border-top: 1px solid #000;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 25px;
+      }
+      .bullet {
+        list-style-type: disc;
+        padding: 0;
+        transform: translateX(15px);
+      }
+      .bullet li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* Aligns the bottom of each column */
+        margin-top: 50px;
+      }
+      .signature-column {
+         width: 45%;
+         display: flex;
+         flex-direction: column;
+      }
+      .signature-line {
+          border-bottom: 1px solid #000;
+          margin-top: 5px;
+      }
+      .signature-label {
+        font-size: 14px;
+        margin-top: 2px; /* Changed to sit below the line */
+      }
+      .signature-date {
+          font-size: 14px;
+          margin-bottom: 2px; /* Ensures date sits just above the line */
+          text-align: center;
+          min-height: 20px;
+      }
+      .blue {
+        color: rgb(51, 128, 204);
+        font-weight: 700;
+      }
+      .dark-blue {
+        color: rgb(15, 47, 112);
+        font-weight: 600;
+      }
+      .refly-address {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+        font-size: 10px;
+        color: #808080;
+      }
+      .signature-column img {
+        max-width: 100%;
+        max-height: 50px;
+        object-fit: contain;
+        margin-bottom: 5px;
+      }
+
+  body
+    if logo
+      img(src=logo, alt="Logo", style="width:150px")
+    else
+      .logo-placeholder Logo
+
+    h1.dark-blue Formulari i Caktimit:
+
+    .row
+      .field-container
+        .field-label.dark-blue Emri i plotë (klienti):
+        .field-value.dark-blue #{firstName} #{lastName}
+        hr
+      .field-container
+        .field-label.dark-blue Referenca e rezervimit:
+        .field-value.dark-blue #{pnr}
+        hr
+
+    .row(style="margin-top: 10px;")
+      .field-container
+        .field-label.dark-blue Adresa e plotë:
+        .field-value.dark-blue #{address}
+        hr
+
+    .content.dark-blue
+      p Klienti i cakton Refly Group Ltd. pronësinë dhe titullin ligjor të plotë mbi Kërkesën e tij/saj, që do të thotë çdo kërkesë kundër linjës ajrore për kompensim monetar dhe si gjest mirëkuptimi, dëmshpërblim ose rimbursim në përputhje me Rregulloren (KE) Nr. 261/2004, Konventën e Montrealit 1999 (MC99), Kodin e Konsumatorit të Brazilit dhe Kodin Aeronautik të Brazilit, Ligjin e të Drejtave të Pasagjerëve Ajrorë në MB ("UK261"), rregulloren turke "SHY" për pasagjerët, Aktin Kanadez të Transportit: Rregulloret e Mbrojtjes së Pasagjerëve Ajrorë, ose si një gjest mirëkuptimi në lidhje me fluturimin(et) e mësipërme të identifikuara nga referenca e rezervimit sipas Kushteve dhe Afateve (T&C).
+      
+      p Klienti autorizon Refly Group Ltd. të kërkojë nga transportuesi operues të mos përpunojë të dhënat e tij/saj personale në lidhje me Kërkesën, sipas ligjeve të aplikueshme për mbrojtjen e të dhënave personale, përveçse për të verifikuar Kërkesën.
+      
+      p Klienti e kupton se kjo do të thotë që ai/ajo nuk mund të pranojë asnjë kontakt ose pagesë të drejtpërdrejtë nga transportuesi operues.
+      
+      p Klienti autorizon Refly Group Ltd. të sigurojë ndihmësve ligjorë të palëve të treta të dhënat e nevojshme për të përpunuar kërkesat.
+      
+      p Nëse caktimi sipas këtij formulari të caktimit shpallet i pavlefshëm për ndonjë arsye, formulari i caktimit do të konsiderohet si një prokurë e dhënë nga Klienti për Refly Group Ltd., me anë të së cilës Refly Group Ltd. i jepet fuqia ekskluzive, me të gjitha të drejtat e zëvendësimit, për të:
+      
+      ul.bullet
+        li Përfaqësuar ligjërisht Klientin përpara palëve të treta në lidhje me Kërkesën;
+        li Marrë çdo lloj informacioni të nevojshëm, si dhe të nisë kërkesa informacioni në lidhje me çdo procedurë civile ose administrative dhe të paraqesë ankesa në gjykatat përkatëse ose organet administrative përgjegjëse për zbatimin e rregullores për të drejtat e pasagjerëve ajrorë në emër të Klientit;
+        li Nisur, kryer dhe ndërmarrë çdo lloj negociatash si dhe masa ligjore – gjyqësore dhe jashtëgjyqësore – të përshtatshme për të mbledhur Kërkesën e Klientit nga transportuesi operues;
+        li Kërkuar nga transportuesi operues të mos përpunojë të dhënat e tij/saj personale në lidhje me Kërkesën sipas ligjeve të aplikueshme për mbrojtjen e të dhënave personale, përveçse për të verifikuar Kërkesën;
+        li Mbledhur dhe marrë pagesa në lidhje me Kërkesën në emër të Klientit.
+
+    .signature-section
+      .signature-column
+        if signature
+            img(src=signature, alt="Signature", style="max-width:180px; max-height:50px; display: block; margin-bottom: 5px;")
+        .signature-line
+        .signature-label.dark-blue Nënshkrimi:
+      .signature-column(style="text-align: right;")
+        if formattedDate
+          .signature-date.dark-blue(style="text-align: center;font-size:16px;")= formattedDate
+        else 
+          .signature-date.dark-blue(style="text-align: center;font-size:16px;") &nbsp;
+        .signature-line
+        .signature-label.dark-blue(style="text-align:left ") Data:
+
+    .refly-address
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org

@@ -1,0 +1,159 @@
+doctype html
+html(lang="no")
+  head
+    meta(charset="utf-8")
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px 50px;
+        color: #0F2F70;
+        line-height: 1.5;
+      }
+      .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: normal;
+        margin: 20px 0 40px 0;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+      }
+      .field-container {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .field-container.full-width {
+        width: 100%;
+      }
+      .field-label {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .field-value {
+        font-size: 14px;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-end;
+      }
+      .content {
+        font-size: 11px;
+        text-align: justify;
+        margin-top: 30px;
+      }
+      .content p {
+        margin-bottom: 16px;
+      }
+      .content ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .content li {
+        margin-bottom: 10px;
+        position: relative;
+        padding-left: 10px;
+        line-height: 1.4;
+      }
+      .content li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .signature-section {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 60px;
+      }
+      .signature-box {
+        width: 45%;
+        border-bottom: 1px solid #888;
+        display: flex;
+        flex-direction: column;
+        min-height: 60px;
+      }
+      .signature-label {
+        font-size: 12px;
+        margin-bottom: auto;
+      }
+      .signature-area {
+        min-height: 35px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 2px;
+      }
+      .signature-area img {
+        max-height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+      .date-text {
+        font-size: 14px;
+        padding-bottom: 2px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 11px;
+        color: #888;
+        margin-top: 60px;
+      }
+  body
+    .logo
+      if logo
+        img(src=logo, alt="ReFly")
+    
+    h1 Oppdragsskjema:
+
+    .row
+      .field-container
+        .field-label Fullt navn ("klienten")
+        .field-value #{firstName} #{lastName}
+      .field-container
+        .field-label Bestillingsreferanse
+        .field-value #{pnr}
+
+    .row
+      .field-container.full-width
+        .field-label Fullstendig adresse
+        .field-value #{address}
+
+    .content
+      p Klienten overdrar herved til ReFly Group Ltd. full eierskap og juridisk tittel til sitt krav, det vil si ethvert krav mot flyselskapet om økonomisk og goodwill-kompensasjon, erstatning eller refusjon i henhold til forordning (EF) nr. 261/2004, Montreal-konvensjonen av 1999 (MC99), den brasilianske forbrukerkoden og brasiliansk luftfartskode, britisk lov om passasjerrettigheter ("UK261"), tyrkisk "SHY" passasjerforskrift, den kanadiske transportloven: forskrifter om passasjerbeskyttelse, eller som en goodwillgest i forbindelse med den ovennevnte opererte flyreisen identifisert ved bookingreferansen i henhold til vilkårene og betingelsene.
+      
+      p Klienten gir ReFly Group Ltd. fullmakt til å be det opererende flyselskapet om ikke å behandle hans/hennes personopplysninger i forbindelse med kravet i henhold til gjeldende lover om personvern, unntatt kun for å verifisere kravet.
+      
+      p Klienten forstår at dette betyr at han/hun ikke kan akseptere direkte kontakt eller betaling fra det opererende flyselskapet.
+      
+      p Klienten gir ReFly Group Ltd. tillatelse til å gi tredjeparts juridiske assistenter de nødvendige opplysningene for å behandle kravene.
+      
+      p Dersom overdragelsen i henhold til dette overdragelsesskjemaet av en eller annen grunn erklæres ugyldig, skal skjemaet anses som en fullmakt gitt av klienten til ReFly Group Ltd., hvor ReFly Group Ltd. gis eksklusiv fullmakt, med full rett til substitusjon, til å:
+      
+      ul
+        li Representere Klienten juridisk overfor tredjeparter i forbindelse med Kravet;
+        li Skaffe all nødvendig informasjon samt initiere informasjonsforespørsler i forbindelse med enhver sivil- eller forvaltningsrettslig prosedyre og fremme klager til de respektive domstoler eller forvaltningsorganer som er ansvarlige for håndheving av regelverket for flypassasjerrettigheter på vegne av Klienten;
+        li Igangsette, gjennomføre og iverksette alle typer forhandlinger samt juridiske – både rettslige og utenrettslige – tiltak som er hensiktsmessige for å inndrive Klientens krav fra det opererende flyselskapet;
+        li Be det opererende flyselskapet om ikke å behandle hans/hennes personopplysninger i forbindelse med kravet i henhold til gjeldende lover om personvern, unntatt kun for å verifisere kravet;
+        li Innhente og motta betalinger knyttet til kravet på Klientens vegne.
+
+    .signature-section
+      .signature-box
+        .signature-label Signatur
+        .signature-area
+          if signature
+            img(src=signature, alt="Signature")
+      .signature-box
+        .signature-label Dato
+        .signature-area
+          if formattedDate
+            span.date-text= formattedDate
+
+    .footer
+      p Refly Group Ltd Ltd - 22 Eastcheap,EC3M 1EU, London, UK - legal@refly.org
