@@ -1,8 +1,11 @@
 version: '3.8'
 services:
-  refly-app:
+  web:
     build: .
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app  # <-- THIS IS THE MAGIC LINE
+      - /app/node_modules # <-- Keeps the container's node_modules safe
     env_file:
       - config.env
