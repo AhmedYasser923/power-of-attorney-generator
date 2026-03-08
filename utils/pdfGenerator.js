@@ -44,11 +44,11 @@ class PDFGenerator {
       console.warn('Star Alliance logo not found');
     }
 
-    // Format both dates independently
-    const formattedFlightDate = data.flightDate ? moment(data.flightDate).format('DD-MM-YYYY') : '';
-    const formattedClaimDate = data.claimDate ? moment(data.claimDate).format('DD-MM-YYYY') : '';
+    // FORMAT UPDATE: Changed to 'MMM DD, YYYY' for the Lufthansa template dates
+    const formattedFlightDate = data.flightDate ? moment(data.flightDate).format('MMM DD, YYYY') : '';
+    const formattedClaimDate = data.claimDate ? moment(data.claimDate).format('MMM DD, YYYY') : '';
 
-    // Standard form compatibility fallback
+    // Standard form compatibility fallback (Kept as DD-MM-YYYY just in case your standard form relies on it)
     const formattedDate = data.date ? moment(data.date).format('DD-MM-YYYY') : '';
 
     const templateData = { 
