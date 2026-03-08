@@ -54,7 +54,6 @@ exports.preview = (req, res) => {
   const dummyData = {
     flightNumber: 'LH982',
     bookingCode: 'xcwgia',
-    // Updated preview data to pass both dates so preview doesn't crash
     formattedFlightDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
     formattedClaimDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
     lufthansaLogo: getLufthansaLogoBase64(),
@@ -68,37 +67,43 @@ exports.preview = (req, res) => {
 
 exports.generateLufthansaPDF = async (req, res) => {
   try {
-    // NEW: Extract both dates from req.body
     const { pnr, flightDate, claimDate, flightNumber, bookingCode } = req.body;
     const files = req.files || [];
 
-    const passengers = [];
-    const signatureFiles = files.filter(f => f.fieldname === 'signatures' || f.fieldname === 'signatures[]');
+    const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
 
+    const passengers = [];
+    let sigIndex = 0;
+
+    // Trigger processing if EITHER a name is typed OR a signature is uploaded
     for (let i = 1; i <= 4; i++) {
-      const rawName = req.body[`fullName${i}`];
+      const rawName = req.body[`fullName${i}`] || '';
+      const signatureFile = signatureFiles[sigIndex]; 
       
-      if (rawName && rawName.trim()) {
-        const nameParts = rawName.trim().split(/\s+/);
+      if (rawName.trim() || signatureFile) {
         let firstName = '';
         let lastName = '';
 
-        if (nameParts.length === 1) {
-          firstName = capitalizeWords(nameParts[0]);
-        } else {
-          firstName = capitalizeWords(nameParts.shift()); 
-          lastName = capitalizeWords(nameParts.join(' '));
+        if (rawName.trim()) {
+          const nameParts = rawName.trim().split(/\s+/);
+          if (nameParts.length === 1) {
+            firstName = capitalizeWords(nameParts[0]);
+          } else {
+            firstName = capitalizeWords(nameParts.shift()); 
+            lastName = capitalizeWords(nameParts.join(' '));
+          }
         }
 
-        const signatureFile = signatureFiles[i - 1]; 
+        // Only consume a signature index if we actually have a file to pull
+        if (signatureFile) sigIndex++;
+        
         const removeBg = req.body[`removeBg${i}`];
-
         const signatureDataUrl = await processSignature(signatureFile, removeBg);
 
         passengers.push({
           firstName,
           lastName,
-          fullName: lastName ? `${lastName}, ${firstName}` : firstName,
+          fullName: lastName ? `${lastName}, ${firstName}` : (firstName || ' '),
           address: req.body[`address${i}`] || '',
           signature: signatureDataUrl
         });
@@ -106,12 +111,11 @@ exports.generateLufthansaPDF = async (req, res) => {
     }
 
     if (passengers.length === 0) {
-      return res.status(400).send("At least one passenger is required for the Lufthansa form.");
+      return res.status(400).send("At least one passenger or signature is required.");
     }
 
     const pdfData = {
       pnr,
-      // Pass both dates to the PDF generator
       flightDate: new Date(flightDate),
       claimDate: new Date(claimDate),
       flightNumber: flightNumber || pnr,

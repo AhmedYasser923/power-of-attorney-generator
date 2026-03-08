@@ -1,9 +1,6 @@
 extends layout
 
 block content
-  //- ==========================================
-  //- LOADER OVERLAY (Glassmorphism & Modern Spinner)
-  //- ==========================================
   #loader-overlay(style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 999999; flex-direction: column; justify-content: center; align-items: center;")
     .modern-spinner
     p(style="margin-top: 24px; font-weight: 600; font-size: 15px; color: #007bff; letter-spacing: 0.5px; animation: pulse-text 1.5s infinite ease-in-out;") Generating PDF... Please wait
@@ -22,22 +19,17 @@ block content
 
     hr(style="margin-bottom:20px;")
 
-    //- ==========================================
     //- AI AUTOFILL SECTION
-    //- ==========================================
     .form-group(style="background: #eef2f7; padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #cdd6e5;")
       label(style="font-weight:bold; font-size:15px; color:#333;") ✨ AI Autofill
       p(style="font-size: 13px; color: #555; margin-bottom: 10px;") Copy the entire block of client info from your CRM or email, paste it below, and let Gemini sort it out.
       textarea#aiAutofillInput(rows="3" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;" placeholder="e.g. Please make the POA for Ahmed Yasser, Pamela Nelson, and John Doe. Address: New Cairo City. PNR: 12345678, flight on 2025-10-15...")
       button#aiAutofillBtn(type="button" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;") Extract & Fill Form
 
-    //- ==========================================
     //- FORM 1: STANDARD REFLY TEMPLATE
-    //- ==========================================
     form#standardForm(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
       h3 Standard Form Details
 
-      //- Comprehensive Language Selection
       .form-group(style="margin-bottom: 20px; background: #f0f7ff; padding: 15px; border-radius: 6px; border: 1px solid #d0e3ff;")
         label(style="font-weight: bold; display: block; margin-bottom: 8px;") Document Language:
         select(name="lang" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;")
@@ -91,12 +83,9 @@ block content
       
       button.btn-primary(type="submit", style="margin-top: 20px;") Generate Standard PDF
 
-    //- ==========================================
     //- FORM 2: LUFTHANSA TEMPLATE
-    //- ==========================================
     form#lufthansaForm(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
       h3 Lufthansa Form Details
-    
       .form-row
         .form-group
           label Flight Number
@@ -224,7 +213,7 @@ block content
       const lhPreviews = document.getElementById('lufthansa-sig-previews');
       const placeholder = document.getElementById('preview-placeholder');
       let lufthansaDataTransfer = new DataTransfer();
-      
+
       if (lhDropZone && lhInput && lhPreviews) {
         lhDropZone.addEventListener('click', () => lhInput.click());
         lhDropZone.addEventListener('dragover', e => { e.preventDefault(); lhDropZone.classList.add('dragover'); });
@@ -234,7 +223,10 @@ block content
           lhDropZone.classList.remove('dragover');
           handleLufthansaFiles(e.dataTransfer.files);
         });
+        
         lhInput.addEventListener('change', () => {
+          // BUG FIX: Reset the list when the file browser opens so it correctly replaces old files
+          lufthansaDataTransfer = new DataTransfer(); 
           handleLufthansaFiles(lhInput.files);
         });
       }
@@ -400,7 +392,6 @@ block content
                   }
                 }
               });
-
               if (data.address) document.querySelector('#lufthansaForm [name="address1"]').value = data.address;
               if (data.pnr) document.querySelector('#lufthansaForm [name="pnr"]').value = data.pnr.toUpperCase();
               if (data.flightNumber) document.querySelector('#lufthansaForm [name="flightNumber"]').value = data.flightNumber.toUpperCase();
@@ -409,7 +400,6 @@ block content
 
             // Clear the box after success
             aiInput.value = "";
-            
           } catch (err) {
             console.error(err);
             alert("Oops! Gemini couldn't extract the data. Try pasting it differently.");

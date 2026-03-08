@@ -13,7 +13,6 @@ html(lang="en")
         padding: 15px 40px;
         background: #fff;
         -webkit-print-color-adjust: exact;
-        /* Forces background colors to print */
         print-color-adjust: exact;
       }
       .container {
@@ -24,19 +23,17 @@ html(lang="en")
       /* Header & Footer Logos */
       .header {
         text-align: right;
-        
-        
       }
       .header img {
-        width:300px;
-        background-color:white;
+        width: 300px;
+        background-color: white;
       }
       .footer-logo {
         text-align: right;
-        display:flex;
-        justify-content:end;
-        align-items:center;
-        gap:3px;
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 3px;
       }
       .footer-logo img {
         height: 30px;
@@ -91,29 +88,23 @@ html(lang="en")
       .field-wrapper {
         margin-bottom: 8px;
       }
-      .field-width{
-        width:50%;
-      }
       .input-box {
         background-color: #e4e7eb;
-        /* Exact Lufthansa gray */
         padding: 6px 8px;
         font-weight: bold;
         color: #333;
         min-height: 12px;
         line-height: 1.2;
         white-space: pre-wrap;
-        font-size:12px;
+        font-size: 12px;
       }
       .address-box {
         min-height: 80px;
       }
       .sub-label {
         font-size: 11px;
-        /* Slightly smaller to match the delicate proportions */
         font-weight: normal;
         color: #757575;
-        /* A softer, more accurate light grey */
         margin-top: 4px;
         line-height: 1;
         -webkit-font-smoothing: antialiased;
@@ -138,43 +129,32 @@ html(lang="en")
         color: #000;
       }
 
-      /* Original Signature Area (Kept for fallback/reference if needed) */
-      .signature-area {
-        display: flex;
-        gap: 10px;
-        height: 40px;
-        align-items: flex-end;
-      }
-      .signature-img {
-        max-height: 45px;
-        max-width: 100px;
-        object-fit: contain;
-      }
-      .signature-line {
-        border-top: 1px solid #999;
-        margin-top: 2px;
-        padding-top: 3px;
-      }
       .border-top-left{
-        border-right:1px solid #999;
-        border-top:1px solid #999;
+        border-right: 1px solid #999;
+        border-top: 1px solid #999;
         padding: 8px;
       }
 
-      /* NEW: BULLETPROOF SIGNATURE LAYOUT */
+      /* NEW: BULLETPROOF CSS GRID FOR SIGNATURES */
       .signatures-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
-      
-        align-items: end; /* This is the magic rule that forces horizontal symmetry */
+        align-items: end; 
       }
       .sig-images-wrapper {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        width: 100%;
         height: 45px;
-        /* Locked height so it won't jump when images are added */
-        display: flex;
-        align-items: flex-end;
-        gap: 10px;
+        align-items: end;
+      }
+      .signature-img {
+        width: 100%;
+        max-height: 45px;
+        object-fit: contain;
+        mix-blend-mode: multiply; /* Keeps the signature, turns white paper transparent */
       }
       .sig-line {
         border-bottom: 1px solid #999;
@@ -219,7 +199,7 @@ html(lang="en")
             .input-box= (passengers && passengers[3]) ? passengers[3].fullName : ''
             .sub-label Last name, First name
 
-      //- Passenger Addresses (Main Claimer Only - Full Width)
+      //- Passenger Addresses
       .section-title(style="margin-top:20px").border-top-left
         p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Passenger address(es):
         .div(style="display:flex;justify-content:space-between;gap:10px")
@@ -234,7 +214,6 @@ html(lang="en")
           .section-title 
             p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Name of the authorized person:
           .field-wrapper
-           
             .input-box Ackermann, Henry
             .sub-label Last name, First name
           .field-wrapper(style="margin-top: 10px;")
@@ -251,11 +230,9 @@ html(lang="en")
         p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Flight number and date of the journey to which the claim refers:
         .grid-2
           .field-wrapper
-          
             .input-box= flightNumber || ''
             .sub-label Flight
           .field-wrapper
-            //- Swapped for formattedFlightDate
             .input-box= formattedFlightDate || ''
             .sub-label Date
         .grid-2
@@ -263,17 +240,14 @@ html(lang="en")
             .input-box= bookingCode || ''
             .sub-label Booking code
           .field-wrapper
-          //- Empty to match the layout
 
       //- Feedback ID
       .section-title(style="margin-top:20px").border-top-left  
         p(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Feedback ID (if available):
         .grid-2
           .field-wrapper
-          
             .input-box
           .field-wrapper
-          //- Empty right side
 
       //- Authorizations
       div(style="margin-top:20px").border-top-left
@@ -289,10 +263,9 @@ html(lang="en")
           .text-column
             p I/We hereby confirm that I/we authorize the above-mentioned persons or agency employees to accept any due payments on my/our behalf.
             
-        //- SYMMETRIC SIGNATURES (Bottom - Using the new bulletproof grid)
+        //- SYMMETRIC SIGNATURES
         .signatures-grid
           .field-wrapper(style="margin-bottom: 0;")
-            //- Swapped for formattedClaimDate
             .input-box= formattedClaimDate || ''
             .sub-label.bold(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Place, Date
           
@@ -300,9 +273,10 @@ html(lang="en")
             .sig-images-wrapper
               if passengers
                 each passenger in passengers
-              
                   if passenger.signature
                     img.signature-img(src=passenger.signature, alt="Signature")
+                  else
+                    div.empty-sig-slot
             .sig-line
             .sub-label.bold(style="font-weight: bold;font-size: 11px;margin-bottom: 6px;color: #000;-webkit-font-smoothing: antialiased;") Passenger signature(s)
         .footer-logo
