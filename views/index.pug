@@ -23,6 +23,15 @@ block content
     hr(style="margin-bottom:20px;")
 
     //- ==========================================
+    //- AI AUTOFILL SECTION
+    //- ==========================================
+    .form-group(style="background: #eef2f7; padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #cdd6e5;")
+      label(style="font-weight:bold; font-size:15px; color:#333;") ✨ AI Autofill
+      p(style="font-size: 13px; color: #555; margin-bottom: 10px;") Copy the entire block of client info from your CRM or email, paste it below, and let Gemini sort it out.
+      textarea#aiAutofillInput(rows="3" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;" placeholder="e.g. Please make the POA for Ahmed Yasser, Pamela Nelson, and John Doe. Address: New Cairo City. PNR: 12345678, flight on 2025-10-15...")
+      button#aiAutofillBtn(type="button" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;") Extract & Fill Form
+
+    //- ==========================================
     //- FORM 1: STANDARD REFLY TEMPLATE
     //- ==========================================
     form#standardForm(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
@@ -53,7 +62,6 @@ block content
           option(value="CH") chienese (Ch)
           option(value="Al") albanian (Al)
 
-
       .form-group
         label First Name *
         input(type="text", name="firstName", required)
@@ -65,7 +73,7 @@ block content
         textarea(name="address", rows="3", required)
       .form-group
         label PNR Number *
-        input(type="text", name="pnr", required, pattern="[A-Z0-9]{6}")
+        input(type="text", name="pnr", required, pattern="[A-Za-z0-9]{6,9}")
       .form-group
         label Date *
         input(type="date", name="date", required)
@@ -88,13 +96,14 @@ block content
     //- ==========================================
     form#lufthansaForm(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
       h3 Lufthansa Form Details
+    
       .form-row
         .form-group
           label Flight Number
           input(type="text", name="flightNumber")
         .form-group
           label PNR / Booking Code *
-          input(type="text", name="pnr", required)
+          input(type="text", name="pnr", required, pattern="[A-Za-z0-9]{6,9}")
         .form-group
           label Flight Date *
           input(type="date", name="flightDate", required)
@@ -156,6 +165,7 @@ block content
       if (selector && standardForm && lufthansaForm) {
         selector.addEventListener('change', (e) => {
           const isStandard = e.target.value === 'standard';
+          
           if (isStandard) {
             standardForm.style.display = 'block';
             lufthansaForm.style.display = 'none';
@@ -312,7 +322,6 @@ block content
           window.URL.revokeObjectURL(downloadUrl);
           a.remove();
           formElement.reset();
-          
           if (formElement.id === 'standardForm') {
             const preview = document.querySelector('#standardForm .sig-preview');
             const text = document.querySelector('#standardForm .drop-zone-text');
@@ -327,10 +336,87 @@ block content
           console.error('PDF Generation Error:', error);
           alert('An error occurred while generating the PDF.'); 
         } finally { 
-          document.getElementById('loader-overlay').style.setProperty('display', 'none', 'important'); 
+          document.getElementById('loader-overlay').style.setProperty('display', 'none', 'important');
         }
       }
 
       if (standardForm) standardForm.addEventListener('submit', (e) => handleFormSubmit(e, standardForm, '/generate-standard'));
       if (lufthansaForm) lufthansaForm.addEventListener('submit', (e) => handleFormSubmit(e, lufthansaForm, '/generate-lufthansa'));
+
+      // ==========================================
+      // AI AUTOFILL LOGIC
+      // ==========================================
+      const aiBtn = document.getElementById('aiAutofillBtn');
+      const aiInput = document.getElementById('aiAutofillInput');
+
+      if (aiBtn && aiInput) {
+        aiBtn.addEventListener('click', async () => {
+          const text = aiInput.value.trim();
+          if (!text) return alert("Please paste some text first!");
+
+          const originalBtnText = aiBtn.innerText;
+          aiBtn.innerText = "⏳ Extracting...";
+          aiBtn.disabled = true;
+
+          try {
+            const response = await fetch('/api/autofill', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ messyText: text })
+            });
+
+            if (!response.ok) throw new Error("Failed to extract data");
+            const data = await response.json();
+
+            // Check which template is active to fill the correct form
+            const activeTemplate = document.getElementById('templateSelector').value;
+
+            // Force the date to be exactly 10 characters (YYYY-MM-DD) and remove any spaces
+            let cleanDate = "";
+            if (data.date && data.date.length >= 10) {
+              cleanDate = data.date.trim().substring(0, 10);
+            }
+
+            // Ensure we safely have a passengers array
+            const passengers = data.passengers || [];
+
+            if (activeTemplate === 'standard') {
+              // Standard form just gets the very first passenger
+              if (passengers.length > 0) {
+                if (passengers[0].firstName) document.querySelector('#standardForm [name="firstName"]').value = passengers[0].firstName;
+                if (passengers[0].lastName) document.querySelector('#standardForm [name="lastName"]').value = passengers[0].lastName;
+              }
+              if (data.address) document.querySelector('#standardForm [name="address"]').value = data.address;
+              if (data.pnr) document.querySelector('#standardForm [name="pnr"]').value = data.pnr.toUpperCase();
+              if (cleanDate) document.querySelector('#standardForm [name="date"]').value = cleanDate;
+            } else {
+              // Lufthansa Form - Loop through all passengers and fill them out
+              passengers.forEach((passenger, index) => {
+                if (index < 4) { // Make sure we don't go past Passenger 4
+                  const fullName = `${passenger.firstName || ''} ${passenger.lastName || ''}`.trim();
+                  if (fullName) {
+                    const nameField = document.querySelector(`#lufthansaForm [name="fullName${index + 1}"]`);
+                    if (nameField) nameField.value = fullName;
+                  }
+                }
+              });
+
+              if (data.address) document.querySelector('#lufthansaForm [name="address1"]').value = data.address;
+              if (data.pnr) document.querySelector('#lufthansaForm [name="pnr"]').value = data.pnr.toUpperCase();
+              if (data.flightNumber) document.querySelector('#lufthansaForm [name="flightNumber"]').value = data.flightNumber.toUpperCase();
+              if (cleanDate) document.querySelector('#lufthansaForm [name="flightDate"]').value = cleanDate;
+            }
+
+            // Clear the box after success
+            aiInput.value = "";
+            
+          } catch (err) {
+            console.error(err);
+            alert("Oops! Gemini couldn't extract the data. Try pasting it differently.");
+          } finally {
+            aiBtn.innerText = originalBtnText;
+            aiBtn.disabled = false;
+          }
+        });
+      }
     });

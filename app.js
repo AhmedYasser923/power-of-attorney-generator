@@ -3,7 +3,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 const express = require('express');
-const mongoose = require('mongoose');
+
 const bodyParser = require('body-parser');
 const path = require('path');
 
