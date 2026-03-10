@@ -1,0 +1,230 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    title Letter of Authority - Aer Lingus
+    style.
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: #333;
+        margin: 0;
+        padding: 30px 40px;
+        background: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+      .header-left h1 {
+        color: #006778;
+        font-size: 24px;
+        margin: 0 0 5px 0;
+      }
+      .header-left p {
+        font-size: 11px;
+        color: #555;
+        margin: 0;
+        max-width: 400px;
+      }
+      .header-right img {
+        height: 45px;
+        object-fit: contain;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        border: 1px solid #b0c4de;
+      }
+      th {
+        background-color: #006778;
+        color: #ffffff;
+        text-align: left;
+        padding: 6px 10px;
+        font-size: 12px;
+        border: 1px solid #006778;
+      }
+      td {
+        border: 1px solid #b0c4de;
+        padding: 6px 10px;
+        vertical-align: top;
+      }
+      .label-cell {
+        background-color: #ffffff;
+        color: #006778;
+        font-weight: bold;
+        width: 25%;
+      }
+      .data-cell {
+        background-color: #eef3fb;
+        color: #333;
+      }
+      
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .box {
+        width: 13px;
+        height: 13px;
+        border: 1px solid #777;
+        background-color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        color: #006778; /* Added a teal color to the tick to make it pop */
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+      }
+      .footer-box {
+        border: 1px solid #b0c4de;
+      }
+      .footer-box-header {
+        background-color: #ffffff;
+        color: #006778;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-bottom: 1px solid #b0c4de;
+      }
+      .footer-box-content {
+        background-color: #eef3fb;
+        min-height: 50px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+      }
+      .signature-img {
+        max-height: 45px;
+        max-width: 100%;
+        mix-blend-mode: multiply;
+      }
+
+  body
+    .header-container
+      .header-left
+        h1 Letter of Authority
+        p This Letter of Authority is written authorisation by a passenger for another person to act in making a claim or complaint in relation to their travel with Aer Lingus.
+      .header-right
+        if aerlingusLogo
+          img(src=aerlingusLogo, alt="Aer Lingus")
+        else
+          h2(style="color:#006778; margin:0;") Aer Lingus
+
+    //- Case Details
+    table
+      tr
+        th(colspan="2") Case Details
+      tr
+        td.label-cell Case Number 
+          span(style="font-weight:normal; font-size:9px; color:#666;") If available
+        td.data-cell= caseNumber || ''
+      tr
+        td.label-cell Booking Reference
+        td.data-cell= pnr || ''
+      tr
+        td.label-cell Type of Claim
+          br
+          span(style="font-weight:normal; font-size:9px; color:#666;") Please tick
+        td.data-cell
+          .checkbox-group
+            //- Changed from 'X' to a tick '✓'
+            .checkbox-item
+              .box= claimType === 'compensation' ? '✓' : ''
+              span Compensation Claim (Regulation EC 261/2004/Applicable legislation)
+            .checkbox-item
+              .box= claimType === 'expense' ? '✓' : ''
+              span Expense Claim (Regulation EC 261/2004/Applicable legislation)
+            .checkbox-item
+              .box= claimType === 'baggage' ? '✓' : ''
+              span Delayed, Lost or Damaged Baggage Claim
+            .checkbox-item
+              .box= claimType === 'complaint' ? '✓' : ''
+              span Complaint
+            .checkbox-item(style="margin-top: 5px; display:flex; gap:10px;")
+              .box= claimType === 'other' ? '✓' : ''
+              span Other, please specify: 
+              span(style="border-bottom: 1px solid #ccc; flex:1;")
+
+    //- Booking Details
+    table
+      tr
+        th(colspan="3") Booking Details
+      tr
+        td.label-cell Flight Date 
+          span(style="font-weight:normal; font-size:9px; color:#666;") Date, Month, Year
+        td.label-cell Flight Number 
+          span(style="font-weight:normal; font-size:9px; color:#666;") Include airline eg. EI
+        td.label-cell Route 
+          span(style="font-weight:normal; font-size:9px; color:#666;") Specify to and from
+      tr
+        td.data-cell= formattedFlightDate || ''
+        td.data-cell= flightNumber || ''
+        td.data-cell= route || ''
+
+    //- Passenger Details
+    table
+      tr
+        th(colspan="2") Passenger Details
+      tr
+        td.label-cell First Name
+        td.data-cell= firstName || ''
+      tr
+        td.label-cell Last Name
+        td.data-cell= lastName || ''
+      tr
+        td.label-cell Address
+        td.data-cell= address || ''
+
+    //- Authorised Person
+    table
+      tr
+        th(colspan="2") Name of Authorised Person
+      tr
+        td.label-cell First Name
+        td.data-cell Henry
+      tr
+        td.label-cell Last Name
+        td.data-cell Ackermann
+      tr
+        td.label-cell Address
+        td.data-cell Refly Management Limited<br>54 Bath Street, JE1 1FW, St Helier, Jersey
+
+    //- Confirmation
+    table(style="margin-bottom: 5px;")
+      tr
+        th Confirmation by Passenger
+      tr
+        td.data-cell(style="background-color: #ffffff; padding: 15px;")
+          p(style="margin:0 0 8px 0; line-height: 1.4;") I confirm that I authorise the Authorised Person to communicate with Aer Lingus in relation to the Claim.
+          p(style="margin:0; line-height: 1.4;") I authorise Aer Lingus to pay to the Authorised Person any monies due to me arising from this Claim to the bank account provided upon submission of the Claim. I confirm that Aer Lingus shall have no further liability to me in respect of any monies paid to the Authorised Person on my behalf in respect of the Claim. I confirm that this Letter of Authority does not authorise the Authorised Person to issue legal proceedings on my behalf.
+
+    //- Footer Signatures
+    .footer-grid
+      .footer-box
+        .footer-box-header Full Name
+        .footer-box-content
+          span(style="font-weight:bold; font-size:13px;")= `${firstName || ''} ${lastName || ''}`
+      .footer-box
+        .footer-box-header Signature
+        .footer-box-content(style="justify-content: center;")
+          if signature
+            img.signature-img(src=signature, alt="Signature")

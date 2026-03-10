@@ -5,6 +5,8 @@ const router = express.Router();
 const aiController = require('../controllers/aiController.js');
 const reflyController = require('../controllers/reflyController.js');
 const lufthansaController = require('../controllers/lufthansaController.js');
+const aerlingusController = require('../controllers/aerlingusController.js');
+const ticketController = require('../controllers/ticketController.js');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -12,17 +14,15 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ROUTES
 // ==========================================
 
-// Main form page
 router.get('/', reflyController.showForm);
-
-// Preview route for Lufthansa template
 router.get('/preview-lufthansa', lufthansaController.preview);
+router.get('/ticket-analyzer', ticketController.renderAnalyzer);
 
-// PDF Generation Routes (Duplicates removed)
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);
 router.post('/generate-lufthansa', upload.any(), lufthansaController.generateLufthansaPDF);
+router.post('/generate-aerlingus', upload.any(), aerlingusController.generateAerLingusPDF);
 
-// AI Extraction Route
 router.post('/api/autofill', aiController.extractData);
+router.post('/api/analyze-ticket', upload.any(), ticketController.analyzeTicket);
 
 module.exports = router;
