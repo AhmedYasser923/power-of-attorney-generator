@@ -8,6 +8,7 @@ block content
       --surface: #ffffff;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+      --secondary: #475569;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border-soft: #e2e8f0;
@@ -38,11 +39,11 @@ block content
     .btn-analyze:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-    /* --- RESULTS DASHBOARD --- */
+    /* --- RESULTS CONTAINERS --- */
     .results-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg); margin-top: 32px; animation: fadeIn 0.5s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* --- EC261 / UK261 ELIGIBILITY CARD (OVERALL) --- */
+    /* Flight Card & Data Styling */
     .ec261-card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 20px; }
     .ec261-card.eligible { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
     .ec261-card.eligible .ec-icon { color: #16a34a; }
@@ -54,25 +55,21 @@ block content
     .ec-content { flex: 1; }
     .ec-title { font-size: 16px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
     .ec-reason { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.4; }
-
-    /* --- PASSENGER INFO --- */
+    
     .passenger-card { background: linear-gradient(145deg, #ffffff, #f8fafc); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .p-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .p-value { font-size: 20px; font-weight: 800; color: var(--text-main); }
     .pnr-box { background: var(--accent-blue); padding: 10px 16px; border-radius: 8px; text-align: right; border: 1px solid #bfdbfe; }
     .pnr-box .p-value { color: var(--primary); font-family: monospace; font-size: 22px; letter-spacing: 2px; }
-
-    /* --- FLIGHT CARDS --- */
+    
     .route-header { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 32px 0 16px 0; display: flex; align-items: center; gap: 10px; }
     .route-header::before { content: ''; display: block; width: 8px; height: 24px; background: var(--primary); border-radius: 4px; }
     
     .flight-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 24px; margin-bottom: 16px; transition: all 0.2s ease; }
     .flight-card:hover { border-color: #cbd5e1; box-shadow: var(--shadow-md); }
-    
     .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .fc-badge { background: #f1f5f9; color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
     .fc-airline { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-main); font-size: 14px; }
-    
     .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
     .fc-node { flex: 1; z-index: 2; }
     .fc-node.right { text-align: right; }
@@ -80,15 +77,11 @@ block content
     .fc-airport { font-size: 13px; color: var(--text-main); font-weight: 600; margin-top: 8px; margin-bottom: 2px; line-height: 1.3; }
     .fc-city { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .fc-time { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 10px; }
-    
     .fc-line-wrapper { flex: 1.5; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-top: 15px; }
     .fc-line { width: 100%; border-top: 2px dashed #cbd5e1; position: absolute; }
     .fc-plane { background: var(--surface); color: var(--text-muted); padding: 0 12px; z-index: 2; font-size: 20px; transform: rotate(90deg); }
-    
     .fc-bottom { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
     .fc-flight-num { background: var(--accent-blue); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
-    
-    /* Leg-specific EC261/UK261 Badge */
     .fc-ec-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; }
     .fc-ec-badge.eligible { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
     .fc-ec-badge.not-eligible { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
@@ -96,7 +89,7 @@ block content
   .container(style="max-width: 850px; margin-top: 50px;")
     .header-title 🎫 Ticket Analyzer AI
     .header-subtitle Drop multiple e-tickets, boarding passes, or flight screenshots below. Our vision model will instantly extract structured passenger data and evaluate EC261 / UK261 claim eligibility.
-
+    
     //- Interactive Drop Zone
     .drop-zone#ticketDropZone(tabindex="0")
       .dz-icon 📥
@@ -114,21 +107,6 @@ block content
 
     //- Results Dashboard
     #resultsCard.results-container(style="display: none;")
-      
-      //- EC261 / UK261 Eligibility Banner Container (Overall Journey)
-      #ec261Container
-      
-      //- Passenger Header Card
-      .passenger-card
-        div
-          .p-label Passenger Name
-          #resName.p-value -
-        .pnr-box
-          .p-label Booking Ref (PNR)
-          #resPNR.p-value -
-          
-      //- Dynamic Flight Cards Container
-      #flightCardsContainer
 
   script.
     document.addEventListener('DOMContentLoaded', () => {
@@ -139,40 +117,27 @@ block content
       const analyzeBtn = document.getElementById('analyzeBtn');
       const clearBtn = document.getElementById('clearFilesBtn');
       const resultsCard = document.getElementById('resultsCard');
-      const flightCardsContainer = document.getElementById('flightCardsContainer');
-      const ec261Container = document.getElementById('ec261Container');
       
       let currentFiles = [];
 
       function updateUI() {
         if (currentFiles.length === 0) {
           previewTicket.style.display = 'none';
+          resultsCard.style.display = 'none';
           return;
         }
-        
-        if (currentFiles.length === 1) {
-          ticketName.innerText = `📄 1 File Ready: ${currentFiles[0].name}`;
-        } else {
-          ticketName.innerText = `📄 ${currentFiles.length} Files Ready for Analysis`;
-        }
-        
+        ticketName.innerText = currentFiles.length === 1 ? `📄 1 File Ready: ${currentFiles[0].name}` : `📄 ${currentFiles.length} Files Ready`;
         previewTicket.style.display = 'block';
-        resultsCard.style.display = 'none';
       }
 
       function handleFiles(fileList) {
         if (!fileList || fileList.length === 0) return;
-        const newFiles = Array.from(fileList);
-        currentFiles = [...currentFiles, ...newFiles];
+        currentFiles = [...currentFiles, ...Array.from(fileList)];
         updateUI();
       }
 
-      clearBtn.addEventListener('click', () => {
-        currentFiles = [];
-        ticketInput.value = ""; 
-        updateUI();
-      });
-
+      // Drag, Drop & Click Logic
+      clearBtn.addEventListener('click', () => { currentFiles = []; ticketInput.value = ""; updateUI(); });
       ticketDropZone.addEventListener('click', () => { ticketInput.click(); });
       ticketInput.addEventListener('change', (e) => handleFiles(e.target.files));
       ticketDropZone.addEventListener('dragover', (e) => { e.preventDefault(); ticketDropZone.classList.add('dragover'); });
@@ -183,22 +148,27 @@ block content
         if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
       });
 
+      // SMART PASTING LOGIC (Ctrl+V)
       document.addEventListener('paste', (e) => {
         const clipboard = e.clipboardData || window.clipboardData;
-        if (clipboard.files && clipboard.files.length > 0) {
-          handleFiles(clipboard.files);
-        } else if (clipboard.items) {
-          const pastedFiles = [];
-          for (let item of clipboard.items) {
-            if (item.type.startsWith('image/') || item.type === 'application/pdf') {
-              const file = item.getAsFile();
-              pastedFiles.push(new File([file], `Pasted_Document_${Date.now()}_${Math.floor(Math.random()*1000)}.${file.type.split('/')[1]}`, { type: file.type }));
-            }
+        if (!clipboard.items) return;
+        
+        const pastedFiles = [];
+        for (let item of clipboard.items) {
+          if (item.type.startsWith('image/') || item.type === 'application/pdf') {
+            const file = item.getAsFile();
+            const ext = file.type.split('/')[1] || 'png';
+            pastedFiles.push(new File([file], `Pasted_Document_${Date.now()}.${ext}`, { type: file.type }));
           }
-          if (pastedFiles.length > 0) handleFiles(pastedFiles);
+        }
+        
+        if (pastedFiles.length > 0) {
+          currentFiles = [...currentFiles, ...pastedFiles];
+          updateUI();
         }
       });
 
+      // --- AI EXTRACTION LOGIC ---
       analyzeBtn.addEventListener('click', async () => {
         if (currentFiles.length === 0) return;
         
@@ -212,97 +182,105 @@ block content
         try {
           const response = await fetch('/api/analyze-ticket', { method: 'POST', body: formData });
           if (!response.ok) throw new Error('Analysis failed');
-          const data = await response.json();
+          let dataArray = await response.json();
           
-          document.getElementById('resName').innerText = data.passengerName || 'Not Found';
-          document.getElementById('resPNR').innerText = data.pnr || 'Not Found';
-          
-          // --- RENDER EC261 / UK261 ELIGIBILITY (OVERALL) ---
-          ec261Container.innerHTML = '';
-          if (data.ec261) {
-            const isEligible = data.ec261.status && data.ec261.status.toLowerCase().includes('not') === false;
-            const cardClass = isEligible ? 'eligible' : 'not-eligible';
-            const icon = isEligible ? '🛡️' : '⚠️';
+          if (!Array.isArray(dataArray)) dataArray = [dataArray];
+
+          resultsCard.innerHTML = '';
+
+          dataArray.forEach((data, journeyIndex) => {
+            const journeyWrapper = document.createElement('div');
+            journeyWrapper.style.marginBottom = "60px";
+            journeyWrapper.style.borderBottom = journeyIndex < dataArray.length - 1 ? "3px dashed var(--border-soft)" : "none";
+            journeyWrapper.style.paddingBottom = journeyIndex < dataArray.length - 1 ? "40px" : "0";
+
+            // Add Header
+            if (dataArray.length > 1) {
+              journeyWrapper.innerHTML += `<h3 style="color: var(--primary); border-bottom: 1px solid var(--border-soft); padding-bottom: 10px;">🎫 Ticket / Journey ${journeyIndex + 1}</h3>`;
+            }
+
+            // Render Overall EC261 Claim
+            if (data.ec261) {
+              const isEligible = data.ec261.status && data.ec261.status.toLowerCase().includes('not') === false;
+              const cardClass = isEligible ? 'eligible' : 'not-eligible';
+              const icon = isEligible ? '🛡️' : '⚠️';
+              journeyWrapper.innerHTML += `<div class="ec261-card ${cardClass}"><div class="ec-icon">${icon}</div><div class="ec-content"><h4 class="ec-title">OVERALL CLAIM: ${data.ec261.status.toUpperCase()}</h4><p class="ec-reason">${data.ec261.reason}</p></div></div>`;
+            }
             
-            ec261Container.innerHTML = `
-              <div class="ec261-card ${cardClass}">
-                <div class="ec-icon">${icon}</div>
-                <div class="ec-content">
-                  <h4 class="ec-title">OVERALL JOURNEY CLAIM: ${data.ec261.status.toUpperCase()}</h4>
-                  <p class="ec-reason">${data.ec261.reason || 'Evaluated based on route and airline jurisdiction.'}</p>
-                </div>
-              </div>
-            `;
-          }
-          
-          // --- RENDER FLIGHT CARDS ---
-          flightCardsContainer.innerHTML = '';
-          if (data.routes && data.routes.length > 0) {
-            data.routes.forEach((route) => {
-              const routeHeader = document.createElement('div');
-              routeHeader.className = 'route-header';
-              routeHeader.innerText = route.type || 'Flight Route';
-              flightCardsContainer.appendChild(routeHeader);
-
-              if (route.legs && route.legs.length > 0) {
-                route.legs.forEach((flight, index) => {
-                  const card = document.createElement('div');
-                  card.className = 'flight-card';
-                  const legIndicator = route.legs.length > 1 ? `Leg ${index + 1}` : 'Direct';
-                  
-                  // Evaluate Individual Leg Badge
-                  let legEcBadgeHtml = '';
-                  if (flight.ec261Leg && flight.ec261Leg.status) {
-                    const legIsEligible = flight.ec261Leg.status.toLowerCase().includes('not') === false;
-                    const legClass = legIsEligible ? 'eligible' : 'not-eligible';
-                    const legIcon = legIsEligible ? '✅' : '❌';
-                    legEcBadgeHtml = `<div class="fc-ec-badge ${legClass}" title="${flight.ec261Leg.reason || 'EC261 / UK261 Leg Evaluation'}">${legIcon} EC261/UK261 ${flight.ec261Leg.status}</div>`;
-                  }
-
-                  card.innerHTML = `
-                    <div class="fc-top">
-                      <div class="fc-airline">✈️ Operated by ${flight.airline || 'Unknown'}</div>
-                      <div class="fc-badge">${legIndicator}</div>
-                    </div>
-                    
-                    <div class="fc-path-container">
-                      <div class="fc-node left">
-                        <div class="fc-iata">${flight.originIata || '???'}</div>
-                        <div class="fc-airport">${flight.originName || ''}</div>
-                        <div class="fc-city">${flight.originCity || ''}</div>
-                        <div class="fc-time">${flight.departureTime || '--:--'}</div>
-                      </div>
-                      
-                      <div class="fc-line-wrapper">
-                        <div class="fc-line"></div>
-                        <div class="fc-plane">✈</div>
-                      </div>
-                      
-                      <div class="fc-node right">
-                        <div class="fc-iata">${flight.destinationIata || '???'}</div>
-                        <div class="fc-airport">${flight.destinationName || ''}</div>
-                        <div class="fc-city">${flight.destinationCity || ''}</div>
-                        <div class="fc-time">${flight.arrivalTime || '--:--'}</div>
-                      </div>
-                    </div>
-                    
-                    <div class="fc-bottom">
-                      <div style="display: flex; align-items: center; gap: 15px;">
-                        <div>📅 ${flight.date || 'Date Unknown'}</div>
-                        <div class="fc-flight-num">Flight: ${flight.flightNumber || 'N/A'}</div>
-                      </div>
-                      ${legEcBadgeHtml}
-                    </div>
-                  `;
-                  flightCardsContainer.appendChild(card);
-                });
-              } else {
-                 flightCardsContainer.innerHTML += '<p style="color: var(--text-muted); font-size: 14px;">No leg data found for this route.</p>';
+            // --- SMART PASSENGER/PNR DE-DUPLICATION ---
+            let showPassengerCard = true;
+            if (journeyIndex > 0) {
+              const prevData = dataArray[journeyIndex - 1];
+              if (data.pnr === prevData.pnr && data.passengerName === prevData.passengerName) {
+                showPassengerCard = false;
               }
-            });
-          } else {
-             flightCardsContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--surface); border-radius: var(--radius-md); border: 1px dashed var(--border-soft);">No flight routes detected in the provided documents.</div>';
-          }
+            }
+
+            if (showPassengerCard) {
+              journeyWrapper.innerHTML += `<div class="passenger-card"><div><div class="p-label">Passenger Name</div><div class="p-value">${data.passengerName || 'Not Found'}</div></div><div class="pnr-box"><div class="p-label">PNR / Booking Ref</div><div class="p-value">${data.pnr || 'Not Found'}</div></div></div>`;
+            }
+            // ------------------------------------------------
+            
+            const flightCardsContainer = document.createElement('div');
+            
+            if (data.routes && data.routes.length > 0) {
+              data.routes.forEach((route) => {
+                flightCardsContainer.innerHTML += `<div class="route-header">${route.type || 'Flight Route'}</div>`;
+                
+                if (route.legs && route.legs.length > 0) {
+                  route.legs.forEach((flight, index) => {
+                    const legIndicator = route.legs.length > 1 ? `Leg ${index + 1}` : 'Direct';
+      
+                    // Evaluate Individual Leg Badge
+                    let legBadgeHtml = '';
+                    if (flight.ec261Leg && flight.ec261Leg.status) {
+                      const lEl = !flight.ec261Leg.status.toLowerCase().includes('not');
+                      legBadgeHtml = `<div class="fc-ec-badge ${lEl ? 'eligible' : 'not-eligible'}" title="${flight.ec261Leg.reason}">${lEl ? '✅' : '❌'} ${flight.ec261Leg.status}</div>`;
+                    }
+
+                    // Format Airline Text
+                    let airText = `✈️ Booked: ${flight.marketingAirline || 'Unknown'}`;
+                    if (flight.operatingAirline && flight.operatingAirline !== flight.marketingAirline) {
+                      airText += ` <span style="color:var(--primary); margin-left:8px;">| Operated: ${flight.operatingAirline}</span>`;
+                    }
+                    
+                    // --- CANCELLATION/REBOOKING UI LOGIC ---
+                    let statusWarningHtml = '';
+                    let opacityStyle = '1';
+                    if (flight.flightStatus && flight.flightStatus.toLowerCase().includes('cancel')) {
+                      statusWarningHtml = `<div style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fecaca;">⚠️ FLIGHT CANCELLED / REBOOKED</div>`;
+                      opacityStyle = '0.55'; // Visually dim the card
+                    }
+
+                    flightCardsContainer.innerHTML += `
+                      <div class="flight-card" style="opacity: ${opacityStyle};">
+                        ${statusWarningHtml}
+                        <div class="fc-top"><div class="fc-airline">${airText}</div><div class="fc-badge">${legIndicator}</div></div>
+                        <div class="fc-path-container">
+                          <div class="fc-node left"><div class="fc-iata">${flight.originIata || '???'}</div><div class="fc-airport">${flight.originName || ''}</div><div class="fc-city">${flight.originCity || ''}, ${flight.originCountry || ''}</div><div class="fc-time">${flight.departureTime || '--:--'}</div></div>
+                          <div class="fc-line-wrapper"><div class="fc-line"></div><div class="fc-plane">✈</div></div>
+                          <div class="fc-node right"><div class="fc-iata">${flight.destinationIata || '???'}</div><div class="fc-airport">${flight.destinationName || ''}</div><div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div><div class="fc-time">${flight.arrivalTime || '--:--'}</div></div>
+                        </div>
+                        <div class="fc-bottom">
+                          <div style="display: flex; align-items: center; gap: 15px;">
+                            <div>📅 ${flight.date || 'Unknown'}</div>
+                            <div class="fc-flight-num">Flight: ${flight.flightNumber || 'N/A'}</div>
+                          </div>
+                          ${legBadgeHtml}
+                        </div>
+                      </div>`;
+                  });
+                } else {
+                   flightCardsContainer.innerHTML += '<p style="color: var(--text-muted); font-size: 14px;">No leg data found for this route.</p>';
+                }
+              });
+            } else {
+               flightCardsContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--surface); border-radius: var(--radius-md); border: 1px dashed var(--border-soft);">No flight routes detected.</div>';
+            }
+
+            journeyWrapper.appendChild(flightCardsContainer);
+            resultsCard.appendChild(journeyWrapper);
+          });
 
           resultsCard.style.display = 'block';
         } catch (error) {
