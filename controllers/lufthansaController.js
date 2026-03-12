@@ -1,9 +1,12 @@
 const PDFGenerator = require('../utils/pdfGenerator');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
+// Initialize APIs
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -13,9 +16,7 @@ cloudinary.config({
 function getLufthansaLogoBase64() {
   try {
     const logoPath = path.join(__dirname, '../public/images/Lufthansa_Logo_2018.svg.png');
-    if (!fs.existsSync(logoPath)) {
-        return null;
-    }
+    if (!fs.existsSync(logoPath)) return null;
     const logoBuffer = fs.readFileSync(logoPath);
     return `data:image/png;base64,${logoBuffer.toString('base64')}`;
   } catch(e) {
@@ -23,37 +24,74 @@ function getLufthansaLogoBase64() {
   }
 }
 
-async function processSignature(file, shouldRemove) {
+// --- HELPER: GEMINI AI ---
+async function runGemini(file) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
+  const prompt = "Extract the handwritten signature. Thicken the ink to make it clear. Place the signature on a solid, pure white background. DO NOT draw a checkerboard transparency pattern. Output ONLY the image.";
+  const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
+  const result = await model.generateContent([prompt, imagePart]);
+  const response = await result.response;
+  const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
+
+  if (outputPart && outputPart.inlineData) {
+    const aiImageBuffer = Buffer.from(outputPart.inlineData.data, 'base64');
+    const finalBuffer = await sharp(aiImageBuffer).grayscale().threshold(220).png().toBuffer();
+    return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+  }
+  throw new Error("No valid image data returned from Gemini.");
+}
+
+// --- HELPER: CLOUDINARY AI ---
+async function runCloudinary(file) {
+  const enlargedBuffer = await sharp(file.buffer).resize({ width: 1000, withoutEnlargement: false }).png().toBuffer();
+  const base64Image = `data:image/png;base64,${enlargedBuffer.toString('base64')}`;
+  const result = await cloudinary.uploader.upload(base64Image, { folder: 'poa_signatures', background_removal: 'cloudinary_ai' });
+  const url = cloudinary.url(result.public_id, { secure: true, effect: "background_removal", transformation: [{ effect: "improve" }] });
+  
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Cloudinary fetch failed');
+  const arrayBuffer = await response.arrayBuffer();
+  return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
+}
+
+async function processSignature(file, processingMethod) {
   if (!file) return null;
-  if (shouldRemove !== 'on') {
-    return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
+
+  if (processingMethod === 'gemini') {
+    try {
+      return await runGemini(file);
+    } catch (error) {
+      console.warn('⚠️ Gemini Signature Error. Falling back to Cloudinary:', error.message);
+      try {
+        return await runCloudinary(file);
+      } catch (fallbackError) {
+        console.error('❌ Cloudinary Fallback Error. Using Raw Image:', fallbackError.message);
+      }
+    }
+  } else if (processingMethod === 'cloudinary') {
+    try {
+      return await runCloudinary(file);
+    } catch (error) {
+      console.warn('⚠️ Cloudinary Error. Falling back to Gemini:', error.message);
+      try {
+        return await runGemini(file);
+      } catch (fallbackError) {
+        console.error('❌ Gemini Fallback Error. Using Raw Image:', fallbackError.message);
+      }
+    }
   }
-  try {
-    const enlargedBuffer = await sharp(file.buffer).resize({ width: 1000, withoutEnlargement: false }).png().toBuffer();
-    const base64Image = `data:image/png;base64,${enlargedBuffer.toString('base64')}`;
-    const result = await cloudinary.uploader.upload(base64Image, { folder: 'poa_signatures', background_removal: 'cloudinary_ai' });
-    const url = cloudinary.url(result.public_id, { secure: true, effect: "background_removal", transformation: [{ effect: "improve" }] });
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Fetch failed');
-    const arrayBuffer = await response.arrayBuffer();
-    return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
-  } catch (error) {
-    console.error('❌ Cloudinary error:', error.message);
-    return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
-  }
+
+  return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
 }
 
 function capitalizeWords(str) {
   if (!str) return '';
-  return str.trim().split(/\s+/).map(word => {
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join(' ');
+  return str.trim().split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
 exports.preview = (req, res) => {
   const dummyData = {
-    flightNumber: 'LH982',
-    bookingCode: 'xcwgia',
+    flightNumber: 'LH982', bookingCode: 'xcwgia',
     formattedFlightDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
     formattedClaimDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
     lufthansaLogo: getLufthansaLogoBase64(),
@@ -71,11 +109,9 @@ exports.generateLufthansaPDF = async (req, res) => {
     const files = req.files || [];
 
     const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
-
     const passengers = [];
     let sigIndex = 0;
 
-    // Trigger processing if EITHER a name is typed OR a signature is uploaded
     for (let i = 1; i <= 4; i++) {
       const rawName = req.body[`fullName${i}`] || '';
       const signatureFile = signatureFiles[sigIndex]; 
@@ -94,11 +130,10 @@ exports.generateLufthansaPDF = async (req, res) => {
           }
         }
 
-        // Only consume a signature index if we actually have a file to pull
         if (signatureFile) sigIndex++;
         
-        const removeBg = req.body[`removeBg${i}`];
-        const signatureDataUrl = await processSignature(signatureFile, removeBg);
+        const sigProcessing = req.body[`sigProcessing${i}`];
+        const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
 
         passengers.push({
           firstName,
@@ -110,18 +145,12 @@ exports.generateLufthansaPDF = async (req, res) => {
       }
     }
 
-    if (passengers.length === 0) {
-      return res.status(400).send("At least one passenger or signature is required.");
-    }
+    if (passengers.length === 0) return res.status(400).send("At least one passenger or signature is required.");
 
     const pdfData = {
-      pnr,
-      flightDate: new Date(flightDate),
-      claimDate: new Date(claimDate),
-      flightNumber: flightNumber || pnr,
-      bookingCode: bookingCode || pnr,
-      passengers,
-      lufthansaLogo: getLufthansaLogoBase64()
+      pnr, flightDate: new Date(flightDate), claimDate: new Date(claimDate),
+      flightNumber: flightNumber || pnr, bookingCode: bookingCode || pnr,
+      passengers, lufthansaLogo: getLufthansaLogoBase64()
     };
 
     const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');

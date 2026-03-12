@@ -17,14 +17,8 @@ block content
       div(style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; box-shadow: 0 2px 4px rgba(37,99,235,0.2);") Launch Analyzer ➔
 
     style.
-      .analyzer-banner:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-        border-color: #93c5fd !important;
-      }
-      .analyzer-banner:hover div:last-child {
-        background: #1d4ed8 !important;
-      }
+      .analyzer-banner:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #93c5fd !important; }
+      .analyzer-banner:hover div:last-child { background: #1d4ed8 !important; }
     
     if error
       .error-message(style="background: #ffdddd; padding: 10px; margin-bottom: 15px;")= error
@@ -99,9 +93,12 @@ block content
           input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;")
           img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
       
-      .form-group(style="display: flex; gap: 10px; align-items: center;")
-        input(type="checkbox", name="removeBg")
-        label(style="margin:0;") Remove signature background (Cloudinary AI)
+      .form-group(style="background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc; margin-top: 10px;")
+        label(style="font-weight: bold; margin-bottom: 8px; display: block;") Signature Processing Option
+        select(name="sigProcessing" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;")
+          option(value="none") None (Use Raw Image)
+          option(value="cloudinary") Cloudinary AI (Standard Background Removal)
+          option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
       
       button.btn-primary(type="submit", style="margin-top: 20px;") Generate Standard PDF
 
@@ -110,7 +107,6 @@ block content
     //- ==========================================
     form#lufthansaForm(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
       h3 Lufthansa Form Details
-    
       .form-row
         .form-group
           label Flight Number
@@ -148,13 +144,17 @@ block content
               input#lufthansa-sig-input(type="file", name="signatures", accept="image/*", multiple=true, style="display: none;")
             #lufthansa-sig-previews(style="display: flex; gap: 10px; flex-wrap: wrap; min-height: 80px; padding: 10px; border: 1px dashed #e4e7eb; border-radius: 6px; background: #fff; align-items: center;")
               span#preview-placeholder(style="color: #aaa; font-size: 12px; margin: auto;") Previews appear here...
+            
             div
-              label(style="font-weight: bold; font-size: 13px; margin-bottom: 10px; display: block;") Background Removal (Cloudinary AI):
-              div(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
+              label(style="font-weight: bold; font-size: 13px; margin-bottom: 10px; display: block;") Processing Method per Signature:
+              div(style="display: flex; flex-direction: column; gap: 8px;")
                 - for (var i = 1; i <= 4; i++)
                   .form-group(style="display: flex; gap: 8px; align-items: center; margin-bottom: 0; background: #fff; padding: 8px; border: 1px solid #ddd; border-radius: 4px;")
-                    input(type="checkbox", name=`removeBg${i}`)
-                    label(style="margin:0; font-size: 12px; cursor: pointer;") Sig #{i}
+                    label(style="margin:0; font-size: 12px; white-space: nowrap; font-weight: bold;") Sig #{i}:
+                    select(name=`sigProcessing${i}` style="flex: 1; padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc;")
+                      option(value="none") None (Raw)
+                      option(value="cloudinary") Cloudinary AI
+                      option(value="gemini", selected) Nano Banana
 
       button.btn-primary(type="submit", style="margin-top: 25px; width: 100%; font-size: 16px; padding: 12px;") Generate Lufthansa PDF
 
@@ -163,7 +163,6 @@ block content
     //- ==========================================
     form#aerLingusForm(action="/generate-aerlingus", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
       h3 Aer Lingus Form Details
-      
       .form-row(style="background: #e0f2f1; padding: 15px; border: 1px solid #80cbc4; border-radius: 6px; margin-bottom: 20px;")
         .form-group
           label Type of Claim *
@@ -210,9 +209,12 @@ block content
           input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;", required)
           img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
       
-      .form-group(style="display: flex; gap: 10px; align-items: center;")
-        input(type="checkbox", name="removeBg")
-        label(style="margin:0;") Remove signature background (Cloudinary AI)
+      .form-group(style="background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc; margin-top: 10px;")
+        label(style="font-weight: bold; margin-bottom: 8px; display: block;") Signature Processing Option
+        select(name="sigProcessing" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;")
+          option(value="none") None (Use Raw Image)
+          option(value="cloudinary") Cloudinary AI (Standard Background Removal)
+          option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
 
       button.btn-primary(type="submit", style="margin-top: 25px; width: 100%; font-size: 16px; padding: 12px; background-color: #006778;") Generate Aer Lingus PDF
 
@@ -290,9 +292,8 @@ block content
 
         if (filesToProcess.length > 0) {
           imageFound = true;
-          // Prevent default pasting into text areas if we are capturing images
           if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
-             e.preventDefault();
+            e.preventDefault();
           }
 
           const activeTemplate = selector.value;
@@ -329,6 +330,7 @@ block content
           }
         }
       });
+
       // ==========================================
       // CLICK & UPLOAD DROP ZONE LOGIC 
       // ==========================================
@@ -339,7 +341,6 @@ block content
 
         if (input && preview && text) {
           zone.addEventListener('click', () => input.click());
-        
           zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
           zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
           zone.addEventListener('drop', e => {
@@ -347,7 +348,6 @@ block content
             zone.classList.remove('dragover');
             if (e.dataTransfer.files.length) {
               input.files = e.dataTransfer.files;
-        
               showPreview(input.files[0], preview, text);
             }
           });
@@ -414,8 +414,7 @@ block content
           if (formElement.id === 'standardForm' || formElement.id === 'aerLingusForm') {
             const preview = document.querySelector(`#${formElement.id} .sig-preview`);
             const text = document.querySelector(`#${formElement.id} .drop-zone-text`);
-            if(preview) { preview.src = ''; preview.style.display = 'none';
-            }
+            if(preview) { preview.src = ''; preview.style.display = 'none'; }
             if(text) text.innerHTML = 'Click to Upload, Drag & Drop, or Paste (Ctrl+V)';
           } else if (formElement.id === 'lufthansaForm') {
             lufthansaDataTransfer = new DataTransfer();
@@ -433,6 +432,7 @@ block content
       if (standardForm) standardForm.addEventListener('submit', (e) => handleFormSubmit(e, standardForm, '/generate-standard'));
       if (lufthansaForm) lufthansaForm.addEventListener('submit', (e) => handleFormSubmit(e, lufthansaForm, '/generate-lufthansa'));
       if (aerLingusForm) aerLingusForm.addEventListener('submit', (e) => handleFormSubmit(e, aerLingusForm, '/generate-aerlingus'));
+
       // AI Text Extraction Logic
       const aiBtn = document.getElementById('aiAutofillBtn');
       const aiInput = document.getElementById('aiAutofillInput');
@@ -446,7 +446,6 @@ block content
           aiBtn.disabled = true;
 
           try {
-     
             const response = await fetch('/api/autofill', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -454,15 +453,14 @@ block content
             });
 
             if (!response.ok) throw new Error("Failed to extract data");
-      
+       
             const data = await response.json();
             const activeTemplate = document.getElementById('templateSelector').value;
             let cleanDate = data.date && data.date.length >= 10 ? data.date.trim().substring(0, 10) : "";
             const passengers = data.passengers || [];
 
             if (activeTemplate === 'standard') {
-              if (passengers.length > 0) 
-              {
+               if (passengers.length > 0) {
                 if (passengers[0].firstName) document.querySelector('#standardForm [name="firstName"]').value = passengers[0].firstName;
                 if (passengers[0].lastName) document.querySelector('#standardForm [name="lastName"]').value = passengers[0].lastName;
               }
@@ -484,7 +482,6 @@ block content
                 if (index < 4) { 
                   const fullName = `${passenger.firstName || ''} ${passenger.lastName || ''}`.trim();
                   if (fullName) {
-        
                     const nameField = document.querySelector(`#lufthansaForm [name="fullName${index + 1}"]`);
                     if (nameField) nameField.value = fullName;
                   }
@@ -530,7 +527,7 @@ block content
           wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: #fafafa; position: relative;";
           const header = document.createElement('div');
           header.style.cssText = "display: flex; justify-content: space-between; width: 100%; align-items: center;";
-    
+          
           const label = document.createElement('span');
           label.innerText = `Sig ${index + 1}`;
           label.style.cssText = "font-size: 11px; font-weight: bold; color: #444;";
@@ -544,7 +541,7 @@ block content
             const files = Array.from(lufthansaDataTransfer.files);
             files.splice(index, 1);
             files.forEach(f => dt.items.add(f));
-           
+            
             lufthansaDataTransfer = dt;
             document.getElementById('lufthansa-sig-input').files = lufthansaDataTransfer.files;
             renderLufthansaPreviews();
