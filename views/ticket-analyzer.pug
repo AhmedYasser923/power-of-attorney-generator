@@ -217,7 +217,28 @@ block content
             }
 
             if (showPassengerCard) {
-              journeyWrapper.innerHTML += `<div class="passenger-card"><div><div class="p-label">Passenger Name</div><div class="p-value">${data.passengerName || 'Not Found'}</div></div><div class="pnr-box"><div class="p-label">PNR / Booking Ref</div><div class="p-value">${data.pnr || 'Not Found'}</div></div></div>`;
+              // --- TICKET NUMBER & PNR NOTE UI ---
+              let pnrNoteHtml = '';
+              if (data.pnrNote) {
+                pnrNoteHtml = `<div style="margin-top: 10px; font-size: 11px; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; max-width: 240px; text-align: right; line-height: 1.3; font-weight: 600;">${data.pnrNote}</div>`;
+              }
+
+              journeyWrapper.innerHTML += `
+                <div class="passenger-card">
+                  <div style="flex: 1;">
+                    <div class="p-label">Passenger Name</div>
+                    <div class="p-value" style="margin-bottom: 12px;">${data.passengerName || 'Not Found'}</div>
+                    
+                    <div class="p-label">Ticket Number</div>
+                    <div class="p-value" style="font-size: 16px; font-family: monospace; color: var(--secondary);">${data.ticketNumber || 'Not Provided'}</div>
+                  </div>
+                  <div class="pnr-box" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
+                    <div class="p-label">PNR / Booking Ref</div>
+                    <div class="p-value">${data.pnr || 'Not Found'}</div>
+                    ${pnrNoteHtml}
+                  </div>
+                </div>
+              `;
             }
             // ------------------------------------------------
             

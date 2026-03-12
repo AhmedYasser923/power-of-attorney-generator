@@ -15,12 +15,12 @@ exports.analyzeTicket = async (req, res) => {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
 
     const prompt = `
       You are an expert aviation data extractor and legal evaluator. Analyze the attached travel document(s). 
       
-      *CRITICAL ROUND-TRIP LAW*: Under EC261 law, a round-trip ticket (e.g., Outbound: EU to Asia, Return: Asia to EU) is legally treated as TWO separate journeys, even if booked under the exact same PNR. 
+      *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket (e.g., Outbound: EU to Asia, Return: Asia to EU) is legally treated as TWO separate journeys, even if booked under the exact same PNR. 
       - If the document is a ONE-WAY trip, create a SINGLE journey object.
       - If the document is a ROUND-TRIP, you MUST split it into TWO separate journey objects in the array: one object for the Outbound route, and a completely separate object for the Return route. 
       - If multiple documents share the same PNR and are part of the SAME directional trip, combine them. Combine multiple passenger names.
@@ -31,7 +31,10 @@ exports.analyzeTicket = async (req, res) => {
 
       STEP 1: EXTRACT BASIC INFO
       - Passenger Name: (Combine names if multiple passengers share this exact journey/PNR).
-      - PNR / Booking Code: MUST be 5 to 9 alphanumeric characters. IGNORE 13-digit e-ticket numbers, Sequence Numbers, or Frequent Flyer Numbers. If missing, output "Not Provided".
+      - PNR / Booking Code: MUST be 5 to 9 alphanumeric characters. IGNORE 13-digit e-ticket numbers here. If missing, output "Not Provided".
+      - Ticket Number: Extract the 13 or 14-digit e-ticket number if present. If multiple, separate by commas. If missing, output "Not Provided".
+      - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
+        [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
 
       STEP 2: EVALUATE OVERALL EC261 & UK261 ELIGIBILITY
       Treat this SPECIFIC directional journey (first origin of this route to final destination of this route) as a single unit.
@@ -40,15 +43,13 @@ exports.analyzeTicket = async (req, res) => {
       *Definitions:*
       - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
       - UK: England, Scotland, Wales, Northern Ireland.
-      - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, etc.
-      - EU Carrier (Operating): Lufthansa, Air France, KLM, Iberia, Wizz Air, Aer Lingus, etc.
-      - UK Carrier (Operating): British Airways, Virgin Atlantic, easyJet UK, etc.
+      - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
+      - EU/UK Carrier (Operating): Lufthansa, Air France, KLM, Iberia, Wizz Air, Aer Lingus, British Airways, Virgin Atlantic, easyJet UK, etc.
       
       *Overall Evaluation Rules (Evaluate in order based on OPERATING airline of the legs):*
       1. Starts in EU or UK -> OVERALL JOURNEY IS ALWAYS ELIGIBLE. (Airline and final destination do not matter).
       2. Starts NON-EU/UK -> Ends NON-EU/UK -> OVERALL JOURNEY IS ALWAYS NOT ELIGIBLE. 
-      3. Starts NON-EU/UK -> Ends in EU -> Eligible ONLY IF OPERATING airline is an EU Carrier. (If non-EU carrier, it is Not Eligible).
-      4. Starts NON-EU/UK -> Ends in UK -> Eligible ONLY IF OPERATING airline is a UK or EU Carrier.
+      3. Starts NON-EU/UK -> Ends in EU or UK -> Eligible ONLY IF OPERATING airline is an EU Carrier or a UK Carrier. (If non-EU/non-UK carrier, it is Not Eligible).
 
       STEP 3: EXTRACT ROUTES & LEGS
       Assign this route's type (e.g., "Outbound" or "Return").
@@ -58,7 +59,7 @@ exports.analyzeTicket = async (req, res) => {
       - operatingAirlineCountry: The home country of the OPERATING airline.
       - flightNumber: Include both if codeshare (e.g., "BA123 / AA456").
       
-      *CRITICAL REBOOKING LOGIC*: DO NOT discard obsolete/cancelled flights. If the documents show a disrupted timeline (e.g., an original AUH->BLR flight on Jan 31, but also a rebooked AUH->MCT flight on Feb 1), INCLUDE ALL LEGS. However, you MUST set the "flightStatus" field to "Cancelled/Rebooked" for the obsolete/replaced flights, and "Scheduled" for the final flown flights.
+      *CRITICAL REBOOKING LOGIC*: DO NOT discard obsolete/cancelled flights. If the documents show a disrupted timeline (e.g., an original flight on Jan 31, but also a rebooked flight on Feb 1), INCLUDE ALL LEGS. However, you MUST set the "flightStatus" field to "Cancelled/Rebooked" for the obsolete flights, and "Scheduled" for the final flown flights.
       
       *CRITICAL LEG-BY-LEG EVALUATION RULES:*
       - IF this overall directional journey is "Eligible": EVERY SINGLE LEG in it is automatically "Eligible".
@@ -71,6 +72,8 @@ exports.analyzeTicket = async (req, res) => {
         {
           "passengerName": "",
           "pnr": "",
+          "ticketNumber": "",
+          "pnrNote": "",
           "ec261": {
             "firstOriginCountry": "Actual starting country of this specific route (Label: EU, UK, or NON-EU)",
             "finalDestinationCountry": "Actual final destination country of this specific route (Label: EU, UK, or NON-EU)",
