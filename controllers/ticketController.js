@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const sharp = require('sharp'); 
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -16,9 +17,12 @@ exports.analyzeTicket = async (req, res) => {
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
+    const currentYear = new Date().getFullYear();
 
     const prompt = `
       You are an expert aviation data extractor and legal evaluator. Analyze the attached travel document(s). 
+      
+      *CRITICAL DATE INFERENCE RULE*: The current year is ${currentYear}. Many boarding passes only display the day and month (e.g., "15 Jan"). If the year is missing from the document, you MUST assume the year is ${currentYear} and append it to the date string. If the timeline suggests a flight from late last year, you may use ${currentYear - 1}.
       
       *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket (e.g., Outbound: EU to Asia, Return: Asia to EU) is legally treated as TWO separate journeys, even if booked under the exact same PNR. 
       - If the document is a ONE-WAY trip, create a SINGLE journey object.
@@ -59,11 +63,22 @@ exports.analyzeTicket = async (req, res) => {
       - operatingAirlineCountry: The home country of the OPERATING airline.
       - flightNumber: Include both if codeshare (e.g., "BA123 / AA456").
       
-      *CRITICAL REBOOKING LOGIC*: DO NOT discard obsolete/cancelled flights. If the documents show a disrupted timeline (e.g., an original flight on Jan 31, but also a rebooked flight on Feb 1), INCLUDE ALL LEGS. However, you MUST set the "flightStatus" field to "Cancelled/Rebooked" for the obsolete flights, and "Scheduled" for the final flown flights.
+      *CRITICAL TIMELINE & REBOOKING LOGIC*: Do NOT blindly assume an earlier flight date is the "cancelled" one (passengers are sometimes rebooked to earlier flights). If you detect overlapping or conflicting flights for the exact same route across different documents, INCLUDE ALL LEGS. 
+      - Set the "flightStatus" to "Scheduled" for standard flights.
+      - If a flight document explicitly states it was cancelled, set it to "Cancelled".
+      - If there are conflicting dates/times for the same route and it is unclear which was actually flown, set the "flightStatus" to "Schedule Change / Review".
       
       *CRITICAL LEG-BY-LEG EVALUATION RULES:*
       - IF this overall directional journey is "Eligible": EVERY SINGLE LEG in it is automatically "Eligible".
       - IF this overall directional journey is "Not Eligible": EVERY SINGLE LEG is automatically "Not Eligible", UNLESS a specific connecting leg DEPARTS from an EU/UK airport.
+      
+      *LEG DISTANCE & CLAIM VALUE CALCULATION*:
+      For EACH leg, estimate the Great Circle Distance between its origin and destination airports and output it in "distanceKm" (e.g., "3450 km").
+      ONLY IF the leg is Eligible, calculate the claim value based on that distance:
+      - Distance up to 1,500 km: Output "€250"
+      - Distance between 1,500 km and 3,500 km: Output "€400"
+      - Distance over 3,500 km: Output "€600"
+      If the leg is Not Eligible, output "N/A" for estimatedClaimValue.
 
       STEP 4: OUTPUT FORMAT
       Return EXACTLY this JSON structure (an ARRAY of objects) and absolutely nothing else. Do not use markdown like \`\`\`json.
@@ -100,12 +115,14 @@ exports.analyzeTicket = async (req, res) => {
                   "destinationCity": "",
                   "destinationCountry": "",
                   "arrivalTime": "",
-                  "date": "",
+                  "date": "Format as YYYY-MM-DD",
+                  "distanceKm": "e.g., 3450 km",
                   "ec261Leg": {
                     "legOriginCountry": "Leg starting country (Label: EU, UK, or NON-EU)",
                     "legDestinationCountry": "Leg destination country (Label: EU, UK, or NON-EU)",
                     "status": "Eligible or Not Eligible",
-                    "reason": "Explain based on rules."
+                    "reason": "Explain based on rules.",
+                    "estimatedClaimValue": "€250, €400, €600, or N/A"
                   }
                 }
               ]
@@ -115,17 +132,47 @@ exports.analyzeTicket = async (req, res) => {
       ]
     `;
 
-    const documentParts = files.map(file => ({
-      inlineData: {
-        data: file.buffer.toString("base64"),
-        mimeType: file.mimetype
-      }
-    }));
+    const documentParts = [];
+    for (const file of files) {
+      let processedBuffer = file.buffer;
+      let mimeType = file.mimetype;
 
-    const result = await model.generateContent([prompt, ...documentParts]);
-    const responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
+      if (file.mimetype.startsWith('image/')) {
+        processedBuffer = await sharp(file.buffer)
+          .resize({ width: 1600, withoutEnlargement: true }) 
+          .jpeg({ quality: 75 }) 
+          .toBuffer();
+        mimeType = 'image/jpeg';
+      }
+
+      documentParts.push({
+        inlineData: { data: processedBuffer.toString("base64"), mimeType: mimeType }
+      });
+    }
+
+    // --- START TIMER ---
+    const startTime = Date.now();
+
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }, ...documentParts] }],
+      generationConfig: {
+        responseMimeType: "application/json" 
+      }
+    });
     
-    res.json(JSON.parse(responseText));
+    // --- END TIMER ---
+    const endTime = Date.now();
+    const processingTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
+    
+    const responseText = result.response.text();
+    const parsedJourneys = JSON.parse(responseText);
+
+    // Send both the journey data AND the timer data to the frontend
+    res.json({
+      processingTime: processingTimeInSeconds,
+      journeys: parsedJourneys
+    });
+
   } catch (error) {
     console.error("Ticket Analyzer Error:", error);
     res.status(500).json({ error: "Failed to analyze ticket(s). API rejected request." });

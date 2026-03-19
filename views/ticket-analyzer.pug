@@ -34,10 +34,13 @@ block content
     .dz-text { font-size: 13px; color: var(--text-muted); margin: 0; }
 
     /* --- BUTTONS --- */
-    .btn-analyze { background: var(--primary); color: white; border: none; border-radius: var(--radius-md); padding: 14px 24px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+    .btn-analyze { background: var(--primary); color: white; border: none; border-radius: var(--radius-md); padding: 14px 24px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; justify-content: center; align-items: center; gap: 8px; }
     .btn-analyze:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
     .btn-analyze:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
+    
+    .stopwatch-icon { animation: spin 2s linear infinite; display: inline-block; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
     /* --- RESULTS CONTAINERS --- */
     .results-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg); margin-top: 32px; animation: fadeIn 0.5s ease; }
@@ -85,6 +88,7 @@ block content
     .fc-ec-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; }
     .fc-ec-badge.eligible { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
     .fc-ec-badge.not-eligible { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .leg-claim-value { background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2); }
 
   .container(style="max-width: 850px; margin-top: 50px;")
     .header-title 🎫 Ticket Analyzer AI
@@ -168,13 +172,25 @@ block content
         }
       });
 
-      // --- AI EXTRACTION LOGIC ---
+      // --- AI EXTRACTION LOGIC WITH LIVE STOPWATCH ---
       analyzeBtn.addEventListener('click', async () => {
         if (currentFiles.length === 0) return;
         
-        const originalText = analyzeBtn.innerText;
-        analyzeBtn.innerText = '⏳ AI is analyzing...';
+        const originalText = analyzeBtn.innerHTML;
         analyzeBtn.disabled = true;
+
+        // Start the UI Stopwatch
+        const startTime = Date.now();
+        analyzeBtn.innerHTML = `<span class="stopwatch-icon">⏳</span> Analyzing... <span id="liveTimer" style="font-family: monospace; font-size: 18px; margin-left: 5px;">0.0s</span>`;
+        const liveTimerEl = document.getElementById('liveTimer');
+        
+        // Update the counter every 100 milliseconds
+        const timerInterval = setInterval(() => {
+          if (liveTimerEl) {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            liveTimerEl.innerText = `${elapsed}s`;
+          }
+        }, 100);
 
         const formData = new FormData();
         currentFiles.forEach(file => formData.append('ticket', file));
@@ -182,11 +198,18 @@ block content
         try {
           const response = await fetch('/api/analyze-ticket', { method: 'POST', body: formData });
           if (!response.ok) throw new Error('Analysis failed');
-          let dataArray = await response.json();
+          
+          let rawResponse = await response.json();
+          let dataArray = rawResponse.journeys || rawResponse; 
           
           if (!Array.isArray(dataArray)) dataArray = [dataArray];
 
           resultsCard.innerHTML = '';
+
+          // --- FINAL SERVER TIMER BADGE INJECTION ---
+          if (rawResponse.processingTime) {
+            resultsCard.innerHTML += `<div style="display: flex; justify-content: flex-end; margin-bottom: 15px;"><span style="background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">⏱️ Server Processed in ${rawResponse.processingTime}s</span></div>`;
+          }
 
           dataArray.forEach((data, journeyIndex) => {
             const journeyWrapper = document.createElement('div');
@@ -204,7 +227,15 @@ block content
               const isEligible = data.ec261.status && data.ec261.status.toLowerCase().includes('not') === false;
               const cardClass = isEligible ? 'eligible' : 'not-eligible';
               const icon = isEligible ? '🛡️' : '⚠️';
-              journeyWrapper.innerHTML += `<div class="ec261-card ${cardClass}"><div class="ec-icon">${icon}</div><div class="ec-content"><h4 class="ec-title">OVERALL CLAIM: ${data.ec261.status.toUpperCase()}</h4><p class="ec-reason">${data.ec261.reason}</p></div></div>`;
+
+              journeyWrapper.innerHTML += `
+                <div class="ec261-card ${cardClass}">
+                  <div class="ec-icon">${icon}</div>
+                  <div class="ec-content">
+                    <h4 class="ec-title">OVERALL CLAIM: ${data.ec261.status.toUpperCase()}</h4>
+                    <p class="ec-reason">${data.ec261.reason}</p>
+                  </div>
+                </div>`;
             }
             
             // --- SMART PASSENGER/PNR DE-DUPLICATION ---
@@ -257,6 +288,11 @@ block content
                     if (flight.ec261Leg && flight.ec261Leg.status) {
                       const lEl = !flight.ec261Leg.status.toLowerCase().includes('not');
                       legBadgeHtml = `<div class="fc-ec-badge ${lEl ? 'eligible' : 'not-eligible'}" title="${flight.ec261Leg.reason}">${lEl ? '✅' : '❌'} ${flight.ec261Leg.status}</div>`;
+                      
+                      // --- LEG-SPECIFIC CLAIM VALUE BADGE ---
+                      if (lEl && flight.ec261Leg.estimatedClaimValue && flight.ec261Leg.estimatedClaimValue !== 'N/A') {
+                         legBadgeHtml += `<div class="leg-claim-value">💸 ${flight.ec261Leg.estimatedClaimValue}</div>`;
+                      }
                     }
 
                     // Format Airline Text
@@ -268,9 +304,21 @@ block content
                     // --- CANCELLATION/REBOOKING UI LOGIC ---
                     let statusWarningHtml = '';
                     let opacityStyle = '1';
-                    if (flight.flightStatus && flight.flightStatus.toLowerCase().includes('cancel')) {
-                      statusWarningHtml = `<div style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fecaca;">⚠️ FLIGHT CANCELLED / REBOOKED</div>`;
-                      opacityStyle = '0.55'; // Visually dim the card
+                    
+                    if (flight.flightStatus) {
+                      const statusLower = flight.flightStatus.toLowerCase();
+                      if (statusLower.includes('cancel')) {
+                        statusWarningHtml = `<div style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fecaca;">⚠️ FLIGHT CANCELLED</div>`;
+                        opacityStyle = '0.55'; // Visually dim the card
+                      } else if (statusLower.includes('review') || statusLower.includes('change') || statusLower.includes('rebook')) {
+                        statusWarningHtml = `<div style="background: #ffedd5; color: #c2410c; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fed7aa;">🔄 SCHEDULE CHANGE / REVIEW TIMELINE</div>`;
+                      }
+                    }
+
+                    // --- DISTANCE KM BUBBLE ---
+                    let distanceHtml = '';
+                    if (flight.distanceKm) {
+                      distanceHtml = `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>`;
                     }
 
                     flightCardsContainer.innerHTML += `
@@ -279,7 +327,11 @@ block content
                         <div class="fc-top"><div class="fc-airline">${airText}</div><div class="fc-badge">${legIndicator}</div></div>
                         <div class="fc-path-container">
                           <div class="fc-node left"><div class="fc-iata">${flight.originIata || '???'}</div><div class="fc-airport">${flight.originName || ''}</div><div class="fc-city">${flight.originCity || ''}, ${flight.originCountry || ''}</div><div class="fc-time">${flight.departureTime || '--:--'}</div></div>
-                          <div class="fc-line-wrapper"><div class="fc-line"></div><div class="fc-plane">✈</div></div>
+                          <div class="fc-line-wrapper">
+                            ${distanceHtml}
+                            <div class="fc-line"></div>
+                            <div class="fc-plane">✈</div>
+                          </div>
                           <div class="fc-node right"><div class="fc-iata">${flight.destinationIata || '???'}</div><div class="fc-airport">${flight.destinationName || ''}</div><div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div><div class="fc-time">${flight.arrivalTime || '--:--'}</div></div>
                         </div>
                         <div class="fc-bottom">
@@ -287,7 +339,9 @@ block content
                             <div>📅 ${flight.date || 'Unknown'}</div>
                             <div class="fc-flight-num">Flight: ${flight.flightNumber || 'N/A'}</div>
                           </div>
-                          ${legBadgeHtml}
+                          <div style="display: flex; gap: 10px; align-items: center;">
+                            ${legBadgeHtml}
+                          </div>
                         </div>
                       </div>`;
                   });
@@ -308,7 +362,9 @@ block content
           alert('Failed to extract data. Ensure the images are clear.');
           console.error(error);
         } finally {
-          analyzeBtn.innerText = originalText;
+          // --- STOP AND RESET THE UI TIMER ---
+          clearInterval(timerInterval);
+          analyzeBtn.innerHTML = originalText;
           analyzeBtn.disabled = false;
         }
       });
