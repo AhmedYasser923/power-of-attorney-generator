@@ -1,4 +1,4 @@
-# Use Node.js version 20 as the base
+# Use Playwright image as the base
 FROM mcr.microsoft.com/playwright:v1.58.2-jammy
 
 # Set the directory inside the container
