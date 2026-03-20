@@ -22,7 +22,6 @@ router.post('/generate-standard', upload.any(), reflyController.generateStandard
 router.post('/generate-lufthansa', upload.any(), lufthansaController.generateLufthansaPDF);
 router.post('/generate-aerlingus', upload.any(), aerlingusController.generateAerLingusPDF);
 
-
 router.post('/api/autofill', aiController.extractData);
 router.post('/api/analyze-ticket', upload.any(), ticketController.analyzeTicket);
 
