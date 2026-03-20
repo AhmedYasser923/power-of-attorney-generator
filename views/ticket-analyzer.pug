@@ -25,7 +25,6 @@ block content
     .header-title { font-size: 32px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
     .header-subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.5; }
 
-    /* --- DROP ZONE --- */
     .drop-zone { border: 2px dashed #cbd5e1; background-color: var(--surface); border-radius: var(--radius-lg); padding: 60px 20px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); outline: none; }
     .drop-zone:hover, .drop-zone:focus, .drop-zone.dragover { border-color: var(--primary); background-color: var(--accent-blue); transform: translateY(-2px); box-shadow: var(--shadow-md); }
     .dz-icon { font-size: 48px; margin-bottom: 16px; transition: transform 0.3s; display: inline-block; }
@@ -33,7 +32,6 @@ block content
     .dz-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0; }
     .dz-text { font-size: 13px; color: var(--text-muted); margin: 0; }
 
-    /* --- BUTTONS --- */
     .btn-analyze { background: var(--primary); color: white; border: none; border-radius: var(--radius-md); padding: 14px 24px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; justify-content: center; align-items: center; gap: 8px; }
     .btn-analyze:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
     .btn-analyze:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; animation: pulse 2s infinite; }
@@ -42,11 +40,9 @@ block content
     .stopwatch-icon { animation: spin 2s linear infinite; display: inline-block; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* --- RESULTS CONTAINERS --- */
     .results-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg); margin-top: 32px; animation: fadeIn 0.5s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Flight Card & Data Styling */
     .ec261-card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 20px; }
     .ec261-card.eligible { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
     .ec261-card.eligible .ec-icon { color: #16a34a; }
@@ -73,7 +69,7 @@ block content
     .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .fc-badge { background: #f1f5f9; color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
     .fc-airline { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-main); font-size: 14px; }
-    .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
+    .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; padding-bottom: 30px; }
     .fc-node { flex: 1; z-index: 2; }
     .fc-node.right { text-align: right; }
     .fc-iata { font-size: 32px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
@@ -83,7 +79,7 @@ block content
     .fc-line-wrapper { flex: 1.5; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-top: 15px; }
     .fc-line { width: 100%; border-top: 2px dashed #cbd5e1; position: absolute; }
     .fc-plane { background: var(--surface); color: var(--text-muted); padding: 0 12px; z-index: 2; font-size: 20px; transform: rotate(90deg); }
-    .fc-bottom { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+    .fc-bottom { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
     .fc-flight-num { background: var(--accent-blue); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
     .fc-ec-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; }
     .fc-ec-badge.eligible { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
@@ -172,7 +168,7 @@ block content
         }
       });
 
-      // --- AI EXTRACTION LOGIC WITH LIVE STOPWATCH ---
+      // --- AI EXTRACTION LOGIC ---
       analyzeBtn.addEventListener('click', async () => {
         if (currentFiles.length === 0) return;
         
@@ -206,7 +202,7 @@ block content
 
           resultsCard.innerHTML = '';
 
-          // --- FINAL SERVER TIMER BADGE INJECTION ---
+          // FINAL SERVER TIMER BADGE INJECTION
           if (rawResponse.processingTime) {
             resultsCard.innerHTML += `<div style="display: flex; justify-content: flex-end; margin-bottom: 15px;"><span style="background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">⏱️ Server Processed in ${rawResponse.processingTime}s</span></div>`;
           }
@@ -238,7 +234,7 @@ block content
                 </div>`;
             }
             
-            // --- SMART PASSENGER/PNR DE-DUPLICATION ---
+            // SMART PASSENGER/PNR DE-DUPLICATION
             let showPassengerCard = true;
             if (journeyIndex > 0) {
               const prevData = dataArray[journeyIndex - 1];
@@ -248,7 +244,7 @@ block content
             }
 
             if (showPassengerCard) {
-              // --- TICKET NUMBER & PNR NOTE UI ---
+              // TICKET NUMBER & PNR NOTE UI
               let pnrNoteHtml = '';
               if (data.pnrNote) {
                 pnrNoteHtml = `<div style="margin-top: 10px; font-size: 11px; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; max-width: 240px; text-align: right; line-height: 1.3; font-weight: 600;">${data.pnrNote}</div>`;
@@ -271,7 +267,6 @@ block content
                 </div>
               `;
             }
-            // ------------------------------------------------
             
             const flightCardsContainer = document.createElement('div');
             
@@ -289,19 +284,24 @@ block content
                       const lEl = !flight.ec261Leg.status.toLowerCase().includes('not');
                       legBadgeHtml = `<div class="fc-ec-badge ${lEl ? 'eligible' : 'not-eligible'}" title="${flight.ec261Leg.reason}">${lEl ? '✅' : '❌'} ${flight.ec261Leg.status}</div>`;
                       
-                      // --- LEG-SPECIFIC CLAIM VALUE BADGE ---
+                      // LEG-SPECIFIC CLAIM VALUE BADGE
                       if (lEl && flight.ec261Leg.estimatedClaimValue && flight.ec261Leg.estimatedClaimValue !== 'N/A') {
                          legBadgeHtml += `<div class="leg-claim-value">💸 ${flight.ec261Leg.estimatedClaimValue}</div>`;
                       }
                     }
 
-                    // Format Airline Text
-                    let airText = `✈️ Booked: ${flight.marketingAirline || 'Unknown'}`;
-                    if (flight.operatingAirline && flight.operatingAirline !== flight.marketingAirline) {
-                      airText += ` <span style="color:var(--primary); margin-left:8px;">| Operated: ${flight.operatingAirline}</span>`;
+                    // OPERATED BY LOGIC
+                    let marketing = flight.marketingAirline || 'Unknown';
+                    let operating = flight.operatingAirline || marketing;
+                    let airText = '';
+
+                    if (marketing === operating) {
+                      airText = `✈️ Operated by: ${operating}`;
+                    } else {
+                      airText = `✈️ Booked: ${marketing} <span style="color:var(--primary); margin-left:8px;">| Operated by: ${operating}</span>`;
                     }
                     
-                    // --- CANCELLATION/REBOOKING UI LOGIC ---
+                    // CANCELLATION/REBOOKING UI LOGIC
                     let statusWarningHtml = '';
                     let opacityStyle = '1';
                     
@@ -315,10 +315,22 @@ block content
                       }
                     }
 
-                    // --- DISTANCE KM BUBBLE ---
+                    // DISTANCE KM BUBBLE
                     let distanceHtml = '';
                     if (flight.distanceKm) {
                       distanceHtml = `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>`;
+                    }
+
+                    // REQUIRED DOCUMENTS UI BUBBLE
+                    let docsHtml = '';
+                    if (flight.claimDocuments) {
+                      let isDefault = flight.claimDocuments === 'No documents required';
+                      let docIcon = isDefault ? '📄' : '📑 Required:';
+                      let docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
+                      let docBg = isDefault ? 'transparent' : '#f0f9ff';
+                      let docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
+                      
+                      docsHtml = `<div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 250px; font-size: 10px; font-weight: 700; color: ${docColor}; background: ${docBg}; border: ${docBorder}; padding: 4px 10px; border-radius: 8px; text-align: center; line-height: 1.3; z-index: 4; box-shadow: ${isDefault ? 'none' : '0 2px 4px rgba(0,0,0,0.05)'};">${docIcon} ${flight.claimDocuments}</div>`;
                     }
 
                     flightCardsContainer.innerHTML += `
@@ -331,6 +343,7 @@ block content
                             ${distanceHtml}
                             <div class="fc-line"></div>
                             <div class="fc-plane">✈</div>
+                            ${docsHtml}
                           </div>
                           <div class="fc-node right"><div class="fc-iata">${flight.destinationIata || '???'}</div><div class="fc-airport">${flight.destinationName || ''}</div><div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div><div class="fc-time">${flight.arrivalTime || '--:--'}</div></div>
                         </div>
@@ -362,7 +375,7 @@ block content
           alert('Failed to extract data. Ensure the images are clear.');
           console.error(error);
         } finally {
-          // --- STOP AND RESET THE UI TIMER ---
+          // STOP AND RESET THE UI TIMER
           clearInterval(timerInterval);
           analyzeBtn.innerHTML = originalText;
           analyzeBtn.disabled = false;

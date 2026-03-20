@@ -4,6 +4,67 @@ const sharp = require('sharp');
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// --- THE AIRLINE DOCUMENT DATABASE ---
+const airlineRequirements = [
+  { names: ["aeroitalia"], reqs: "ID" },
+  { names: ["aerolineas argentinas", "ar"], reqs: "Ticket number, ID number" },
+  { names: ["air algerie"], reqs: "ID (Front and Back) or Copy of Passport" },
+  { names: ["air arabia"], reqs: "Ticket number, Boarding pass, ID (If delayed: need rescheduled time)" },
+  { names: ["air cairo", "msc"], reqs: "Boarding pass, ID" },
+  { names: ["air canada", "ac"], reqs: "Ticket number" },
+  { names: ["air corsica", "corse-mediterranee", "xk"], reqs: "Boarding pass, ID" },
+  { names: ["air dolomiti", "en"], reqs: "Ticket number" },
+  { names: ["air europa", "ux"], reqs: "POA, ID, Boarding pass" },
+  { names: ["asl airlines france"], reqs: "Boarding pass, ID" }, 
+  { names: ["air france", "af"], reqs: "ID" },
+  { names: ["air india", "ai"], reqs: "Ticket number, Passport (Both strictly mandatory)" },
+  { names: ["air mauritius", "mk"], reqs: "Ticket number, DOB" },
+  { names: ["air serbia", "ju"], reqs: "Ticket number, Boarding pass (Boarding pass only if delayed)" },
+  { names: ["air tahiti nui"], reqs: "DOB" },
+  { names: ["bintercanarias", "binter canarias"], reqs: "Passport" },
+  { names: ["canaryfly"], reqs: "ID / Passport number" },
+  { names: ["corendon dutch"], reqs: "Ticket, Boarding pass, Reservation confirmation" }, 
+  { names: ["corendon", "xc"], reqs: "DOB" },
+  { names: ["corsair", "ss"], reqs: "Ticket number, DOB" },
+  { names: ["danish air transport", "dx"], reqs: "Boarding pass, ID" },
+  { names: ["dan air", "dan-air"], reqs: "Boarding pass, ID" },
+  { names: ["delta", "dl"], reqs: "Ticket number, ID" },
+  { names: ["egyptair", "ms"], reqs: "Ticket number, ID" },
+  { names: ["el al", "ly"], reqs: "ID" },
+  { names: ["emirates", "ek"], reqs: "Ticket number, Passport" },
+  { names: ["enter air"], reqs: "Birth certificate required for minors" },
+  { names: ["ethiopian", "et"], reqs: "Ticket number, ID" },
+  { names: ["etihad", "ey"], reqs: "Ticket number" },
+  { names: ["iberia", "ib"], reqs: "Ticket number, Passport / National ID / Spanish Residence card" },
+  { names: ["iberojet"], reqs: "Submit via portal: iberojet.com/es/solicitudes/reclamaciones" },
+  { names: ["indigo"], reqs: "DOB" },
+  { names: ["ita airways", "ita"], reqs: "Ticket number" },
+  { names: ["alitalia"], reqs: "Ticket number" },
+  { names: ["kenya airways", "kq"], reqs: "Ticket number" },
+  { names: ["klm", "kl"], reqs: "ID" },
+  { names: ["lan airlines", "latam", "la"], reqs: "ID / Passport" },
+  { names: ["lufthansa", "lh"], reqs: "Lufthansa POA (Ticket & Boarding pass needed later)" },
+  { names: ["neos air", "neos"], reqs: "Birth details/place, Passport no. (Codice Fiscale for Italian citizens)" },
+  { names: ["oman air", "wy"], reqs: "Ticket number" },
+  { names: ["plus ultra"], reqs: "Boarding pass, ID" },
+  { names: ["polish airlines", "lot", "lo"], reqs: "Handwritten signature on POA" },
+  { names: ["royal air maroc", "at"], reqs: "Ticket number" },
+  { names: ["saudi", "saudia", "sv"], reqs: "Ticket number, Passport / ID" },
+  { names: ["skyup", "u5"], reqs: "Boarding pass, Passport" },
+  { names: ["sunexpress", "xq"], reqs: "ID" },
+  { names: ["swiss", "lx"], reqs: "Ticket, Confirmation email copy" },
+  { names: ["tarom", "ro"], reqs: "Ticket number (No PDFs accepted)" },
+  { names: ["tui", "tom", "by"], reqs: "DOB, Mobile number" },
+  { names: ["tunis air", "tunisair", "tu"], reqs: "Ticket number" },
+  { names: ["turkish", "tk"], reqs: "ID" },
+  { names: ["virgin atlantic", "vs"], reqs: "DOB" },
+  { names: ["vistara"], reqs: "Merged with Air India. Send claim to Air India." },
+  { names: ["volotea"], reqs: "Boarding pass, ID" },
+  { names: ["vueling", "vy"], reqs: "ID" },
+  { names: ["wizz", "wizzair"], reqs: "Wizz Air Denied Boarding Compensation Form" },
+  { names: ["world2fly"], reqs: "ID / Passport number mandatory" }
+];
+
 exports.renderAnalyzer = (req, res) => {
   res.render('ticket-analyzer', { title: 'Ticket Analyzer' });
 };
@@ -150,7 +211,6 @@ exports.analyzeTicket = async (req, res) => {
       });
     }
 
-    // --- START TIMER ---
     const startTime = Date.now();
 
     const result = await model.generateContent({
@@ -160,14 +220,39 @@ exports.analyzeTicket = async (req, res) => {
       }
     });
     
-    // --- END TIMER ---
     const endTime = Date.now();
     const processingTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
     
     const responseText = result.response.text();
     const parsedJourneys = JSON.parse(responseText);
 
-    // Send both the journey data AND the timer data to the frontend
+    // --- SERVER-SIDE DB MATCHING LOGIC (FIXED) ---
+    parsedJourneys.forEach(journey => {
+        if (journey.routes) {
+            journey.routes.forEach(route => {
+                if (route.legs) {
+                    route.legs.forEach(leg => {
+                        let opAirline = leg.operatingAirline || leg.marketingAirline || "";
+                        let reqsFound = "No documents required";
+                        
+                        if (opAirline) {
+                            const normalized = opAirline.toLowerCase();
+                            for (const item of airlineRequirements) {
+                                // FIXED: Using Regex \b (Word Boundaries) to ensure exact word matches.
+                                // This prevents "ai" from matching the letters inside "wizz air"
+                                if (item.names.some(keyword => new RegExp(`\\b${keyword}\\b`, 'i').test(normalized))) {
+                                    reqsFound = item.reqs;
+                                    break; 
+                                }
+                            }
+                        }
+                        leg.claimDocuments = reqsFound;
+                    });
+                }
+            });
+        }
+    });
+
     res.json({
       processingTime: processingTimeInSeconds,
       journeys: parsedJourneys
