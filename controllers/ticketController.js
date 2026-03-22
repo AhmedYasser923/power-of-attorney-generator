@@ -1,6 +1,10 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const sharp = require('sharp'); 
 
+// --- LOAD EOC DATABASE DIRECTLY FROM JSON ---
+const eocDatabase = require('../eoc_data.json');
+console.log(`[EOC Database] Successfully loaded ${eocDatabase.length} records from JSON.`);
+
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -79,6 +83,7 @@ exports.analyzeTicket = async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
     const currentYear = new Date().getFullYear();
+    const currentDateFull = new Date().toISOString().split('T')[0];
 
     const prompt = `
       You are an expert aviation data extractor and legal evaluator. Analyze the attached travel document(s). 
@@ -133,13 +138,30 @@ exports.analyzeTicket = async (req, res) => {
       - IF this overall directional journey is "Eligible": EVERY SINGLE LEG in it is automatically "Eligible".
       - IF this overall directional journey is "Not Eligible": EVERY SINGLE LEG is automatically "Not Eligible", UNLESS a specific connecting leg DEPARTS from an EU/UK airport.
       
+      *STATUTE OF LIMITATIONS (EXPIRATION) RULE*:
+      Today's date is ${currentDateFull}. You MUST legally calculate if the claim is expired.
+      Limitations by Country (ONLY Valid EU/EEA/UK Jurisdictions Apply):
+      - 1 year: Poland
+      - 2 years: Italy, Netherlands, Switzerland, Slovakia, Malta, Iceland
+      - 3 years: Romania, Austria, Germany (Expires Dec 31st of the 3rd year), Portugal, Denmark, Finland, Norway, Czech Republic, Slovenia, Estonia
+      - 5 years: France, Spain, Belgium, Bulgaria, Greece, Hungary, Croatia
+      - 6 years: United Kingdom, Ireland, Cyprus
+      - 10 years: Latvia, Lithuania, Luxembourg, Sweden
+      
+      Expiration Logic:
+      1. Identify the limitation years for: (A) Origin Country, (B) Destination Country, (C) Operating Airline's Country. 
+      2. *CRITICAL JURISDICTION CHECK*: You MUST discard any country that is NOT in the EU, UK, or EEA (Iceland, Norway, Switzerland). For example, if the destination is Canada, USA, or the airline is Emirates (UAE) or Turkish Airlines (Turkey), you CANNOT use their laws to file an EC261 claim. Their limitation period must be entirely ignored.
+      3. Find the BEST (longest) limitation period among the remaining *eligible* EU/UK/EEA jurisdictions. Output the years (e.g., "3 years").
+      4. Calculate the Deadline Date. (If Germany is chosen for the best period, deadline is Dec 31 of FlightYear + 3). Otherwise, Flight Date + Longest Limitation Period.
+      5. Compare Deadline Date to ${currentDateFull}. If Deadline has passed, isExpired is true.
+
       *LEG DISTANCE & CLAIM VALUE CALCULATION*:
       For EACH leg, estimate the Great Circle Distance between its origin and destination airports and output it in "distanceKm" (e.g., "3450 km").
-      ONLY IF the leg is Eligible, calculate the claim value based on that distance:
+      ONLY IF the leg is Eligible AND isExpired is false, calculate the claim value based on that distance:
       - Distance up to 1,500 km: Output "€250"
       - Distance between 1,500 km and 3,500 km: Output "€400"
       - Distance over 3,500 km: Output "€600"
-      If the leg is Not Eligible, output "N/A" for estimatedClaimValue.
+      If the leg is Not Eligible OR is Expired, output "N/A" for estimatedClaimValue.
 
       STEP 4: OUTPUT FORMAT
       Return EXACTLY this JSON structure (an ARRAY of objects) and absolutely nothing else. Do not use markdown like \`\`\`json.
@@ -183,7 +205,16 @@ exports.analyzeTicket = async (req, res) => {
                     "legDestinationCountry": "Leg destination country (Label: EU, UK, or NON-EU)",
                     "status": "Eligible or Not Eligible",
                     "reason": "Explain based on rules.",
-                    "estimatedClaimValue": "€250, €400, €600, or N/A"
+                    "estimatedClaimValue": "€250, €400, €600, or N/A",
+                    "claimExpiration": {
+                      "originYears": "e.g. 3 years (If Non-EU, leave empty)",
+                      "destinationYears": "e.g. 5 years (If Non-EU, leave empty)",
+                      "airlineYears": "e.g. 2 years (If Non-EU, leave empty)",
+                      "bestCountry": "Country Name",
+                      "bestYears": "Number",
+                      "expirationDate": "YYYY-MM-DD",
+                      "isExpired": false
+                    }
                   }
                 }
               ]
@@ -226,7 +257,6 @@ exports.analyzeTicket = async (req, res) => {
     const responseText = result.response.text();
     const parsedJourneys = JSON.parse(responseText);
 
-    // --- SERVER-SIDE DB MATCHING LOGIC (FIXED) ---
     parsedJourneys.forEach(journey => {
         if (journey.routes) {
             journey.routes.forEach(route => {
@@ -238,8 +268,6 @@ exports.analyzeTicket = async (req, res) => {
                         if (opAirline) {
                             const normalized = opAirline.toLowerCase();
                             for (const item of airlineRequirements) {
-                                // FIXED: Using Regex \b (Word Boundaries) to ensure exact word matches.
-                                // This prevents "ai" from matching the letters inside "wizz air"
                                 if (item.names.some(keyword => new RegExp(`\\b${keyword}\\b`, 'i').test(normalized))) {
                                     reqsFound = item.reqs;
                                     break; 
@@ -261,5 +289,156 @@ exports.analyzeTicket = async (req, res) => {
   } catch (error) {
     console.error("Ticket Analyzer Error:", error);
     res.status(500).json({ error: "Failed to analyze ticket(s). API rejected request." });
+  }
+};
+
+// --- EOC JSON DATABASE CHECKER ---
+exports.checkEOC = (req, res) => {
+  try {
+    const { date, originIata, destIata, originCountry, destCountry } = req.query;
+
+    if (!date || date === 'Unknown') {
+      return res.json({ eocFound: false });
+    }
+
+    const oIata = (originIata || '').toLowerCase();
+    const dIata = (destIata || '').toLowerCase();
+    const oCountry = (originCountry || '').toLowerCase();
+    const dCountry = (destCountry || '').toLowerCase();
+    const flightDate = new Date(date);
+
+    const matchedEvents = eocDatabase.filter(eoc => {
+      const eocLoc = (eoc.location || '').toLowerCase();
+      
+      const locationMatch = (eocLoc === oIata || eocLoc === dIata || eocLoc === oCountry || eocLoc === dCountry || eocLoc === "world wide");
+
+      if (!locationMatch) return false;
+
+      const eocCat = (eoc.category || '').toLowerCase();
+      if (eocCat.includes('ongoing')) {
+        const eocDate = new Date(eoc.date);
+        return flightDate >= eocDate;
+      } else {
+        return eoc.date === date;
+      }
+    });
+
+    if (matchedEvents.length > 0) {
+      res.json({ eocFound: true, events: matchedEvents });
+    } else {
+      res.json({ eocFound: false });
+    }
+  } catch (error) {
+    console.error("EOC Check Error:", error);
+    res.status(500).json({ error: "Failed to check EOC database." });
+  }
+};
+
+// --- AI-POWERED AEROAPI FLIGHT STATUS ANALYZER ---
+exports.checkFlightStatus = async (req, res) => {
+  try {
+    const { flightNumber, date, destination } = req.query;
+    
+    if (!flightNumber || flightNumber === 'N/A') {
+      return res.status(400).json({ error: 'Valid flight number is required' });
+    }
+
+    const aeroApiKey = process.env.AEROAPI_KEY;
+    if (!aeroApiKey) {
+      console.error("[AeroAPI] Error: API Key Missing in config.env!");
+      return res.json({ status: 'AeroAPI Key Missing' });
+    }
+
+    const cleanFlightNum = flightNumber.replace(/[^a-zA-Z0-9]/g, '');
+    let url = `https://aeroapi.flightaware.com/aeroapi/flights/${cleanFlightNum}`;
+    
+    if (date && date !== 'Unknown') {
+        url += `?start=${date}T00:00:00Z&end=${date}T23:59:59Z`;
+    }
+
+    const response = await fetch(url, {
+      headers: { 'x-apikey': aeroApiKey, 'Accept': 'application/json' }
+    });
+
+    const data = await response.json();
+    
+    console.log(`\n=============================================`);
+    console.log(`[AeroAPI] Raw Response for ${cleanFlightNum} on ${date}:`);
+    console.dir(data, { depth: null, colors: true });
+    console.log(`=============================================\n`);
+    
+    if (!data.flights || data.flights.length === 0) {
+        return res.json({ error: data.title || "No flight data found." });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-pro-preview" });
+    
+    const aiPrompt = `
+      You are an expert aviation data analyst. Review the following raw JSON response from FlightAware's AeroAPI for flight ${cleanFlightNum}.
+      
+      TARGET DATE: ${date}
+      TARGET DESTINATION: ${destination || 'Unknown'}
+
+      Task: Find the correct flight record in the array and extract its data into a clean, formatted UI object.
+
+      *CRITICAL RULES FOR SELECTING THE RIGHT FLIGHT*:
+      1. Find the flight that matches the Target Date (look at 'scheduled_out').
+      2. If a flight was DIVERTED (Return to Base), FlightAware splits it into TWO records: one for the physical return (e.g. MUC to MUC), and one for the intended flight marked "diverted: true" (e.g. MUC to SFO). You MUST select the intended flight that matches the Target Destination, even if its actual arrival is null!
+      3. If a flight's status says "result unknown" but "cancelled" is true, treat it as explicitly CANCELLED.
+
+      *CRITICAL FORMATTING RULES*:
+      1. Convert ISO times (e.g., 2026-03-20T16:30:00Z) to HH:MM format based on the airport's timezone. Determine the short timezone string (e.g. "CET", "PST") and output it. If null, output "--:--".
+      2. Convert dates to DD-MMM-YYYY format (e.g. 20-Mar-2026).
+      3. Delay Calculations: If departure_delay or arrival_delay > 0, calculate the minutes (e.g. "45 mins").
+      4. Colors: 
+         - If Cancelled or Diverted: bannerBg = "#ef4444", bannerTextCol = "#ffffff"
+         - If Delayed: bannerBg = "#eab308", bannerTextCol = "#854d0e", depDelayColor/arrDelayColor = "#ef4444"
+         - If On Time: bannerBg = "#22c55e", bannerTextCol = "#ffffff", depDelayColor/arrDelayColor = "#22c55e"
+      5. Summary HTML: Write a 2-3 sentence human-readable analysis of the flight event. If it was delayed, diverted, or cancelled, explain exactly what the data shows (e.g., "This flight departed 2 hours late. It was subsequently diverted and never reached its destination."). Format this as basic HTML using <p>, <strong>, or <ul> if needed.
+
+      Return EXACTLY this JSON structure and absolutely nothing else:
+      {
+        "bannerBg": "#hexcode",
+        "bannerTextCol": "#hexcode",
+        "bannerText": "e.g., DIVERTED | Cancelled, or Delayed by 45m | Arrived, or On Time | Scheduled",
+        "depIata": "Airport Code",
+        "depCity": "City name",
+        "depDate": "DD-MMM-YYYY",
+        "depSched": "HH:MM",
+        "depSchedZone": "TZ",
+        "depActual": "HH:MM",
+        "depActualZone": "TZ",
+        "depActualLabel": "Actual or Estimated",
+        "depDelay": "0 mins",
+        "depDelayColor": "#hexcode",
+        "arrIata": "Airport Code",
+        "arrCity": "City name",
+        "arrDate": "DD-MMM-YYYY",
+        "arrSched": "HH:MM",
+        "arrSchedZone": "TZ",
+        "arrActual": "HH:MM",
+        "arrActualZone": "TZ",
+        "arrActualLabel": "Actual or Estimated",
+        "arrDelay": "0 mins",
+        "arrDelayColor": "#hexcode",
+        "summaryHTML": "<p>Your AI analysis paragraph goes here.</p>"
+      }
+
+      RAW AEROAPI JSON TO ANALYZE:
+      ${JSON.stringify(data.flights)}
+    `;
+
+    const aiResult = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: aiPrompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const parsedUIStats = JSON.parse(aiResult.response.text());
+
+    res.json({ aiStats: parsedUIStats, rawResponse: data });
+
+  } catch (error) {
+    console.error("Flight Status AI Analysis Error:", error);
+    res.status(500).json({ error: "Failed to analyze flight status" });
   }
 };

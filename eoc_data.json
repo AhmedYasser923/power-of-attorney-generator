@@ -1,0 +1,4538 @@
+[
+  {
+    "category": "Airport Issues",
+    "date": "2026-03-18",
+    "event": "Strike",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-03-13",
+    "event": "Ground Stop",
+    "location": "IAD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-03-12",
+    "event": "Strike",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-03-12",
+    "event": "Strike",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-11",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-10",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-09",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-08",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-07",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-06",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-05",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-04",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-03",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-02",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-03-01",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2026-02-28",
+    "event": "Political instability",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-28",
+    "event": "Closed post-strikes",
+    "location": "Saudi Arabia",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-24",
+    "event": "Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-24",
+    "event": "Storm",
+    "location": "EWR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-23",
+    "event": "Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-23",
+    "event": "Storm",
+    "location": "PHL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-23",
+    "event": "Storm",
+    "location": "EWR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-22",
+    "event": "Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-22",
+    "event": "Storm",
+    "location": "PHL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-22",
+    "event": "Storm",
+    "location": "EWR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-20",
+    "event": "Winter Storm",
+    "location": "VIE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-19",
+    "event": "Snow Storm",
+    "location": "Romania",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-02-18",
+    "event": "Snow Storm",
+    "location": "Romania",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-15",
+    "event": "Snow Storm",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-12",
+    "event": "Storms",
+    "location": "BCN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-06",
+    "event": "Snow Storm",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-05",
+    "event": "Snow Storm",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-05",
+    "event": "Bad Weather, proceed if the client didn't mention (Weather /Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "AGP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-05",
+    "event": "Bad Weather, proceed if the client didn't mention (Weather /Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "MAD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-02-03",
+    "event": "Heavy snowfall",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-27",
+    "event": "Winter Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-27",
+    "event": "Winter Storm",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "EWR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "CLT",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "ATL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "MEM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm",
+    "location": "BNA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm Fern",
+    "location": "AUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Winter Storm Fern",
+    "location": "IAH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-26",
+    "event": "Storms & Snows",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "ATL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "CLT",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "MEM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "BNA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm",
+    "location": "EWR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "AUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-25",
+    "event": "Winter Storm Fern",
+    "location": "IAH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-24",
+    "event": "Winter Storm Fern",
+    "location": "AUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-09",
+    "event": "Storm Goretti and heavy snowfall.",
+    "location": "BHX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-08",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-08",
+    "event": "Storm Goretti and heavy snowfall.",
+    "location": "BHX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-07",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-07",
+    "event": "Bad Weather",
+    "location": "CDG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-07",
+    "event": "Bad Weather",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-07",
+    "event": "Bad Weather",
+    "location": "BEG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-07",
+    "event": "Bad Weather",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-06",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-06",
+    "event": "Bad Weather",
+    "location": "BEG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-06",
+    "event": "Bad Weather",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-06",
+    "event": "Run way Limitaion - Blizard storm",
+    "location": "ABZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-05",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-05",
+    "event": "Bad Weather",
+    "location": "BEG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-05",
+    "event": "Bad Weather",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-05",
+    "event": "Snow Storm",
+    "location": "LPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2026-01-04",
+    "event": "ATC Strike",
+    "location": "Greece",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-04",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-04",
+    "event": "Bad Weather",
+    "location": "BEG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-04",
+    "event": "ILS failure combined with dense fog",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-03",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-03",
+    "event": "ILS failure combined with dense fog",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-02",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-01",
+    "event": "Bad Weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-12-26",
+    "event": "Winter Storm",
+    "location": "PHL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-12-19",
+    "event": "Bad Weather",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-12-18",
+    "event": "Bad Weather",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-12-11",
+    "event": "National strike",
+    "location": "Portugal",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2025-12-01",
+    "event": "Political instability",
+    "location": "venezuela",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-28",
+    "event": "Strike, Proceed if the client and airline didn't mention strike",
+    "location": "Italy",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-26",
+    "event": "National strike",
+    "location": "Belgium",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-14",
+    "event": "The FAA's emergency",
+    "location": "United States",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-13",
+    "event": "The FAA's emergency",
+    "location": "United States",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-11",
+    "event": "The FAA's emergency",
+    "location": "United States",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-11-07",
+    "event": "The FAA's emergency",
+    "location": "United States",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-31",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-30",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-29",
+    "event": "Strike",
+    "location": "LIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-29",
+    "event": "Strike",
+    "location": "PSA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-29",
+    "event": "Strike",
+    "location": "FLR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-29",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-29",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-28",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-27",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-26",
+    "event": "Flood",
+    "location": "MBJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-10-14",
+    "event": "National strike",
+    "location": "Belgium",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-10",
+    "event": "Airport closure",
+    "location": "SXM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "DUB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "KIR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "CFN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "SNN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "BHD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Storm Amy",
+    "location": "BFS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-04",
+    "event": "Operation suspended due to drone sighting",
+    "location": "MUC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Strike",
+    "location": "BLQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Strike",
+    "location": "NAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Strike",
+    "location": "FCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "DUB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "ORK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "KIR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "CFN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "SNN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "BHD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "BFS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-10-03",
+    "event": "Storm Amy",
+    "location": "LDY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-30",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-29",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-28",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-27",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-26",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "HKG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "SZX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "CAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "PKX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "SHA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Bad Weather (proceed if client didn't mention: Bad weather, problems at airport, Force majeure)",
+    "location": "MFM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Strike",
+    "location": "LIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Strike",
+    "location": "CAG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-26",
+    "event": "Strike",
+    "location": "VCE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-25",
+    "event": "Political instability",
+    "location": "Madagascar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "HKG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "SZX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "CAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "PKX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "SHA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-25",
+    "event": "Bad Weather",
+    "location": "MFM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "MFM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "HKG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "SZX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "CAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "PKX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-24",
+    "event": "Bad Weather",
+    "location": "SHA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "HKG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "SZX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "CAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "PKX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "SHA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-23",
+    "event": "Bad Weather",
+    "location": "MFM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-22",
+    "event": "cyberattack",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-22",
+    "event": "cyberattack",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-22",
+    "event": "cyberattack",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-21",
+    "event": "cyberattack",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-21",
+    "event": "cyberattack",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-21",
+    "event": "cyberattack",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-21",
+    "event": "Bad weather",
+    "location": "BCN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-21",
+    "event": "Bad weather",
+    "location": "PMI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-20",
+    "event": "cyberattack",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-20",
+    "event": "cyberattack",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-20",
+    "event": "cyberattack",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-20",
+    "event": "Security issue",
+    "location": "DUB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-09-14",
+    "event": "Airport Closure",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-10",
+    "event": "Political instability",
+    "location": "Poland",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-09-10",
+    "event": "Strike (proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "France",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-08-16",
+    "event": "Bad weather",
+    "location": "SXM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-08-06",
+    "event": "ATC",
+    "location": "BHX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-08-01",
+    "event": "Airport Closure",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-30",
+    "event": "Radar Failure",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-16",
+    "event": "Airport closure due to plane crash",
+    "location": "SEN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-15",
+    "event": "Airport closure due to plane crash",
+    "location": "SEN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-14",
+    "event": "Airport closure due to plane crash",
+    "location": "SEN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-13",
+    "event": "Airport closure due to plane crash",
+    "location": "SEN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-10",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-10",
+    "event": "Strike",
+    "location": "LIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-10",
+    "event": "Strike",
+    "location": "VCE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-10",
+    "event": "Strike",
+    "location": "NAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-08",
+    "event": "Airport shutdown due to wildfires",
+    "location": "MRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-07-04",
+    "event": "Strike (only proceed if client mentioned \"technical problems with the aircraft\")",
+    "location": "France",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "Spain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "LIS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "FNC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "OPO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "FAO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-04",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "RAK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-07-03",
+    "event": "Strike (only proceed if client mentioned \"technical problems\")",
+    "location": "France",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "Spain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "Strike",
+    "location": "MAD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC",
+    "location": "IBZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "LIS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "FNC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "OPO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "FAO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-07-03",
+    "event": "ATC strike in France affected airport's operations proceed if the client didn't mention (strike/Force majeure /Problems at the airport/Influence by other flights)",
+    "location": "RAK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-28",
+    "event": "Radar Failure",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-28",
+    "event": "Radar Failure",
+    "location": "LIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-25",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-25",
+    "event": "Political instability",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-25",
+    "event": "Strike",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-25",
+    "event": "Strike",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "Oman",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-24",
+    "event": "Political instability",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "Qatar",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "Kuwait",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "bahrain",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "Oman",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-23",
+    "event": "Political instability",
+    "location": "United Arab Emirates",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-22",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-21",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-20",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-19",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-19",
+    "event": "Bad weather",
+    "location": "JFK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-19",
+    "event": "Strike",
+    "location": "HEL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-18",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-17",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-16",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-15",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-14",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-06-13",
+    "event": "Political instability",
+    "location": "Jordan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-10",
+    "event": "mechanical failure",
+    "location": "NAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-09",
+    "event": "mechanical failure",
+    "location": "NAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-06-08",
+    "event": "ATC",
+    "location": "ZAG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-31",
+    "event": "Adverse weather",
+    "location": "OPO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-30",
+    "event": "Adverse weather",
+    "location": "OPO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-19",
+    "event": "strike",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-18",
+    "event": "Strike",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-16",
+    "event": "Strike",
+    "location": "HEL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-05-06",
+    "event": "Strike",
+    "location": "TLS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-30",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-29",
+    "event": "power outage",
+    "location": "LIS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-29",
+    "event": "power outage",
+    "location": "AGP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-29",
+    "event": "ATC",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-29",
+    "event": "ATC",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "Power outage",
+    "location": "OPO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "Power outage",
+    "location": "FNC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "Power outage",
+    "location": "PDL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "MRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "MAD",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "BCN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "VLC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "SVQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "AGP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "BIO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "ALC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "PNA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-28",
+    "event": "power outage",
+    "location": "LIS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-04-10",
+    "event": "Strike",
+    "location": "Argentina",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-04-09",
+    "event": "Strike",
+    "location": "Greece",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-04-05",
+    "event": "Adverse Weather",
+    "location": "MEM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-03-31",
+    "event": "Nationwide Strike",
+    "location": "Belgium",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-31",
+    "event": "ATC",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-31",
+    "event": "ATC",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-24",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-21",
+    "event": "Airport Shutdown",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-03-10",
+    "event": "ATC Strike",
+    "location": "Germany",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-10",
+    "event": "Strike",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-09",
+    "event": "ATC",
+    "location": "HAM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-04",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-03",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-02",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-03-01",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-02-28",
+    "event": "Strike",
+    "location": "Greece",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-28",
+    "event": "Strike",
+    "location": "MUC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-28",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-27",
+    "event": "Strike",
+    "location": "MUC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-27",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-26",
+    "event": "ATC",
+    "location": "RUN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-24",
+    "event": "Strike",
+    "location": "CGN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-24",
+    "event": "Strike",
+    "location": "DUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-23",
+    "event": "Strike",
+    "location": "DUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-23",
+    "event": "Adverse weather",
+    "location": "IST",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-22",
+    "event": "Adverse weather",
+    "location": "IST",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-21",
+    "event": "Adverse weather",
+    "location": "IST",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-20",
+    "event": "Plane Crash /Snow fall",
+    "location": "YYZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-19",
+    "event": "Plane Crash /Snow fall",
+    "location": "YYZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-18",
+    "event": "Plane Crash /Snow fall",
+    "location": "YYZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-17",
+    "event": "Plane Crash /Snow fall",
+    "location": "YYZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-16",
+    "event": "Run way Limitations",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-14",
+    "event": "ATC",
+    "location": "LIS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2025-02-13",
+    "event": "Nationwide strike",
+    "location": "belgium",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-11",
+    "event": "Adverse weather",
+    "location": "IST",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-02-05",
+    "event": "Adverse weather",
+    "location": "KEF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-31",
+    "event": "Adverse weather",
+    "location": "CRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-24",
+    "event": "Adverse weather",
+    "location": "ABZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-24",
+    "event": "Adverse weather",
+    "location": "EDI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-24",
+    "event": "ATC",
+    "location": "DUB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-24",
+    "event": "Bad weather",
+    "location": "GLA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-22",
+    "event": "Adverse weather",
+    "location": "IAH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-21",
+    "event": "Adverse weather",
+    "location": "IAH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-20",
+    "event": "Adverse weather flights after 2 PM",
+    "location": "IAH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-20",
+    "event": "Adverse weather",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-17",
+    "event": "Adverse weather",
+    "location": "DTM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-15",
+    "event": "Adverse weather",
+    "location": "EIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-13",
+    "event": "Nationwide strike",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-13",
+    "event": "ATC",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-11",
+    "event": "Adverse weather",
+    "location": "BNA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-11",
+    "event": "Adverse weather",
+    "location": "EIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-10",
+    "event": "Adverse weather",
+    "location": "BNA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-09",
+    "event": "Adverse weather",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-09",
+    "event": "Adverse Weather",
+    "location": "DTM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-07",
+    "event": "Adverse weather",
+    "location": "LBA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-07",
+    "event": "Adverse weather",
+    "location": "LPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-07",
+    "event": "Adverse weather",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-06",
+    "event": "Adverse weather",
+    "location": "LBA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-06",
+    "event": "Adverse weather",
+    "location": "LPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-06",
+    "event": "Adverse weather",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "BHX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "LBA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "LPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-05",
+    "event": "Adverse weather",
+    "location": "BGO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-04",
+    "event": "IT outage",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-04",
+    "event": "Adverse weather",
+    "location": "BRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-04",
+    "event": "Adverse weather",
+    "location": "DEL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "DUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "MUC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "DTM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Nationwide IT outage (Major German airports (BER - DUS - FRA - MUC-DTM-CGN) (except Leipzig and Dresden was not affected))",
+    "location": "CGN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-03",
+    "event": "Adverse weather",
+    "location": "BGO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-01",
+    "event": "Adverse weather",
+    "location": "CDG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-01",
+    "event": "Adverse weather",
+    "location": "IAS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2025-01-01",
+    "event": "Adverse weather",
+    "location": "ZRH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-31",
+    "event": "Adverse weather",
+    "location": "Ias",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-30",
+    "event": "Adverse weather",
+    "location": "BOO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-29",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-29",
+    "event": "Plane Crash",
+    "location": "STR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-29",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-29",
+    "event": "Adverse weather",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "EIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-28",
+    "event": "Adverse weather",
+    "location": "STN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-27",
+    "event": "Adverse weather",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-27",
+    "event": "Adverse Weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-25",
+    "event": "Adverse weather",
+    "location": "KEF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-20",
+    "event": "Adverse weather",
+    "location": "GOA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-20",
+    "event": "Adverse weather",
+    "location": "IAS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-19",
+    "event": "Adverse weather",
+    "location": "IAS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-17",
+    "event": "ATC",
+    "location": "PGF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-17",
+    "event": "Strike",
+    "location": "LYS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-17",
+    "event": "ATC",
+    "location": "MPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-15",
+    "event": "Air Traffic Control IT issue",
+    "location": "EDI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-15",
+    "event": "Airport workers strike",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-15",
+    "event": "Airport workers strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-15",
+    "event": "Airport workers strike",
+    "location": "LIN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-08",
+    "event": "Windy",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-08",
+    "event": "Storm Darragh",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-08",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-07",
+    "event": "Adverse weather",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-07",
+    "event": "Adverse weather",
+    "location": "LPL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-07",
+    "event": "Adverse weather",
+    "location": "BRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-07",
+    "event": "Adverse weather",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-05",
+    "event": "ATC strike",
+    "location": "CDG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-05",
+    "event": "ATC strike",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-05",
+    "event": "ATC strike",
+    "location": "MRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-05",
+    "event": "ATC strike",
+    "location": "TLS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-02",
+    "event": "illegal walk-out affects (14:00:16:15)",
+    "location": "HEL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-12-02",
+    "event": "Adverse weather",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-27",
+    "event": "Adverse weather",
+    "location": "KRK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-24",
+    "event": "Airport Clousre",
+    "location": "AYT",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-24",
+    "event": "Adverse weather",
+    "location": "GOA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-24",
+    "event": "Adverse weather",
+    "location": "EDI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-24",
+    "event": "Adverse weather",
+    "location": "GLA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-23",
+    "event": "Adverse weather",
+    "location": "LHR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-23",
+    "event": "Adverse weather",
+    "location": "EDI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-23",
+    "event": "Adverse weather",
+    "location": "GLA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-23",
+    "event": "Adverse weather",
+    "location": "BRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-22",
+    "event": "Security reasons",
+    "location": "LGW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-21",
+    "event": "Adverse weather",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-21",
+    "event": "Adverse weather",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-20",
+    "event": "heavy snowfall and gusty wind",
+    "location": "HEL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-16",
+    "event": "Mount Lewotobi Eruption",
+    "location": "DPS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-15",
+    "event": "Mount Lewotobi Eruption",
+    "location": "DPS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-15",
+    "event": "Bad Weather",
+    "location": "KEF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-14",
+    "event": "Mount Lewotobi Eruption",
+    "location": "DPS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-13",
+    "event": "Mount Lewotobi Eruption",
+    "location": "DPS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-13",
+    "event": "Volcanic ash from Indonesia's Mt. Lewotobi",
+    "location": "LOP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-12",
+    "event": "Mount Lewotobi Eruption",
+    "location": "DPS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-07",
+    "event": "firefighter and rescue staff strike",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-07",
+    "event": "Adverse weather",
+    "location": "AEY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-06",
+    "event": "firefighter and rescue staff strike",
+    "location": "NTE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-06",
+    "event": "ATC",
+    "location": "HAV",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-04",
+    "event": "Adverse weather",
+    "location": "BCN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-11-03",
+    "event": "Adverse weather",
+    "location": "EiN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-10-30",
+    "event": "Strike",
+    "location": "Argentina",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-30",
+    "event": "Adverse weather",
+    "location": "VLC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-29",
+    "event": "Adverse weather",
+    "location": "AGP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-29",
+    "event": "Adverse weather",
+    "location": "VLC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-29",
+    "event": "Adverse weather",
+    "location": "APG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-25",
+    "event": "Strike",
+    "location": "LEJ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-24",
+    "event": "Strike",
+    "location": "DRS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-24",
+    "event": "Strike",
+    "location": "Lej",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-22",
+    "event": "Security Staff Strike",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-10-20",
+    "event": "ATC Strikes",
+    "location": "Italy",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-20",
+    "event": "Storm Ashley",
+    "location": "DUB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-12",
+    "event": "Hurricane Milton",
+    "location": "DAB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "DAB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "LAL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "MCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "MLB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "ORL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "PCM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "PIE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "ATC strike",
+    "location": "PMO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "SFB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "SRQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "TPA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "TPF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-11",
+    "event": "Hurricane Milton",
+    "location": "VDF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "DAB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "LAL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "MCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "MLB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "ORL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "PCM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "PIE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "RSW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "SFB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "SRQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "TPA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "TPF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-10",
+    "event": "Hurricane Milton",
+    "location": "VDF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "DAB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "LAL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "MCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "MLB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "ORL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "PCM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "PIE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "RSW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "SFB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "SRQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "TPA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "TPF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-09",
+    "event": "Hurricane Milton",
+    "location": "VDF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "DAB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "LAL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "MCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "MLB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "ORL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "PCM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "PIE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "RSW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "SFB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "SRQ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "TPA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "TPF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-08",
+    "event": "Hurricane Milton",
+    "location": "VDF",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-10-01",
+    "event": "Runway incident",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-09-16",
+    "event": "strike",
+    "location": "BRU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-09-13",
+    "event": "Labour Strike",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-09-12",
+    "event": "Labour Strike",
+    "location": "CRL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-19",
+    "event": "Adverse weather",
+    "location": "FNC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-18",
+    "event": "Adverse weather",
+    "location": "FNC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-17",
+    "event": "Adverse weather",
+    "location": "HND",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-16",
+    "event": "Adverse weather",
+    "location": "HND",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-15",
+    "event": "ATC",
+    "location": "PMI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-15",
+    "event": "Adverse weather",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-08-09",
+    "event": "Political instability",
+    "location": "Bangladesh",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-08-08",
+    "event": "Political instability",
+    "location": "Bangladesh",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-08-07",
+    "event": "Political instability",
+    "location": "Bangladesh",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-08-06",
+    "event": "Political instability",
+    "location": "Bangladesh",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2024-08-05",
+    "event": "Political instability",
+    "location": "Bangladesh",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2024-08-01",
+    "event": "Political instability",
+    "location": "Israel",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-08-01",
+    "event": "malfunction in Airport's IT system",
+    "location": "BEG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-07-26",
+    "event": "safety reasons",
+    "location": "BSL",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-07-25",
+    "event": "ATC",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-07-23",
+    "event": "Sicily's Mount Etna erupts",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-07-22",
+    "event": "A cyber attack blocks the system",
+    "location": "SPU",
+    "decision": "REJECT"
+  },
+  {
+    "category": "World Wide",
+    "date": "2024-07-20",
+    "event": "Global IT Failure (Microsoft)",
+    "location": "World Wide",
+    "decision": "REJECT"
+  },
+  {
+    "category": "World Wide",
+    "date": "2024-07-19",
+    "event": "Global IT Failure (Microsoft)",
+    "location": "World Wide",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-07-12",
+    "event": "ATC",
+    "location": "ZRH",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-06-29",
+    "event": "Adverse weather",
+    "location": "JMK",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-06-23",
+    "event": "ATC",
+    "location": "MAN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-06-02",
+    "event": "runway light outage",
+    "location": "LIM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-05-26",
+    "event": "ATC",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-05-15",
+    "event": "ATC",
+    "location": "SAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-25",
+    "event": "Strike",
+    "location": "CDG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-25",
+    "event": "Strike",
+    "location": "ORY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-25",
+    "event": "ATC",
+    "location": "BVA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-20",
+    "event": "Heavy Rainfall",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-20",
+    "event": "Heavy Rainfall",
+    "location": "DWC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-19",
+    "event": "Heavy Rainfall",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-19",
+    "event": "Heavy Rainfall",
+    "location": "DWC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-18",
+    "event": "Heavy Rainfall",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-18",
+    "event": "Heavy Rainfall",
+    "location": "DWC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-17",
+    "event": "Heavy Rainfall",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-17",
+    "event": "Heavy Rainfall",
+    "location": "DWC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-16",
+    "event": "Heavy Rainfall",
+    "location": "DXB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-04-16",
+    "event": "Heavy Rainfall",
+    "location": "DWC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-14",
+    "event": "Unionized ground staff and security employees",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-14",
+    "event": "Unionized ground staff and security employees",
+    "location": "CGN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-14",
+    "event": "Unionized ground staff and security employees",
+    "location": "STR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-14",
+    "event": "Unionized ground staff and security employees",
+    "location": "FKB",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-08",
+    "event": "Security Staff Strike",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-03-07",
+    "event": "Security Staff Strike",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-02-20",
+    "event": "ATC",
+    "location": "AOI",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-02-01",
+    "event": "Security Staff Strike",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-02-01",
+    "event": "Verdi trade union strike",
+    "location": "STR",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-01-19",
+    "event": "Adverse Weather",
+    "location": "ZAZ",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2024-01-15",
+    "event": "Adverse weather",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-12-01",
+    "event": "Adverse Weather",
+    "location": "MUC",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-11-28",
+    "event": "Adverse weather",
+    "location": "ARN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-10-11",
+    "event": "ATC",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2023-09-29",
+    "event": "Labor unions plan aviation sector strikes",
+    "location": "Italy",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-28",
+    "event": "ATC",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-05",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-04",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-03",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-02",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-08-01",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-31",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-30",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-29",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-28",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-27",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-26",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-25",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-24",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-23",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-22",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-21",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-20",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-19",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-18",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-07-17",
+    "event": "Volcanic Ash eruption of Mount Etna",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2023-07-15",
+    "event": "Labor unions aviation sector nationwide strikes",
+    "location": "Italy",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2023-06-30",
+    "event": "Political instability",
+    "location": "Syria",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2023-06-30",
+    "event": "Political instability",
+    "location": "Iraq",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2023-06-30",
+    "event": "Political instability",
+    "location": "Iran",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2023-06-30",
+    "event": "Political instability",
+    "location": "Lebanon",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-06-30",
+    "event": "workers strike",
+    "location": "GVA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-06-20",
+    "event": "Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Country Wide Issues",
+    "date": "2023-06-04",
+    "event": "Air Transport Sector Strike",
+    "location": "Italy",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-05-01",
+    "event": "ATC",
+    "location": "BVA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2023-04-15",
+    "event": "Political instability",
+    "location": "Sudan",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-03-16",
+    "event": "ATC",
+    "location": "SKG",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-03-13",
+    "event": "ATC",
+    "location": "BER",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-03-13",
+    "event": "strike",
+    "location": "BRE",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-03-13",
+    "event": "strike",
+    "location": "HAM",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-02-27",
+    "event": "Strike",
+    "location": "DUS",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-02-27",
+    "event": "Strike",
+    "location": "CGN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-02-02",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-02-01",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-01-31",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2023-01-30",
+    "event": "Adverse weather",
+    "location": "DFW",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2022-07-29",
+    "event": "ATC",
+    "location": "FRA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2022-07-18",
+    "event": "airport ad-hoc closure",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2022-02-24",
+    "event": "Political instability",
+    "location": "ukraine",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2020-05-29",
+    "event": "ATC",
+    "location": "LTN",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Ongoing Issues",
+    "date": "2014-03-01",
+    "event": "Political instability",
+    "location": "Libya",
+    "decision": "REJECT"
+  }
+]

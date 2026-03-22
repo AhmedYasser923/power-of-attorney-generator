@@ -22,9 +22,12 @@ router.post('/generate-standard', upload.any(), reflyController.generateStandard
 router.post('/generate-lufthansa', upload.any(), lufthansaController.generateLufthansaPDF);
 router.post('/generate-aerlingus', upload.any(), aerlingusController.generateAerLingusPDF);
 
+router.get('/api/flight-status', ticketController.checkFlightStatus);
+
+// --- NEW EOC ROUTE ---
+router.get('/api/check-eoc', ticketController.checkEOC);
+
 router.post('/api/autofill', aiController.extractData);
 router.post('/api/analyze-ticket', upload.any(), ticketController.analyzeTicket);
-
-// Add this next to your existing router.post('/api/analyze-ticket', ...) line
 
 module.exports = router;
