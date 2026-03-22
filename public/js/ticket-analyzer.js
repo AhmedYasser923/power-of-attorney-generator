@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let statusBtnHtml = '';
                 if (flight.flightNumber && flight.flightNumber !== 'N/A' && flight.flightNumber !== 'Unknown') {
-                    statusBtnHtml = `<button type="button" class="btn-check-status" data-flight="${flight.flightNumber}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">📡 AI Analysis</button>`;
+                    statusBtnHtml = `<button type="button" class="btn-check-status" data-flight="${flight.flightNumber}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">📡 Check Status</button>`;
                 }
 
                 let eocBtnHtml = '';
