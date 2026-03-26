@@ -1,0 +1,489 @@
+extends layout
+
+block content
+  style.
+    /* Widened container to fit side-by-side cards beautifully */
+    .tools-container { max-width: 1050px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .page-sub { font-size: 14px; color: #64748b; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; background: #ffffff; padding: 6px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid #e2e8f0; }
+    .tab-btn { flex: 1; padding: 12px 16px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: #64748b; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .tab-btn:hover { background: #f8fafc; color: #0f172a; }
+    .tab-btn.active { background: #eff6ff; color: #2563eb; box-shadow: 0 1px 2px rgba(37,99,235,0.1); }
+    
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Forms */
+    .tool-card { background: #ffffff; padding: 32px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; font-family: inherit; width: 100%; box-sizing: border-box; }
+    .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .form-input[readonly] { background-color: #f8fafc; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
+    
+    .action-btn { background: #2563eb; color: white; border: none; padding: 14px 24px; font-size: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; display: flex; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(37,99,235,0.2); margin-top: 24px; }
+    .action-btn:hover { background: #1d4ed8; }
+    .action-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .btn-outline { background: transparent; border: 1px dashed #cbd5e1; color: #64748b; font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; width: max-content; }
+    .btn-outline:hover { background: #f8fafc; color: #0f172a; border-color: #94a3b8; }
+    
+    /* Fetch Button Unified Styling */
+    .btn-fetch-row { background: #2563eb; color: white; border: none; height: 45px; padding: 0 32px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 700; transition: 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+    .btn-fetch-row:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-fetch-row:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    /* Results Layout */
+    #flightResult { margin-top: 32px; display: flex; flex-direction: row; flex-wrap: wrap; gap: 24px; align-items: stretch; }
+    .fetched-flight-card { flex: 1 1 calc(50% - 12px); min-width: 400px; animation: fadeIn 0.4s ease; display: flex; flex-direction: column; }
+    #eocResult, #ec261Result { margin-top: 32px; }
+
+    /* --- Autocomplete Dropdown Styles --- */
+    .autocomplete-wrapper { position: relative; width: 100%; }
+    .autocomplete-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px; overflow-y: auto; display: none; }
+    .autocomplete-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: 0.2s; display: flex; flex-direction: column; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: #f8fafc; }
+    .ac-top { display: flex; align-items: baseline; gap: 8px; }
+    .ac-iata { font-size: 14px; font-weight: 800; color: #2563eb; }
+    .ac-city { font-size: 13px; font-weight: 600; color: #0f172a; }
+    .ac-country { font-size: 12px; color: #64748b; font-weight: 500; margin-left: auto; }
+    .ac-name { font-size: 11px; color: #64748b; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* --- Route Builder Styles --- */
+    .route-builder { position: relative; padding-left: 20px; border-left: 2px dashed #cbd5e1; margin-left: 10px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 24px; }
+    .route-node { position: relative; }
+    .route-node::before { content: ''; position: absolute; left: -27px; top: 38px; width: 12px; height: 12px; background: #ffffff; border: 2px solid #2563eb; border-radius: 50%; z-index: 2; }
+
+  .tools-container
+    .page-header
+      .page-title 🛠️ Manual Tools Suite
+      .page-sub Run individual checks for claims without travel documents.
+
+    .tabs
+      button.tab-btn.active(data-tab="cirium") 📡 OAG FlightStats
+      button.tab-btn(data-tab="eoc") ⚠️ EOC Radar
+      button.tab-btn(data-tab="ec261") 💸 Comp Calculator
+
+    //- TAB 1: OAG FLIGHTSTATS
+    #cirium.tab-content.active
+      .tool-card
+        //- Unified Input Group
+        .flight-input-row(style="display: flex; gap: 16px; align-items: flex-end;")
+          .form-group(style="flex: 1;")
+            label Flight Number
+            input#c-flight.form-input(type="text" placeholder="e.g. U28412" required)
+          .form-group(style="flex: 1;")
+            label Departure Date
+            input#c-date.form-input(type="date" required)
+          
+          button#btn-fetch-cirium.btn-fetch-row(type="button") Search Flight
+            
+        //- Flex Row Container for Side-by-Side Cards
+        #flightResult
+
+    //- TAB 2: EOC RADAR
+    #eoc.tab-content
+      .tool-card
+        .form-grid
+          .form-group
+            label Flight Date
+            input#e-date.form-input(type="date" required)
+          .form-group
+            label (Optional) Origin Airport
+            input#e-o-iata.form-input(type="text" placeholder="e.g. LHR or Heathrow")
+          .form-group
+            label (Optional) Dest Airport
+            input#e-d-iata.form-input(type="text" placeholder="e.g. BER or Berlin")
+          .form-group
+            label (Optional) Origin Country
+            input#e-o-country.form-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+          .form-group
+            label (Optional) Dest Country
+            input#e-d-country.form-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+        button#btn-eoc.action-btn ⚠️ Scan EOC Database
+        #eocResult
+
+    //- TAB 3: COMPENSATION CALCULATOR
+    #ec261.tab-content
+      .tool-card
+        div(style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;") 🗺️ Flight Route Distance
+        
+        .route-builder
+          .route-node
+            .form-grid(style="margin-bottom: 0;")
+              .form-group
+                label Origin Airport
+                input#l-origin.form-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
+              .form-group
+                label Origin Country
+                input#l-origin-country.form-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+          
+          .route-node
+            .form-grid(style="margin-bottom: 0;")
+              .form-group
+                label Final Destination Airport
+                input#l-dest.form-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
+              .form-group
+                label Destination Country
+                input#l-dest-country.form-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+
+        button#btn-ec261.action-btn 💸 Calculate Compensation
+        #ec261Result
+
+  script.
+    document.addEventListener('DOMContentLoaded', () => {
+      // Global set to keep track of loaded flights to prevent double fetching
+      window.searchedFlights = new Set();
+
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+      });
+
+      function setupAirportAutocomplete(inputId, countryInputId = null) {
+        const input = document.getElementById(inputId);
+        const countryInput = countryInputId ? document.getElementById(countryInputId) : null;
+        if (!input) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'autocomplete-wrapper';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const list = document.createElement('div');
+        list.className = 'autocomplete-list';
+        wrapper.appendChild(list);
+
+        let timeout = null;
+
+        input.addEventListener('input', (e) => {
+            e.target.removeAttribute('data-iata'); 
+            e.target.removeAttribute('data-country');
+            e.target.removeAttribute('data-lat');
+            e.target.removeAttribute('data-lon');
+            if (countryInput) countryInput.value = '';
+            
+            clearTimeout(timeout);
+            const val = e.target.value;
+            
+            if (val.length < 2) { list.style.display = 'none'; return; }
+
+            timeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/tools/search-airports?q=${encodeURIComponent(val)}`);
+                    const data = await res.json();
+                    list.innerHTML = '';
+                    
+                    if (data.length > 0) {
+                        list.style.display = 'block';
+                        data.forEach(airport => {
+                            const item = document.createElement('div');
+                            item.className = 'autocomplete-item';
+                            item.innerHTML = `
+                                <div class="ac-top" style="align-items: center;">
+                                    <span class="ac-iata" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; margin-right: 8px;">${airport.iata}</span>
+                                    <span class="ac-city" style="color: #334155;">${airport.name}, ${airport.city}, ${airport.country}</span>
+                                </div>
+                            `;
+                            item.addEventListener('click', () => {
+                                input.value = `${airport.name}, ${airport.city}`;
+                                input.dataset.iata = airport.iata; 
+                                input.dataset.country = airport.country;
+                                input.dataset.lat = airport.lat; 
+                                input.dataset.lon = airport.lon;
+                                
+                                if (countryInput) countryInput.value = airport.country;
+                                list.style.display = 'none';
+                            });
+                            list.appendChild(item);
+                        });
+                    } else { list.style.display = 'none'; }
+                } catch (err) { list.style.display = 'none'; }
+            }, 150); 
+        });
+
+        document.addEventListener('click', (e) => { if (e.target !== input) list.style.display = 'none'; });
+      }
+
+      setupAirportAutocomplete('e-o-iata', 'e-o-country');
+      setupAirportAutocomplete('e-d-iata', 'e-d-country');
+      setupAirportAutocomplete('l-origin', 'l-origin-country');
+      setupAirportAutocomplete('l-dest', 'l-dest-country');
+
+      // --- EXACT DASHBOARD UI FOR TOOLS SUITE (ROW DIRECTION & NO DUPLICATES) ---
+      document.getElementById('btn-fetch-cirium').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const flightInput = document.getElementById('c-flight');
+        const dateInput = document.getElementById('c-date');
+        const flight = flightInput.value.trim().toUpperCase();
+        const date = dateInput.value;
+        const resultDiv = document.getElementById('flightResult');
+
+        if(!flight || !date) return alert("Flight Number and Date required!");
+
+        // Anti-Duplicate Check
+        const flightKey = `${flight}-${date}`;
+        if (window.searchedFlights.has(flightKey)) {
+            return alert("This exact flight and date combination is already displayed below!");
+        }
+
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "⏳ Searching..."; 
+        btn.disabled = true; 
+
+        try {
+            const res = await fetch(`/api/tools/flight-status?flightNumber=${encodeURIComponent(flight)}&date=${encodeURIComponent(date)}`);
+            const data = await res.json();
+            
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'fetched-flight-card';
+            
+            if (data.aiStats) {
+                // Successfully fetched, add to our memory tracker
+                window.searchedFlights.add(flightKey);
+                const ai = data.aiStats;
+                
+                const dismissLogic = `window.searchedFlights.delete('${flightKey}'); this.closest('.fetched-flight-card').remove();`;
+
+                cardWrapper.innerHTML = `
+                    <div style="background: #111827; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; position: relative; height: 100%; display: flex; flex-direction: column;">
+                        
+                        <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: #ffffff; opacity: 0.5; cursor: pointer; font-size: 16px; z-index: 10;" title="Dismiss">✖</button>
+                        
+                        <div style="background: ${ai.bannerBg}; color: #ffffff; text-align: center; padding: 14px; font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
+                            ${ai.bannerText}
+                        </div>
+                        
+                        <div style="padding: 24px 32px 32px 32px; flex: 1; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                                <div style="display: flex; gap: 12px; align-items: center;">
+                                    <div style="width: 40px; height: 40px; background: #1f2937; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #374151;">✈️</div>
+                                    <div>
+                                        <div style="font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Operated by:</div>
+                                        <div style="font-size: 16px; font-weight: 800; color: #ffffff; line-height: 1.2;">${ai.operatorName || 'Unknown Operator'}</div>
+                                    </div>
+                                </div>
+                                <div style="display: inline-flex; align-items: center; gap: 6px; background: #1f2937; color: #9ca3af; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #374151;">
+                                    <span style="font-size: 10px;">🛡️</span> ${ai.flightDuration}
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                                <div style="text-align: left; flex: 1;">
+                                    <div style="font-size: 46px; font-weight: 900; color: #ffffff; line-height: 1; letter-spacing: -1.5px; margin-bottom: 8px;">${ai.depIata}</div>
+                                    <div style="font-size: 14px; color: #9ca3af; font-weight: 500;">${ai.depCity}</div>
+                                </div>
+                                
+                                <div style="flex: 1.5; display: flex; align-items: center; justify-content: center; position: relative; top: -15px;">
+                                    <div style="height: 2px; background: repeating-linear-gradient(to right, #4b5563 0, #4b5563 6px, transparent 6px, transparent 12px); width: 100%;"></div>
+                                    <div style="font-size: 20px; color: #6b7280; background: #111827; padding-left: 8px; margin-left: -12px;">✈</div>
+                                </div>
+                                
+                                <div style="text-align: right; flex: 1;">
+                                    <div style="font-size: 46px; font-weight: 900; color: #ffffff; line-height: 1; letter-spacing: -1.5px; margin-bottom: 8px;">${ai.arrIata}</div>
+                                    <div style="font-size: 14px; color: #9ca3af; font-weight: 500;">${ai.arrCity}</div>
+                                </div>
+                            </div>
+
+                            <div style="background: #1f2937; border-radius: 12px; padding: 24px; display: flex; margin-bottom: 24px;">
+                                <div style="flex: 1; border-right: 1px solid #374151; padding-right: 24px;">
+                                    <div style="font-size: 11px; font-weight: 800; color: #6b7280; letter-spacing: 1px; margin-bottom: 20px;">DEPARTURE GATE</div>
+                                    
+                                    <div style="margin-bottom: 20px;">
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                            <span style="font-size: 12px; color: #9ca3af;">Scheduled</span>
+                                            <span style="background: #374151; color: #d1d5db; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${ai.depSchedZone}</span>
+                                        </div>
+                                        <div style="font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.2;">${ai.depSched}</div>
+                                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">${ai.depDate}</div>
+                                    </div>
+                                    
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                            <span style="font-size: 12px; color: #9ca3af;">${ai.depActualLabel}</span>
+                                            <span style="background: #374151; color: #d1d5db; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${ai.depActualZone}</span>
+                                        </div>
+                                        <div style="font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.2;">${ai.depActual}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="flex: 1; padding-left: 24px; text-align: right;">
+                                    <div style="font-size: 11px; font-weight: 800; color: #6b7280; letter-spacing: 1px; margin-bottom: 20px;">ARRIVAL GATE</div>
+                                    
+                                    <div style="margin-bottom: 20px;">
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 6px;">
+                                            <span style="background: #374151; color: #d1d5db; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${ai.arrSchedZone}</span>
+                                            <span style="font-size: 12px; color: #9ca3af;">Scheduled</span>
+                                        </div>
+                                        <div style="font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.2;">${ai.arrSched}</div>
+                                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">${ai.arrDate}</div>
+                                    </div>
+                                    
+                                    <div>
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 6px;">
+                                            <span style="background: #374151; color: #d1d5db; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${ai.arrActualZone}</span>
+                                            <span style="font-size: 12px; color: #9ca3af;">${ai.arrActualLabel}</span>
+                                        </div>
+                                        <div style="font-size: 24px; font-weight: 700; color: ${ai.arrDelayColor === '#22c55e' ? '#ffffff' : ai.arrDelayColor}; line-height: 1.2;">${ai.arrActual}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1;"></div>
+
+                            <div style="border-top: 1px dashed #374151; padding-top: 24px; display: flex; justify-content: center; align-items: center; gap: 12px;">
+                                <span style="font-size: 12px; color: #6b7280; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">ARRIVAL DELAY:</span>
+                                <span style="border: 1px solid ${ai.arrDelayColor === '#22c55e' ? '#374151' : ai.arrDelayColor + '50'}; color: ${ai.arrDelayColor === '#22c55e' ? '#9ca3af' : ai.arrDelayColor}; background: ${ai.arrDelayColor === '#22c55e' ? 'transparent' : ai.arrDelayColor + '10'}; padding: 6px 16px; border-radius: 6px; font-size: 14px; font-weight: 800;">${ai.arrDelay}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                resultDiv.insertBefore(cardWrapper, resultDiv.firstChild);
+
+                // Optionally clear the inputs to easily search the next one
+                flightInput.value = '';
+                
+            } else { 
+                cardWrapper.innerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #fecaca; position: relative;">⚠️ Flight ${flight}: ${data.error || 'No Data'}<button type="button" onclick="this.parentElement.parentElement.remove()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; font-size: 16px; cursor: pointer; color: #ef4444;">✖</button></div>`; 
+                resultDiv.insertBefore(cardWrapper, resultDiv.firstChild);
+            }
+            
+        } catch(err) { 
+            const errDiv = document.createElement('div');
+            errDiv.innerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #fecaca; margin-bottom: 16px; position: relative;">❌ Error fetching data for ${flight}.<button type="button" onclick="this.parentElement.remove()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; font-size: 16px; cursor: pointer; color: #ef4444;">✖</button></div>`;
+            resultDiv.insertBefore(errDiv, resultDiv.firstChild);
+        }
+        
+        btn.innerHTML = originalText; 
+        btn.disabled = false;
+      });
+
+      // --- ISOLATED EOC SCANNER ---
+      document.getElementById('btn-eoc').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const date = document.getElementById('e-date').value;
+        const oInput = document.getElementById('e-o-iata');
+        const dInput = document.getElementById('e-d-iata');
+        const oIata = oInput.dataset.iata || oInput.value.trim();
+        const dIata = dInput.dataset.iata || dInput.value.trim();
+        const oCount = document.getElementById('e-o-country').value.trim();
+        const dCount = document.getElementById('e-d-country').value.trim();
+        const resultDiv = document.getElementById('eocResult');
+
+        if(!date) return alert("Date is required to scan EOCs!");
+        btn.innerHTML = "⏳ Scanning..."; btn.disabled = true;
+        
+        try {
+            const query = `date=${date}&originIata=${encodeURIComponent(oIata)}&destIata=${encodeURIComponent(dIata)}&originCountry=${encodeURIComponent(oCount)}&destCountry=${encodeURIComponent(dCount)}`;
+            const res = await fetch(`/api/tools/check-eoc?${query}`);
+            const data = await res.json();
+            
+            if (data.eocFound && data.events.length > 0) {
+                const ev = data.events[0];
+                resultDiv.innerHTML = `<div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; color: #7f1d1d;"><div style="font-weight: 800; color: #dc2626; margin-bottom: 12px; text-transform: uppercase; font-size: 13px;">⚠️ Extraordinary Circumstances Detected</div><div style="display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px;"><strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span><strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span><strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span><strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span></div></div>`;
+            } else { 
+                resultDiv.innerHTML = `<div style="background: #dcfce7; color: #166534; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #bbf7d0;">✅ No EOCs found for this route on this date.</div>`; 
+            }
+        } catch(err) { 
+            resultDiv.innerHTML = "❌ Error scanning EOC database."; 
+        }
+        btn.innerHTML = "⚠️ Scan EOC Database"; btn.disabled = false;
+      });
+
+      // --- COMPENSATION CALCULATOR ---
+      document.getElementById('btn-ec261').addEventListener('click', () => {
+        const oInput = document.getElementById('l-origin');
+        const dInput = document.getElementById('l-dest');
+        const resultDiv = document.getElementById('ec261Result');
+
+        if(!oInput.value || !dInput.value) return alert("Origin and Destination are required!");
+
+        let dist = 0;
+        const lat1 = parseFloat(oInput.dataset.lat);
+        const lon1 = parseFloat(oInput.dataset.lon);
+        const lat2 = parseFloat(dInput.dataset.lat);
+        const lon2 = parseFloat(dInput.dataset.lon);
+        const originCountry = (oInput.dataset.country || document.getElementById('l-origin-country').value).trim().toLowerCase();
+        const destCountry = (dInput.dataset.country || document.getElementById('l-dest-country').value).trim().toLowerCase();
+
+        if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2) && lat1 !== 0) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            dist = Math.round(R * c);
+        } else {
+            const manualDist = prompt("Could not automatically calculate distance (No GPS data). Please manually enter the distance in KM:");
+            dist = parseFloat(manualDist);
+            if (isNaN(dist)) return alert("Valid distance is required to calculate compensation.");
+        }
+
+        const euList = ["austria","belgium","bulgaria","croatia","cyprus","czech republic","denmark","estonia","finland","france","germany","greece","hungary","ireland","italy","latvia","lithuania","luxembourg","malta","netherlands","the netherlands","poland","portugal","romania","slovakia","slovenia","spain","sweden","iceland","norway","switzerland","united kingdom","uk","guadeloupe","reunion","martinique","french guiana","mayotte"];
+
+        const isOriginEU = euList.includes(originCountry);
+        const isDestEU = euList.includes(destCountry);
+
+        let comp = "€250"; let type = "Short Haul";
+        
+        if (dist > 1500 && dist <= 3500) { 
+            comp = "€400"; type = "Medium Haul"; 
+        } else if (dist > 3500) { 
+            if (isOriginEU && isDestEU) {
+                comp = "€400"; type = "Intra-EU Long Haul";
+            } else {
+                comp = "€600"; type = "Long Haul"; 
+            }
+        }
+
+        let eligibilityNote = ""; let statusBadge = "";
+        
+        if (!isOriginEU && !isDestEU) {
+            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #dc2626;">❌ NOT ELIGIBLE</div>`;
+            eligibilityNote = `Neither <b>${oInput.dataset.country || "Origin"}</b> nor <b>${dInput.dataset.country || "Destination"}</b> are in the EU/UK. EC261 does not apply.`;
+            comp = "N/A";
+        } else if (!isOriginEU && isDestEU) {
+            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #f59e0b;">⚠️ CONDITIONALLY ELIGIBLE</div>`;
+            eligibilityNote = `Since the flight departs from a Non-EU country (<b>${oInput.dataset.country || "Origin"}</b>) to the EU, it is ONLY eligible if operated by an EU/UK airline.`;
+        } else {
+            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #16a34a;">✅ ELIGIBLE</div>`;
+            eligibilityNote = `Flight departs from the EU/UK (<b>${oInput.dataset.country || "Origin"}</b>). All airlines are covered.`;
+        }
+
+        resultDiv.innerHTML = `
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; animation: fadeIn 0.4s ease;">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">EC261 Status</div>
+                    ${statusBadge}
+                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">${eligibilityNote}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid #cbd5e1; padding-top: 16px;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Flight Distance</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #0f172a;">${dist} km</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${type}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Estimated Compensation</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #16a34a;">${comp !== "N/A" ? '💸 ' : ''}${comp}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+      });
+    });
