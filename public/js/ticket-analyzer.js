@@ -452,12 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 flightCard.appendChild(statsCard);
 
-                if (ai.summaryHTML) {
-                    const summaryBox = document.createElement('div');
-                    summaryBox.style.cssText = "margin-top: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #2563eb; padding: 16px; border-radius: 8px; font-size: 13px; color: #334155; line-height: 1.5; animation: fadeIn 0.5s ease;";
-                    summaryBox.innerHTML = `<div style="font-weight: 800; color: #0f172a; margin-bottom: 8px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">🤖 AI Flight Analysis</div>${ai.summaryHTML}`;
-                    flightCard.appendChild(summaryBox);
-                }
+          
 
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">✨ checked</div>`;
                 
