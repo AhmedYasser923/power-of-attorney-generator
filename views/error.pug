@@ -1,9 +1,17 @@
 extends layout
 
 block content
-  .container
-    h2 Error
-    .error-message= message
-    if error
-      pre= error
-    a(href="/", class="btn-primary") Return to Home
+  main.main(style="display: flex; justify-content: center; align-items: center; min-height: 80vh; background-color: #f8f9fa;")
+    .error-container(style="max-width: 650px; width: 100%; text-align: center; padding: 3rem 2rem; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid #ef4444; margin: 2rem;")
+      
+      .error__title
+        h2.heading-secondary.heading-secondary--error(style="color: #ef4444; font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 700;") Uh oh! Something went wrong.   
+        h2.error__emoji(style="font-size: 4rem; margin: 1rem 0;") ✈️💥
+      
+      .error__msg(style="font-size: 1.25rem; color: #4b5563; margin-top: 1rem; font-weight: 500;")= msg
+      
+      //- Only shows up if we pass 'stack' from the dev controller
+      if stack
+        pre.error__stack(style="text-align: left; background: #1f2937; color: #f87171; padding: 1.5rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; margin-top: 2rem; line-height: 1.5;")= stack
+      
+      a.btn(href="/" style="display: inline-block; margin-top: 2rem; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; transition: background 0.3s ease;") Return to Dashboard

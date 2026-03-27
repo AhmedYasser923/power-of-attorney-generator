@@ -1,3 +1,4 @@
+const AppError = require('./utils/appError');
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 const dotenv = require("dotenv");
@@ -6,8 +7,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
-
-
+const globalErrorHandler = require('./controllers/errorController');
 
 
 // View engine setup
@@ -22,21 +22,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/', require('./routes/index'));
 
-
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
+// 1. Handle all unhandled routes (404)
+app.use((req, res, next) => {
+  // Passing an argument to next() automatically tells Express an error occurred
+  // and skips all other middleware to go straight to the global error handler
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).render('error', { message: 'Page not found' });
-});
+// 2. Use the new Global Error Handling Middleware
+app.use(globalErrorHandler);
+
 
 
 
