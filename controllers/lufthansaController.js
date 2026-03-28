@@ -4,6 +4,8 @@ const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // Initialize APIs
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -24,6 +26,10 @@ function getLufthansaLogoBase64() {
   }
 }
 
+/**
+ * Unified Signature Processing Engine
+ * Errors are caught internally and fall back to the raw image — this is intentional.
+ */
 async function processSignature(file, processingMethod) {
   if (!file) return null;
 
@@ -42,7 +48,7 @@ async function processSignature(file, processingMethod) {
         return `data:image/png;base64,${finalBuffer.toString('base64')}`;
       }
     } catch (error) {
-      console.error('❌ Gemini Signature Error:', error.message);
+      console.error('Gemini Signature Error:', error.message);
     }
   } else if (processingMethod === 'cloudinary') {
     try {
@@ -55,7 +61,7 @@ async function processSignature(file, processingMethod) {
       const arrayBuffer = await response.arrayBuffer();
       return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
     } catch (error) {
-      console.error('❌ Cloudinary Error:', error.message);
+      console.error('Cloudinary Error:', error.message);
     }
   }
 
@@ -67,7 +73,7 @@ function capitalizeWords(str) {
   return str.trim().split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
-exports.preview = (req, res) => {
+exports.preview = catchAsync(async (req, res, next) => {
   const dummyData = {
     flightNumber: 'LH982', bookingCode: 'xcwgia',
     formattedFlightDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
@@ -79,66 +85,63 @@ exports.preview = (req, res) => {
     ]
   };
   res.render('lufthansa-poa', dummyData);
-};
+});
 
-exports.generateLufthansaPDF = async (req, res) => {
-  try {
-    const { pnr, flightDate, claimDate, flightNumber, bookingCode } = req.body;
-    const files = req.files || [];
+exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
+  const { pnr, flightDate, claimDate, flightNumber, bookingCode } = req.body;
+  const files = req.files || [];
 
-    const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
-    const passengers = [];
-    let sigIndex = 0;
+  const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
+  const passengers = [];
+  let sigIndex = 0;
 
-    for (let i = 1; i <= 4; i++) {
-      const rawName = req.body[`fullName${i}`] || '';
-      const signatureFile = signatureFiles[sigIndex]; 
-      
-      if (rawName.trim() || signatureFile) {
-        let firstName = '';
-        let lastName = '';
+  for (let i = 1; i <= 4; i++) {
+    const rawName = req.body[`fullName${i}`] || '';
+    const signatureFile = signatureFiles[sigIndex];
 
-        if (rawName.trim()) {
-          const nameParts = rawName.trim().split(/\s+/);
-          if (nameParts.length === 1) {
-            firstName = capitalizeWords(nameParts[0]);
-          } else {
-            firstName = capitalizeWords(nameParts.shift()); 
-            lastName = capitalizeWords(nameParts.join(' '));
-          }
+    if (rawName.trim() || signatureFile) {
+      let firstName = '';
+      let lastName = '';
+
+      if (rawName.trim()) {
+        const nameParts = rawName.trim().split(/\s+/);
+        if (nameParts.length === 1) {
+          firstName = capitalizeWords(nameParts[0]);
+        } else {
+          firstName = capitalizeWords(nameParts.shift());
+          lastName = capitalizeWords(nameParts.join(' '));
         }
-
-        if (signatureFile) sigIndex++;
-        
-        const sigProcessing = req.body[`sigProcessing${i}`];
-        const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
-
-        passengers.push({
-          firstName,
-          lastName,
-          fullName: lastName ? `${lastName}, ${firstName}` : (firstName || ' '),
-          address: req.body[`address${i}`] || '',
-          signature: signatureDataUrl
-        });
       }
+
+      if (signatureFile) sigIndex++;
+
+      const sigProcessing = req.body[`sigProcessing${i}`];
+      const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+
+      passengers.push({
+        firstName,
+        lastName,
+        fullName: lastName ? `${lastName}, ${firstName}` : (firstName || ' '),
+        address: req.body[`address${i}`] || '',
+        signature: signatureDataUrl
+      });
     }
-
-    if (passengers.length === 0) return res.status(400).send("At least one passenger or signature is required.");
-
-    const pdfData = {
-      pnr, flightDate: new Date(flightDate), claimDate: new Date(claimDate),
-      flightNumber: flightNumber || pnr, bookingCode: bookingCode || pnr,
-      passengers, lufthansaLogo: getLufthansaLogoBase64()
-    };
-
-    const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=lufthansa-poa-${pnr}.pdf`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('❌ Error generating Lufthansa PDF:', error);
-    res.status(500).render('error', { message: 'Error generating PDF.' });
   }
-};
+
+  if (passengers.length === 0) {
+    return next(new AppError('At least one passenger or signature is required.', 400));
+  }
+
+  const pdfData = {
+    pnr, flightDate: new Date(flightDate), claimDate: new Date(claimDate),
+    flightNumber: flightNumber || pnr, bookingCode: bookingCode || pnr,
+    passengers, lufthansaLogo: getLufthansaLogoBase64()
+  };
+
+  const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=lufthansa-poa-${pnr}.pdf`);
+  res.setHeader('Content-Length', pdfBuffer.length);
+  res.send(pdfBuffer);
+});

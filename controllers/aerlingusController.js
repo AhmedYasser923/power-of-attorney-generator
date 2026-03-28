@@ -2,6 +2,8 @@ const PDFGenerator = require('../utils/pdfGenerator');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 cloudinary.config({
@@ -10,6 +12,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+/**
+ * Unified Signature Processing Engine
+ * Errors are caught internally and fall back to the raw image — this is intentional.
+ */
 async function processSignature(file, processingMethod) {
   if (!file) return null;
 
@@ -28,7 +34,7 @@ async function processSignature(file, processingMethod) {
         return `data:image/png;base64,${finalBuffer.toString('base64')}`;
       }
     } catch (error) {
-      console.error('❌ Gemini Signature Error:', error.message);
+      console.error('Gemini Signature Error:', error.message);
     }
   } else if (processingMethod === 'cloudinary') {
     try {
@@ -41,40 +47,37 @@ async function processSignature(file, processingMethod) {
       const arrayBuffer = await response.arrayBuffer();
       return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
     } catch (error) {
-      console.error('❌ Cloudinary Error:', error.message);
+      console.error('Cloudinary Error:', error.message);
     }
   }
 
   return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
 }
 
-exports.generateAerLingusPDF = async (req, res) => {
-  try {
-    const { firstName, lastName, address, pnr, caseNumber, claimType, flightDate, flightNumber, route, sigProcessing } = req.body;
-    const files = req.files || [];
-    const signatureFile = files.find(f => f.fieldname === 'signature');
+exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
+  const { firstName, lastName, address, pnr, caseNumber, claimType, flightDate, flightNumber, route, sigProcessing } = req.body;
+  const files = req.files || [];
+  const signatureFile = files.find(f => f.fieldname === 'signature');
 
-    if (!firstName || !lastName || !pnr) return res.status(400).send('First Name, Last Name, and PNR are required.');
-
-    const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
-    
-    const pdfData = { 
-      firstName, lastName, address, pnr, caseNumber, claimType, 
-      flightDate: new Date(flightDate), flightNumber, route, 
-      signature: signatureDataUrl 
-    };
-    
-    const passengerName = `${firstName}_${lastName}`;
-    const fileName = `AerLingus_POA_${passengerName}.pdf`;
-
-    const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'aerlingus-poa');
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('❌ Error generating Aer Lingus PDF:', error);
-    res.status(500).render('error', { message: 'Error generating PDF.' });
+  if (!firstName || !lastName || !pnr) {
+    return next(new AppError('First Name, Last Name, and PNR are required.', 400));
   }
-};
+
+  const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+
+  const pdfData = {
+    firstName, lastName, address, pnr, caseNumber, claimType,
+    flightDate: new Date(flightDate), flightNumber, route,
+    signature: signatureDataUrl
+  };
+
+  const passengerName = `${firstName}_${lastName}`;
+  const fileName = `AerLingus_POA_${passengerName}.pdf`;
+
+  const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'aerlingus-poa');
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.setHeader('Content-Length', pdfBuffer.length);
+  res.send(pdfBuffer);
+});

@@ -97,11 +97,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Analysis failed');
 
             let rawResponse = await res.json();
-            let dataArray = rawResponse.journeys || rawResponse; 
-            
-            if (!Array.isArray(dataArray)) dataArray = [dataArray];
 
             resultsCard.innerHTML = '';
+            resultsCard.style.display = 'block';
+
+            // Document had no flight information
+            if (rawResponse.noFlightData) {
+                resultsCard.innerHTML = `
+                    <div style="text-align: center; padding: 48px 24px; background: #fff7ed; border: 1px dashed #fed7aa; border-radius: 12px; color: #9a3412;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🚫✈️</div>
+                        <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">No Flight Information Found</div>
+                        <div style="font-size: 14px; color: #c2410c;">This document doesn't contain any flight information.<br>Please upload a boarding pass, e-ticket, or itinerary.</div>
+                    </div>`;
+                return;
+            }
+
+            let dataArray = rawResponse.journeys || rawResponse;
+            
+            if (!Array.isArray(dataArray)) dataArray = [dataArray];
 
             if (rawResponse.processingTime) {
                 resultsCard.innerHTML += `<div style="display: flex; justify-content: flex-end; margin-bottom: 15px;"><span style="background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">⏱️ Server Processed in ${rawResponse.processingTime}s</span></div>`;
@@ -228,63 +241,91 @@ document.addEventListener('DOMContentLoaded', () => {
                                     distanceHtml = `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>`;
                                 }
 
+                                // Zone 4 — docs pill (inline, no absolute positioning)
                                 let docsHtml = '';
                                 if (flight.claimDocuments) {
-                                    let isDefault = flight.claimDocuments === 'No documents required';
-                                    let docIcon = isDefault ? '📄' : '📑 Required:';
-                                    let docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
-                                    let docBg = isDefault ? 'transparent' : '#f0f9ff';
-                                    let docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
-                                    
-                                    docsHtml = `<div style="position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 250px; font-size: 10px; font-weight: 700; color: ${docColor}; background: ${docBg}; border: ${docBorder}; padding: 4px 10px; border-radius: 8px; text-align: center; line-height: 1.3; z-index: 4; box-shadow: ${isDefault ? 'none' : '0 2px 4px rgba(0,0,0,0.05)'};">${docIcon} ${flight.claimDocuments}</div>`;
+                                    const isDefault = flight.claimDocuments === 'No documents required';
+                                    const docIcon = isDefault ? '📄' : '📑';
+                                    const docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
+                                    const docBg   = isDefault ? 'transparent' : '#f0f9ff';
+                                    const docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
+                                    const docLabel = isDefault ? 'No docs required' : `Required: ${flight.claimDocuments}`;
+                                    docsHtml = `<span style="display:inline-flex;align-items:center;gap:4px;color:${docColor};background:${docBg};border:${docBorder};padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;max-width:260px;white-space:normal;line-height:1.3;">${docIcon} ${docLabel}</span>`;
                                 }
 
+                                // Zone 4 — check-stats button (lives next to flight number)
                                 let statusBtnHtml = '';
                                 if (flight.flightNumber && flight.flightNumber !== 'N/A' && flight.flightNumber !== 'Unknown') {
-                                    statusBtnHtml = `<button type="button" class="btn-check-status" data-flight="${flight.flightNumber}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">📡 check stats</button>`;
+                                    statusBtnHtml = `<button type="button" class="btn-check-status" data-flight="${flight.flightNumber}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 Stats</button>`;
                                 }
 
+                                // Zone 5 — EOC button
                                 let eocBtnHtml = '';
                                 if (flight.date && flight.date !== 'Unknown') {
-                                    eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background: #fef08a; color: #9a3412; border: 1px solid #fde047; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;">⚠️ Check EOC</button>`;
+                                    eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
                                 }
 
                                 flightCardsContainer.innerHTML += `
-                                    <div class="flight-card" style="opacity: ${opacityStyle};">
+                                    <div class="flight-card" style="opacity:${opacityStyle};">
+
                                         ${statusWarningHtml}
-                                        <div class="fc-top"><div class="fc-airline">${airText}</div><div class="fc-badge">${legIndicator}</div></div>
+
+                                        <!-- Zone 1: Header -->
+                                        <div class="fc-top">
+                                            <div class="fc-airline">${airText}</div>
+                                            <div class="fc-badge">${legIndicator}</div>
+                                        </div>
+
+                                        <!-- Zone 2: Route (IATA + airport + city) -->
                                         <div class="fc-path-container">
                                             <div class="fc-node left">
                                                 <div class="fc-iata">${flight.originIata || '???'}</div>
                                                 <div class="fc-airport">${flight.originName || ''}</div>
                                                 <div class="fc-city">${flight.originCity || ''}, ${flight.originCountry || ''}</div>
-                                                ${originStatute}
-                                                <div class="fc-time">${flight.departureTime || '--:--'}</div>
                                             </div>
                                             <div class="fc-line-wrapper">
                                                 ${distanceHtml}
                                                 <div class="fc-line"></div>
                                                 <div class="fc-plane">✈</div>
-                                                ${docsHtml}
                                             </div>
                                             <div class="fc-node right">
                                                 <div class="fc-iata">${flight.destinationIata || '???'}</div>
                                                 <div class="fc-airport">${flight.destinationName || ''}</div>
                                                 <div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div>
-                                                ${destStatute}
-                                                <div class="fc-time">${flight.arrivalTime || '--:--'}</div>
                                             </div>
                                         </div>
-                                        <div class="fc-bottom">
-                                            <div style="display: flex; align-items: center; gap: 15px;">
-                                                <div>📅 ${flight.date || 'Unknown'}</div>
-                                                <div class="fc-flight-num" style="display: flex; gap: 8px; align-items: center;">Flight: ${flight.flightNumber || 'N/A'} ${statusBtnHtml} ${eocBtnHtml}</div>
+
+                                        <!-- Zone 3: Times + statute limits -->
+                                        <div class="fc-times-row">
+                                            <div>
+                                                <div class="fc-time">${flight.departureTime || '--:--'}</div>
+                                                ${originStatute ? `<div class="fc-statute">${originStatute.replace(/<[^>]*>/g,'')}</div>` : ''}
                                             </div>
-                                            <div style="display: flex; gap: 10px; align-items: center;">
+                                            <div style="text-align:right;">
+                                                <div class="fc-time">${flight.arrivalTime || '--:--'}</div>
+                                                ${destStatute ? `<div class="fc-statute" style="text-align:right;">${destStatute.replace(/<[^>]*>/g,'')}</div>` : ''}
+                                            </div>
+                                        </div>
+
+                                        <!-- Zone 4: Info strip (date · flight number + stats · documents) -->
+                                        <div class="fc-info-strip">
+                                            <span class="fc-date-pill">📅 ${flight.date || 'Unknown'}</span>
+                                            <span class="fc-strip-sep">·</span>
+                                            <span class="fc-flight-num">✈ ${flight.flightNumber || 'N/A'} ${statusBtnHtml}</span>
+                                            ${docsHtml ? `<span class="fc-strip-sep">·</span>${docsHtml}` : ''}
+                                        </div>
+
+                                        <!-- Zone 5: Footer (EOC + eligibility badges) -->
+                                        <div class="fc-footer">
+                                            <div style="display:flex;gap:8px;align-items:center;">
+                                                ${eocBtnHtml}
+                                            </div>
+                                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                                 ${legBadgeHtml}
                                                 ${expBadgeHtml}
                                             </div>
                                         </div>
+
                                     </div>`;
                             });
                         } else {
@@ -379,80 +420,108 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.aiStats) {
                 const ai = data.aiStats;
 
+                // Pre-compute conditional fragments before the template literal
+                const isCancelled = ai.rawStatus === 'C';
+                const isDiverted  = ai.rawStatus === 'D';
+
+                const arrSchedHtml = isCancelled
+                    ? `<div style="font-size:22px;font-weight:700;color:#475569;line-height:1;text-decoration:line-through;opacity:0.5;">${ai.arrSched}</div>`
+                    : `<div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.arrSched}</div>`;
+
+                const arrActualHtml = isCancelled
+                    ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>`
+                    : ai.arrTimeDataPending
+                        ? `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>`
+                        : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
+
+                const divertedCallout = (isDiverted && ai.divertedTo)
+                    ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>`
+                    : '';
+
+                const aiCommentHtml = ai.aiComment
+                    ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>`
+                    : '';
+
                 const statsCard = document.createElement('div');
                 statsCard.style.cssText = "margin-top: 20px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease;";
-                
+
                 statsCard.innerHTML = `
-                    <div style="background: ${ai.bannerBg}; color: ${ai.bannerTextCol}; text-align: center; padding: 14px; font-size: 15px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
+                    <div style="background:${ai.bannerBg};color:${ai.bannerTextCol};text-align:center;padding:14px;font-size:15px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;">
                         ${ai.bannerText}
                     </div>
-                    <div style="background: #0f172a; color: #ffffff; padding: 32px 24px; position: relative;">
-                        
-                        <div style="position: absolute; top: 20px; left: 24px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
-                            <span style="font-size: 14px;">✈️</span> OPERATOR: <span style="color: #f8fafc;">${ai.operatorName}</span>
+                    <div style="background:#0f172a;color:#ffffff;padding:24px;">
+
+                        <!-- Operator + Duration — flex row, no absolute positioning -->
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+                            <div style="flex:1;min-width:0;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px;overflow:hidden;">
+                                <span style="flex-shrink:0;">✈️</span>
+                                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ai.operatorName}</span>
+                            </div>
+                            <div style="flex-shrink:0;background:#1e293b;border:1px solid #334155;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;color:#94a3b8;display:flex;align-items:center;gap:6px;box-shadow:0 4px 6px rgba(0,0,0,0.2);">
+                                ⏱️ ${ai.flightDuration}
+                            </div>
+                            <div style="flex:1;"></div>
                         </div>
 
-                        <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid #334155; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #94a3b8; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                            ⏱️ ${ai.flightDuration}
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 36px;">
-                            <div style="text-align: left; flex: 1;">
-                                <div style="font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -2px; margin-bottom: 8px;">${ai.depIata}</div>
-                                <div style="font-size: 15px; color: #94a3b8; font-weight: 500;">${ai.depCity}</div>
+                        <!-- IATA codes + cities -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="text-align:left;flex:1;">
+                                <div style="font-size:56px;font-weight:800;line-height:1;letter-spacing:-2px;margin-bottom:8px;">${ai.depIata}</div>
+                                <div style="font-size:15px;color:#94a3b8;font-weight:500;">${ai.depCity}</div>
                             </div>
-
-                            <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 10px; opacity: 0.6;">
-                                <div style="height: 2px; background: repeating-linear-gradient(to right, #cbd5e1 0, #cbd5e1 6px, transparent 6px, transparent 12px); width: 100%;"></div>
-                                <div style="font-size: 28px; transform: rotate(90deg); margin-left: -14px; color: #cbd5e1;">✈</div>
+                            <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px;opacity:0.6;">
+                                <div style="height:2px;background:repeating-linear-gradient(to right,#cbd5e1 0,#cbd5e1 6px,transparent 6px,transparent 12px);width:100%;"></div>
+                                <div style="font-size:28px;transform:rotate(90deg);margin-left:-14px;color:#cbd5e1;">✈</div>
                             </div>
-
-                            <div style="text-align: right; flex: 1;">
-                                <div style="font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -2px; margin-bottom: 8px;">${ai.arrIata}</div>
-                                <div style="font-size: 15px; color: #94a3b8; font-weight: 500;">${ai.arrCity}</div>
+                            <div style="text-align:right;flex:1;">
+                                <div style="font-size:56px;font-weight:800;line-height:1;letter-spacing:-2px;margin-bottom:8px;">${ai.arrIata}</div>
+                                <div style="font-size:15px;color:#94a3b8;font-weight:500;">${ai.arrCity}</div>
                             </div>
                         </div>
 
-                        <div style="background: #1e293b; border-radius: 16px; padding: 20px; margin-top: 32px; display: flex; justify-content: space-between; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                            <div style="flex: 1;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 16px; font-weight: 800;">Departure Gate</div>
-                                <div style="margin-bottom: 16px;">
-                                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">Scheduled <span style="background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">${ai.depSchedZone}</span></div>
-                                    <div style="font-size: 22px; font-weight: 700; color: #f8fafc; line-height: 1;">${ai.depSched}</div>
-                                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${ai.depDate}</div>
+                        <!-- Times table -->
+                        <div style="background:#1e293b;border-radius:16px;padding:20px;margin-top:32px;display:flex;justify-content:space-between;box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="flex:1;">
+                                <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;margin-bottom:16px;font-weight:800;">Departure Gate</div>
+                                <div style="margin-bottom:16px;">
+                                    <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;gap:6px;">Scheduled <span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.depSchedZone}</span></div>
+                                    <div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.depSched}</div>
+                                    <div style="font-size:12px;color:#64748b;margin-top:4px;">${ai.depDate}</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">${ai.depActualLabel} <span style="background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">${ai.depActualZone}</span></div>
-                                    <div style="font-size: 22px; font-weight: 700; color: #f8fafc; line-height: 1;">${ai.depActual}</div>
+                                    <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;gap:6px;">${ai.depActualLabel} <span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.depActualZone}</span></div>
+                                    <div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.depActual}</div>
                                 </div>
                             </div>
-                            
-                            <div style="width: 1px; background: #334155; margin: 0 20px;"></div>
 
-                            <div style="flex: 1; text-align: right;">
-                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 16px; font-weight: 800;">Arrival Gate</div>
-                                <div style="margin-bottom: 16px;">
-                                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;"><span style="background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">${ai.arrSchedZone}</span> Scheduled</div>
-                                    <div style="font-size: 22px; font-weight: 700; color: #f8fafc; line-height: 1;">${ai.arrSched}</div>
-                                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${ai.arrDate}</div>
+                            <div style="width:1px;background:#334155;margin:0 20px;"></div>
+
+                            <div style="flex:1;text-align:right;${isCancelled ? 'opacity:0.45;' : ''}">
+                                <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;margin-bottom:16px;font-weight:800;">Arrival Gate</div>
+                                <div style="margin-bottom:12px;">
+                                    <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;justify-content:flex-end;gap:6px;"><span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.arrSchedZone}</span> Scheduled</div>
+                                    ${arrSchedHtml}
+                                    <div style="font-size:12px;color:#64748b;margin-top:4px;">${ai.arrDate}</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;"><span style="background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">${ai.arrActualZone}</span> ${ai.arrActualLabel}</div>
-                                    <div style="font-size: 22px; font-weight: 700; color: ${ai.arrDelayColor}; line-height: 1;">${ai.arrActual}</div>
+                                    <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;justify-content:flex-end;gap:6px;"><span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.arrActualZone}</span> ${ai.arrActualLabel}</div>
+                                    ${arrActualHtml}
                                 </div>
+                                ${divertedCallout}
                             </div>
                         </div>
 
-                        <div style="margin-top: 24px; text-align: center; border-top: 1px dashed #334155; padding-top: 20px;">
-                            <span style="font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Arrival Delay:</span>
-                            <strong style="margin-left: 10px; font-size: 18px; color: ${ai.arrDelayColor}; background: ${ai.arrDelayColor}15; border: 1px solid ${ai.arrDelayColor}30; padding: 6px 16px; border-radius: 8px;">${ai.arrDelay}</strong>
+                        <!-- Status summary bar -->
+                        <div style="margin-top:24px;text-align:center;border-top:1px dashed #334155;padding-top:20px;">
+                            <span style="font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Flight Status:</span>
+                            <strong style="margin-left:10px;font-size:18px;color:${ai.arrDelayColor};background:${ai.arrDelayColor}15;border:1px solid ${ai.arrDelayColor}30;padding:6px 16px;border-radius:8px;">${ai.arrDelay}</strong>
                         </div>
+
+                        ${aiCommentHtml}
                     </div>
                 `;
-                
-                flightCard.appendChild(statsCard);
 
-          
+                flightCard.appendChild(statsCard);
 
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">✨ checked</div>`;
                 

@@ -73,21 +73,36 @@ block content
     
     .flight-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 24px; margin-bottom: 16px; transition: all 0.2s ease; }
     .flight-card:hover { border-color: #cbd5e1; box-shadow: var(--shadow-md); }
-    .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+
+    /* Zone 1 – Header */
+    .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .fc-badge { background: #f1f5f9; color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
     .fc-airline { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-main); font-size: 14px; }
-    .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; padding-bottom: 30px; }
+
+    /* Zone 2 – Route (IATA + airport + city only, no times) */
+    .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
     .fc-node { flex: 1; z-index: 2; }
     .fc-node.right { text-align: right; }
-    .fc-iata { font-size: 32px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
-    .fc-airport { font-size: 13px; color: var(--text-main); font-weight: 600; margin-top: 8px; margin-bottom: 2px; line-height: 1.3; }
-    .fc-city { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .fc-time { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 10px; }
-    .fc-line-wrapper { flex: 1.5; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-top: 15px; }
+    .fc-iata { font-size: 36px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
+    .fc-airport { font-size: 12px; color: var(--text-main); font-weight: 600; margin-top: 6px; margin-bottom: 2px; line-height: 1.3; }
+    .fc-city { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .fc-line-wrapper { flex: 1.5; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-top: 12px; }
     .fc-line { width: 100%; border-top: 2px dashed #cbd5e1; position: absolute; }
     .fc-plane { background: var(--surface); color: var(--text-muted); padding: 0 12px; z-index: 2; font-size: 20px; transform: rotate(90deg); }
-    .fc-bottom { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
-    .fc-flight-num { background: var(--accent-blue); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+
+    /* Zone 3 – Times + statute limits */
+    .fc-times-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+    .fc-time { font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .fc-statute { font-size: 10px; color: #3b82f6; font-weight: 700; margin-top: 5px; }
+
+    /* Zone 4 – Info strip */
+    .fc-info-strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #f8fafc; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .fc-date-pill { display: flex; align-items: center; gap: 4px; color: var(--text-muted); }
+    .fc-flight-num { background: var(--accent-blue); color: var(--primary); padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+    .fc-strip-sep { color: #cbd5e1; font-size: 14px; }
+
+    /* Zone 5 – Footer actions + badges */
+    .fc-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
     
     /* --- NEW STATUS BADGES --- */
     .fc-ec-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; }

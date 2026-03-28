@@ -1,6 +1,11 @@
+// MUST be first: catch synchronous exceptions before anything else loads
+process.on('uncaughtException', err => {
+  console.error('UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(err.name, err.message, err.stack);
+  process.exit(1);
+});
+
 const AppError = require('./utils/appError');
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 const express = require('express');
@@ -24,19 +29,23 @@ app.use('/', require('./routes/index'));
 
 // 1. Handle all unhandled routes (404)
 app.use((req, res, next) => {
-  // Passing an argument to next() automatically tells Express an error occurred
-  // and skips all other middleware to go straight to the global error handler
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// 2. Use the new Global Error Handling Middleware
+// 2. Global Error Handler
 app.use(globalErrorHandler);
 
 
-
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://127.0.0.1:${PORT}`);
 });
 
+// Catch unhandled promise rejections (async errors that escape Express)
+process.on('unhandledRejection', err => {
+  console.error('UNHANDLED REJECTION! Shutting down...');
+  console.error(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});

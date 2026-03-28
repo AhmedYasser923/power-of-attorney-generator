@@ -2,6 +2,8 @@ const PDFGenerator = require('../utils/pdfGenerator');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // Initialize APIs
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -13,6 +15,7 @@ cloudinary.config({
 
 /**
  * Unified Signature Processing Engine
+ * Errors are caught internally and fall back to the raw image — this is intentional.
  */
 async function processSignature(file, processingMethod) {
   if (!file) return null;
@@ -20,8 +23,8 @@ async function processSignature(file, processingMethod) {
   if (processingMethod === 'gemini') {
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
-      const prompt = "Extract the handwritten signature. Thicken the ink to make it clear. Place the signature on a solid, pure white background. DO NOT draw a checkerboard transparency pattern. Output ONLY the image.";
-      
+      const prompt = "Extract the handwritten signature. Thicken the ink to make it clear. Place the signature on a solid, pure white background. DO NOT draw a checkerboard transparency pattern. Output ONLY the image. and try not change it and keep it as original as possible.";
+
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
@@ -33,7 +36,7 @@ async function processSignature(file, processingMethod) {
         return `data:image/png;base64,${finalBuffer.toString('base64')}`;
       }
     } catch (error) {
-      console.error('❌ Gemini Signature Error:', error.message);
+      console.error('Gemini Signature Error:', error.message);
     }
   } else if (processingMethod === 'cloudinary') {
     try {
@@ -46,7 +49,7 @@ async function processSignature(file, processingMethod) {
       const arrayBuffer = await response.arrayBuffer();
       return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
     } catch (error) {
-      console.error('❌ Cloudinary Error:', error.message);
+      console.error('Cloudinary Error:', error.message);
     }
   }
 
@@ -54,41 +57,37 @@ async function processSignature(file, processingMethod) {
   return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
 }
 
-exports.showForm = (req, res) => {
+exports.showForm = catchAsync(async (req, res, next) => {
   res.render('index', { title: 'Generate POA', error: null });
-};
+});
 
-exports.generateStandardPDF = async (req, res) => {
-  try {
-    const { firstName, lastName, address, pnr, date, sigProcessing, lang } = req.body;
-    const files = req.files || [];
-    const signatureFile = files.find(f => f.fieldname === 'signature');
+exports.generateStandardPDF = catchAsync(async (req, res, next) => {
+  const { firstName, lastName, address, pnr, date, sigProcessing, lang } = req.body;
+  const files = req.files || [];
+  const signatureFile = files.find(f => f.fieldname === 'signature');
 
-    if (!firstName || !lastName || !address || !pnr || !date) {
-      return res.render('index', { error: 'All fields are required', formData: req.body });
-    }
-
-    const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
-    
-    const pdfData = { firstName, lastName, address, pnr, date: new Date(date), signature: signatureDataUrl };
-    
-    const langCode = lang || 'En';
-    const templateName = langCode === 'En' ? 'assignment-pdf' : `assignment-${langCode.toLowerCase()}-pdf`;
-
-    const safeFirstName = firstName.replace(/[^\x00-\x7F]/g, "").trim();
-    const safeLastName = lastName.replace(/[^\x00-\x7F]/g, "").trim();
-    
-    const passengerName = `${safeFirstName}_${safeLastName}`;
-    const fileName = `Assignment-${langCode}_${passengerName}.pdf`;
-
-    const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, templateName);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('❌ Error generating Standard PDF:', error);
-    res.status(500).render('error', { message: 'Error generating PDF.' });
+  // Form validation — render back to form with the error (better UX than error page)
+  if (!firstName || !lastName || !address || !pnr || !date) {
+    return res.render('index', { error: 'All fields are required', formData: req.body });
   }
-};
+
+  const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+
+  const pdfData = { firstName, lastName, address, pnr, date: new Date(date), signature: signatureDataUrl };
+
+  const langCode = lang || 'En';
+  const templateName = langCode === 'En' ? 'assignment-pdf' : `assignment-${langCode.toLowerCase()}-pdf`;
+
+  const safeFirstName = firstName.replace(/[^\x00-\x7F]/g, "").trim();
+  const safeLastName = lastName.replace(/[^\x00-\x7F]/g, "").trim();
+
+  const passengerName = `${safeFirstName}_${safeLastName}`;
+  const fileName = `Assignment-${langCode}_${passengerName}.pdf`;
+
+  const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, templateName);
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+  res.setHeader('Content-Length', pdfBuffer.length);
+  res.send(pdfBuffer);
+});

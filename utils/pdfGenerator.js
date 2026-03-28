@@ -54,15 +54,17 @@ class PDFGenerator {
     return new Promise((resolve, reject) => {
       app.render(templateName, templateData, async (err, html) => {
         if (err) return reject(err);
+        let browser;
         try {
-          const browser = await chromium.launch();
+          browser = await chromium.launch();
           const page = await browser.newPage();
           await page.setContent(html, { waitUntil: 'networkidle' });
           const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-          await browser.close();
           resolve(pdfBuffer);
         } catch (error) {
           reject(error);
+        } finally {
+          if (browser) await browser.close().catch(() => {});
         }
       });
     });
