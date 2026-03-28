@@ -1,54 +1,48 @@
 extends layout
 
 block content
-  #loader-overlay(style="display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 999999; flex-direction: column; justify-content: center; align-items: center;")
+  //- Note: Add link(rel="stylesheet", href="/css/poa-form.css") to your layout.pug <head> 
+
+  #loader-overlay.poa-loader
     .modern-spinner
-    p(style="margin-top: 24px; font-weight: 600; font-size: 15px; color: #007bff; letter-spacing: 0.5px; animation: pulse-text 1.5s infinite ease-in-out;") Generating PDF... Please wait
+    p.poa-loader__text Generating PDF... Please wait
 
-  .container(style="max-width: 1000px; position: relative;") 
-    h2 Generate Power of Attorney
+  .poa-container
+    h2.poa-title Generate Power of Attorney
     
-    //- --- NEW AI ANALYZER REDIRECTION BANNER ---
-    a.analyzer-banner(href="/ticket-analyzer" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%); border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px 25px; margin-bottom: 30px; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s ease;")
-      div
-        h3(style="margin: 0 0 6px 0; color: #1e40af; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;") ✨ Ticket Analyzer
-        p(style="margin: 0; color: #3b82f6; font-size: 14px; font-weight: 500;") Instantly extract passenger data, routes, and EC261/UK261 eligibility from any screenshot.
-      
-      div(style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; white-space: nowrap; box-shadow: 0 2px 4px rgba(37,99,235,0.2);") Launch Analyzer ➔
-
-    style.
-      .analyzer-banner:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #93c5fd !important; }
-      .analyzer-banner:hover div:last-child { background: #1d4ed8 !important; }
+    //- AI ANALYZER REDIRECTION BANNER
+    a.poa-banner(href="/ticket-analyzer")
+      .poa-banner__content
+        h3.poa-banner__title ✨ Ticket Analyzer
+        p.poa-banner__desc Instantly extract passenger data, routes, and EC261/UK261 eligibility from any screenshot.
+      .poa-banner__btn Launch Analyzer ➔
     
     if error
-      .error-message(style="background: #ffdddd; padding: 10px; margin-bottom: 15px;")= error
+      .poa-error= error
     
-    .form-group
-      label(for="templateSelector" style="font-weight:bold; font-size:16px;") Select Template Format *
-      select#templateSelector(style="width: 100%; padding: 10px; margin-bottom: 20px; font-size:16px;")
+    .poa-form-group
+      label.poa-label(for="templateSelector") Select Template Format *
+      select#templateSelector.poa-select
         option(value="standard") Standard ReFly Template (1 Passenger)
         option(value="lufthansa") Lufthansa Template (Up to 4 Passengers)
         option(value="aerlingus") Aer Lingus Template (1 Passenger)
 
-    hr(style="margin-bottom:20px;")
+    hr.poa-divider
 
-    //- ==========================================
     //- AI AUTOFILL & UNIFIED PASTE SECTION
-    //- ==========================================
-    .form-group(style="background: #eef2f7; padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #cdd6e5; transition: background-color 0.3s;" id="aiZoneContainer")
-      label(style="font-weight:bold; font-size:15px; color:#333;") ✨ AI Autofill & Signature Drop
-      p(style="font-size: 13px; color: #555; margin-bottom: 10px;") Use <b>Ditto</b> to paste text and signatures globally. Text goes to AI, images auto-attach to the active form below.
-      textarea#aiAutofillInput(rows="3" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; transition: all 0.2s;" placeholder="Paste text here...")
-      button#aiAutofillBtn(type="button" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;") Extract & Fill Form
+    .poa-ai-zone#aiZoneContainer
+      label.poa-ai-zone__label ✨ AI Autofill & Signature Drop
+      p.poa-ai-zone__desc Use <b>Ditto</b> to paste text and signatures globally. Text goes to AI, images auto-attach to the active form below.
+      textarea#aiAutofillInput.poa-textarea(rows="3" placeholder="Paste text here...")
+      button#aiAutofillBtn.poa-btn.poa-btn--success(type="button") Extract & Fill Form
 
-    //- ==========================================
     //- FORM 1: STANDARD REFLY TEMPLATE
-    //- ==========================================
-    form#standardForm(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
-      h3 Standard Form Details
-      .form-group(style="margin-bottom: 20px; background: #f0f7ff; padding: 15px; border-radius: 6px; border: 1px solid #d0e3ff;")
-        label(style="font-weight: bold; display: block; margin-bottom: 8px;") Document Language:
-        select(name="lang" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;")
+    form#standardForm.poa-form(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
+      h3.poa-form-title Standard Form Details
+      
+      .poa-highlight-box
+        label.poa-label Document Language:
+        select.poa-select(name="lang")
           option(value="En" selected) English (En)
           option(value="Fr") French (Fr)
           option(value="De") German (De)
@@ -70,492 +64,154 @@ block content
           option(value="CH") chienese (Ch)
           option(value="Al") albanian (Al)
 
-      .form-group
-        label First Name *
-        input(type="text", name="firstName", required)
-      .form-group
-        label Last Name *
-        input(type="text", name="lastName", required)
-      .form-group
-        label Address *
-        textarea(name="address", rows="3", required)
-      .form-group
-        label PNR Number *
-        input(type="text", name="pnr", required, minlength="5",  pattern="[A-Za-z0-9]{5,}")
-      .form-group
-        label Date *
-        input(type="date", name="date", required)
+      .poa-form-group
+        label.poa-label First Name *
+        input.poa-input(type="text", name="firstName", required)
+      .poa-form-group
+        label.poa-label Last Name *
+        input.poa-input(type="text", name="lastName", required)
+      .poa-form-group
+        label.poa-label Address *
+        textarea.poa-textarea(name="address", rows="3", required)
+      .poa-form-group
+        label.poa-label PNR Number *
+        input.poa-input(type="text", name="pnr", required, minlength="5", pattern="[A-Za-z0-9]{5,}")
+      .poa-form-group
+        label.poa-label Date *
+        input.poa-input(type="date", name="date", required)
       
-      .form-group
-        label Signature Image (optional)
-        .drop-zone
-          p.drop-zone-text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+      .poa-form-group
+        label.poa-label Signature Image (optional)
+        .drop-zone.poa-dropzone
+          p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
           input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;")
           img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
       
-      .form-group(style="background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc; margin-top: 10px;")
-        label(style="font-weight: bold; margin-bottom: 8px; display: block;") Signature Processing Option
-        select(name="sigProcessing" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;")
+      .poa-sig-processing-box
+        label.poa-label Signature Processing Option
+        select.poa-select(name="sigProcessing")
           option(value="none") None (Use Raw Image)
           option(value="cloudinary") Cloudinary AI (Standard Background Removal)
           option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
       
-      button.btn-primary(type="submit", style="margin-top: 20px;") Generate Standard PDF
+      button.poa-btn.poa-btn--primary.poa-mt-20(type="submit") Generate Standard PDF
 
-    //- ==========================================
     //- FORM 2: LUFTHANSA TEMPLATE
-    //- ==========================================
-    form#lufthansaForm(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
-      h3 Lufthansa Form Details
-      .form-row
-        .form-group
-          label Flight Number
-          input(type="text", name="flightNumber")
-        .form-group
-          label PNR / Booking Code *
-          input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
-        .form-group
-          label Flight Date *
-          input(type="date", name="flightDate", required)
+    form#lufthansaForm.poa-form(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
+      h3.poa-form-title Lufthansa Form Details
+      .poa-row
+        .poa-col
+          label.poa-label Flight Number
+          input.poa-input(type="text", name="flightNumber")
+        .poa-col
+          label.poa-label PNR / Booking Code *
+          input.poa-input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
+        .poa-col
+          label.poa-label Flight Date *
+          input.poa-input(type="date", name="flightDate", required)
 
-      .form-row(style="display: flex; gap: 20px; align-items: flex-start; margin-top: 20px;")
-        div(style="flex: 1.2;")
+      .poa-row.poa-row--align-start.poa-mt-20
+        .poa-col.poa-col--1-2
           h4 Passenger Details
-          #names-container(style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; gap: 15px;")
+          #names-container.poa-panel
             - for (var i = 1; i <= 4; i++)
-              .form-row(style="margin-bottom: 0; align-items: center;")
-                .form-group(style="flex: 1; margin-bottom: 0;")
-                  label Passenger #{i} Full Name #{i === 1 ? '*' : '(Optional)'}
-                  input(type="text", name=`fullName${i}`, placeholder="e.g. Pamela Nelson", required=(i === 1))
+              .poa-row.poa-row--no-margin.poa-row--center
+                .poa-col.poa-col--no-margin
+                  label.poa-label Passenger #{i} Full Name #{i === 1 ? '*' : '(Optional)'}
+                  input.poa-input(type="text", name=`fullName${i}`, placeholder="e.g. Pamela Nelson", required=(i === 1))
               if i === 1
-                .form-row(style="margin-bottom: 0; margin-top: 10px;")
-                  .form-group(style="flex: 1; margin-bottom: 0;")
-                    label Main Claimer Address *
-                    textarea(name="address1", rows="2", required=true)
+                .poa-row.poa-row--no-margin.poa-mt-10
+                  .poa-col.poa-col--no-margin
+                    label.poa-label Main Claimer Address *
+                    textarea.poa-textarea(name="address1", rows="2", required=true)
 
-        div(style="flex: 1;")
+        .poa-col.poa-col--1
           h4 Signatures
-          #signatures-container(style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; gap: 15px;")
-            .form-group(style="margin-bottom: 0;")
-              label Claim Submission Date *
-              input(type="date", name="claimDate", required, style="width: 100%;")
-            .drop-zone#lufthansa-drop-zone(style="padding: 20px; text-align: center; border: 2px dashed #ccc; border-radius: 6px; cursor: pointer; background: #fff;")
-              p.drop-zone-text(style="margin: 0; font-size: 14px;") Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+          #signatures-container.poa-panel
+            .poa-form-group.poa-form-group--no-margin
+              label.poa-label Claim Submission Date *
+              input.poa-input(type="date", name="claimDate", required)
+            
+            .drop-zone.poa-dropzone#lufthansa-drop-zone
+              p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
               input#lufthansa-sig-input(type="file", name="signatures", accept="image/*", multiple=true, style="display: none;")
-            #lufthansa-sig-previews(style="display: flex; gap: 10px; flex-wrap: wrap; min-height: 80px; padding: 10px; border: 1px dashed #e4e7eb; border-radius: 6px; background: #fff; align-items: center;")
-              span#preview-placeholder(style="color: #aaa; font-size: 12px; margin: auto;") Previews appear here...
+            
+            #lufthansa-sig-previews.poa-sig-previews
+              span#preview-placeholder.poa-preview-placeholder Previews appear here...
             
             div
-              label(style="font-weight: bold; font-size: 13px; margin-bottom: 10px; display: block;") Processing Method per Signature:
-              div(style="display: flex; flex-direction: column; gap: 8px;")
+              label.poa-label.poa-label--bold Processing Method per Signature:
+              .poa-sig-processing-list
                 - for (var i = 1; i <= 4; i++)
-                  .form-group(style="display: flex; gap: 8px; align-items: center; margin-bottom: 0; background: #fff; padding: 8px; border: 1px solid #ddd; border-radius: 4px;")
-                    label(style="margin:0; font-size: 12px; white-space: nowrap; font-weight: bold;") Sig #{i}:
-                    select(name=`sigProcessing${i}` style="flex: 1; padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc;")
+                  .poa-sig-processing-item
+                    label.poa-sig-processing-item__label Sig #{i}:
+                    select.poa-select.poa-select--small(name=`sigProcessing${i}`)
                       option(value="none") None (Raw)
                       option(value="cloudinary") Cloudinary AI
                       option(value="gemini", selected) Nano Banana
 
-      button.btn-primary(type="submit", style="margin-top: 25px; width: 100%; font-size: 16px; padding: 12px;") Generate Lufthansa PDF
+      button.poa-btn.poa-btn--primary.poa-btn--full.poa-mt-25(type="submit") Generate Lufthansa PDF
 
-    //- ==========================================
     //- FORM 3: AER LINGUS TEMPLATE
-    //- ==========================================
-    form#aerLingusForm(action="/generate-aerlingus", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
-      h3 Aer Lingus Form Details
-      .form-row(style="background: #e0f2f1; padding: 15px; border: 1px solid #80cbc4; border-radius: 6px; margin-bottom: 20px;")
-        .form-group
-          label Type of Claim *
-          select(name="claimType" required style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;")
-            option(value="compensation") Compensation Claim (Regulation EC 261/2004)
-            option(value="expense") Expense Claim
-            option(value="baggage") Delayed, Lost or Damaged Baggage Claim
-            option(value="complaint") Complaint
-            option(value="other") Other
-        .form-group
-          label Case Number (Optional)
-          input(type="text", name="caseNumber")
-
-      .form-row
-        .form-group
-          label Passenger First Name *
-          input(type="text", name="firstName", required)
-        .form-group
-          label Passenger Last Name *
-          input(type="text", name="lastName", required)
-      .form-group
-        label Passenger Address *
-        textarea(name="address", rows="2", required)
+    form#aerLingusForm.poa-form(action="/generate-aerlingus", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
+      h3.poa-form-title Aer Lingus Form Details
       
-      .form-row
-        .form-group
-          label PNR / Booking Code *
-          input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
-        .form-group
-          label Flight Number
-          input(type="text", name="flightNumber")
-        .form-group
-          label Flight Date *
-          input(type="date", name="flightDate", required)
-      
-      .form-group
-        label Route (Specify to and from)
-        input(type="text", name="route", placeholder="e.g. DUB - JFK")
+      .poa-highlight-box--teal
+        .poa-row
+          .poa-col
+            label.poa-label Type of Claim *
+            select.poa-select(name="claimType" required)
+              option(value="compensation") Compensation Claim (Regulation EC 261/2004)
+              option(value="expense") Expense Claim
+              option(value="baggage") Delayed, Lost or Damaged Baggage Claim
+              option(value="complaint") Complaint
+              option(value="other") Other
+          .poa-col
+            label.poa-label Case Number (Optional)
+            input.poa-input(type="text", name="caseNumber")
 
-      .form-group
-        label Signature Image *
-        .drop-zone
-          p.drop-zone-text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+      .poa-row
+        .poa-col
+          label.poa-label Passenger First Name *
+          input.poa-input(type="text", name="firstName", required)
+        .poa-col
+          label.poa-label Passenger Last Name *
+          input.poa-input(type="text", name="lastName", required)
+      
+      .poa-form-group
+        label.poa-label Passenger Address *
+        textarea.poa-textarea(name="address", rows="2", required)
+      
+      .poa-row
+        .poa-col
+          label.poa-label PNR / Booking Code *
+          input.poa-input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
+        .poa-col
+          label.poa-label Flight Number
+          input.poa-input(type="text", name="flightNumber")
+        .poa-col
+          label.poa-label Flight Date *
+          input.poa-input(type="date", name="flightDate", required)
+      
+      .poa-form-group
+        label.poa-label Route (Specify to and from)
+        input.poa-input(type="text", name="route", placeholder="e.g. DUB - JFK")
+
+      .poa-form-group
+        label.poa-label Signature Image *
+        .drop-zone.poa-dropzone
+          p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
           input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;", required)
           img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
       
-      .form-group(style="background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc; margin-top: 10px;")
-        label(style="font-weight: bold; margin-bottom: 8px; display: block;") Signature Processing Option
-        select(name="sigProcessing" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;")
+      .poa-sig-processing-box
+        label.poa-label Signature Processing Option
+        select.poa-select(name="sigProcessing")
           option(value="none") None (Use Raw Image)
           option(value="cloudinary") Cloudinary AI (Standard Background Removal)
           option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
 
-      button.btn-primary(type="submit", style="margin-top: 25px; width: 100%; font-size: 16px; padding: 12px; background-color: #006778;") Generate Aer Lingus PDF
+      button.poa-btn.poa-btn--aerlingus.poa-btn--full.poa-mt-25(type="submit") Generate Aer Lingus PDF
 
-  style.
-    .drop-zone { border: 2px dashed #ccc; padding: 15px; text-align: center; cursor: pointer; background: #fff; margin-top: 5px; border-radius: 5px; transition: all 0.3s; }
-    .drop-zone.dragover { border-color: #007bff; background: #e9f5ff; }
-    .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
-    .form-row > .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
-    .modern-spinner { width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#0000 10%, #007bff); -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0); mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 0); animation: smooth-spin 1s infinite linear; }
-    @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    @keyframes smooth-spin { to { transform: rotate(1turn); } }
-    
-  script.
-    document.addEventListener('DOMContentLoaded', () => {
-      const selector = document.getElementById('templateSelector');
-      const standardForm = document.getElementById('standardForm');
-      const lufthansaForm = document.getElementById('lufthansaForm');
-      const aerLingusForm = document.getElementById('aerLingusForm');
-      const globalLogo = document.querySelector('img[src*="Screenshot_1"], img[src*="lufthansa_logo"], header img, .navbar img');
-      let lufthansaDataTransfer = new DataTransfer();
-
-      if (selector) {
-        selector.addEventListener('change', (e) => {
-          const val = e.target.value;
-          
-          [standardForm, lufthansaForm, aerLingusForm].forEach(f => {
-            if(f) {
-              f.style.display = 'none';
-              f.querySelectorAll('input, textarea, select').forEach(el => el.disabled = true);
-            }
-          });
-
-          if (val === 'standard') {
-            standardForm.style.display = 'block';
-            standardForm.querySelectorAll('input, textarea, select').forEach(el => el.disabled = false);
-            if (globalLogo) { globalLogo.src = '/images/Screenshot_1.png'; globalLogo.style.height = '40px'; }
-          } else if (val === 'lufthansa') {
-            lufthansaForm.style.display = 'block';
-            lufthansaForm.querySelectorAll('input, textarea, select').forEach(el => el.disabled = false);
-            if (globalLogo) { globalLogo.src = '/images/Lufthansa_Logo_2018.svg.png'; globalLogo.style.height = '40px'; }
-          } else if (val === 'aerlingus') {
-            aerLingusForm.style.display = 'block';
-            aerLingusForm.querySelectorAll('input, textarea, select').forEach(el => el.disabled = false);
-            if (globalLogo) { globalLogo.src = '/images/aer-lingus.png'; globalLogo.style.height = '40px'; }
-          }
-        });
-        selector.dispatchEvent(new Event('change'));
-      }
-
-      // ==========================================
-      // BULLETPROOF GLOBAL PASTE LISTENER
-      // ==========================================
-      const aiZoneContainer = document.getElementById('aiZoneContainer');
-      const lhInput = document.getElementById('lufthansa-sig-input');
-
-      document.addEventListener('paste', (e) => {
-        const clipboard = e.clipboardData || window.clipboardData;
-        let imageFound = false;
-        const filesToProcess = [];
-
-        if (clipboard.files && clipboard.files.length > 0) {
-          for (let i = 0; i < clipboard.files.length; i++) {
-            if (clipboard.files[i].type.startsWith('image/')) {
-              filesToProcess.push(clipboard.files[i]);
-            }
-          }
-        } else if (clipboard.items) {
-          for (let i = 0; i < clipboard.items.length; i++) {
-            if (clipboard.items[i].type.startsWith('image/')) {
-              const file = clipboard.items[i].getAsFile();
-              if (file) filesToProcess.push(file);
-            }
-          }
-        }
-
-        if (filesToProcess.length > 0) {
-          imageFound = true;
-          if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
-            e.preventDefault();
-          }
-
-          const activeTemplate = selector.value;
-          filesToProcess.forEach(file => {
-            const newFile = new File([file], `sig_${Date.now()}_${Math.floor(Math.random()*1000)}.png`, { type: file.type || 'image/png' });
-            
-            if (activeTemplate === 'standard') {
-              const stdInput = document.querySelector('#standardForm .sig-file-input');
-              const dt = new DataTransfer();
-              dt.items.add(newFile);
-              stdInput.files = dt.files;
-              showPreview(newFile, document.querySelector('#standardForm .sig-preview'), document.querySelector('#standardForm .drop-zone-text'));
-            } else if (activeTemplate === 'aerlingus') {
-              const aerInput = document.querySelector('#aerLingusForm .sig-file-input');
-              const dt = new DataTransfer();
-              dt.items.add(newFile);
-              aerInput.files = dt.files;
-              showPreview(newFile, document.querySelector('#aerLingusForm .sig-preview'), document.querySelector('#aerLingusForm .drop-zone-text'));
-            } else {
-              if (lufthansaDataTransfer.items.length < 4) {
-                lufthansaDataTransfer.items.add(newFile);
-                if (lhInput) lhInput.files = lufthansaDataTransfer.files;
-                renderLufthansaPreviews();
-              }
-            }
-          });
-          if (aiZoneContainer) {
-            aiZoneContainer.style.backgroundColor = '#d4edda';
-            aiZoneContainer.style.borderColor = '#28a745';
-            setTimeout(() => {
-              aiZoneContainer.style.backgroundColor = '';
-              aiZoneContainer.style.borderColor = '#ccc';
-            }, 400);
-          }
-        }
-      });
-
-      // ==========================================
-      // CLICK & UPLOAD DROP ZONE LOGIC 
-      // ==========================================
-      document.querySelectorAll('#standardForm .drop-zone, #aerLingusForm .drop-zone').forEach(zone => {
-        const input = zone.querySelector('.sig-file-input');
-        const preview = zone.querySelector('.sig-preview');
-        const text = zone.querySelector('.drop-zone-text');
-
-        if (input && preview && text) {
-          zone.addEventListener('click', () => input.click());
-          zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-          zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
-          zone.addEventListener('drop', e => {
-            e.preventDefault(); 
-            zone.classList.remove('dragover');
-            if (e.dataTransfer.files.length) {
-              input.files = e.dataTransfer.files;
-              showPreview(input.files[0], preview, text);
-            }
-          });
-          input.addEventListener('change', () => {
-            if (input.files.length) showPreview(input.files[0], preview, text);
-          });
-        }
-      });
-
-      // Lufthansa Multiple-File Drop Zone Logic
-      const lhDropZone = document.getElementById('lufthansa-drop-zone');
-      const lhPreviews = document.getElementById('lufthansa-sig-previews');
-      
-      if (lhDropZone && lhInput && lhPreviews) {
-        lhDropZone.addEventListener('click', () => lhInput.click());
-        lhDropZone.addEventListener('dragover', e => { e.preventDefault(); lhDropZone.classList.add('dragover'); });
-        lhDropZone.addEventListener('dragleave', e => { e.preventDefault(); lhDropZone.classList.remove('dragover'); });
-        lhDropZone.addEventListener('drop', e => {
-          e.preventDefault();
-          lhDropZone.classList.remove('dragover');
-          handleLufthansaFiles(e.dataTransfer.files);
-        });
-        lhInput.addEventListener('change', () => {
-          handleLufthansaFiles(lhInput.files);
-        });
-      }
-
-      function handleLufthansaFiles(files) {
-        for (let file of files) {
-          if (file.type.startsWith('image/') && lufthansaDataTransfer.items.length < 4) {
-            lufthansaDataTransfer.items.add(file);
-          }
-        }
-        lhInput.files = lufthansaDataTransfer.files;
-        renderLufthansaPreviews();
-      }
-
-      // Form Submit Handlers
-      async function handleFormSubmit(event, formElement, endpoint) {
-        event.preventDefault();
-        document.getElementById('loader-overlay').style.setProperty('display', 'flex', 'important');
-        try {
-          const formData = new FormData(formElement);
-          const response = await fetch(endpoint, { method: 'POST', body: formData });
-          if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-          let filename = 'document.pdf';
-          const disposition = response.headers.get('Content-Disposition');
-          if (disposition && disposition.indexOf('filename=') !== -1) {
-            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-            if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
-          }
-
-          const blob = await response.blob();
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(downloadUrl);
-          a.remove();
-          
-          formElement.reset();
-          if (formElement.id === 'standardForm' || formElement.id === 'aerLingusForm') {
-            const preview = document.querySelector(`#${formElement.id} .sig-preview`);
-            const text = document.querySelector(`#${formElement.id} .drop-zone-text`);
-            if(preview) { preview.src = ''; preview.style.display = 'none'; }
-            if(text) text.innerHTML = 'Click to Upload, Drag & Drop, or Paste (Ctrl+V)';
-          } else if (formElement.id === 'lufthansaForm') {
-            lufthansaDataTransfer = new DataTransfer();
-            if (lhInput) lhInput.files = lufthansaDataTransfer.files;
-            renderLufthansaPreviews();
-          }
-        } catch (error) { 
-          console.error('PDF Generation Error:', error);
-          alert('An error occurred while generating the PDF.'); 
-        } finally { 
-          document.getElementById('loader-overlay').style.setProperty('display', 'none', 'important');
-        }
-      }
-
-      if (standardForm) standardForm.addEventListener('submit', (e) => handleFormSubmit(e, standardForm, '/generate-standard'));
-      if (lufthansaForm) lufthansaForm.addEventListener('submit', (e) => handleFormSubmit(e, lufthansaForm, '/generate-lufthansa'));
-      if (aerLingusForm) aerLingusForm.addEventListener('submit', (e) => handleFormSubmit(e, aerLingusForm, '/generate-aerlingus'));
-
-      // AI Text Extraction Logic
-      const aiBtn = document.getElementById('aiAutofillBtn');
-      const aiInput = document.getElementById('aiAutofillInput');
-      if (aiBtn && aiInput) {
-        aiBtn.addEventListener('click', async () => {
-          const text = aiInput.value.trim();
-          if (!text) return alert("Please paste some text first!");
-
-          const originalBtnText = aiBtn.innerText;
-          aiBtn.innerText = "⏳ Extracting...";
-          aiBtn.disabled = true;
-
-          try {
-            const response = await fetch('/api/autofill', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ messyText: text })
-            });
-
-            if (!response.ok) throw new Error("Failed to extract data");
-       
-            const data = await response.json();
-            const activeTemplate = document.getElementById('templateSelector').value;
-            let cleanDate = data.date && data.date.length >= 10 ? data.date.trim().substring(0, 10) : "";
-            const passengers = data.passengers || [];
-
-            if (activeTemplate === 'standard') {
-               if (passengers.length > 0) {
-                if (passengers[0].firstName) document.querySelector('#standardForm [name="firstName"]').value = passengers[0].firstName;
-                if (passengers[0].lastName) document.querySelector('#standardForm [name="lastName"]').value = passengers[0].lastName;
-              }
-              if (data.address) document.querySelector('#standardForm [name="address"]').value = data.address;
-              if (data.pnr) document.querySelector('#standardForm [name="pnr"]').value = data.pnr.toUpperCase();
-              if (cleanDate) document.querySelector('#standardForm [name="date"]').value = cleanDate;
-            } else if (activeTemplate === 'aerlingus') {
-              if (passengers.length > 0) {
-                if (passengers[0].firstName) document.querySelector('#aerLingusForm [name="firstName"]').value = passengers[0].firstName;
-                if (passengers[0].lastName) document.querySelector('#aerLingusForm [name="lastName"]').value = passengers[0].lastName;
-              }
-              if (data.address) document.querySelector('#aerLingusForm [name="address"]').value = data.address;
-              if (data.pnr) document.querySelector('#aerLingusForm [name="pnr"]').value = data.pnr.toUpperCase();
-              if (data.flightNumber) document.querySelector('#aerLingusForm [name="flightNumber"]').value = data.flightNumber.toUpperCase();
-              if (cleanDate) document.querySelector('#aerLingusForm [name="flightDate"]').value = cleanDate;
-              if (data.route) document.querySelector('#aerLingusForm [name="route"]').value = data.route;
-            } else {
-              passengers.forEach((passenger, index) => {
-                if (index < 4) { 
-                  const fullName = `${passenger.firstName || ''} ${passenger.lastName || ''}`.trim();
-                  if (fullName) {
-                    const nameField = document.querySelector(`#lufthansaForm [name="fullName${index + 1}"]`);
-                    if (nameField) nameField.value = fullName;
-                  }
-                }
-              });
-              if (data.address) document.querySelector('#lufthansaForm [name="address1"]').value = data.address;
-              if (data.pnr) document.querySelector('#lufthansaForm [name="pnr"]').value = data.pnr.toUpperCase();
-              if (data.flightNumber) document.querySelector('#lufthansaForm [name="flightNumber"]').value = data.flightNumber.toUpperCase();
-              if (cleanDate) document.querySelector('#lufthansaForm [name="flightDate"]').value = cleanDate;
-            }
-            aiInput.value = "";
-          } catch (err) {
-            console.error(err);
-            alert("Oops! Gemini couldn't extract the data. Try pasting it differently.");
-          } finally {
-            aiBtn.innerText = originalBtnText;
-            aiBtn.disabled = false;
-          }
-        });
-      }
-
-      // Shared Dropzone Functions
-      function showPreview(file, previewElement, textElement) {
-        if (!file.type.startsWith('image/')) return;
-        previewElement.src = window.URL.createObjectURL(file);
-        previewElement.style.display = 'block';
-        textElement.innerHTML = '<small style="color:green">Signature Loaded!</small>';
-      }
-
-      function renderLufthansaPreviews() {
-        const lhPreviews = document.getElementById('lufthansa-sig-previews');
-        if (!lhPreviews) return;
-        
-        // Safely wipe and re-inject the placeholder if no files exist to prevent null errors
-        lhPreviews.innerHTML = '';
-        if (lufthansaDataTransfer.files.length === 0) {
-          lhPreviews.innerHTML = '<span id="preview-placeholder" style="color: #aaa; font-size: 12px; margin: auto;">Previews appear here...</span>';
-          return;
-        }
-        
-        Array.from(lufthansaDataTransfer.files).forEach((file, index) => {
-          const wrapper = document.createElement('div');
-          wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: #fafafa; position: relative;";
-          const header = document.createElement('div');
-          header.style.cssText = "display: flex; justify-content: space-between; width: 100%; align-items: center;";
-          
-          const label = document.createElement('span');
-          label.innerText = `Sig ${index + 1}`;
-          label.style.cssText = "font-size: 11px; font-weight: bold; color: #444;";
-          const removeBtn = document.createElement('button');
-          removeBtn.innerHTML = "&times;";
-          removeBtn.type = "button";
-          removeBtn.style.cssText = "font-size: 16px; line-height: 1; color: #dc3545; border: none; background: none; cursor: pointer; padding: 0;";
-          removeBtn.onclick = (event) => { 
-            event.stopPropagation(); 
-            const dt = new DataTransfer();
-            const files = Array.from(lufthansaDataTransfer.files);
-            files.splice(index, 1);
-            files.forEach(f => dt.items.add(f));
-            
-            lufthansaDataTransfer = dt;
-            document.getElementById('lufthansa-sig-input').files = lufthansaDataTransfer.files;
-            renderLufthansaPreviews();
-          };
-          
-          const img = document.createElement('img');
-          img.src = window.URL.createObjectURL(file);
-          img.style.cssText = "height: 45px; width: 120px; object-fit: contain; background: #fff; border: 1px solid #eee; border-radius: 4px;";
-          
-          header.appendChild(label);
-          header.appendChild(removeBtn);
-          wrapper.appendChild(header);
-          wrapper.appendChild(img);
-          lhPreviews.appendChild(wrapper);
-        });
-      }
-    });
+  //- Include the extracted logic
+  script(src="/js/poa-form.js")

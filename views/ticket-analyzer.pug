@@ -1,138 +1,29 @@
 extends layout
 
 block content
-  style.
-    /* --- MODERN UI/UX COLOR PALETTE & TYPOGRAPHY --- */
-    :root {
-      --bg-body: white;
-      --surface: #ffffff;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --secondary: #475569;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-soft: #e2e8f0;
-      --accent-blue: #eff6ff;
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025);
-    }
+  //- Note: You must add link(rel="stylesheet", href="/css/ticket-analyzer.css") to your layout.pug <head> 
+  //- or simply paste the contents of ticket-analyzer.css into your main style.css
 
-    body { background-color: var(--bg-body); }
-
-    .header-title { font-size: 32px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
-    .header-subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.5; }
-
-    /* --- DROP ZONE --- */
-    .drop-zone { border: 2px dashed #cbd5e1; background-color: var(--surface); border-radius: var(--radius-lg); padding: 60px 20px; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); outline: none; }
-    .drop-zone:hover, .drop-zone:focus, .drop-zone.dragover { border-color: var(--primary); background-color: var(--accent-blue); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .dz-icon { font-size: 48px; margin-bottom: 16px; transition: transform 0.3s; display: inline-block; }
-    .drop-zone:hover .dz-icon { transform: scale(1.1) translateY(-5px); }
-    .dz-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0; }
-    .dz-text { font-size: 13px; color: var(--text-muted); margin: 0; }
-
-    /* --- BUTTONS --- */
-    .btn-analyze { background: var(--primary); color: white; border: none; border-radius: var(--radius-md); padding: 14px 24px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .btn-analyze:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3); }
-    .btn-analyze:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.85; } 100% { opacity: 1; } }
+  .ta-layout
+    h1.ta-header__title 🎫 Ticket Analyzer 
+    p.ta-header__subtitle Drop multiple e-tickets, boarding passes, or flight screenshots below. Our vision model will instantly extract structured passenger data and evaluate EC261 / UK261 claim eligibility.
     
-    .stopwatch-icon { animation: spin 2s linear infinite; display: inline-block; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    .btn-check-status:hover { background: #cbd5e1 !important; transform: scale(1.02); }
-    .btn-check-eoc:hover { transform: scale(1.02); }
-
-    /* --- RESULTS CONTAINERS --- */
-    .results-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg); margin-top: 32px; animation: fadeIn 0.5s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Flight Card & Data Styling */
-    .ec261-card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 20px; }
-    .ec261-card.eligible { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
-    .ec261-card.eligible .ec-icon { color: #16a34a; }
-    .ec261-card.eligible .ec-title { color: #15803d; }
-    .ec261-card.not-eligible { background-color: #fef2f2; border: 1px solid #fecaca; }
-    .ec261-card.not-eligible .ec-icon { color: #dc2626; }
-    .ec261-card.not-eligible .ec-title { color: #b91c1c; }
-    .ec-icon { font-size: 32px; }
-    .ec-content { flex: 1; }
-    .ec-title { font-size: 16px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ec-reason { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.4; }
-    
-    .passenger-card { background: linear-gradient(145deg, #ffffff, #f8fafc); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .p-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-    .p-value { font-size: 20px; font-weight: 800; color: var(--text-main); }
-    .pnr-box { background: var(--accent-blue); padding: 10px 16px; border-radius: 8px; text-align: right; border: 1px solid #bfdbfe; }
-    .pnr-box .p-value { color: var(--primary); font-family: monospace; font-size: 22px; letter-spacing: 2px; }
-    
-    .route-header { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 32px 0 16px 0; display: flex; align-items: center; gap: 10px; }
-    .route-header::before { content: ''; display: block; width: 8px; height: 24px; background: var(--primary); border-radius: 4px; }
-    
-    .flight-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 24px; margin-bottom: 16px; transition: all 0.2s ease; }
-    .flight-card:hover { border-color: #cbd5e1; box-shadow: var(--shadow-md); }
-
-    /* Zone 1 – Header */
-    .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .fc-badge { background: #f1f5f9; color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .fc-airline { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-main); font-size: 14px; }
-
-    /* Zone 2 – Route (IATA + airport + city only, no times) */
-    .fc-path-container { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
-    .fc-node { flex: 1; z-index: 2; }
-    .fc-node.right { text-align: right; }
-    .fc-iata { font-size: 36px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
-    .fc-airport { font-size: 12px; color: var(--text-main); font-weight: 600; margin-top: 6px; margin-bottom: 2px; line-height: 1.3; }
-    .fc-city { font-size: 11px; color: var(--text-muted); font-weight: 500; }
-    .fc-line-wrapper { flex: 1.5; position: relative; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-top: 12px; }
-    .fc-line { width: 100%; border-top: 2px dashed #cbd5e1; position: absolute; }
-    .fc-plane { background: var(--surface); color: var(--text-muted); padding: 0 12px; z-index: 2; font-size: 20px; transform: rotate(90deg); }
-
-    /* Zone 3 – Times + statute limits */
-    .fc-times-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
-    .fc-time { font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1; }
-    .fc-statute { font-size: 10px; color: #3b82f6; font-weight: 700; margin-top: 5px; }
-
-    /* Zone 4 – Info strip */
-    .fc-info-strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #f8fafc; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
-    .fc-date-pill { display: flex; align-items: center; gap: 4px; color: var(--text-muted); }
-    .fc-flight-num { background: var(--accent-blue); color: var(--primary); padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; }
-    .fc-strip-sep { color: #cbd5e1; font-size: 14px; }
-
-    /* Zone 5 – Footer actions + badges */
-    .fc-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
-    
-    /* --- NEW STATUS BADGES --- */
-    .fc-ec-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; }
-    .fc-ec-badge.eligible { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .fc-ec-badge.not-eligible { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .fc-exp-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; cursor: help; display: flex; align-items: center; gap: 5px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .fc-exp-badge.expired { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .leg-claim-value { background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2); }
-
-  .container(style="max-width: 850px; margin-top: 50px;")
-    .header-title 🎫 Ticket Analyzer 
-    .header-subtitle Drop multiple e-tickets, boarding passes, or flight screenshots below. Our vision model will instantly extract structured passenger data and evaluate EC261 / UK261 claim eligibility.
-    
-    //- Interactive Drop Zone
-    .drop-zone#ticketDropZone(tabindex="0")
-      .dz-icon 📥
-      .dz-title Click, Drag & Drop, or Paste (Ctrl+V)
-      .dz-text Supports multiple PDFs, PNGs, and JPGs at once
-      input#ticketInput(type="file", accept="image/*,application/pdf", multiple, style="display: none;")
+    //- Interactive Drop Zone (IDs preserved for ticket-analyzer.js functionality)
+    .ta-dropzone#ticketDropZone(tabindex="0")
+      span.ta-dropzone__icon 📥
+      h2.ta-dropzone__title Click, Drag & Drop, or Paste (Ctrl+V)
+      p.ta-dropzone__text Supports multiple PDFs, PNGs, and JPGs at once
+      input.ta-dropzone__input#ticketInput(type="file", accept="image/*,application/pdf", multiple)
     
     //- Action Area
-    #previewTicketContainer(style="display: none; margin-top: 24px; text-align: center;")
-      div(style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 16px;")
-        p#ticketNameDisplay(style="font-weight: 600; color: var(--primary); margin: 0; font-size: 14px; background: var(--accent-blue); padding: 8px 18px; border-radius: 20px;")
-        button#clearFilesBtn(type="button" title="Clear all files" style="background: #fee2e2; color: #ef4444; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s;") ✖
+    .ta-preview#previewTicketContainer
+      .ta-preview__header
+        p.ta-preview__name#ticketNameDisplay
+        button.ta-preview__clear-btn#clearFilesBtn(type="button" title="Clear all files") ✖
       
-      button#analyzeBtn.btn-analyze ✨ Extract Ticket Data
+      button.ta-preview__analyze-btn#analyzeBtn ✨ Extract Ticket Data
 
     //- Results Dashboard
-    #resultsCard.results-container(style="display: none;")
+    .ta-results#resultsCard
 
-  //- Link to your newly separated JavaScript file
   script(src="/js/ticket-analyzer.js")
