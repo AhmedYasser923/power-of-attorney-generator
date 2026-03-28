@@ -3,15 +3,26 @@ html(lang="en")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title= title || 'Power of Attorney Generator'
+    title= title || 'Workspace Dashboard'
     link(rel="stylesheet", href="/css/style.css")
     link(rel="icon", type="image/png", href="/images/image-removebg-preview.png")
   body
-    nav
-      .nav-container
-        img(src="/images/Screenshot_1.png", alt="Logo", )
-      
+    //- A11Y [CRITICAL]: Skip to content link for keyboard-only navigation
+    a.skip-link(href="#main-content") Skip to main content
 
-    main
+    //- A11Y [CRITICAL]: Semantic header and navigation landmark
+    header.global-header
+      .nav-container(style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;")
+        a(href="/", aria-label="Go to Dashboard")
+          img(src="/images/Screenshot_1.png", alt="Refly Logo", style="height: 40px;")
+        
+        nav(role="navigation", aria-label="Main Application Navigation")
+          ul.nav-list
+            li: a(href="/") Dashboard
+            li: a(href="/poa") POA Generator
+            li: a(href="/ticket-analyzer") Ticket Analyzer
+            li: a(href="/tools") Operations Tools
+
+    //- A11Y [CRITICAL]: Main landmark so screen readers know where the app logic begins
+    main#main-content
       block content
-    

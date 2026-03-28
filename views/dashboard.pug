@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  .dashboard-container
+    header.dashboard-header
+      h1#dashboard-heading Welcome to the Workspace
+      p.lead Select a module below to begin your workflow.
+
+    //- A11Y: Defining a list of cards for relationship context
+    .card-grid(role="list", aria-label="Available Tools")
+      
+      // Card 1: POA
+      .card(role="listitem")
+        h2#poa-title Power of Attorney Generator
+        p Create standard, Lufthansa, and Aer Lingus POA documents instantly.
+        //- NEW: target="_blank" and rel="noopener noreferrer" added
+        a.btn(href="/poa", target="_blank", rel="noopener noreferrer", aria-labelledby="poa-title") Open POA Generator
+
+      // Card 2: Analyzer
+      .card(role="listitem")
+        h2#analyzer-title Ticket Analyzer
+        p Extract passenger data and autofill claims securely using AI.
+        //- NEW: target="_blank" and rel="noopener noreferrer" added
+        a.btn(href="/ticket-analyzer", target="_blank", rel="noopener noreferrer", aria-labelledby="analyzer-title") Open Ticket Analyzer
+
+      // Card 3: Tools
+      .card(role="listitem")
+        h2#tools-title Operations Tools
+        p Check live flight statuses, verify EOCs, and query airport databases.
+        //- NEW: target="_blank" and rel="noopener noreferrer" added
+        a.btn(href="/tools", target="_blank", rel="noopener noreferrer", aria-labelledby="tools-title") Open Operations Tools
