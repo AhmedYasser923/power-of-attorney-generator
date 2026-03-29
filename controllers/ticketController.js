@@ -89,12 +89,14 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
 const prompt = `
     You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). 
     
-    🚨 ***ANTI-LAZINESS DIRECTIVE*** 🚨
-    You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights. If there are 4 boarding passes or a ticket with 4 legs, you MUST output data for all 4 legs. Scrutinize every page.
+    🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
+    You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights.
     
-    *CRITICAL DATE INFERENCE RULE*: The current year is ${currentYear}. Many boarding passes only display the day and month (e.g., "15 Jan"). If the year is missing from the document, you MUST assume the year is ${currentYear} and append it to the date string. If the timeline suggests a flight from late last year, you may use ${currentYear - 1}.
-    🚨 WARNING: DO NOT confuse the "Issue Date" or "Printed Date" (often located at the very bottom of a boarding pass, e.g., "Date 19/02/2026") with the actual Flight Date. You MUST explicitly extract the FLIGHT DEPARTURE DATE (e.g., "25 Mar") and ignore the date the document was generated.
-    
+    *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
+    1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates. You must physically locate the departure date printed next to that specific leg's origin/destination.
+    2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.
+    3. if only the day and month were provided and the year isn't explicitly there, don't but a year just the day and month
+
     *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket is legally treated as TWO separate journeys. 
     - If the document is a ONE-WAY trip, create a SINGLE journey object.
     - If the document is a ROUND-TRIP, split it into TWO separate journey objects: one for the Outbound route, one for the Return route. 
@@ -103,7 +105,7 @@ const prompt = `
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
     STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
-    - PNR / Booking Code: Extract the actual AIRLINE PNR. 🚨 CRITICAL RULE: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference (e.g., Expedia, Kiwi, Booking.com, Trip.com). Agency references are often purely numeric, much longer, or labeled "Agency Ref" at the top of the page. Airline PNRs are almost always EXACTLY 6 alphanumeric characters (e.g., "R8T9QZ"). You must ignore the agency reference and find the actual airline's record locator. Extract ALL 5 to 9 alphanumeric character airline PNRs found. If multiple exist, separate by commas. If missing, output "Not Provided".
+    - PNR / Booking Code: Extract the actual AIRLINE PNR. 🚨 CRITICAL RULE: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference. Agency references are often purely numeric, much longer, or labeled "Agency Ref" at the top of the page. Airline PNRs are almost always EXACTLY 6 alphanumeric characters. You must ignore the agency reference and find the actual airline's record locator. Extract ALL 5 to 9 alphanumeric character airline PNRs found. If multiple exist, separate by commas. If missing, output "Not Provided".
     - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific 13 or 14-digit e-ticket number to their name. If missing, output "Not Provided".
     - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
       [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
@@ -129,53 +131,54 @@ const prompt = `
       {
         "passengers": [
           {
-            "firstName": "John",
-            "lastName": "Doe",
-            "ticketNumber": "1234567890123"
+            "firstName": "[String]",
+            "lastName": "[String]",
+            "ticketNumber": "[String]"
           }
         ],
-        "pnr": "Comma separated list of all PNRs",
-        "pnrNote": "",
+        "pnr": "[String: Comma separated list of all PNRs]",
+        "pnrNote": "[String]",
         "ec261": {
-          "firstOriginCountry": "EU, UK, or NON-EU",
-          "finalDestinationCountry": "EU, UK, or NON-EU",
-          "status": "Eligible or Not Eligible",
-          "reason": ""
+          "firstOriginCountry": "[String]",
+          "finalDestinationCountry": "[String]",
+          "status": "[String]",
+          "reason": "[String]"
         },
         "routes": [
           {
-            "type": "Outbound or Return",
+            "type": "[String: Outbound or Return]",
             "legs": [
               {
-                "flightStatus": "Scheduled or Cancelled/Rebooked",
-                "marketingAirline": "",
-                "operatingAirline": "",
-                "operatingAirlineCountry": "",
-                "flightNumbers": ["FLIGHT1", "FLIGHT2"],
-                "originIata": "",
-                "originName": "",
-                "originCity": "",
-                "originCountry": "",
-                "departureTime": "",
-                "destinationIata": "",
-                "destinationName": "",
-                "destinationCity": "",
-                "destinationCountry": "",
-                "arrivalTime": "",
+                "flightStatus": "[String: Scheduled or Cancelled/Rebooked]",
+                "marketingAirline": "[String]",
+                "operatingAirline": "[String]",
+                "operatingAirlineCountry": "[String]",
+                "flightNumbers": ["[String]", "[String]"],
+                "originIata": "[String]",
+                "originName": "[String]",
+                "originCity": "[String]",
+                "originCountry": "[String]",
+                "departureTime": "[String]",
+                "destinationIata": "[String]",
+                "destinationName": "[String]",
+                "destinationCity": "[String]",
+                "destinationCountry": "[String]",
+                "arrivalTime": "[String]",
+                "rawExtractedDate": "[String: STRICTLY the exact characters printed on the ticket for this leg's date. DO NOT INVENT EXAMPLES]",
                 "date": "YYYY-MM-DD",
-                "distanceKm": "3450 km",
+                "distanceKm": "[String]",
                 "ec261Leg": {
-                  "legOriginCountry": "EU, UK, or NON-EU",
-                  "legDestinationCountry": "EU, UK, or NON-EU",
-                  "status": "Eligible or Not Eligible",
-                  "reason": "",
-                  "estimatedClaimValue": "€250, €400, €600, or N/A",
+                  "legOriginCountry": "[String]",
+                  "legDestinationCountry": "[String]",
+                  "status": "[String]",
+                  "reason": "[String]",
+                  "estimatedClaimValue": "[String]",
                   "claimExpiration": {
-                    "originYears": "",
-                    "destinationYears": "",
-                    "airlineYears": "",
-                    "bestCountry": "",
-                    "bestYears": "",
+                    "originYears": "[String]",
+                    "destinationYears": "[String]",
+                    "airlineYears": "[String]",
+                    "bestCountry": "[String]",
+                    "bestYears": "[String]",
                     "expirationDate": "YYYY-MM-DD",
                     "isExpired": false
                   }
