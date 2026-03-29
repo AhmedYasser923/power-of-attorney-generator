@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     journeyWrapper.innerHTML += `
-                        <div class="passenger-card" style="align-items: stretch;">
+                        <div class="passenger-card" style="align-items: flex-start;">
                             <div style="flex: 1.5; padding-right: 20px; border-right: 1px dashed var(--border-soft);">
                                 <div class="p-label" style="margin-bottom: 12px;">Passenger Roster & Tickets</div>
                                 ${passengersListHtml}
