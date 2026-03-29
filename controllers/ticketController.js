@@ -144,16 +144,17 @@ const prompt = `
     STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
     - PNR / Booking Code: Extract the actual AIRLINE PNR. 
       🚨 CRITICAL RULE 1: Standard airline PNRs are EXACTLY 6 alphanumeric characters.
+      🚨 CRITICAL RULE 2: HIDDEN PNRs (CONCATENATION): Sometimes airlines mash the flight number, PNR, and internal codes into one long barcode string (e.g., "LH220HABMTTA4"). If you see a long mixed string like this, look inside it to extract ONLY the hidden 6-character alphanumeric PNR (e.g., "HABMTT"). Do NOT output the whole long string.
       🚨 CRITICAL EXCEPTION LIST: The following airlines use strictly NUMERIC PNRs of varying lengths. If the marketing airline is one of these, you MUST extract their numeric PNR instead:
          - 6 Numbers: Heston Airlines, Sunclass.
          - 7 Numbers: Corendon DUTCH Airlines CD.
          - 8 Numbers: Air Arabia Maroc, Arkia Israel, TUI Airways, Condor Flugdienst, Electra Airways.
          - 9 Numbers: Fly Jinnah.
          - Variable/Numbers: Neos.
-      🚨 CRITICAL RULE 2: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference (e.g., Expedia, Booking.com). Unless the airline is on the exception list above, you must ignore long numeric agency references and find the actual 6-character airline locator. If missing, output "Not Provided".
+      🚨 CRITICAL RULE 3: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference (e.g., Expedia, Booking.com). Unless the airline is on the exception list above, you must ignore long numeric agency references and find the actual 6-character airline locator. If missing, output "Not Provided".
       🚨 SPECIAL SKYUP RULE: For SkyUp, the PNR shown often corresponds to the agency rather than the airline system directly.
       
-    - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific e-ticket number to their name. 🚨 CRITICAL TICKET RULE: Electronic ticket numbers (e-tickets) are standardized as EXACTLY 13 digits globally. If a ticket number appears as 14 or 15 digits on the document (due to extra formatting or flight segment numbers appended at the end), you MUST extract ONLY the core 13-digit identifier (the first 13 digits). Do NOT confuse the 13-digit ticket number with the shorter PNR. If missing, output "Not Provided".
+    - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific e-ticket number to their name. 🚨 CRITICAL TICKET RULE: Electronic ticket numbers (e-tickets) are strictly NUMERIC ONLY and exactly 13 digits globally. They NEVER contain letters. If a string has letters (like "LH220HABMTTA4"), it is NOT a ticket number. If a purely numeric ticket appears as 14 or 15 digits (due to extra formatting), extract ONLY the core 13-digit identifier. If missing, output "Not Provided".
     
     - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
       [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
@@ -181,7 +182,7 @@ const prompt = `
           {
             "firstName": "[String]",
             "lastName": "[String]",
-            "ticketNumber": "[String: STRICTLY 13 DIGITS]"
+            "ticketNumber": "[String: STRICTLY 13 NUMERIC DIGITS. NO LETTERS.]"
           }
         ],
         "pnr": "[String: Comma separated list of all PNRs]",
