@@ -128,20 +128,84 @@ document.addEventListener('DOMContentLoaded', () => {
                     journeyWrapper.innerHTML += `<h3 style="color: var(--primary); border-bottom: 1px solid var(--border-soft); padding-bottom: 10px;">🎫 Ticket / Journey ${journeyIndex + 1}</h3>`;
                 }
 
-                if (data.ec261) {
-                    const isEligible = data.ec261.status && data.ec261.status.toLowerCase().includes('not') === false;
-                    const cardClass = isEligible ? 'eligible' : 'not-eligible';
-                    const icon = isEligible ? '🛡️' : '⚠️';
+         // ---> REPLACE THE EXISTING "if (data.ec261) { ... }" BLOCK WITH THIS <---
+                
+                if (data.ec261 || (data.routes && data.routes.length > 0)) {
+                    let eligibleLegs = [];
+                    let ineligibleLegs = [];
+
+                    // Scan all individual flight legs for their specific legal status
+                    if (data.routes) {
+                        data.routes.forEach(route => {
+                            if (route.legs) {
+                                route.legs.forEach(leg => {
+                                    if (leg.ec261Leg && leg.ec261Leg.status) {
+                                        const isLegEligible = !leg.ec261Leg.status.toLowerCase().includes('not');
+                                        const legSummary = `<b>${leg.originIata || '?'} ➔ ${leg.destinationIata || '?'}</b>: ${leg.ec261Leg.reason}`;
+                                        if (isLegEligible) {
+                                            eligibleLegs.push(legSummary);
+                                        } else {
+                                            ineligibleLegs.push(legSummary);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    let cardClass = '';
+                    let icon = '';
+                    let titleHtml = '';
+                    let reasonHtml = '';
+                    let inlineStyle = '';
+
+                    // TRIGGER YELLOW ALERT: Mix of eligible and ineligible flights
+                    if (eligibleLegs.length > 0 && ineligibleLegs.length > 0) {
+                        cardClass = 'partially-eligible';
+                        inlineStyle = 'background-color: #fffbeb; border: 1px solid #fde68a;';
+                        icon = '<span style="color: #d97706;">⚠️</span>';
+                        titleHtml = '<h4 class="ec-title" style="color: #b45309;">OVERALL CLAIM: MIXED ELIGIBILITY</h4>';
+                        reasonHtml = `
+                            <p class="ec-reason" style="margin-bottom: 8px; color: #92400e;">This journey contains a mix of eligible and legally ineligible flight legs depending on where the disruption occurred.</p>
+                            <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px; border: 1px dashed #fcd34d;">
+                                <div style="color: #15803d; font-size: 13px; line-height: 1.4;">✅ ${eligibleLegs.join('<br>✅ ')}</div>
+                                <div style="color: #b91c1c; font-size: 13px; line-height: 1.4; margin-top: 4px; padding-top: 8px; border-top: 1px dashed #fde68a;">❌ ${ineligibleLegs.join('<br>❌ ')}</div>
+                            </div>
+                        `;
+                    } 
+                    // STANDARD STATES: All Green or All Red
+                    else {
+                        let isEligible = false;
+                        let aiReason = data.ec261 ? data.ec261.reason : '';
+                        let aiStatus = data.ec261 ? data.ec261.status.toUpperCase() : 'UNKNOWN';
+
+                        if (eligibleLegs.length > 0 && ineligibleLegs.length === 0) {
+                            isEligible = true;
+                            aiStatus = 'ELIGIBLE';
+                        } else if (ineligibleLegs.length > 0 && eligibleLegs.length === 0) {
+                            isEligible = false;
+                            aiStatus = 'NOT ELIGIBLE';
+                        } else if (data.ec261) {
+                            isEligible = !data.ec261.status.toLowerCase().includes('not');
+                        }
+
+                        cardClass = isEligible ? 'eligible' : 'not-eligible';
+                        icon = isEligible ? '🛡️' : '🚫';
+                        titleHtml = `<h4 class="ec-title">OVERALL CLAIM: ${aiStatus}</h4>`;
+                        reasonHtml = `<p class="ec-reason">${aiReason}</p>`;
+                    }
 
                     journeyWrapper.innerHTML += `
-                        <div class="ec261-card ${cardClass}">
+                        <div class="ec261-card ${cardClass}" style="${inlineStyle}">
                             <div class="ec-icon">${icon}</div>
                             <div class="ec-content">
-                                <h4 class="ec-title">OVERALL CLAIM: ${data.ec261.status.toUpperCase()}</h4>
-                                <p class="ec-reason">${data.ec261.reason}</p>
+                                ${titleHtml}
+                                ${reasonHtml}
                             </div>
                         </div>`;
                 }
+                
+                // ---> END REPLACEMENT BLOCK <---
                 
                 // --- NEW PASSENGER & TICKET MAPPING UI ---
                 let showPassengerCard = true;
