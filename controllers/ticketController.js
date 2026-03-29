@@ -558,3 +558,4 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
 
   res.json({ aiStats: parsedUIStats, rawResponse: data });
 });
+

@@ -4,6 +4,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
+let airlineDatabase = [];
+try {
+  airlineDatabase = require('../airlines_data.json');
+} catch (err) {
+  console.warn("⚠️ airlines_data.json not found. Please run 'node build_airlines.js' first.");
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Render the UI
@@ -276,4 +283,123 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
   };
 
   res.json({ aiStats: parsedUIStats, rawResponse: data });
+});
+
+
+
+// ==========================================
+// DOCUMENT CHECKER LOGIC
+// ==========================================
+
+const specificAirlineReqs = [
+  { names: ["aeroitalia"], reqs: "ID" },
+  { names: ["aerolineas argentinas", "ar"], reqs: "Ticket number, ID number" },
+  { names: ["air algerie"], reqs: "ID (Front and Back) or Copy of Passport" },
+  { names: ["air arabia"], reqs: "Ticket number, Boarding pass, ID (If delayed: need rescheduled time)" },
+  { names: ["air cairo", "msc"], reqs: "Boarding pass, ID" },
+  { names: ["air canada", "ac"], reqs: "Ticket number" },
+  { names: ["air corsica", "corse-mediterranee", "xk"], reqs: "Boarding pass, ID" },
+  { names: ["air dolomiti", "en"], reqs: "Ticket number" },
+  { names: ["air europa", "ux"], reqs: "POA, ID, Boarding pass" },
+  { names: ["asl airlines france"], reqs: "Boarding pass, ID" }, 
+  { names: ["air france", "af"], reqs: "ID" },
+  { names: ["air india", "ai"], reqs: "Ticket number, Passport (Both strictly mandatory)" },
+  { names: ["air mauritius", "mk"], reqs: "Ticket number, DOB" },
+  { names: ["air serbia", "ju"], reqs: "Ticket number, Boarding pass (Boarding pass only if delayed)" },
+  { names: ["air tahiti nui"], reqs: "DOB" },
+  { names: ["bintercanarias", "binter canarias"], reqs: "Passport" },
+  { names: ["canaryfly"], reqs: "ID / Passport number" },
+  { names: ["corendon dutch"], reqs: "Ticket, Boarding pass, Reservation confirmation" }, 
+  { names: ["corendon", "xc"], reqs: "DOB" },
+  { names: ["corsair", "ss"], reqs: "Ticket number, DOB" },
+  { names: ["danish air transport", "dx"], reqs: "Boarding pass, ID" },
+  { names: ["dan air", "dan-air"], reqs: "Boarding pass, ID" },
+  { names: ["delta", "dl"], reqs: "Ticket number, ID" },
+  { names: ["egyptair", "ms"], reqs: "Ticket number, ID" },
+  { names: ["el al", "ly"], reqs: "ID" },
+  { names: ["emirates", "ek"], reqs: "Ticket number, Passport" },
+  { names: ["enter air"], reqs: "Birth certificate required for minors" },
+  { names: ["ethiopian", "et"], reqs: "Ticket number, ID" },
+  { names: ["etihad", "ey"], reqs: "Ticket number" },
+  { names: ["iberia", "ib"], reqs: "Ticket number, Passport / National ID / Spanish Residence card" },
+  { names: ["iberojet"], reqs: "Submit via portal: iberojet.com/es/solicitudes/reclamaciones" },
+  { names: ["indigo"], reqs: "DOB" },
+  { names: ["ita airways", "ita"], reqs: "Ticket number" },
+  { names: ["alitalia"], reqs: "Ticket number" },
+  { names: ["kenya airways", "kq"], reqs: "Ticket number" },
+  { names: ["klm", "kl"], reqs: "ID" },
+  { names: ["lan airlines", "latam", "la"], reqs: "ID / Passport" },
+  { names: ["lufthansa", "lh"], reqs: "Lufthansa POA (Ticket & Boarding pass needed later)" },
+  { names: ["neos air", "neos"], reqs: "Birth details/place, Passport no. (Codice Fiscale for Italian citizens)" },
+  { names: ["oman air", "wy"], reqs: "Ticket number" },
+  { names: ["plus ultra"], reqs: "Boarding pass, ID" },
+  { names: ["polish airlines", "lot", "lo"], reqs: "Handwritten signature on POA" },
+  { names: ["royal air maroc", "at"], reqs: "Ticket number" },
+  { names: ["saudi", "saudia", "sv"], reqs: "Ticket number, Passport / ID" },
+  { names: ["skyup", "u5"], reqs: "Boarding pass, Passport" },
+  { names: ["sunexpress", "xq"], reqs: "ID" },
+  { names: ["swiss", "lx"], reqs: "Ticket, Confirmation email copy" },
+  { names: ["tarom", "ro"], reqs: "Ticket number (No PDFs accepted)" },
+  { names: ["tui", "tom", "by"], reqs: "DOB, Mobile number" },
+  { names: ["tunis air", "tunisair", "tu"], reqs: "Ticket number" },
+  { names: ["turkish", "tk"], reqs: "ID" },
+  { names: ["virgin atlantic", "vs"], reqs: "DOB" },
+  { names: ["vistara"], reqs: "Merged with Air India. Send claim to Air India." },
+  { names: ["volotea"], reqs: "Boarding pass, ID" },
+  { names: ["vueling", "vy"], reqs: "ID" },
+  { names: ["wizz", "wizzair"], reqs: "Wizz Air Denied Boarding Compensation Form" },
+  { names: ["world2fly"], reqs: "ID / Passport number mandatory" }
+];
+
+exports.checkDocs = catchAsync(async (req, res, next) => {
+  const query = (req.query.airline || '').toLowerCase().trim();
+  if (!query) return res.status(400).json({ error: 'Airline name is required' });
+
+  // Resolve the display name using the JSON DB if available
+  const dbMatch = airlineDatabase.find(a => a.name.toLowerCase() === query || a.iata.toLowerCase() === query);
+  const displayAirline = dbMatch ? dbMatch.name : query;
+
+  // Check if it matches our specific requirements array
+  const specialMatch = specificAirlineReqs.find(a => 
+    a.names.some(n => n.toLowerCase() === query || (dbMatch && n.toLowerCase() === dbMatch.iata.toLowerCase()))
+  );
+
+  if (specialMatch) {
+    res.status(200).json({
+      airline: displayAirline,
+      hasDocs: true,
+      reqs: specialMatch.reqs
+    });
+  } else {
+    // Definitive empty state
+    res.status(200).json({
+      airline: displayAirline,
+      hasDocs: false,
+      reqs: "No documents required."
+    });
+  }
+});
+
+// (Keep your existing exports.searchAirlines right below this)
+
+exports.searchAirlines = catchAsync(async (req, res, next) => {
+  const query = (req.query.q || '').toLowerCase().trim();
+  
+  if (!query || query.length < 2) {
+    return res.json([]);
+  }
+
+  const results = [];
+  
+  // Search the comprehensive JSON database for autocomplete
+  for (const airline of airlineDatabase) {
+    if (airline.name.toLowerCase().includes(query) || airline.iata.toLowerCase().includes(query)) {
+      results.push({ name: airline.name, iata: airline.iata });
+    }
+    
+    // Limit to 10 results to keep the UI snappy
+    if (results.length >= 10) break; 
+  }
+
+  res.status(200).json(results);
 });

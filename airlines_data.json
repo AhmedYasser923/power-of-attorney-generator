@@ -1,0 +1,1527 @@
+[
+  {
+    "name": "4 Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "AlbaStar",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "AlpAvia",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aegean Airlines",
+    "iata": "A3",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aer Arann",
+    "iata": "RE",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aer Lingus",
+    "iata": "EI",
+    "reqs": "Generate Aer Lingus POA   //  If webform does not work then send via email"
+  },
+  {
+    "name": "AeroItalia",
+    "iata": "",
+    "reqs": "ID"
+  },
+  {
+    "name": "Aeroflot Russian Airlines",
+    "iata": "SU",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aerolineas Argentinas",
+    "iata": "AR",
+    "reqs": "Ticket number, ID number"
+  },
+  {
+    "name": "Aerolíneas Estelar",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aeromexico",
+    "iata": "AM",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Albania",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Algerie",
+    "iata": "",
+    "reqs": "ID- front and Back or Copy of Passport"
+  },
+  {
+    "name": "Air Anka",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Antilles",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Austral",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Senegal",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Afriqiyah Airways",
+    "iata": "8U",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Arabia",
+    "iata": "",
+    "reqs": "Ticket number,Boarding pass, ID. If delayed then need to know rescheduled time"
+  },
+  {
+    "name": "Air Cairo",
+    "iata": "MSC",
+    "reqs": "ID,Boarding"
+  },
+  {
+    "name": "Air Canada",
+    "iata": "AC",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Aircalin/ Air Caledonie International",
+    "iata": "Route related to Italy",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aircalin/ Air Caledonie International",
+    "iata": "Route related to France",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Caraibes",
+    "iata": "TX",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air China",
+    "iata": "",
+    "reqs": "CC: ca-europe@airchina.com"
+  },
+  {
+    "name": "Air Corsica / Corse-Mediterranee",
+    "iata": "XK",
+    "reqs": "ID, Boarding  ( Log in: legal@refly.org, Password: Fkk4erdF!!)"
+  },
+  {
+    "name": "AIR CONNECT",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Dolomiti",
+    "iata": "EN",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Air Europa",
+    "iata": "UX",
+    "reqs": "POA-ID-Boarding"
+  },
+  {
+    "name": "Air France",
+    "iata": "AF",
+    "reqs": "ID"
+  },
+  {
+    "name": "Air Greenland",
+    "iata": "GL",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Horizont",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air India",
+    "iata": "AI",
+    "reqs": "Ticket number / Passport (Both are mandatory we are unable to proceed without it)"
+  },
+  {
+    "name": "Airlink",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Mediterranean",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Moana",
+    "iata": "NM",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Montenegro",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Mauritius",
+    "iata": "MK",
+    "reqs": "Ticket number, DOB"
+  },
+  {
+    "name": "Air Moldova",
+    "iata": "9U",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Namibia",
+    "iata": "SW",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Nippon",
+    "iata": "NH",
+    "reqs": "https://ana-support.my.site.com/enus/s/atmint-en?cc=us"
+  },
+  {
+    "name": "Air New Zealand",
+    "iata": "NZ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Nostrum",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Olympic",
+    "iata": "OA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Peace",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Prishtina",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Serbia",
+    "iata": "JU",
+    "reqs": "Ticket (need ticket number), boarding pass(in case of delayed flight)"
+  },
+  {
+    "name": "Air Tahiti Nui",
+    "iata": "",
+    "reqs": "Date of Birth"
+  },
+  {
+    "name": "Air Tanzania",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Transat",
+    "iata": "TS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Wisconsin",
+    "iata": "ZW",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Air Baltic",
+    "iata": "BT",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ajet",
+    "iata": "VF",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Alaska Airlines",
+    "iata": "AS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Albawings",
+    "iata": "",
+    "reqs": "Ceased operation since January 12, 2024"
+  },
+  {
+    "name": "AMC Aviation",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "American Airlines",
+    "iata": "AA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Animawings",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Arkia Israeli Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Asiana Airlines",
+    "iata": "",
+    "reqs": "https://avochome.flyasiana.com/complaint/complaintRegist.voc"
+  },
+  {
+    "name": "Atlantic Airways",
+    "iata": "RC",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aura Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Aurigny Air Services",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Austrian Airlines",
+    "iata": "OS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "AVIANCA",
+    "iata": "AV",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Avies",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Avion Express",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Azerbaijan Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Azul Brazilian Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Bees Airline",
+    "iata": "7B",
+    "reqs": "Currently not operating, all the bees we are reciving are Bees airlines Romania"
+  },
+  {
+    "name": "Bees Airlines Romania",
+    "iata": "E8",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Biman Bangladesh Airlines",
+    "iata": "BG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "BinterCanarias",
+    "iata": "",
+    "reqs": "Passport"
+  },
+  {
+    "name": "Bluebird Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Blue Islands",
+    "iata": "SI",
+    "reqs": "Ceased operations 17 Nov, 2025"
+  },
+  {
+    "name": "Blue Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "BoA Boliviana de Aviacion",
+    "iata": "OB",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Braathens Regional",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "British Airways",
+    "iata": "BA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Brussels Airlines",
+    "iata": "SN",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Bulgaria Air",
+    "iata": "FB",
+    "reqs": "Log in: legal@refly.org Password: Fkk4erdF"
+  },
+  {
+    "name": "Buzz airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Camair-Co",
+    "iata": "QC",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Canaryfly",
+    "iata": "",
+    "reqs": "ID/Passport number"
+  },
+  {
+    "name": "Cathay Pacific",
+    "iata": "CX",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Chair airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "China Eastern Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "China Southern Airlines",
+    "iata": "CZ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "CHina Airlines",
+    "iata": "CI",
+    "reqs": "Select NONE in Member information"
+  },
+  {
+    "name": "CityJet",
+    "iata": "WX",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Condor",
+    "iata": "DE",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Conviasa",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Copa Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Corendon Airlines",
+    "iata": "XC",
+    "reqs": "Date of birth"
+  },
+  {
+    "name": "Corendon Dutch Airlines",
+    "iata": "",
+    "reqs": "Airline tickets, boarding passes, reservation confirmation and, if applicable, any correspondence with the tour operator and/or travel insurance"
+  },
+  {
+    "name": "Corsair",
+    "iata": "SS",
+    "reqs": "Ticket number / DOB"
+  },
+  {
+    "name": "Croatia Airlines",
+    "iata": "OU",
+    "reqs": "Can be sent via email if webform does not work"
+  },
+  {
+    "name": "Cubana",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Cyprus Airways",
+    "iata": "CY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Czech Airlines",
+    "iata": "OK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Danish Air Transport",
+    "iata": "DX",
+    "reqs": "ID-Boarding Pass"
+  },
+  {
+    "name": "DAN AIR",
+    "iata": "",
+    "reqs": "ID-Boarding Pass"
+  },
+  {
+    "name": "Dana Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Delta Air Lines",
+    "iata": "DL",
+    "reqs": "Ticket number, ID"
+  },
+  {
+    "name": "Discover Airlines / Eurowings Discover",
+    "iata": "4Y",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Djibouti Airlines",
+    "iata": "D8",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Eastern Airways",
+    "iata": "T3",
+    "reqs": "Ceased operations since October 27, 2025"
+  },
+  {
+    "name": "easyJet",
+    "iata": "U2/EZY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Edelweiss Air",
+    "iata": "WK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Egyptair",
+    "iata": "MS",
+    "reqs": "Ticket, ID"
+  },
+  {
+    "name": "EL AL Israel Airlines",
+    "iata": "LY",
+    "reqs": "ID"
+  },
+  {
+    "name": "Electra Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Emerald Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Emirates",
+    "iata": "EK",
+    "reqs": "Ticket number, Passport"
+  },
+  {
+    "name": "Endeavor Air",
+    "iata": "9E",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Enter Air",
+    "iata": "",
+    "reqs": "Birth certificate required for minors"
+  },
+  {
+    "name": "Envoy Air",
+    "iata": "MQ / ENY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ethiopian Airlines",
+    "iata": "ET",
+    "reqs": "Ticket number, ID"
+  },
+  {
+    "name": "Etihad Airways",
+    "iata": "EY",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Euro Atlantic Airways",
+    "iata": "YU",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Euroairlines S.L.",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "ASL Airlines France",
+    "iata": "",
+    "reqs": "Boarding. ID"
+  },
+  {
+    "name": "Eurowings",
+    "iata": "EW",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "EVA Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ewa Air",
+    "iata": "EWR",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Finnair",
+    "iata": "AY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "FlexFlight",
+    "iata": "W2",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Fly Play",
+    "iata": "FPY/ OG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Fly Baghdad",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Flydubai",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "FlyErbil",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Flyegypt",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Fly Jinnah",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Fly Level SL",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "FlyLili",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Flynas",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "FlyOne",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Fly2Sky",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "FreeBird",
+    "iata": "FH",
+    "reqs": "Currently using email as Webform not working"
+  },
+  {
+    "name": "French Bee",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Frontier airlines",
+    "iata": "F9",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "German Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Getjet",
+    "iata": "GW",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "GOL",
+    "iata": "G3",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "GP Aviation Switzerland GmbH",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Grupo Taca",
+    "iata": "TA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Gulf Air",
+    "iata": "GF",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Hainan Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Hayways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Helvetic Airways",
+    "iata": "SL",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Hi Fly",
+    "iata": "5K",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Hisky Europe Srl",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "HOP!-Regional",
+    "iata": "A5",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Iberia",
+    "iata": "IB",
+    "reqs": "Ticket number, Passportnumber/ National Identity Card number/ Spanish Residence card number"
+  },
+  {
+    "name": "Iberojet Airlines",
+    "iata": "",
+    "reqs": "https://www.iberojet.com/es/solicitudes/reclamaciones"
+  },
+  {
+    "name": "Icelandair",
+    "iata": "FI",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "IndiGo Airlines",
+    "iata": "",
+    "reqs": "DOB"
+  },
+  {
+    "name": "Indonesia AirAsia",
+    "iata": "QZ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "InterCaribbean Airways",
+    "iata": "JY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Iran Air",
+    "iata": "IR",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Iraqi Airways",
+    "iata": "IA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Israir Airlines",
+    "iata": "6H",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "ITA Airways",
+    "iata": "",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Alitalia",
+    "iata": "",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "JAL/ Japan Airlines",
+    "iata": "JL",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jat Airways / Air Serbia",
+    "iata": "Jat stopped operation in 2013 and got the name Air Serbia",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jet2 . com",
+    "iata": "LBA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jetairfly",
+    "iata": "TB",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "JetBlue Airways",
+    "iata": "B6",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jet Sky Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jetstar Airways",
+    "iata": "JQ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Jettime",
+    "iata": "JG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Juneyao Air",
+    "iata": "HO",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Kenya Airways",
+    "iata": "KQ",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "KLM",
+    "iata": "KL",
+    "reqs": "ID"
+  },
+  {
+    "name": "Km Malta Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Kosova Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Kuwait Airways",
+    "iata": "KU",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Lacsa",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "La Compagnie",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "LAM Mozambique Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "LAN Airlines",
+    "iata": "LA",
+    "reqs": "ID / Passport"
+  },
+  {
+    "name": "Laser Airlines",
+    "iata": "QL",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Lion Air",
+    "iata": "JT",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Logan Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Lufthansa",
+    "iata": "LH",
+    "reqs": "During submission Lufthansa POA (And Ticket and Boarding when they accept the claim.)"
+  },
+  {
+    "name": "Lumiwings",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Luxair",
+    "iata": "LG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Malaysia Airlines",
+    "iata": "MH",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Maleth-Aero",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Marabu",
+    "iata": "DI",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Marathon Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Mavi Gök Havacılık A.S.",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Middle East Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Mistral Air",
+    "iata": "7M",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Monarch Airline",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Neos Air",
+    "iata": "",
+    "reqs": "Please collect all the data: Birth details, birth place, passport no. ,Codice Fiscale for Italian citizens"
+  },
+  {
+    "name": "Nesma Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "New England Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Nile Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Norse Atlantic Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Norwegian",
+    "iata": "DY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Nouvel Air Tunise",
+    "iata": "BJ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Olympic Air",
+    "iata": "OA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Oman Air",
+    "iata": "WY",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Omni Air International",
+    "iata": "OY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Pakistan International Airlines",
+    "iata": "PK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Pegasus",
+    "iata": "PC",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Philippine Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Plus Ultra",
+    "iata": "",
+    "reqs": "Boarding, ID"
+  },
+  {
+    "name": "Polish Airlines",
+    "iata": "LO",
+    "reqs": "LOT need hand wirtten signature on the POA / webform w/ attachment"
+  },
+  {
+    "name": "Porter Airlines",
+    "iata": "PD",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Portugalia Airlines",
+    "iata": "NI",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Precision air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "PrivatAir",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Privilege Style",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Pullmantur Air",
+    "iata": "EB",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Qantas",
+    "iata": "QF",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Qatar Airways",
+    "iata": "QR",
+    "reqs": "https://www.qatarairways.com/en/help/contact-us.html?iid=ALL74246290"
+  },
+  {
+    "name": "Res Sea Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Rossiya airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Royal Air Maroc",
+    "iata": "AT",
+    "reqs": "Ticket No"
+  },
+  {
+    "name": "Royal Jordanian",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Rwandair",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ryanair",
+    "iata": "FR",
+    "reqs": "Log in details: legal@refly.org Pass: Fkk4erdF"
+  },
+  {
+    "name": "S7 Airlines",
+    "iata": "Siberia Airlines",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SAS",
+    "iata": "SK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sata",
+    "iata": "S4",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Saudi Airlines",
+    "iata": "SV",
+    "reqs": "Ticket number, passport/ ID no ** Attachment should not exceed 2 MB"
+  },
+  {
+    "name": "Scoot",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Shenzhen Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Singapore Airlines",
+    "iata": "SQ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Skyalps",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sky Express S.A.",
+    "iata": "GQ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sky Europe",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Skyline Express Airlines/ Azur Air Ukraine",
+    "iata": "QU",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SkyWest Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SkyUP Airlines",
+    "iata": "U5",
+    "reqs": "Boarding pass, Passport"
+  },
+  {
+    "name": "Smart Lynx Airlines",
+    "iata": "6Y",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SmartWings / Travel Service",
+    "iata": "QS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Somon Air",
+    "iata": "SZ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "South African Airways",
+    "iata": "SA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Southwest Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Southwind Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Spirit Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SriLankan Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Star Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "STAR EAST AIRLINES",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "STP Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "SUN-AIR of Scandinavia A/S",
+    "iata": "EZ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sundair",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sunexpress",
+    "iata": "XQ",
+    "reqs": "ID"
+  },
+  {
+    "name": "Sunclass Airlines",
+    "iata": "DK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Sunwing",
+    "iata": "WG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Surinam Airways",
+    "iata": "PY",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Swift Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Swiss International Airlines",
+    "iata": "LX",
+    "reqs": "Ticket, confirmation email copy/ Boarding pass- not during submission, they ask it later"
+  },
+  {
+    "name": "TAAG - Angola Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "TACV Cabo Verde Airlines",
+    "iata": "VR",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tailwind Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tam Brazilian Airlines",
+    "iata": "JJ",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Titan Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tap Portugal / Tap Airlines",
+    "iata": "TP",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tarom",
+    "iata": "RO",
+    "reqs": "Ticket number        (They don't accept PDF file as attachment)"
+  },
+  {
+    "name": "Thai Airlines",
+    "iata": "TG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tassili Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Thomas Cook Airlines Scandinavia",
+    "iata": "DK",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Thomas Cook Ireland",
+    "iata": "MT",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Thomson Airways",
+    "iata": "TOM",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Transavia / Transavia Denmark",
+    "iata": "HV",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Travel Service A/S",
+    "iata": "QS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Trade Air Ltd",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tui Airways",
+    "iata": "TOM/ BY",
+    "reqs": "Date of birth, mobile number"
+  },
+  {
+    "name": "TUIFly",
+    "iata": "X3",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "TUIfly Belgium",
+    "iata": "TB/JAF",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "TUIfly Netherlands / ArkeFly",
+    "iata": "OR",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "TUIfly Nordic",
+    "iata": "6B/ BLX",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Tunisair",
+    "iata": "TU",
+    "reqs": "Ticket number"
+  },
+  {
+    "name": "Tunis Air Express",
+    "iata": "UG",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Turkish Airlines",
+    "iata": "TK",
+    "reqs": "ID"
+  },
+  {
+    "name": "Turkmenistan Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "TUS Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "T'way Air",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Uganda Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ukraine International Airlines",
+    "iata": "PS",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "United Airlines",
+    "iata": "UA",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Universal Air",
+    "iata": "VO",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Ural Airlines",
+    "iata": "U6",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "UTair",
+    "iata": "UT",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Uzbekistan Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Vietnam Airlines",
+    "iata": "VN",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Virgin Atlantic",
+    "iata": "VS",
+    "reqs": "Date of birth,"
+  },
+  {
+    "name": "Vistara",
+    "iata": "",
+    "reqs": "Merged with Air India, so claim need to be sent to Air India, also pls use Air India email for making child ticket"
+  },
+  {
+    "name": "Volotea",
+    "iata": "",
+    "reqs": "Boarding, ID"
+  },
+  {
+    "name": "Vueling Airways",
+    "iata": "VY",
+    "reqs": "ID"
+  },
+  {
+    "name": "WestJet",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "White Airways",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Wideroe",
+    "iata": "WF",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Winair",
+    "iata": "WM",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Wind Jet",
+    "iata": "IV",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Wizz",
+    "iata": "",
+    "reqs": "\"Wizz Air Denied Boarding Compensation Form\" in denied boarding cases ID: legal@refly.org Pass: Fkk4erdF!"
+  },
+  {
+    "name": "World2Fly",
+    "iata": "",
+    "reqs": "ID/Passport number mandatory"
+  },
+  {
+    "name": "Wow Air",
+    "iata": "WW",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Xiamen Airlines",
+    "iata": "",
+    "reqs": "No documents required"
+  },
+  {
+    "name": "Xfly",
+    "iata": "",
+    "reqs": "No documents required"
+  }
+]
