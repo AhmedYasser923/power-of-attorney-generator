@@ -132,7 +132,7 @@ const prompt = `
     *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
     1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates. You must physically locate the departure date printed next to that specific leg's origin/destination.
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.
-    3. CURRENT YEAR: The current year is ${currentYear}. If the true flight date lacks a year, you MUST assume ${currentYear} and format the final "date" field as YYYY-MM-DD.
+    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar" or "13 Feb") and the year is not explicitly printed for that specific flight, DO NOT assume, guess, or append the current year. Output EXACTLY the explicit day and month you see for the "date" field. Only format as YYYY-MM-DD if the year is explicitly printed on the ticket.
 
     *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket is legally treated as TWO separate journeys. 
     - If the document is a ONE-WAY trip, create a SINGLE journey object.
@@ -142,7 +142,17 @@ const prompt = `
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
     STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
-    - PNR / Booking Code: Extract the actual AIRLINE PNR. 🚨 CRITICAL RULE: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference. Agency references are often purely numeric, much longer, or labeled "Agency Ref" at the top of the page. Airline PNRs are almost always EXACTLY 6 alphanumeric characters. You must ignore the agency reference and find the actual airline's record locator. Extract ALL 5 to 9 alphanumeric character airline PNRs found. If multiple exist, separate by commas. If missing, output "Not Provided".
+    - PNR / Booking Code: Extract the actual AIRLINE PNR. 
+      🚨 CRITICAL RULE 1: Standard airline PNRs are EXACTLY 6 alphanumeric characters.
+      🚨 CRITICAL EXCEPTION LIST: The following airlines use strictly NUMERIC PNRs of varying lengths. If the marketing airline is one of these, you MUST extract their numeric PNR instead:
+         - 6 Numbers: Heston Airlines, Sunclass.
+         - 7 Numbers: Corendon DUTCH Airlines CD.
+         - 8 Numbers: Air Arabia Maroc, Arkia Israel, TUI Airways, Condor Flugdienst, Electra Airways.
+         - 9 Numbers: Fly Jinnah.
+         - Variable/Numbers: Neos.
+      🚨 CRITICAL RULE 2: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference (e.g., Expedia, Booking.com). Unless the airline is on the exception list above, you must ignore long numeric agency references and find the actual 6-character airline locator. If missing, output "Not Provided".
+      🚨 SPECIAL SKYUP RULE: For SkyUp, the PNR shown often corresponds to the agency rather than the airline system directly.
+      
     - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific 13 or 14-digit e-ticket number to their name. If missing, output "Not Provided".
     - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
       [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
@@ -157,7 +167,7 @@ const prompt = `
 
     STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
-    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["BA123", "AA456"]).
+    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
     - Evaluate leg eligibility, expiration limits (compare against ${currentDateFull}), and calculate distance claim values (€250, €400, €600, or N/A).
 
     STEP 4: OUTPUT FORMAT
@@ -202,7 +212,7 @@ const prompt = `
                 "destinationCountry": "[String]",
                 "arrivalTime": "[String]",
                 "rawExtractedDate": "[String: STRICTLY the exact characters printed on the ticket for this leg's date. DO NOT INVENT EXAMPLES]",
-                "date": "YYYY-MM-DD",
+                "date": "[String: YYYY-MM-DD if year is explicitly printed, otherwise exact Day and Month seen e.g., '25 Mar']",
                 "distanceKm": "[String]",
                 "ec261Leg": {
                   "legOriginCountry": "[String]",
@@ -216,7 +226,7 @@ const prompt = `
                     "airlineYears": "[String]",
                     "bestCountry": "[String]",
                     "bestYears": "[String]",
-                    "expirationDate": "YYYY-MM-DD",
+                    "expirationDate": "[String: YYYY-MM-DD or N/A]",
                     "isExpired": false
                   }
                 }
