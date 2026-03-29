@@ -361,6 +361,14 @@ let expBadgeHtml = '';
                                 if (flight.date && flight.date !== 'Unknown') {
                                     eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
                                 }
+let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !== 'Unknown';
+                                let datePillHtml = isMissingYear 
+                                    ? `<span class="fc-date-pill" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">📅 ${flight.date} <input type="number" class="year-fix-input" data-original="${flight.date}" placeholder="YYYY" style="width: 48px; margin-left: 6px; padding: 2px 4px; border: 1px solid #ca8a04; border-radius: 4px; font-size: 11px; background: #fffbeb; color: #854d0e; outline: none; text-align: center;"></span>`
+                                    : `<span class="fc-date-pill">📅 ${flight.date || 'Unknown'}</span>`;
+
+                                // Store jurisdiction variables to pass to the DOM
+                                let expBestYears = flight.ec261Leg && flight.ec261Leg.claimExpiration ? flight.ec261Leg.claimExpiration.bestYears : 'N/A';
+                                let expBestCountry = flight.ec261Leg && flight.ec261Leg.claimExpiration ? flight.ec261Leg.claimExpiration.bestCountry : 'N/A';
 
                                 flightCardsContainer.innerHTML += `
                                     <div class="flight-card" style="opacity:${opacityStyle};">
@@ -402,7 +410,7 @@ let expBadgeHtml = '';
                                         </div>
 
                                         <div class="fc-info-strip" style="flex-wrap: wrap;">
-                                            <span class="fc-date-pill">📅 ${flight.date || 'Unknown'}</span>
+                                            ${datePillHtml}
                                             <span class="fc-strip-sep">·</span>
                                             <span class="fc-flight-num" style="display:flex; align-items:center; flex-wrap:wrap;">✈ ${flightNumsDisplay} ${statusBtnsHtml}</span>
                                             ${docsHtml ? `<span class="fc-strip-sep" style="width:100%; height:1px; background:#e2e8f0; margin:4px 0;"></span>${docsHtml}` : ''}
@@ -414,7 +422,7 @@ let expBadgeHtml = '';
                                             </div>
                                             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                                 ${legBadgeHtml}
-                                                ${expBadgeHtml}
+                                                <div class="exp-badge-container" data-years="${expBestYears}" data-country="${expBestCountry}">${expBadgeHtml}</div>
                                             </div>
                                         </div>
 
@@ -616,6 +624,69 @@ let expBadgeHtml = '';
             console.error(err);
             btn.innerHTML = '❌ Error';
             btn.disabled = false;
+        }
+    });
+
+    resultsCard.addEventListener('change', (e) => {
+        if (e.target.classList.contains('year-fix-input')) {
+            const input = e.target;
+            const year = input.value.trim();
+            
+            // Only trigger if a full 4-digit year is typed
+            if (year.length === 4) {
+                const originalDate = input.dataset.original; // e.g., "16 Mar"
+                const flightCard = input.closest('.flight-card');
+                
+                const expContainer = flightCard.querySelector('.exp-badge-container');
+                const bestYearsStr = expContainer.dataset.years;
+                const bestCountry = expContainer.dataset.country;
+                
+                // Parse the new full date
+                const fullDateStr = `${originalDate} ${year}`;
+                const flightDate = new Date(fullDateStr);
+                
+                if (!isNaN(flightDate.getTime())) {
+                    // Format flight date strictly as YYYY-MM-DD
+                    const fY = flightDate.getFullYear();
+                    const fM = String(flightDate.getMonth() + 1).padStart(2, '0');
+                    const fD = String(flightDate.getDate()).padStart(2, '0');
+                    const formattedFlightDate = `${fY}-${fM}-${fD}`;
+
+                    // 1. Update hidden data for Cirium / EOC buttons
+                    flightCard.querySelectorAll('.btn-check-eoc, .btn-check-status').forEach(btn => {
+                        btn.dataset.date = formattedFlightDate;
+                    });
+
+                    // 2. Recalculate Legal Jurisdiction Expiration
+                    if (bestYearsStr !== 'N/A') {
+                        const bestYears = parseInt(bestYearsStr);
+                        if (!isNaN(bestYears)) {
+                            const expDate = new Date(flightDate);
+                            expDate.setFullYear(expDate.getFullYear() + bestYears);
+                            
+                            const eY = expDate.getFullYear();
+                            const eM = String(expDate.getMonth() + 1).padStart(2, '0');
+                            const eD = String(expDate.getDate()).padStart(2, '0');
+                            const formattedExpDate = `${eY}-${eM}-${eD}`;
+                            
+                            const isExpired = new Date() > expDate;
+                            
+                            if (isExpired) {
+                                expContainer.innerHTML = `<div class="fc-exp-badge expired" title="Deadline was ${formattedExpDate} (${bestCountry})">🚨 EXPIRED</div>`;
+                            } else {
+                                expContainer.innerHTML = `<div class="fc-exp-badge" title="Valid under ${bestCountry} law (${bestYears} years)">⏳ Valid to ${formattedExpDate}</div>`;
+                            }
+                        }
+                    }
+                    
+                    // 3. Morph the Date Pill UI to show it was successfully verified
+                    const datePill = input.closest('.fc-date-pill');
+                    datePill.style.background = '#f1f5f9';
+                    datePill.style.color = '#475569';
+                    datePill.style.border = 'none';
+                    datePill.innerHTML = `📅 ${formattedFlightDate} <span style="color: #10b981; margin-left: 4px; font-weight: 800;" title="Year Manually Verified">✓</span>`;
+                }
+            }
         }
     });
 });
