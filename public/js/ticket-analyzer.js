@@ -128,13 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     journeyWrapper.innerHTML += `<h3 style="color: var(--primary); border-bottom: 1px solid var(--border-soft); padding-bottom: 10px;">🎫 Ticket / Journey ${journeyIndex + 1}</h3>`;
                 }
 
-         // ---> REPLACE THE EXISTING "if (data.ec261) { ... }" BLOCK WITH THIS <---
-                
                 if (data.ec261 || (data.routes && data.routes.length > 0)) {
                     let eligibleLegs = [];
                     let ineligibleLegs = [];
 
-                    // Scan all individual flight legs for their specific legal status
                     if (data.routes) {
                         data.routes.forEach(route => {
                             if (route.legs) {
@@ -159,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     let reasonHtml = '';
                     let inlineStyle = '';
 
-                    // TRIGGER YELLOW ALERT: Mix of eligible and ineligible flights
                     if (eligibleLegs.length > 0 && ineligibleLegs.length > 0) {
                         cardClass = 'partially-eligible';
                         inlineStyle = 'background-color: #fffbeb; border: 1px solid #fde68a;';
@@ -172,9 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="color: #b91c1c; font-size: 13px; line-height: 1.4; margin-top: 4px; padding-top: 8px; border-top: 1px dashed #fde68a;">❌ ${ineligibleLegs.join('<br>❌ ')}</div>
                             </div>
                         `;
-                    } 
-                    // STANDARD STATES: All Green or All Red
-                    else {
+                    } else {
                         let isEligible = false;
                         let aiReason = data.ec261 ? data.ec261.reason : '';
                         let aiStatus = data.ec261 ? data.ec261.status.toUpperCase() : 'UNKNOWN';
@@ -205,24 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>`;
                 }
                 
-                // ---> END REPLACEMENT BLOCK <---
-                
-                // --- NEW PASSENGER & TICKET MAPPING UI ---
                 let showPassengerCard = true;
                 if (journeyIndex > 0) {
                     const prevData = dataArray[journeyIndex - 1];
                     if (data.pnr === prevData.pnr) {
-                        showPassengerCard = false; // Don't duplicate passenger blocks for same PNR round-trips
+                        showPassengerCard = false; 
                     }
                 }
 
                 if (showPassengerCard) {
-                    let pnrNoteHtml = '';
-                    if (data.pnrNote) {
-                        pnrNoteHtml = `<div style="margin-top: 10px; font-size: 11px; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; max-width: 240px; text-align: right; line-height: 1.3; font-weight: 600;">${data.pnrNote}</div>`;
-                    }
-
-                    // Map through all passengers dynamically
                     let passengersListHtml = '';
                     if (data.passengers && data.passengers.length > 0) {
                         passengersListHtml = data.passengers.map(p => `
@@ -232,20 +217,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         `).join('');
                     } else {
-                        // Fallback for missing data
                         passengersListHtml = `<div style="color: var(--text-muted); font-size: 14px;">No passenger data extracted.</div>`;
                     }
+                    
+                    let pnrDisplay = data.pnr && data.pnr !== 'Not Provided' ? data.pnr : 'Not Provided';
+                    let pnrNoteHtml = data.pnrNote ? `<div style="font-size: 10px; color: #d97706; margin-top: 8px; background: #fffbeb; padding: 6px; border-radius: 4px; border: 1px solid #fde68a; line-height: 1.4;">${data.pnrNote}</div>` : '';
 
                     journeyWrapper.innerHTML += `
-                        <div class="passenger-card" style="align-items: flex-start;">
-                            <div style="flex: 1.5; padding-right: 20px; border-right: 1px dashed var(--border-soft);">
-                                <div class="p-label" style="margin-bottom: 12px;">Passenger Roster & Tickets</div>
-                                ${passengersListHtml}
+                     <div class="passenger-card" style="display: flex; flex-direction: column; gap: 20px; padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Passenger Roster & Tickets</div>
+                                
+                                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 24px; text-align: center; min-width: 220px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">PNR / Booking Ref</div>
+                                    <div style="font-size: 18px; font-weight: 700; color: #3b82f6; letter-spacing: 2px;">${pnrDisplay}</div>
+                                    ${pnrNoteHtml}
+                                </div>
                             </div>
-                            <div class="pnr-box" style="flex: 1; margin-left: 20px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
-                                <div class="p-label">PNR / Booking Ref</div>
-                                <div class="p-value" style="font-size: 20px;">${data.pnr || 'Not Found'}</div>
-                                ${pnrNoteHtml}
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; width: 100%;">
+                                ${passengersListHtml}
                             </div>
                         </div>
                     `;
@@ -271,13 +262,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 }
 
-let expBadgeHtml = '';
+                                // --- SMART MISSING DATE DETECTION ---
+                                let isMissingDate = !flight.date || flight.date === 'Unknown' || flight.date.trim() === '';
+                                let isMissingYear = !isMissingDate && !/\d{4}/.test(flight.date);
+
+                                let expBadgeHtml = '';
                                 let originStatute = '';
                                 let destStatute = '';
+                                let expBestYears = 'N/A';
+                                let expBestCountry = 'N/A';
+
                                 if (flight.ec261Leg && flight.ec261Leg.claimExpiration) {
                                     const exp = flight.ec261Leg.claimExpiration;
+                                    expBestYears = exp.bestYears;
+                                    expBestCountry = exp.bestCountry;
                                     
-                                    // Helper to append "years" safely
                                     const formatLimit = (val) => {
                                         if (!val || val === 'N/A' || String(val).toLowerCase().includes('not applicable')) return 'N/A';
                                         return String(val).toLowerCase().includes('year') ? val : `${val} years`;
@@ -290,7 +289,12 @@ let expBadgeHtml = '';
                                         destStatute = `<div style="font-size: 11px; color: #d97706; font-weight: 700; margin-top: 6px; text-align: right; letter-spacing: 0.3px;">⚖️ Limit: ${formatLimit(exp.destinationYears)}</div>`;
                                     }
 
-                                    if (exp.isExpired) {
+                                    // NEW: Prevent EXPIRED hallucination if date is missing
+                                    if (isMissingDate) {
+                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Please enter a date to check if it has expired or not</div>`;
+                                    } else if (isMissingYear) {
+                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Please add a year to check jurisdiction</div>`;
+                                    } else if (exp.isExpired) {
                                         expBadgeHtml = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 EXPIRED</div>`;
                                     } else {
                                         expBadgeHtml = `<div class="fc-exp-badge" title="Valid under ${exp.bestCountry} law (${exp.bestYears} years)">⏳ Valid to ${exp.expirationDate}</div>`;
@@ -318,7 +322,6 @@ let expBadgeHtml = '';
 
                                 let distanceHtml = flight.distanceKm ? `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>` : '';
 
-
                                 let docsHtml = '';
                                 if (flight.claimDocuments && Array.isArray(flight.claimDocuments)) {
                                     const docsItemsHtml = flight.claimDocuments.map(doc => {
@@ -339,8 +342,6 @@ let expBadgeHtml = '';
                                     docsHtml = `<div style="width:100%; display:flex; flex-direction:column; margin-top:8px;">${docsItemsHtml}</div>`;
                                 }
                              
-
-                                // --- NEW MULTI-FLIGHT NUMBER LOGIC ---
                                 let statusBtnsHtml = '';
                                 let flightNumsDisplay = '';
                                 const fNums = Array.isArray(flight.flightNumbers) ? flight.flightNumbers : [];
@@ -357,18 +358,18 @@ let expBadgeHtml = '';
                                     flightNumsDisplay = 'N/A';
                                 }
 
-                                let eocBtnHtml = '';
-                                if (flight.date && flight.date !== 'Unknown') {
-                                    eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
-                                }
-let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !== 'Unknown';
-                                let datePillHtml = isMissingYear 
-                                    ? `<span class="fc-date-pill" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">📅 ${flight.date} <input type="number" class="year-fix-input" data-original="${flight.date}" placeholder="YYYY" style="width: 48px; margin-left: 6px; padding: 2px 4px; border: 1px solid #ca8a04; border-radius: 4px; font-size: 11px; background: #fffbeb; color: #854d0e; outline: none; text-align: center;"></span>`
-                                    : `<span class="fc-date-pill">📅 ${flight.date || 'Unknown'}</span>`;
+                                let eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
 
-                                // Store jurisdiction variables to pass to the DOM
-                                let expBestYears = flight.ec261Leg && flight.ec261Leg.claimExpiration ? flight.ec261Leg.claimExpiration.bestYears : 'N/A';
-                                let expBestCountry = flight.ec261Leg && flight.ec261Leg.claimExpiration ? flight.ec261Leg.claimExpiration.bestCountry : 'N/A';
+                                // --- SMART DATE PILL UI ---
+                                let datePillHtml = '';
+                                if (isMissingDate) {
+                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 Missing Date <input type="date" class="full-date-fix-input" style="margin-left:6px; padding:1px 4px; border:1px solid #ca8a04; border-radius:4px; font-size:11px; background:#fffbeb; color:#854d0e; outline:none; cursor:pointer;"></span>`;
+                                } else if (isMissingYear) {
+                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 ${flight.date} <input type="number" class="year-fix-input" data-original="${flight.date}" placeholder="YYYY" style="width:48px; margin-left:6px; padding:2px 4px; border:1px solid #ca8a04; border-radius:4px; font-size:11px; background:#fffbeb; color:#854d0e; outline:none; text-align:center;"></span>`;
+                                } else {
+                                    datePillHtml = `<span class="fc-date-pill">📅 ${flight.date}</span>`;
+                                }
+
 
                                 flightCardsContainer.innerHTML += `
                                     <div class="flight-card" style="opacity:${opacityStyle};">
@@ -453,11 +454,47 @@ let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !==
         }
     });
 
+    // --- HELPER FUNCTION: SOFT BLOCKER ---
+    function validateDateForAPI(btn, flightCard) {
+        const dateVal = btn.dataset.date;
+        if (!dateVal || dateVal === 'Unknown' || !/\d{4}/.test(dateVal)) {
+            const originalHtml = btn.innerHTML;
+            const originalBg = btn.style.background;
+            const originalColor = btn.style.color;
+            const originalBorder = btn.style.border;
+
+            btn.innerHTML = '⚠️ Enter Date First';
+            btn.style.background = '#fef2f2';
+            btn.style.color = '#dc2626';
+            btn.style.border = '1px solid #fecaca';
+            
+            const datePill = flightCard.querySelector('.needs-date-warning');
+            if (datePill) {
+                datePill.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.4)';
+                setTimeout(() => { datePill.style.boxShadow = 'none'; }, 2000);
+            }
+
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.style.background = originalBg;
+                btn.style.color = originalColor;
+                btn.style.border = originalBorder;
+                btn.disabled = false;
+            }, 2000);
+
+            return false;
+        }
+        return true;
+    }
+
     /* --- EOC CHECKER UI LOGIC --- */
     resultsCard.addEventListener('click', async (e) => {
         const eocBtn = e.target.closest('.btn-check-eoc');
         if (eocBtn) {
             const flightCard = eocBtn.closest('.flight-card');
+            
+            if (!validateDateForAPI(eocBtn, flightCard)) return;
+
             eocBtn.innerHTML = '⏳ Checking...';
             eocBtn.disabled = true;
             
@@ -502,6 +539,9 @@ let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !==
         if (!btn) return;
 
         const flightCard = btn.closest('.flight-card');
+        
+        if (!validateDateForAPI(btn, flightCard)) return;
+
         const flightNum = btn.dataset.flight;
         const date = btn.dataset.date;
         const dest = btn.dataset.dest;
@@ -611,10 +651,8 @@ let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !==
                     </div>
                 `;
 
-                // Append so multiple stats cards stack vertically if multiple buttons are clicked
                 flightCard.appendChild(statsCard);
 
-                // Disable only the clicked button so the other flight numbers can still be queried
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 6px; display: inline-block;">✨ ${flightNum} checked</div>`;
                 
             } else {
@@ -627,37 +665,46 @@ let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !==
         }
     });
 
+    /* --- UNIFIED MANUAL DATE REMEDIATION ENGINE --- */
     resultsCard.addEventListener('change', (e) => {
-        if (e.target.classList.contains('year-fix-input')) {
+        const isYearFix = e.target.classList.contains('year-fix-input');
+        const isFullDateFix = e.target.classList.contains('full-date-fix-input');
+
+        if (isYearFix || isFullDateFix) {
             const input = e.target;
-            const year = input.value.trim();
+            const flightCard = input.closest('.flight-card');
             
-            // Only trigger if a full 4-digit year is typed
-            if (year.length === 4) {
-                const originalDate = input.dataset.original; // e.g., "16 Mar"
-                const flightCard = input.closest('.flight-card');
-                
+            let flightDate;
+            let formattedFlightDate;
+
+            if (isYearFix) {
+                const year = input.value.trim();
+                if (year.length === 4) {
+                    const originalDate = input.dataset.original; 
+                    flightDate = new Date(`${originalDate} ${year}`);
+                }
+            } else if (isFullDateFix) {
+                const dateVal = input.value; 
+                if (dateVal) {
+                    flightDate = new Date(dateVal);
+                }
+            }
+            
+            if (flightDate && !isNaN(flightDate.getTime())) {
+                const fY = flightDate.getFullYear();
+                const fM = String(flightDate.getMonth() + 1).padStart(2, '0');
+                const fD = String(flightDate.getDate()).padStart(2, '0');
+                formattedFlightDate = `${fY}-${fM}-${fD}`;
+
+                flightCard.querySelectorAll('.btn-check-eoc, .btn-check-status').forEach(btn => {
+                    btn.dataset.date = formattedFlightDate;
+                });
+
                 const expContainer = flightCard.querySelector('.exp-badge-container');
-                const bestYearsStr = expContainer.dataset.years;
-                const bestCountry = expContainer.dataset.country;
-                
-                // Parse the new full date
-                const fullDateStr = `${originalDate} ${year}`;
-                const flightDate = new Date(fullDateStr);
-                
-                if (!isNaN(flightDate.getTime())) {
-                    // Format flight date strictly as YYYY-MM-DD
-                    const fY = flightDate.getFullYear();
-                    const fM = String(flightDate.getMonth() + 1).padStart(2, '0');
-                    const fD = String(flightDate.getDate()).padStart(2, '0');
-                    const formattedFlightDate = `${fY}-${fM}-${fD}`;
-
-                    // 1. Update hidden data for Cirium / EOC buttons
-                    flightCard.querySelectorAll('.btn-check-eoc, .btn-check-status').forEach(btn => {
-                        btn.dataset.date = formattedFlightDate;
-                    });
-
-                    // 2. Recalculate Legal Jurisdiction Expiration
+                if (expContainer) {
+                    const bestYearsStr = expContainer.dataset.years;
+                    const bestCountry = expContainer.dataset.country;
+                    
                     if (bestYearsStr !== 'N/A') {
                         const bestYears = parseInt(bestYearsStr);
                         if (!isNaN(bestYears)) {
@@ -678,15 +725,17 @@ let isMissingYear = flight.date && !/\d{4}/.test(flight.date) && flight.date !==
                             }
                         }
                     }
-                    
-                    // 3. Morph the Date Pill UI to show it was successfully verified
-                    const datePill = input.closest('.fc-date-pill');
-                    datePill.style.background = '#f1f5f9';
-                    datePill.style.color = '#475569';
-                    datePill.style.border = 'none';
-                    datePill.innerHTML = `📅 ${formattedFlightDate} <span style="color: #10b981; margin-left: 4px; font-weight: 800;" title="Year Manually Verified">✓</span>`;
                 }
+                
+                const datePill = input.closest('.fc-date-pill');
+                datePill.style.background = '#f1f5f9';
+                datePill.style.color = '#475569';
+                datePill.style.border = 'none';
+                datePill.style.boxShadow = 'none';
+                datePill.classList.remove('needs-date-warning');
+                datePill.innerHTML = `📅 ${formattedFlightDate} <span style="color: #10b981; margin-left: 4px; font-weight: 800;" title="Date Manually Verified">✓</span>`;
             }
         }
     });
+
 });
