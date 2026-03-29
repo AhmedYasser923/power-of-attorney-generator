@@ -71,6 +71,43 @@ const airlineRequirements = [
   { names: ["world2fly"], reqs: "ID / Passport number mandatory" }
 ];
 
+// --- EC261 STATUTE OF LIMITATIONS DATABASE (IN YEARS) ---
+const jurisdictionLimits = {
+  "poland": 1,
+  "belgium": 1,
+  "italy": 2,
+  "netherlands": 2,
+  "the netherlands": 2,
+  "switzerland": 2,
+  "croatia": 2,
+  "iceland": 2,
+  "slovakia": 2,
+  "slovenia": 2,
+  "germany": 3,
+  "austria": 3,
+  "denmark": 3,
+  "finland": 3,
+  "norway": 3,
+  "portugal": 3,
+  "romania": 3,
+  "sweden": 3, // Note: Sweden is generally 3 for transport
+  "czech republic": 3,
+  "bulgaria": 3,
+  "estonia": 3,
+  "latvia": 3,
+  "lithuania": 3,
+  "spain": 5,
+  "france": 5,
+  "greece": 5,
+  "hungary": 5,
+  "uk": 6,
+  "united kingdom": 6,
+  "ireland": 6,
+  "cyprus": 6,
+  "malta": 6,
+  "luxembourg": 10
+};
+
 exports.renderAnalyzer = catchAsync(async (req, res, next) => {
   res.render('ticket-analyzer', { title: 'Ticket Analyzer' });
 });
@@ -95,7 +132,7 @@ const prompt = `
     *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
     1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates. You must physically locate the departure date printed next to that specific leg's origin/destination.
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.
-    3. if only the day and month were provided and the year isn't explicitly there, don't but a year just the day and month
+    3. CURRENT YEAR: The current year is ${currentYear}. If the true flight date lacks a year, you MUST assume ${currentYear} and format the final "date" field as YYYY-MM-DD.
 
     *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket is legally treated as TWO separate journeys. 
     - If the document is a ONE-WAY trip, create a SINGLE journey object.
@@ -114,7 +151,7 @@ const prompt = `
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
     - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
-    1. Starts in EU or UK -> ALWAYS ELIGIBLE.
+    1. Starts in EU or UK -> ALWAYS ELIGIBLE. 🚨 CRITICAL CONNECTING FLIGHT RULE: If the first flight of a journey departs from the EU/UK, ALL subsequent connecting flights on that exact same journey are automatically ELIGIBLE under EC261, even if those later legs are operated by a non-EU airline between two non-EU countries. Do NOT mark connecting legs as "Not Eligible" if the journey originated in the EU/UK.
     2. Starts NON-EU/UK -> Ends NON-EU/UK -> ALWAYS NOT ELIGIBLE. 
     3. Starts NON-EU/UK -> Ends in EU or UK -> Eligible ONLY IF OPERATING airline is an EU/UK Carrier.
 
@@ -190,7 +227,6 @@ const prompt = `
       }
     ]
   `;
-
   const documentParts = [];
   for (const file of files) {
     let processedBuffer = file.buffer;
@@ -240,15 +276,15 @@ const prompt = `
   }
 
 
-  parsedJourneys.forEach(journey => {
+parsedJourneys.forEach(journey => {
     if (journey.routes) {
       journey.routes.forEach(route => {
         if (route.legs) {
           route.legs.forEach(leg => {
+            // 1. --- DOCUMENT CHECKER LOGIC ---
             let marketing = leg.marketingAirline || "Unknown";
             let operating = leg.operatingAirline || marketing;
 
-            // Helper to fetch reqs for a specific airline
             const getReqs = (airlineName) => {
               if (!airlineName || airlineName === "Unknown") return "No documents required";
               const normalized = airlineName.toLowerCase();
@@ -261,17 +297,60 @@ const prompt = `
             };
 
             let docsList = [];
-            
-            // If they are the same, just show one requirement
             if (marketing === operating) {
                 docsList.push({ airline: marketing, role: "", reqs: getReqs(marketing) });
             } else {
-                // If codeshare, show BOTH requirements independently
                 docsList.push({ airline: marketing, role: "Booked", reqs: getReqs(marketing) });
                 docsList.push({ airline: operating, role: "Operated", reqs: getReqs(operating) });
             }
-            
             leg.claimDocuments = docsList;
+
+            // 2. --- JURISDICTION OVERRIDE LOGIC ---
+            if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
+                const oCountry = (leg.originCountry || '').toLowerCase().trim();
+                const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
+                
+                let oLimit = jurisdictionLimits[oCountry] || 'N/A';
+                let dLimit = jurisdictionLimits[dCountry] || 'N/A';
+                
+                leg.ec261Leg.claimExpiration.originYears = oLimit;
+                leg.ec261Leg.claimExpiration.destinationYears = dLimit;
+
+                // Calculate the "Best Country" mathematically
+                let bestLimit = 0;
+                let bestCountryName = 'Unknown';
+
+                if (oLimit !== 'N/A') {
+                    bestLimit = oLimit;
+                    bestCountryName = leg.originCountry;
+                }
+                
+                if (dLimit !== 'N/A' && dLimit > bestLimit) {
+                    bestLimit = dLimit;
+                    bestCountryName = leg.destinationCountry;
+                }
+
+                if (bestLimit > 0 && leg.date && leg.date !== "Unknown") {
+                    leg.ec261Leg.claimExpiration.bestYears = bestLimit;
+                    leg.ec261Leg.claimExpiration.bestCountry = bestCountryName;
+                    
+                    // Calculate exact expiration date based on the precise flight date
+                    const flightDate = new Date(leg.date);
+                    if (!isNaN(flightDate.getTime())) {
+                        flightDate.setFullYear(flightDate.getFullYear() + bestLimit);
+                        leg.ec261Leg.claimExpiration.expirationDate = flightDate.toISOString().split('T')[0];
+                        
+                        // Check if currently expired
+                        const today = new Date();
+                        leg.ec261Leg.claimExpiration.isExpired = today > flightDate;
+                    }
+                } else {
+                    leg.ec261Leg.claimExpiration.bestYears = 'N/A';
+                    leg.ec261Leg.claimExpiration.bestCountry = 'N/A';
+                    leg.ec261Leg.claimExpiration.expirationDate = 'N/A';
+                    leg.ec261Leg.claimExpiration.isExpired = false;
+                }
+            }
           });
         }
       });
