@@ -188,10 +188,11 @@ const prompt = `
        - If a Leg goes from Non-EU to EU/UK -> ELIGIBLE ONLY IF the operating airline is an EU/UK carrier.
        - If a Leg goes from Non-EU to Non-EU -> NOT ELIGIBLE (Operating airline does not matter at all).
 
-    STEP 3: EXTRACT ROUTES & LEGS
+STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
     - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
-    - Evaluate leg eligibility, expiration limits (compare against ${currentDateFull}), and calculate distance claim values (€250, €400, €600, or N/A).
+    - distanceKm: You MUST estimate the physical flight distance specifically for THIS INDIVIDUAL LEG ONLY (e.g., ZRH to LHR is ~790km). DO NOT output the total multi-leg journey distance here.
+    - ec261Leg.estimatedClaimValue: Evaluate leg eligibility and calculate the claim value (€250, €400, €600, or N/A). 🚨 CRITICAL LEGAL RULE: For connecting flights, EC261 compensation is legally based on the TOTAL distance from the journey's first origin to its final destination. Therefore, a short 700km connecting leg must still output a €600 claim value if the overall journey originated 8000km away. Do not let the physical leg distance alter the total journey legal claim value.
 
     STEP 4: OUTPUT FORMAT
     *** IMPORTANT *** If no flight data exists, return ONLY an empty JSON array: []
