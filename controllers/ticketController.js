@@ -163,10 +163,31 @@ const prompt = `
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
     - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
-    1. Starts in EU or UK -> ALWAYS ELIGIBLE. 🚨 CRITICAL CONNECTING FLIGHT RULE: If the first flight of a journey departs from the EU/UK, ALL subsequent connecting flights on that exact same journey are automatically ELIGIBLE under EC261, even if those later legs are operated by a non-EU airline between two non-EU countries. Do NOT mark connecting legs as "Not Eligible" if the journey originated in the EU/UK.
-    2. Starts NON-EU/UK -> Ends NON-EU/UK -> ALWAYS NOT ELIGIBLE. 
-    3. Starts NON-EU/UK -> Ends in EU or UK -> Eligible ONLY IF OPERATING airline is an EU/UK Carrier.
+🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
 
+    RULE 1: THE EU ORIGIN DOCTRINE (BLANKET ELIGIBILITY)
+    If the FIRST leg of the overall journey departs from an airport inside the EU/UK:
+    -> The entire journey and ALL subsequent connecting legs are AUTOMATICALLY ELIGIBLE.
+    -> The operating airlines DO NOT matter. Mark the overall journey and every leg as ELIGIBLE.
+
+    RULE 2: THE STRICT NON-EU ORIGIN RULES
+    If the FIRST leg of the overall journey departs from OUTSIDE the EU/UK, the blanket doctrine dies. You MUST apply these conditions:
+
+       CONDITION A (TOTAL REJECTION):
+       If the journey starts Non-EU, ends Non-EU, and EVERY connecting leg is Non-EU to Non-EU:
+       -> The entire journey and ALL legs are AUTOMATICALLY NOT ELIGIBLE. Operating airlines do not matter.
+
+       CONDITION B (TOTAL ACCEPTANCE VIA EU CARRIER):
+       If the journey starts Non-EU but arrives in the EU/UK, AND EVERY SINGLE LEG is operated by an EU/UK carrier:
+       -> The entire journey and ALL legs are AUTOMATICALLY ELIGIBLE. Do not use mixed eligibility.
+
+       CONDITION C (PER-LEG EVALUATION & MIXED ELIGIBILITY):
+       If the journey starts Non-EU and does NOT perfectly fit Condition A or Condition B, you MUST treat EVERY LEG like its own separate journey and evaluate them individually:
+       - If a Leg departs from EU/UK -> ELIGIBLE.
+       - If a Leg goes from Non-EU to EU/UK -> ELIGIBLE ONLY IF the operating airline is an EU/UK carrier.
+       - If a Leg goes from Non-EU to Non-EU -> NOT ELIGIBLE (Operating airline does not matter at all).
+
+       
     STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
     - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
