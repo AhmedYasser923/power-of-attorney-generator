@@ -94,94 +94,52 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     
     *CRITICAL DATE INFERENCE RULE*: The current year is ${currentYear}. Many boarding passes only display the day and month (e.g., "15 Jan"). If the year is missing from the document, you MUST assume the year is ${currentYear} and append it to the date string. If the timeline suggests a flight from late last year, you may use ${currentYear - 1}.
     
-    *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket (e.g., Outbound: EU to Asia, Return: Asia to EU) is legally treated as TWO separate journeys, even if booked under the exact same PNR. 
+    *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket is legally treated as TWO separate journeys. 
     - If the document is a ONE-WAY trip, create a SINGLE journey object.
-    - If the document is a ROUND-TRIP, you MUST split it into TWO separate journey objects in the array: one object for the Outbound route, and a completely separate object for the Return route. 
-    - If multiple documents share the same PNR and are part of the SAME directional trip, combine them. Combine multiple passenger names.
+    - If the document is a ROUND-TRIP, split it into TWO separate journey objects: one for the Outbound route, one for the Return route. 
+    - Combine multiple passengers into the SAME journey object if they share the itinerary.
 
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
-    Follow these STRICT instructions step-by-step for EACH journey object:
-
-    STEP 1: EXTRACT BASIC INFO
-    - Passenger Name: (Combine names if multiple passengers share this exact journey/PNR).
-    - PNR / Booking Code: MUST be 5 to 9 alphanumeric characters. IGNORE 13-digit e-ticket numbers here. If missing, output "Not Provided".
-    - Ticket Number: Extract the 13 or 14-digit e-ticket number if present. If multiple, separate by commas. If missing, output "Not Provided".
+    STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
+    - PNR / Booking Code: Extract ALL 5 to 9 alphanumeric character PNRs found. If multiple exist, separate them by commas. If missing, output "Not Provided".
+    - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific 13 or 14-digit e-ticket number to their name. If missing, output "Not Provided".
     - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
       [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
 
     STEP 2: EVALUATE OVERALL EC261 & UK261 ELIGIBILITY
-    Treat this SPECIFIC directional journey (first origin of this route to final destination of this route) as a single unit.
-    *CRITICAL LAW*: EC261/UK261 liability falls strictly on the OPERATING carrier, NOT the marketing carrier.
-    
-    *Definitions:*
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
     - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
-    - EU/UK Carrier (Operating): Lufthansa, Air France, KLM, Iberia, Wizz Air, Aer Lingus, British Airways, Virgin Atlantic, easyJet UK, etc.
-    
-    *Overall Evaluation Rules (Evaluate in order based on OPERATING airline of the legs):*
-    1. Starts in EU or UK -> OVERALL JOURNEY IS ALWAYS ELIGIBLE. (Airline and final destination do not matter).
-    2. Starts NON-EU/UK -> Ends NON-EU/UK -> OVERALL JOURNEY IS ALWAYS NOT ELIGIBLE. 
-    3. Starts NON-EU/UK -> Ends in EU or UK -> Eligible ONLY IF OPERATING airline is an EU Carrier or a UK Carrier. (If non-EU/non-UK carrier, it is Not Eligible).
+    1. Starts in EU or UK -> ALWAYS ELIGIBLE.
+    2. Starts NON-EU/UK -> Ends NON-EU/UK -> ALWAYS NOT ELIGIBLE. 
+    3. Starts NON-EU/UK -> Ends in EU or UK -> Eligible ONLY IF OPERATING airline is an EU/UK Carrier.
 
     STEP 3: EXTRACT ROUTES & LEGS
-    Assign this route's type (e.g., "Outbound" or "Return").
-    For each leg, carefully extract operating vs booked (marketing) details.
-    - marketingAirline: Who the ticket was bought from.
-    - operatingAirline: Who actually flies the plane (e.g., "Operated by..."). If not stated, assume it's the marketing airline.
-    - operatingAirlineCountry: The home country of the OPERATING airline.
-    - flightNumber: Include both if codeshare (e.g., "BA123 / AA456").
-    
-    *CRITICAL TIMELINE & REBOOKING LOGIC*: Do NOT blindly assume an earlier flight date is the "cancelled" one (passengers are sometimes rebooked to earlier flights). If you detect overlapping or conflicting flights for the exact same route across different documents, INCLUDE ALL LEGS. 
-    - Set the "flightStatus" to "Scheduled" for standard flights.
-    - If a flight document explicitly states it was cancelled, set it to "Cancelled".
-    - If there are conflicting dates/times for the same route and it is unclear which was actually flown, set the "flightStatus" to "Schedule Change / Review".
-    
-    *CRITICAL LEG-BY-LEG EVALUATION RULES:*
-    - IF this overall directional journey is "Eligible": EVERY SINGLE LEG in it is automatically "Eligible".
-    - IF this overall directional journey is "Not Eligible": EVERY SINGLE LEG is automatically "Not Eligible", UNLESS a specific connecting leg DEPARTS from an EU/UK airport.
-    
-    *STATUTE OF LIMITATIONS (EXPIRATION) RULE*:
-    Today's date is ${currentDateFull}. You MUST legally calculate if the claim is expired.
-    Limitations by Country (ONLY Valid EU/EEA/UK Jurisdictions Apply):
-    - 1 year: Poland
-    - 2 years: Italy, Netherlands, Switzerland, Slovakia, Malta, Iceland
-    - 3 years: Romania, Austria, Germany (Expires Dec 31st of the 3rd year), Portugal, Denmark, Finland, Norway, Czech Republic, Slovenia, Estonia
-    - 5 years: France, Spain, Belgium, Bulgaria, Greece, Hungary, Croatia
-    - 6 years: United Kingdom, Ireland, Cyprus
-    - 10 years: Latvia, Lithuania, Luxembourg, Sweden
-    
-    Expiration Logic:
-    1. Identify the limitation years for: (A) Origin Country, (B) Destination Country, (C) Operating Airline's Country. 
-    2. *CRITICAL JURISDICTION CHECK*: You MUST discard any country that is NOT in the EU, UK, or EEA (Iceland, Norway, Switzerland). For example, if the destination is Canada, USA, or the airline is Emirates (UAE) or Turkish Airlines (Turkey), you CANNOT use their laws to file an EC261 claim. Their limitation period must be entirely ignored.
-    3. Find the BEST (longest) limitation period among the remaining *eligible* EU/UK/EEA jurisdictions. Output the years (e.g., "3 years").
-    4. Calculate the Deadline Date. (If Germany is chosen for the best period, deadline is Dec 31 of FlightYear + 3). Otherwise, Flight Date + Longest Limitation Period.
-    5. Compare Deadline Date to ${currentDateFull}. If Deadline has passed, isExpired is true.
-
-    *LEG DISTANCE & CLAIM VALUE CALCULATION*:
-    For EACH leg, estimate the Great Circle Distance between its origin and destination airports and output it in "distanceKm" (e.g., "3450 km").
-    ONLY IF the leg is Eligible AND isExpired is false, calculate the claim value based on that distance:
-    - Distance up to 1,500 km: Output "€250"
-    - Distance between 1,500 km and 3,500 km: Output "€400"
-    - Distance over 3,500 km: Output "€600"
-    If the leg is Not Eligible OR is Expired, output "N/A" for estimatedClaimValue.
+    For each leg:
+    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["BA123", "AA456"]).
+    - Evaluate leg eligibility, expiration limits (compare against ${currentDateFull}), and calculate distance claim values (€250, €400, €600, or N/A).
 
     STEP 4: OUTPUT FORMAT
-    *** IMPORTANT *** If the uploaded document does NOT contain any flight or travel information (e.g. it is a photo, receipt, ID, random text, or any non-travel document), return ONLY an empty JSON array: []
-    Otherwise, return EXACTLY this JSON structure (an ARRAY of objects) and absolutely nothing else. Do not use markdown like \`\`\`json.
+    *** IMPORTANT *** If no flight data exists, return ONLY an empty JSON array: []
+    Otherwise, return EXACTLY this JSON structure (an ARRAY of objects) and absolutely nothing else. Do not use markdown.
     
     [
       {
-        "passengerName": "",
-        "pnr": "",
-        "ticketNumber": "",
+        "passengers": [
+          {
+            "firstName": "John",
+            "lastName": "Doe",
+            "ticketNumber": "1234567890123"
+          }
+        ],
+        "pnr": "Comma separated list of all PNRs",
         "pnrNote": "",
         "ec261": {
-          "firstOriginCountry": "Actual starting country of this specific route (Label: EU, UK, or NON-EU)",
-          "finalDestinationCountry": "Actual final destination country of this specific route (Label: EU, UK, or NON-EU)",
+          "firstOriginCountry": "EU, UK, or NON-EU",
+          "finalDestinationCountry": "EU, UK, or NON-EU",
           "status": "Eligible or Not Eligible",
-          "reason": "Brief reason based on rules."
+          "reason": ""
         },
         "routes": [
           {
@@ -192,7 +150,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
                 "marketingAirline": "",
                 "operatingAirline": "",
                 "operatingAirlineCountry": "",
-                "flightNumber": "",
+                "flightNumbers": ["FLIGHT1", "FLIGHT2"],
                 "originIata": "",
                 "originName": "",
                 "originCity": "",
@@ -203,20 +161,20 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
                 "destinationCity": "",
                 "destinationCountry": "",
                 "arrivalTime": "",
-                "date": "Format as YYYY-MM-DD",
-                "distanceKm": "e.g., 3450 km",
+                "date": "YYYY-MM-DD",
+                "distanceKm": "3450 km",
                 "ec261Leg": {
-                  "legOriginCountry": "Leg starting country (Label: EU, UK, or NON-EU)",
-                  "legDestinationCountry": "Leg destination country (Label: EU, UK, or NON-EU)",
+                  "legOriginCountry": "EU, UK, or NON-EU",
+                  "legDestinationCountry": "EU, UK, or NON-EU",
                   "status": "Eligible or Not Eligible",
-                  "reason": "Explain based on rules.",
+                  "reason": "",
                   "estimatedClaimValue": "€250, €400, €600, or N/A",
                   "claimExpiration": {
-                    "originYears": "e.g. 3 years (If Non-EU, leave empty)",
-                    "destinationYears": "e.g. 5 years (If Non-EU, leave empty)",
-                    "airlineYears": "e.g. 2 years (If Non-EU, leave empty)",
-                    "bestCountry": "Country Name",
-                    "bestYears": "Number",
+                    "originYears": "",
+                    "destinationYears": "",
+                    "airlineYears": "",
+                    "bestCountry": "",
+                    "bestYears": "",
                     "expirationDate": "YYYY-MM-DD",
                     "isExpired": false
                   }
