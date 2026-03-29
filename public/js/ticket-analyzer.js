@@ -243,16 +243,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 let distanceHtml = flight.distanceKm ? `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>` : '';
 
+
                                 let docsHtml = '';
-                                if (flight.claimDocuments) {
-                                    const isDefault = flight.claimDocuments === 'No documents required';
-                                    const docIcon = isDefault ? '📄' : '📑';
-                                    const docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
-                                    const docBg   = isDefault ? 'transparent' : '#f0f9ff';
-                                    const docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
-                                    const docLabel = isDefault ? 'No docs required' : `Required: ${flight.claimDocuments}`;
-                                    docsHtml = `<span style="display:inline-flex;align-items:center;gap:4px;color:${docColor};background:${docBg};border:${docBorder};padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;max-width:260px;white-space:normal;line-height:1.3;">${docIcon} ${docLabel}</span>`;
+                                if (flight.claimDocuments && Array.isArray(flight.claimDocuments)) {
+                                    const docsItemsHtml = flight.claimDocuments.map(doc => {
+                                        const isDefault = doc.reqs === 'No documents required';
+                                        const docIcon = isDefault ? '📄' : '📑';
+                                        const docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
+                                        const docBg   = isDefault ? 'transparent' : '#f0f9ff';
+                                        const docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
+                                        
+                                        const rolePrefix = doc.role ? `[${doc.role}] ` : '';
+                                        const docLabel = isDefault 
+                                            ? `<b>${rolePrefix}${doc.airline}</b>: No docs required` 
+                                            : `<b>${rolePrefix}${doc.airline}</b> Required: ${doc.reqs}`;
+                                        
+                                        return `<div style="display:flex;align-items:flex-start;gap:6px;color:${docColor};background:${docBg};border:${docBorder};padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;width:100%;"><span style="flex-shrink:0;margin-top:2px;">${docIcon}</span> <span style="white-space:normal;line-height:1.4;">${docLabel}</span></div>`;
+                                    }).join('');
+                                    
+                                    docsHtml = `<div style="width:100%; display:flex; flex-direction:column; margin-top:8px;">${docsItemsHtml}</div>`;
                                 }
+                             
 
                                 // --- NEW MULTI-FLIGHT NUMBER LOGIC ---
                                 let statusBtnsHtml = '';
