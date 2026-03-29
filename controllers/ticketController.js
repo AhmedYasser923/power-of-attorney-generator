@@ -134,15 +134,15 @@ const prompt = `
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.
     3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar" or "13 Feb") and the year is not explicitly printed for that specific flight, DO NOT assume, guess, or append the current year. Output EXACTLY the explicit day and month you see for the "date" field. Only format as YYYY-MM-DD if the year is explicitly printed on the ticket.
 
-    *CRITICAL ROUND-TRIP LAW*: Under EC261/UK261 law, a round-trip ticket is legally treated as TWO separate journeys. 
-    - If the document is a ONE-WAY trip, create a SINGLE journey object.
-    - If the document is a ROUND-TRIP, split it into TWO separate journey objects: one for the Outbound route, one for the Return route. 
-    - Combine multiple passengers into the SAME journey object if they share the itinerary.
+    *CRITICAL JOURNEY SPLITTING LAWS (EC261)*:
+    1. ROUND-TRIPS: A round-trip ticket is legally treated as TWO separate journeys. Split them into one Outbound journey object and one Return journey object.
+    2. SELF-TRANSFERS & SEPARATE TICKETS: If the document explicitly states "Self transfer", OR if consecutive flight legs are booked under completely different Airline PNRs (e.g., Leg 1 has PNR 'ABCDEF' and Leg 2 has PNR 'XYZ123'), they are legally SEPARATE contracts. You MUST split them into completely SEPARATE journey objects. Each journey object must contain only the specific leg(s) and the specific PNR associated with that contract.
+    3. PASSENGERS: Combine multiple passengers into the SAME journey object if they share the exact same itinerary and PNR.
 
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
     STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
-    - PNR / Booking Code: Extract the actual AIRLINE PNR. 
+    - PNR / Booking Code: Extract the actual AIRLINE PNR associated strictly with THIS specific journey object. 
       🚨 CRITICAL RULE 1: Standard airline PNRs are EXACTLY 6 alphanumeric characters.
       🚨 CRITICAL RULE 2: HIDDEN PNRs (CONCATENATION): Sometimes airlines mash the flight number, PNR, and internal codes into one long barcode string (e.g., "LH220HABMTTA4"). If you see a long mixed string like this, look inside it to extract ONLY the hidden 6-character alphanumeric PNR (e.g., "HABMTT"). Do NOT output the whole long string.
       🚨 CRITICAL EXCEPTION LIST: The following airlines use strictly NUMERIC PNRs of varying lengths. If the marketing airline is one of these, you MUST extract their numeric PNR instead:
@@ -163,7 +163,8 @@ const prompt = `
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
     - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
-🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
+    
+    🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
 
     RULE 1: THE EU ORIGIN DOCTRINE (BLANKET ELIGIBILITY)
     If the FIRST leg of the overall journey departs from an airport inside the EU/UK:
@@ -187,7 +188,6 @@ const prompt = `
        - If a Leg goes from Non-EU to EU/UK -> ELIGIBLE ONLY IF the operating airline is an EU/UK carrier.
        - If a Leg goes from Non-EU to Non-EU -> NOT ELIGIBLE (Operating airline does not matter at all).
 
-       
     STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
     - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
@@ -206,7 +206,7 @@ const prompt = `
             "ticketNumber": "[String: STRICTLY 13 NUMERIC DIGITS. NO LETTERS.]"
           }
         ],
-        "pnr": "[String: Comma separated list of all PNRs]",
+        "pnr": "[String: Comma separated list of all PNRs strictly for THIS journey]",
         "pnrNote": "[String]",
         "ec261": {
           "firstOriginCountry": "[String]",
