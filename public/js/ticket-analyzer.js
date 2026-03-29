@@ -271,13 +271,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 }
 
-                                let expBadgeHtml = '';
+let expBadgeHtml = '';
                                 let originStatute = '';
                                 let destStatute = '';
                                 if (flight.ec261Leg && flight.ec261Leg.claimExpiration) {
                                     const exp = flight.ec261Leg.claimExpiration;
-                                    if (exp.originYears) originStatute = `<div style="font-size: 10px; color: #3b82f6; font-weight: 700; margin-top: 4px;">⚖️ Limit: ${exp.originYears}</div>`;
-                                    if (exp.destinationYears) destStatute = `<div style="font-size: 10px; color: #3b82f6; font-weight: 700; margin-top: 4px;">⚖️ Limit: ${exp.destinationYears}</div>`;
+                                    
+                                    // Helper to append "years" safely
+                                    const formatLimit = (val) => {
+                                        if (!val || val === 'N/A' || String(val).toLowerCase().includes('not applicable')) return 'N/A';
+                                        return String(val).toLowerCase().includes('year') ? val : `${val} years`;
+                                    };
+
+                                    if (exp.originYears) {
+                                        originStatute = `<div style="font-size: 11px; color: #d97706; font-weight: 700; margin-top: 6px; letter-spacing: 0.3px;">⚖️ Limit: ${formatLimit(exp.originYears)}</div>`;
+                                    }
+                                    if (exp.destinationYears) {
+                                        destStatute = `<div style="font-size: 11px; color: #d97706; font-weight: 700; margin-top: 6px; text-align: right; letter-spacing: 0.3px;">⚖️ Limit: ${formatLimit(exp.destinationYears)}</div>`;
+                                    }
 
                                     if (exp.isExpired) {
                                         expBadgeHtml = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 EXPIRED</div>`;
@@ -322,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             ? `<b>${rolePrefix}${doc.airline}</b>: No docs required` 
                                             : `<b>${rolePrefix}${doc.airline}</b> Required: ${doc.reqs}`;
                                         
-                                        return `<div style="display:flex;align-items:flex-start;gap:6px;color:${docColor};background:${docBg};border:${docBorder};padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;width:100%;"><span style="flex-shrink:0;margin-top:2px;">${docIcon}</span> <span style="white-space:normal;line-height:1.4;">${docLabel}</span></div>`;
+                                        return `<div style="display:flex;align-items:flex-start;gap:6px;color:${docColor};background:${docBg};border:${docBorder};padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;width:100%;"><span style="flex-shrink:0;">${docIcon}</span> <span style="white-space:normal;line-height:1.4;">${docLabel}</span></div>`;
                                     }).join('');
                                     
                                     docsHtml = `<div style="width:100%; display:flex; flex-direction:column; margin-top:8px;">${docsItemsHtml}</div>`;
@@ -366,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 <div class="fc-iata">${flight.originIata || '???'}</div>
                                                 <div class="fc-airport">${flight.originName || ''}</div>
                                                 <div class="fc-city">${flight.originCity || ''}, ${flight.originCountry || ''}</div>
+                                                ${originStatute}
                                             </div>
                                             <div class="fc-line-wrapper">
                                                 ${distanceHtml}
@@ -376,17 +388,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 <div class="fc-iata">${flight.destinationIata || '???'}</div>
                                                 <div class="fc-airport">${flight.destinationName || ''}</div>
                                                 <div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div>
+                                                ${destStatute}
                                             </div>
                                         </div>
 
                                         <div class="fc-times-row">
                                             <div>
                                                 <div class="fc-time">${flight.departureTime || '--:--'}</div>
-                                                ${originStatute ? `<div class="fc-statute">${originStatute.replace(/<[^>]*>/g,'')}</div>` : ''}
                                             </div>
                                             <div style="text-align:right;">
                                                 <div class="fc-time">${flight.arrivalTime || '--:--'}</div>
-                                                ${destStatute ? `<div class="fc-statute" style="text-align:right;">${destStatute.replace(/<[^>]*>/g,'')}</div>` : ''}
                                             </div>
                                         </div>
 
