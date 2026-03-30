@@ -656,12 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 6px; display: inline-block;">✨ ${flightNum} checked</div>`;
                 
             } else {
-                btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fecaca; margin-left: 6px; display: inline-block;">⚠️ ${flightNum} error</div>`;
+                // Grab the specific error sent by the backend, or fallback to a default
+                const errorMsg = data.error || 'Status unavailable';
+                
+                // Display the error with text-wrapping and a max-width so it looks clean
+                btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block; max-width: 280px; white-space: normal; line-height: 1.4; vertical-align: middle;">⚠️ <b>${flightNum}:</b> ${errorMsg}</div>`;
             }
         } catch(err) {
             console.error(err);
-            btn.innerHTML = '❌ Error';
-            btn.disabled = false;
+            btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block;">❌ Network/Server Error</div>`;
         }
     });
 

@@ -157,7 +157,7 @@ const prompt = `
       
     - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific e-ticket number to their name. 🚨 CRITICAL TICKET RULE: Electronic ticket numbers (e-tickets) are strictly NUMERIC ONLY and exactly 13 digits globally. They NEVER contain letters. If a string has letters (like "LH220HABMTTA4"), it is NOT a ticket number. If a purely numeric ticket appears as 14 or 15 digits (due to extra formatting), extract ONLY the core 13-digit identifier. If missing, output "Not Provided".
     
-    - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output exactly: "💡 Note: For this airline, the 13-digit Ticket Number can be used in place of the PNR." Otherwise, leave empty ("").
+    - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output: "💡 Note: For [Airline Name], the 13-digit Ticket Number can be used in place of the PNR." (Replace [Airline Name] with the actual airline, e.g., Emirates). Otherwise, leave empty ("").
       [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
 
     STEP 2: EVALUATE OVERALL EC261 & UK261 ELIGIBILITY
@@ -379,6 +379,7 @@ parsedJourneys.forEach(journey => {
             leg.claimDocuments = docsList;
 
             // 2. --- JURISDICTION OVERRIDE LOGIC ---
+            
             if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
                 const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
