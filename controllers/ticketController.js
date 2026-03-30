@@ -29,7 +29,6 @@ const airlineRequirements = [
   { names: ["air serbia", "ju"], reqs: "Ticket number, Boarding pass (Boarding pass only if delayed)" },
   { names: ["air tahiti nui"], reqs: "DOB" },
   { names: ["bintercanarias", "binter canarias"], reqs: "Passport" },
-  { names: ["canaryfly"], reqs: "ID / Passport number" },
   { names: ["corendon dutch"], reqs: "Ticket, Boarding pass, Reservation confirmation" }, 
   { names: ["corendon", "xc"], reqs: "DOB" },
   { names: ["corsair", "ss"], reqs: "Ticket number, DOB" },
@@ -89,7 +88,7 @@ const jurisdictionLimits = {
   "denmark": 3,
   "finland": 3,
   "norway": 3,
-  "portugal": 3,
+  "portugal": 2,
   "romania": 3,
   "sweden": 3, 
   "czech republic": 3,
@@ -115,6 +114,7 @@ exports.renderAnalyzer = catchAsync(async (req, res, next) => {
 
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const files = req.files && req.files.length > 0 ? req.files : [];
+  const journeyYear = req.body.journeyYear; // Capture global year from frontend
 
   if (files.length === 0) {
     return next(new AppError('No files uploaded', 400));
@@ -122,11 +122,14 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
 
   const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
-  
+  let yearDirective = "";
+  if (journeyYear) {
+    yearDirective = `\n    🚨 *** GLOBAL JOURNEY YEAR PROVIDED: ${journeyYear} *** 🚨\n    The user has explicitly confirmed the travel year is ${journeyYear}. If a flight date on the ticket only shows Day and Month (e.g., '25 Mar'), you MUST use ${journeyYear} to format the 'date' field as 'YYYY-MM-DD' (e.g., '${journeyYear}-03-25').`;
+  }
 
 const prompt = `
     You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). 
-    
+    ${yearDirective}
     🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
     You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights.
     
@@ -525,12 +528,25 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
   }
 
   // 4. Extract Target Flight Data (Find best match based on destination)
-  let targetFlight = data.flightStatuses[0];
-  if (destination && destination !== 'Unknown') {
+// 4. Extract Target Flight Data (Find best match based on destination AND exact date)
+  let targetFlight = data.flightStatuses[0]; // Fallback to first item
+
+  const requestedDateStr = `${year}-${month}-${day}`;
+
+  // Priority 1: Match BOTH the Destination AND the exact Scheduled Departure Date
+  let exactMatch = data.flightStatuses.find(f => {
+    const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
+    const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+    return destMatches && dateMatches;
+  });
+
+  if (exactMatch) {
+    targetFlight = exactMatch;
+  } else if (destination && destination !== 'Unknown') {
+    // Priority 2: Fallback to just matching the destination if exact date fails
     const destMatch = data.flightStatuses.find(f => f.arrivalAirportFsCode === destination.toUpperCase());
     if (destMatch) targetFlight = destMatch;
   }
-
   // Helpers
   const formatDate = (dateString) => {
     if (!dateString) return '--';
@@ -562,9 +578,9 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
 
   // Operational Times
   const ops = targetFlight.operationalTimes || {};
-  const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || {};
+  const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || ops.publishedDeparture || {};
   const aDep = ops.actualGateDeparture || ops.estimatedGateDeparture || ops.actualRunwayDeparture || sDep;
-  const sArr = ops.scheduledGateArrival || ops.scheduledRunwayArrival || {};
+  const sArr = ops.scheduledGateArrival || ops.scheduledRunwayArrival || ops.publishedArrival || {};
   const aArr = ops.actualGateArrival || ops.estimatedGateArrival || ops.actualRunwayArrival || sArr;
 
   const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? "Actual" : (ops.estimatedGateDeparture ? "Estimated" : "Scheduled");
@@ -572,7 +588,7 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
 
   // Flight Duration & Delay
   const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
-  const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || 0;
+  const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || targetFlight.delays?.arrivalRunwayDelayMinutes || 0;
 
   let arrDelayStr = "On Time";
   if (arrDelayMins > 0) {
@@ -593,8 +609,16 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
 
   switch (rawStatus) {
     case 'S':
-      bannerBg = '#3b82f6'; bannerText = 'SCHEDULED';
-      arrDelayStr = 'Scheduled'; arrDelayColor = '#3b82f6';
+      if (arrDelayMins > 0) {
+        bannerBg = '#f59e0b'; 
+        bannerText = `SCHEDULED | Delayed ${arrDelayStr}`; 
+        arrDelayColor = '#ef4444';
+      } else {
+        bannerBg = '#3b82f6'; 
+        bannerText = 'SCHEDULED';
+        arrDelayStr = 'Scheduled'; 
+        arrDelayColor = '#3b82f6';
+      }
       break;
     case 'A':
       if (arrDelayMins > 0) {
@@ -664,14 +688,14 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
     bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
     rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
     depIata, depCity, depName,
-    depDate: formatDate(sDep.dateLocal),
+    depDate: formatDate(sDep.dateLocal), // Now correctly captures updated date if delayed to next day
     depSched: formatTime(sDep.dateLocal),
     depSchedZone: calculateUtcOffset(sDep.dateLocal, sDep.dateUtc),
     depActual: formatTime(aDep.dateLocal),
     depActualZone: calculateUtcOffset(aDep.dateLocal, aDep.dateUtc),
     depActualLabel,
     arrIata, arrCity, arrName,
-    arrDate: formatDate(sArr.dateLocal),
+    arrDate: formatDate(sArr.dateLocal), // Now correctly captures updated date if delayed to next day
     arrSched: formatTime(sArr.dateLocal),
     arrSchedZone: calculateUtcOffset(sArr.dateLocal, sArr.dateUtc),
     arrActual: formatTime(aArr.dateLocal),

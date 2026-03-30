@@ -317,9 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                     // NEW: Prevent EXPIRED hallucination if date is missing
                                     if (isMissingDate) {
-                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Please enter a date to check if it has expired or not</div>`;
+                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Date unknown, cannot verify jurisdiction limit</div>`;
                                     } else if (isMissingYear) {
-                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Please add a year to check jurisdiction</div>`;
+                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Year unknown, cannot verify jurisdiction limit</div>`;
                                     } else if (exp.isExpired) {
                                         expBadgeHtml = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 EXPIRED</div>`;
                                     } else {
@@ -386,16 +386,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 let eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
 
-                                // --- SMART DATE PILL UI ---
+                                // --- SMART DATE PILL UI (Static) ---
                                 let datePillHtml = '';
                                 if (isMissingDate) {
-                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 Missing Date <input type="date" class="full-date-fix-input" style="margin-left:6px; padding:1px 4px; border:1px solid #ca8a04; border-radius:4px; font-size:11px; background:#fffbeb; color:#854d0e; outline:none; cursor:pointer;"></span>`;
+                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 Missing Date</span>`;
                                 } else if (isMissingYear) {
-                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 ${flight.date} <input type="number" class="year-fix-input" data-original="${flight.date}" placeholder="YYYY" style="width:48px; margin-left:6px; padding:2px 4px; border:1px solid #ca8a04; border-radius:4px; font-size:11px; background:#fffbeb; color:#854d0e; outline:none; text-align:center;"></span>`;
+                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 ${flight.date}</span>`;
                                 } else {
                                     datePillHtml = `<span class="fc-date-pill">📅 ${flight.date}</span>`;
                                 }
-
 
                                 flightCardsContainer.innerHTML += `
                                     <div class="flight-card" style="opacity:${opacityStyle};">
@@ -489,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalColor = btn.style.color;
             const originalBorder = btn.style.border;
 
-            btn.innerHTML = '⚠️ Enter Date First';
+            btn.innerHTML = '⚠️ Date Incomplete';
             btn.style.background = '#fef2f2';
             btn.style.color = '#dc2626';
             btn.style.border = '1px solid #fecaca';
@@ -691,79 +690,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(err) {
             console.error(err);
             btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block;">❌ Network/Server Error</div>`;
-        }
-    });
-
-    /* --- UNIFIED MANUAL DATE REMEDIATION ENGINE --- */
-    resultsCard.addEventListener('change', (e) => {
-        const isYearFix = e.target.classList.contains('year-fix-input');
-        const isFullDateFix = e.target.classList.contains('full-date-fix-input');
-
-        if (isYearFix || isFullDateFix) {
-            const input = e.target;
-            const flightCard = input.closest('.flight-card');
-            
-            let flightDate;
-            let formattedFlightDate;
-
-            if (isYearFix) {
-                const year = input.value.trim();
-                if (year.length === 4) {
-                    const originalDate = input.dataset.original; 
-                    flightDate = new Date(`${originalDate} ${year}`);
-                }
-            } else if (isFullDateFix) {
-                const dateVal = input.value; 
-                if (dateVal) {
-                    flightDate = new Date(dateVal);
-                }
-            }
-            
-            if (flightDate && !isNaN(flightDate.getTime())) {
-                const fY = flightDate.getFullYear();
-                const fM = String(flightDate.getMonth() + 1).padStart(2, '0');
-                const fD = String(flightDate.getDate()).padStart(2, '0');
-                formattedFlightDate = `${fY}-${fM}-${fD}`;
-
-                flightCard.querySelectorAll('.btn-check-eoc, .btn-check-status').forEach(btn => {
-                    btn.dataset.date = formattedFlightDate;
-                });
-
-                const expContainer = flightCard.querySelector('.exp-badge-container');
-                if (expContainer) {
-                    const bestYearsStr = expContainer.dataset.years;
-                    const bestCountry = expContainer.dataset.country;
-                    
-                    if (bestYearsStr !== 'N/A') {
-                        const bestYears = parseInt(bestYearsStr);
-                        if (!isNaN(bestYears)) {
-                            const expDate = new Date(flightDate);
-                            expDate.setFullYear(expDate.getFullYear() + bestYears);
-                            
-                            const eY = expDate.getFullYear();
-                            const eM = String(expDate.getMonth() + 1).padStart(2, '0');
-                            const eD = String(expDate.getDate()).padStart(2, '0');
-                            const formattedExpDate = `${eY}-${eM}-${eD}`;
-                            
-                            const isExpired = new Date() > expDate;
-                            
-                            if (isExpired) {
-                                expContainer.innerHTML = `<div class="fc-exp-badge expired" title="Deadline was ${formattedExpDate} (${bestCountry})">🚨 EXPIRED</div>`;
-                            } else {
-                                expContainer.innerHTML = `<div class="fc-exp-badge" title="Valid under ${bestCountry} law (${bestYears} years)">⏳ Valid to ${formattedExpDate}</div>`;
-                            }
-                        }
-                    }
-                }
-                
-                const datePill = input.closest('.fc-date-pill');
-                datePill.style.background = '#f1f5f9';
-                datePill.style.color = '#475569';
-                datePill.style.border = 'none';
-                datePill.style.boxShadow = 'none';
-                datePill.classList.remove('needs-date-warning');
-                datePill.innerHTML = `📅 ${formattedFlightDate} <span style="color: #10b981; margin-left: 4px; font-weight: 800;" title="Date Manually Verified">✓</span>`;
-            }
         }
     });
 
