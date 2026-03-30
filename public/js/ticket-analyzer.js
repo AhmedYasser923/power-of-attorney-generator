@@ -7,6 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearFilesBtn');
     const resultsCard = document.getElementById('resultsCard');
     
+    // --- NEW FEATURE: Inject Global YEAR Input Before Dropzone ---
+    const dateInputHtml = `
+        <div style="margin-bottom: 20px; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px;">
+            <label style="display: block; font-weight: 800; color: #b45309; margin-bottom: 6px; font-size: 14px;">
+                📅 Confirm Flight Year (Highly Recommended)
+            </label>
+            <div style="font-size: 12px; color: #92400e; margin-bottom: 12px; line-height: 1.4;">
+                Boarding passes often hide the year. Enter the year of travel (e.g., 2024) before analyzing to guarantee the AI calculates perfect Jurisdiction & Expiration limits.
+            </div>
+            <input type="number" id="globalJourneyYear" placeholder="YYYY" min="2000" max="2050" style="width: 100%; max-width: 150px; padding: 10px; border-radius: 6px; border: 1px solid #fbbf24; outline: none; font-family: inherit; font-size: 14px; text-align: center;">
+        </div>
+    `;
+    if (ticketDropZone) {
+        ticketDropZone.insertAdjacentHTML('beforebegin', dateInputHtml);
+    }
+
     let currentFiles = [];
     let fetchAbortController = null;
 
@@ -62,14 +78,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    analyzeBtn.addEventListener('click', async () => {
-        if (currentFiles.length === 0) return;
-        
-        const originalText = analyzeBtn.innerHTML;
+    // --- MAIN ANALYSIS TRIGGER ---
+    analyzeBtn.addEventListener('click', async (e) => {
+        e.preventDefault(); // Stop Event Leakage immediately
+
+        if (currentFiles.length === 0) return alert('Please upload a ticket or boarding pass first.');
+
         analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<div class="modern-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div>';
+        resultsCard.style.display = 'none';
 
         const startTime = Date.now();
-        analyzeBtn.innerHTML = `<span class="stopwatch-icon">⏳</span> Analyzing... <span id="liveTimer" style="font-family: monospace; font-size: 18px; margin-left: 5px;">0.0s</span>`;
         const liveTimerEl = document.getElementById('liveTimer');
         
         const timerInterval = setInterval(() => {
@@ -86,6 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData();
         currentFiles.forEach(file => formData.append('ticket', file));
+
+        // --- NEW FEATURE: Append the Global Year to Request ---
+        const globalYear = document.getElementById('globalJourneyYear')?.value;
+        if (globalYear) {
+            formData.append('journeyYear', globalYear);
+        }
+        // ------------------------------------------------------
 
         try {
             const res = await fetch('/api/analyze-ticket', { 
@@ -449,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } finally {
             clearInterval(timerInterval);
-            analyzeBtn.innerHTML = originalText;
+            analyzeBtn.innerHTML = 'Analyze Document';
             analyzeBtn.disabled = false;
         }
     });
