@@ -1,10 +1,11 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const sharp = require('sharp');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-// --- LOAD EOC DATABASE DIRECTLY FROM JSON ---
+// --- LOAD DATABASES DIRECTLY FROM JSON ---
 const eocDatabase = require('../eoc_data.json');
+const airportsDatabase = require('../airports_data.json'); // NEW: Loaded for programmatic distance calc
 console.log(`[EOC Database] Successfully loaded ${eocDatabase.length} records from JSON.`);
 
 // Initialize Gemini
@@ -90,7 +91,7 @@ const jurisdictionLimits = {
   "norway": 3,
   "portugal": 3,
   "romania": 3,
-  "sweden": 3, // Note: Sweden is generally 3 for transport
+  "sweden": 3, 
   "czech republic": 3,
   "bulgaria": 3,
   "estonia": 3,
@@ -120,8 +121,8 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-  const currentYear = new Date().getFullYear();
-  const currentDateFull = new Date().toISOString().split('T')[0];
+
+  
 
 const prompt = `
     You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). 
@@ -188,12 +189,10 @@ const prompt = `
        - If a Leg goes from Non-EU to EU/UK -> ELIGIBLE ONLY IF the operating airline is an EU/UK carrier.
        - If a Leg goes from Non-EU to Non-EU -> NOT ELIGIBLE (Operating airline does not matter at all).
 
-STEP 3: EXTRACT ROUTES & LEGS
+    STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
     - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
-    - distanceKm: You MUST estimate the physical flight distance specifically for THIS INDIVIDUAL LEG ONLY (e.g., ZRH to LHR is ~790km). DO NOT output the total multi-leg journey distance here.
-    - ec261Leg.estimatedClaimValue: Evaluate leg eligibility and calculate the claim value (€250, €400, €600, or N/A). 🚨 CRITICAL LEGAL RULE: For connecting flights, EC261 compensation is legally based on the TOTAL distance from the journey's first origin to its final destination. Therefore, a short 700km connecting leg must still output a €600 claim value if the overall journey originated 8000km away. Do not let the physical leg distance alter the total journey legal claim value.
-
+    
     STEP 4: OUTPUT FORMAT
     *** IMPORTANT *** If no flight data exists, return ONLY an empty JSON array: []
     Otherwise, return EXACTLY this JSON structure (an ARRAY of objects) and absolutely nothing else. Do not use markdown.
@@ -237,13 +236,11 @@ STEP 3: EXTRACT ROUTES & LEGS
                 "arrivalTime": "[String]",
                 "rawExtractedDate": "[String: STRICTLY the exact characters printed on the ticket for this leg's date. DO NOT INVENT EXAMPLES]",
                 "date": "[String: YYYY-MM-DD if year is explicitly printed, otherwise exact Day and Month seen e.g., '25 Mar']",
-                "distanceKm": "[String]",
                 "ec261Leg": {
                   "legOriginCountry": "[String]",
                   "legDestinationCountry": "[String]",
                   "status": "[String]",
                   "reason": "[String]",
-                  "estimatedClaimValue": "[String]",
                   "claimExpiration": {
                     "originYears": "[String]",
                     "destinationYears": "[String]",
@@ -315,6 +312,48 @@ parsedJourneys.forEach(journey => {
       journey.routes.forEach(route => {
         if (route.legs) {
           route.legs.forEach(leg => {
+            
+            // 0. --- PROGRAMMATIC DISTANCE & COMPENSATION CALCULATION ---
+            const oIata = (leg.originIata || '').toUpperCase();
+            const dIata = (leg.destinationIata || '').toUpperCase();
+            
+            const originPort = airportsDatabase.find(a => a.iata && a.iata.toUpperCase() === oIata);
+            const destPort = airportsDatabase.find(a => a.iata && a.iata.toUpperCase() === dIata);
+            
+            leg.ec261Leg = leg.ec261Leg || {};
+
+            if (originPort && destPort) {
+                // Precise Haversine Formula Math
+                const R = 6371; // Earth's radius in km
+                const dLat = (destPort.lat - originPort.lat) * Math.PI / 180;
+                const dLon = (destPort.lon - originPort.lon) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(originPort.lat * Math.PI / 180) * Math.cos(destPort.lat * Math.PI / 180) *
+                          Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const distance = Math.round(R * c);
+
+                leg.distanceKm = `${distance} km`;
+
+                // EC261 Standard Value Bands (Calculated per individual leg)
+                const euCountries = ["austria", "belgium", "bulgaria", "croatia", "cyprus", "czech republic", "denmark", "estonia", "finland", "france", "germany", "greece", "hungary", "ireland", "italy", "latvia", "lithuania", "luxembourg", "malta", "netherlands", "the netherlands", "poland", "portugal", "romania", "slovakia", "slovenia", "spain", "sweden", "iceland", "norway", "switzerland", "united kingdom", "uk"];
+                
+                const oCountry = (leg.originCountry || '').toLowerCase().trim();
+                const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
+                const isIntraEU = euCountries.includes(oCountry) && euCountries.includes(dCountry);
+
+                if (distance <= 1500) {
+                    leg.ec261Leg.estimatedClaimValue = "€250";
+                } else if (isIntraEU || (distance > 1500 && distance <= 3500)) {
+                    leg.ec261Leg.estimatedClaimValue = "€400";
+                } else {
+                    leg.ec261Leg.estimatedClaimValue = "€600";
+                }
+            } else {
+                leg.distanceKm = "Unknown";
+                leg.ec261Leg.estimatedClaimValue = "N/A";
+            }
+
             // 1. --- DOCUMENT CHECKER LOGIC ---
             let marketing = leg.marketingAirline || "Unknown";
             let operating = leg.operatingAirline || marketing;
@@ -350,7 +389,6 @@ parsedJourneys.forEach(journey => {
                 leg.ec261Leg.claimExpiration.originYears = oLimit;
                 leg.ec261Leg.claimExpiration.destinationYears = dLimit;
 
-                // Calculate the "Best Country" mathematically
                 let bestLimit = 0;
                 let bestCountryName = 'Unknown';
 
@@ -368,13 +406,11 @@ parsedJourneys.forEach(journey => {
                     leg.ec261Leg.claimExpiration.bestYears = bestLimit;
                     leg.ec261Leg.claimExpiration.bestCountry = bestCountryName;
                     
-                    // Calculate exact expiration date based on the precise flight date
                     const flightDate = new Date(leg.date);
                     if (!isNaN(flightDate.getTime())) {
                         flightDate.setFullYear(flightDate.getFullYear() + bestLimit);
                         leg.ec261Leg.claimExpiration.expirationDate = flightDate.toISOString().split('T')[0];
                         
-                        // Check if currently expired
                         const today = new Date();
                         leg.ec261Leg.claimExpiration.isExpired = today > flightDate;
                     }
@@ -610,7 +646,7 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     if (opLine) operatorName = opLine.name || operatorCode;
   }
 
-  // 8. Gemini AI comment — only for notable situations (cancel / divert / unknown / delay ≥ 30 min)
+  // 8. Gemini AI comment — only for notable situations
   let aiComment = null;
   if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
     try {
@@ -619,9 +655,7 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
 Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
       const commentResult = await commentModel.generateContent(commentPrompt);
       aiComment = commentResult.response.text().trim().replace(/^["']|["']$/g, '');
-    } catch (e) {
-      // Silent — AI comment is optional
-    }
+    } catch (e) {}
   }
 
   // 9. Construct Final UI Object
@@ -647,4 +681,3 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
 
   res.json({ aiStats: parsedUIStats, rawResponse: data });
 });
-
