@@ -499,7 +499,9 @@ exports.checkFlightStatus = async (req, res, next) => {
     }
 
     // 1. BULLETPROOF CHERRY-PICKING PARSER
-    const match = flightNumber.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})\s*0*(\d{1,4})/);
+  const cleanFlightNum = flightNumber.replace(/[^A-Za-z0-9]/g, '');
+    const match = cleanFlightNum.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})0*(\d{1,4})/);
+    
     if (!match) {
       return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
     }
