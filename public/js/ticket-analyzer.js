@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MAIN ANALYSIS TRIGGER ---
     analyzeBtn.addEventListener('click', async (e) => {
-        e.preventDefault(); // Stop Event Leakage immediately
+        e.preventDefault();
 
         if (currentFiles.length === 0) return alert('Please upload a ticket or boarding pass first.');
 
@@ -106,12 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         currentFiles.forEach(file => formData.append('ticket', file));
 
-        // --- NEW FEATURE: Append the Global Year to Request ---
         const globalYear = document.getElementById('globalJourneyYear')?.value;
         if (globalYear) {
             formData.append('journeyYear', globalYear);
         }
-        // ------------------------------------------------------
 
         try {
             const res = await fetch('/api/analyze-ticket', { 
@@ -289,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
 
                                 // --- SMART MISSING DATE DETECTION ---
-                                let isMissingDate = !flight.date || flight.date === 'Unknown' || flight.date.trim() === '';
+                                let isMissingDate = !flight.date || flight.date === 'Unknown' || flight.date.trim() === '' || flight.date === 'Not Provided';
                                 let isMissingYear = !isMissingDate && !/\d{4}/.test(flight.date);
 
                                 let expBadgeHtml = '';
@@ -315,11 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                         destStatute = `<div style="font-size: 11px; color: #d97706; font-weight: 700; margin-top: 6px; text-align: right; letter-spacing: 0.3px;">⚖️ Limit: ${formatLimit(exp.destinationYears)}</div>`;
                                     }
 
-                                    // NEW: Prevent EXPIRED hallucination if date is missing
-                                    if (isMissingDate) {
-                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Date unknown, cannot verify jurisdiction limit</div>`;
-                                    } else if (isMissingYear) {
-                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Year unknown, cannot verify jurisdiction limit</div>`;
+                                    if (isMissingDate || isMissingYear) {
+                                        expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Select Date to verify limit</div>`;
                                     } else if (exp.isExpired) {
                                         expBadgeHtml = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 EXPIRED</div>`;
                                     } else {
@@ -377,8 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     fNums.forEach(fNum => {
                                         const cleanNum = fNum.trim();
                                         if(cleanNum && cleanNum !== 'N/A' && cleanNum !== 'Unknown') {
-                                            // 👇 NEW LOGIC: ADDED data-origin TO THE BUTTON 👇
-                                            statusBtnsHtml += `<button type="button" class="btn-check-status" data-flight="${cleanNum}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left: 6px; background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${cleanNum} Stats</button>`;
+                                            statusBtnsHtml += `<button type="button" class="btn-check-status" data-flight="${cleanNum}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="margin-left: 6px; background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${cleanNum} Stats</button>`;
                                         }
                                     });
                                 } else {
@@ -387,18 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 let eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
 
-                                // --- SMART DATE PILL UI (Static) ---
+                                // --- NATIVE DATE PICKER INJECTION ---
                                 let datePillHtml = '';
-                                if (isMissingDate) {
-                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 Missing Date</span>`;
-                                } else if (isMissingYear) {
-                                    datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 ${flight.date}</span>`;
+                                if (isMissingDate || isMissingYear) {
+                                    let warnText = isMissingDate ? 'Missing Date:' : `Missing Year (${flight.date}):`;
+                                    datePillHtml = `
+                                        <div class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s; display:inline-flex; align-items:center; gap:6px; padding:4px 8px; position:relative;">
+                                            ⚠️ <span style="font-size: 12px; font-weight: 700;">${warnText}</span>
+                                            <input type="date" class="manual-date-input" style="background:rgba(255,255,255,0.5); border:1px solid #fcd34d; border-radius:4px; outline:none; color:#9a3412; font-weight:700; font-family:inherit; cursor:pointer; padding:2px 4px;" title="Click to select the actual flight date">
+                                        </div>
+                                    `;
                                 } else {
                                     datePillHtml = `<span class="fc-date-pill">📅 ${flight.date}</span>`;
                                 }
 
                                 flightCardsContainer.innerHTML += `
-                                    <div class="flight-card" style="opacity:${opacityStyle};">
+                                    <div class="flight-card" style="opacity:${opacityStyle}">
 
                                         ${statusWarningHtml}
 
@@ -483,20 +481,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HELPER FUNCTION: SOFT BLOCKER ---
     function validateDateForAPI(btn, flightCard) {
         const dateVal = btn.dataset.date;
-        if (!dateVal || dateVal === 'Unknown' || !/\d{4}/.test(dateVal)) {
+        if (!dateVal || dateVal === 'Unknown' || dateVal === 'Not Provided' || !/\d{4}/.test(dateVal)) {
             const originalHtml = btn.innerHTML;
             const originalBg = btn.style.background;
             const originalColor = btn.style.color;
             const originalBorder = btn.style.border;
 
-            btn.innerHTML = '⚠️ Date Incomplete';
+            btn.innerHTML = '⚠️ Pick a Date First';
             btn.style.background = '#fef2f2';
             btn.style.color = '#dc2626';
             btn.style.border = '1px solid #fecaca';
             
             const datePill = flightCard.querySelector('.needs-date-warning');
             if (datePill) {
-                datePill.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.4)';
+                datePill.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.4)';
                 setTimeout(() => { datePill.style.boxShadow = 'none'; }, 2000);
             }
 
@@ -512,6 +510,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return true;
     }
+
+    /* --- DATE PICKER EVENT LISTENER --- */
+    resultsCard.addEventListener('change', (e) => {
+        if (e.target.classList.contains('manual-date-input')) {
+            const input = e.target;
+            const newDate = input.value; // Formatted YYYY-MM-DD from native picker
+            
+            if (!newDate) return;
+
+            const flightCard = input.closest('.flight-card');
+            
+            // 1. Update data-date attributes on buttons
+            const eocBtn = flightCard.querySelector('.btn-check-eoc');
+            if (eocBtn) eocBtn.dataset.date = newDate;
+            
+            const statsBtns = flightCard.querySelectorAll('.btn-check-status');
+            statsBtns.forEach(btn => btn.dataset.date = newDate);
+
+            // 2. Re-calculate the Statute of Limitations Expiry Badge
+            const expContainer = flightCard.querySelector('.exp-badge-container');
+            if (expContainer) {
+                const bestYears = parseInt(expContainer.dataset.years, 10);
+                const bestCountry = expContainer.dataset.country;
+                
+                if (!isNaN(bestYears) && bestYears > 0) {
+                    const flightDateObj = new Date(newDate);
+                    flightDateObj.setFullYear(flightDateObj.getFullYear() + bestYears);
+                    
+                    const expFormatted = flightDateObj.toISOString().split('T')[0];
+                    const isExpired = new Date() > flightDateObj;
+                    
+                    if (isExpired) {
+                        expContainer.innerHTML = `<div class="fc-exp-badge expired" title="Deadline was ${expFormatted} (${bestCountry})">🚨 EXPIRED</div>`;
+                    } else {
+                        expContainer.innerHTML = `<div class="fc-exp-badge" title="Valid under ${bestCountry} law (${bestYears} years)">⏳ Valid to ${expFormatted}</div>`;
+                    }
+                } else {
+                    expContainer.innerHTML = `<div class="fc-exp-badge" style="background:#e2e8f0; color:#475569; border:1px solid #cbd5e1;">Limit: N/A</div>`;
+                }
+            }
+
+            // 3. Transform the Warning Pill into a Confirmed Date Pill
+            const datePill = input.closest('.fc-date-pill');
+            datePill.style.background = '#f1f5f9';
+            datePill.style.color = '#475569';
+            datePill.style.border = '1px solid #e2e8f0';
+            datePill.style.boxShadow = 'none';
+            datePill.classList.remove('needs-date-warning');
+            datePill.innerHTML = `📅 ${newDate} <span style="color: #10b981; margin-left: 6px; font-weight: 800; font-size: 14px;" title="Date Manually Confirmed">✓</span>`;
+        }
+    });
 
     /* --- EOC CHECKER UI LOGIC --- */
     resultsCard.addEventListener('click', async (e) => {
@@ -568,10 +617,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!validateDateForAPI(btn, flightCard)) return;
 
-        // 👇 NEW LOGIC: RETRIEVE ORIGIN FROM DATASET 👇
         const flightNum = btn.dataset.flight;
         const date = btn.dataset.date;
-        const origin = btn.dataset.origin; 
         const dest = btn.dataset.dest;
 
         const originalHtml = btn.innerHTML;
@@ -579,8 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            // 👇 NEW LOGIC: SEND ORIGIN IN THE FETCH URL 👇
-            const response = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
+            const response = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&destination=${encodeURIComponent(dest)}`);
             const data = await response.json();
 
             if (data.aiStats) {
@@ -685,10 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 6px; display: inline-block;">✨ ${flightNum} checked</div>`;
                 
             } else {
-                // Grab the specific error sent by the backend, or fallback to a default
                 const errorMsg = data.error || 'Status unavailable';
                 
-                // Display the error with text-wrapping and a max-width so it looks clean
                 btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block; max-width: 280px; white-space: normal; line-height: 1.4; vertical-align: middle;">⚠️ <b>${flightNum}:</b> ${errorMsg}</div>`;
             }
         } catch(err) {
