@@ -74,7 +74,7 @@ const airlineRequirements = [
 // --- EC261 STATUTE OF LIMITATIONS DATABASE (IN YEARS) ---
 const jurisdictionLimits = {
   "poland": 1,
-  "belgium": 1,
+  "belgium": 5,
   "italy": 2,
   "netherlands": 2,
   "the netherlands": 2,
