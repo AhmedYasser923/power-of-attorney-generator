@@ -377,7 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     fNums.forEach(fNum => {
                                         const cleanNum = fNum.trim();
                                         if(cleanNum && cleanNum !== 'N/A' && cleanNum !== 'Unknown') {
-                                            statusBtnsHtml += `<button type="button" class="btn-check-status" data-flight="${cleanNum}" data-date="${flight.date || 'Unknown'}" data-dest="${flight.destinationIata || ''}" style="margin-left: 6px; background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${cleanNum} Stats</button>`;
+                                            // 👇 NEW LOGIC: ADDED data-origin TO THE BUTTON 👇
+                                            statusBtnsHtml += `<button type="button" class="btn-check-status" data-flight="${cleanNum}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left: 6px; background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${cleanNum} Stats</button>`;
                                         }
                                     });
                                 } else {
@@ -567,8 +568,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!validateDateForAPI(btn, flightCard)) return;
 
+        // 👇 NEW LOGIC: RETRIEVE ORIGIN FROM DATASET 👇
         const flightNum = btn.dataset.flight;
         const date = btn.dataset.date;
+        const origin = btn.dataset.origin; 
         const dest = btn.dataset.dest;
 
         const originalHtml = btn.innerHTML;
@@ -576,7 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            const response = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&destination=${encodeURIComponent(dest)}`);
+            // 👇 NEW LOGIC: SEND ORIGIN IN THE FETCH URL 👇
+            const response = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
             const data = await response.json();
 
             if (data.aiStats) {

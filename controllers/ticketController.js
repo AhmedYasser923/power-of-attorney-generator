@@ -480,8 +480,10 @@ exports.checkEOC = (req, res, next) => {
 
 
 // --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
+// --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
+// --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
 exports.checkFlightStatus = catchAsync(async (req, res, next) => {
-  const { flightNumber, date, destination } = req.query;
+  const { flightNumber, date, origin, destination } = req.query;
 
   if (!flightNumber || flightNumber === 'N/A') {
     return next(new AppError('Valid flight number is required', 400));
@@ -527,26 +529,50 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
   }
 
-  // 4. Extract Target Flight Data (Find best match based on destination)
-// 4. Extract Target Flight Data (Find best match based on destination AND exact date)
-  let targetFlight = data.flightStatuses[0]; // Fallback to first item
-
+  // 4. Extract Target Flight Data (Handle Multi-Stops & Double-Disruptions)
+  let targetFlight = data.flightStatuses[0];
   const requestedDateStr = `${year}-${month}-${day}`;
 
-  // Priority 1: Match BOTH the Destination AND the exact Scheduled Departure Date
-  let exactMatch = data.flightStatuses.find(f => {
+  // Priority 1: STRICT MATCH -> Origin + Destination + Date (Perfect for multi-stop flights)
+  let exactMatches = data.flightStatuses.filter(f => {
+    const originMatches = !origin || origin === 'Unknown' || f.departureAirportFsCode === origin.toUpperCase();
     const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
     const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
-    return destMatches && dateMatches;
+    return originMatches && destMatches && dateMatches;
   });
 
-  if (exactMatch) {
-    targetFlight = exactMatch;
-  } else if (destination && destination !== 'Unknown') {
-    // Priority 2: Fallback to just matching the destination if exact date fails
-    const destMatch = data.flightStatuses.find(f => f.arrivalAirportFsCode === destination.toUpperCase());
-    if (destMatch) targetFlight = destMatch;
+  // Priority 2: FALLBACK -> If Origin wasn't provided or didn't match perfectly, just match Destination + Date
+  if (exactMatches.length === 0) {
+      exactMatches = data.flightStatuses.filter(f => {
+        const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
+        const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+        return destMatches && dateMatches;
+      });
   }
+
+  // Priority 3: FINAL FALLBACK -> Just match the Date
+  if (exactMatches.length === 0) {
+      exactMatches = data.flightStatuses.filter(f => {
+        return f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+      });
+  }
+
+  let hasMultipleDisruptions = false;
+
+  if (exactMatches.length > 0) {
+    // Sort by priority: Diverted gives us the most info, then Cancelled
+    const statusPriority = { 'D': 1, 'C': 2, 'L': 3, 'A': 4, 'S': 5, 'U': 6 };
+    exactMatches.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+    
+    targetFlight = exactMatches[0];
+    
+    // Check if Cirium split a Diverted + Cancelled flight into two records
+    const uniqueStatuses = [...new Set(exactMatches.map(f => f.status))];
+    if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) {
+        hasMultipleDisruptions = true;
+    }
+  }
+
   // Helpers
   const formatDate = (dateString) => {
     if (!dateString) return '--';
@@ -600,7 +626,7 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
   const arrTimeDataPending = rawStatus === 'L' &&
     !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
 
-  // 6. Status → Banner (all 6 Cirium codes)
+  // 6. Status → Banner
   const statusMap = { 'S': 'Scheduled', 'A': 'Active', 'L': 'Landed', 'C': 'Cancelled', 'D': 'Diverted', 'U': 'Unknown' };
   const statusText = statusMap[rawStatus] || 'Unknown';
   const bannerTextCol = '#ffffff';
@@ -639,8 +665,22 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
       arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444';
       break;
     case 'D':
-      bannerBg = '#ef4444'; bannerText = `DIVERTED → ${divertedCode}`;
-      arrDelayStr = 'DIVERTED'; arrDelayColor = '#ef4444';
+      if (hasMultipleDisruptions) {
+        bannerBg = '#991b1b'; // Darker red for double disruption
+        bannerText = `DIVERTED & CANCELLED → ${divertedCode}`;
+        arrDelayStr = 'DIVERTED/CANCELLED'; 
+        arrDelayColor = '#ef4444';
+      } else {
+        bannerBg = '#ef4444'; 
+        if (arrDelayMins > 0) {
+            bannerText = `DIVERTED → ${divertedCode} | Delayed ${arrDelayStr}`;
+            arrDelayColor = '#ef4444';
+        } else {
+            bannerText = `DIVERTED → ${divertedCode}`;
+            arrDelayStr = 'DIVERTED'; 
+            arrDelayColor = '#ef4444';
+        }
+      }
       break;
     default: // 'U'
       bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN';
@@ -671,9 +711,11 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     if (opLine) operatorName = opLine.name || operatorCode;
   }
 
-  // 8. Gemini AI comment — only for notable situations
+  // 8. Gemini AI comment
   let aiComment = null;
-  if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
+  if (hasMultipleDisruptions && rawStatus === 'D') {
+    aiComment = `🚨 Double Disruption: The aircraft initially diverted to ${divertedCode || 'another airport'}, and the remainder of the journey was officially cancelled.`;
+  } else if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
     try {
       const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
       const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
@@ -688,14 +730,14 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
     bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
     rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
     depIata, depCity, depName,
-    depDate: formatDate(sDep.dateLocal), // Now correctly captures updated date if delayed to next day
+    depDate: formatDate(sDep.dateLocal),
     depSched: formatTime(sDep.dateLocal),
     depSchedZone: calculateUtcOffset(sDep.dateLocal, sDep.dateUtc),
     depActual: formatTime(aDep.dateLocal),
     depActualZone: calculateUtcOffset(aDep.dateLocal, aDep.dateUtc),
     depActualLabel,
     arrIata, arrCity, arrName,
-    arrDate: formatDate(sArr.dateLocal), // Now correctly captures updated date if delayed to next day
+    arrDate: formatDate(sArr.dateLocal),
     arrSched: formatTime(sArr.dateLocal),
     arrSchedZone: calculateUtcOffset(sArr.dateLocal, sArr.dateUtc),
     arrActual: formatTime(aArr.dateLocal),
