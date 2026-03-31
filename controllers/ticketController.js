@@ -142,6 +142,7 @@ const prompt = `
     1. ROUND-TRIPS: A round-trip ticket is legally treated as TWO separate journeys. Split them into one Outbound journey object and one Return journey object.
     2. SELF-TRANSFERS & SEPARATE TICKETS: If the document explicitly states "Self transfer", OR if consecutive flight legs are booked under completely different Airline PNRs (e.g., Leg 1 has PNR 'ABCDEF' and Leg 2 has PNR 'XYZ123'), they are legally SEPARATE contracts. You MUST split them into completely SEPARATE journey objects. Each journey object must contain only the specific leg(s) and the specific PNR associated with that contract.
     3. PASSENGERS: Combine multiple passengers into the SAME journey object if they share the exact same itinerary and PNR.
+    4. REBOOKINGS & RE-ROUTINGS (THE DISRUPTION OVERRIDE RULE): If the documents show the SAME passenger holding tickets for an original flight (e.g., a direct flight A ➔ B on Day 1) AND an alternative/multi-leg flight reaching the SAME final destination (e.g., A ➔ C ➔ B on Day 1 or Day 2), this is a REBOOKING due to a disruption. You MUST group them in the SAME journey object, . Mark the original abandoned leg's "flightStatus" strictly as "Cancelled/Rebooked", and the new routing legs as "Scheduled" or "Flown".
 
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
