@@ -23,7 +23,7 @@ async function processSignature(file, processingMethod) {
   if (processingMethod === 'gemini') {
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
-      const prompt = "Extract the handwritten signature. if it's written in white make it thick black . then place it on a solid white background";
+      const prompt = "Extract the handwritten signature. Thicken the ink to make it clear. Place the signature on a solid, pure white background. DO NOT draw a checkerboard transparency pattern. Output ONLY the image.";
 
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
