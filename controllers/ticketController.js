@@ -482,269 +482,269 @@ exports.checkEOC = (req, res, next) => {
 // --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
 // --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
 // --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
-exports.checkFlightStatus = catchAsync(async (req, res, next) => {
-  const { flightNumber, date, origin, destination } = req.query;
+exports.checkFlightStatus = async (req, res, next) => {
+  try {
+    const { flightNumber, date, origin, destination } = req.query;
 
-  if (!flightNumber || flightNumber === 'N/A') {
-    return next(new AppError('Valid flight number is required', 400));
-  }
-
-  const ciriumAppId = process.env.CIRIUM_APP_ID;
-  const ciriumAppKey = process.env.CIRIUM_APP_KEY;
-
-  if (!ciriumAppId || !ciriumAppKey) {
-    console.error("[Cirium] Error: CIRIUM_APP_ID or CIRIUM_APP_KEY Missing in config.env!");
-    return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
-  }
-
-  // 1. BULLETPROOF CHERRY-PICKING PARSER
-  const match = flightNumber.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})\s*0*(\d{1,4})/);
-  if (!match) {
-    return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
-  }
-  const carrier = match[1].toUpperCase();
-  const fNum = match[2];
-
-  // 2. Parse Date
-  let year, month, day;
-  if (date && date !== 'Unknown') {
-    const parts = date.split('-');
-    year = parts[0]; month = parts[1]; day = parts[2];
-  } else {
-    const today = new Date();
-    year = today.getFullYear();
-    month = String(today.getMonth() + 1).padStart(2, '0');
-    day = String(today.getDate()).padStart(2, '0');
-  }
-
-  // 3. Fetch from Cirium
-  const url = `https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/${carrier}/${fNum}/dep/${year}/${month}/${day}?appId=${ciriumAppId}&appKey=${ciriumAppKey}&utc=false`;
-  const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  const data = await response.json();
-
-  if (data.error) {
-    return res.json({ error: data.error.errorMessage || 'Cirium API Error' });
-  }
-  if (!data.flightStatuses || data.flightStatuses.length === 0) {
-    return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
-  }
-
-  // 4. Extract Target Flight Data (Handle Multi-Stops & Double-Disruptions)
-  let targetFlight = data.flightStatuses[0];
-  const requestedDateStr = `${year}-${month}-${day}`;
-
-  // Priority 1: STRICT MATCH -> Origin + Destination + Date (Perfect for multi-stop flights)
-  let exactMatches = data.flightStatuses.filter(f => {
-    const originMatches = !origin || origin === 'Unknown' || f.departureAirportFsCode === origin.toUpperCase();
-    const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
-    const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
-    return originMatches && destMatches && dateMatches;
-  });
-
-  // Priority 2: FALLBACK -> If Origin wasn't provided or didn't match perfectly, just match Destination + Date
-  if (exactMatches.length === 0) {
-      exactMatches = data.flightStatuses.filter(f => {
-        const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
-        const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
-        return destMatches && dateMatches;
-      });
-  }
-
-  // Priority 3: FINAL FALLBACK -> Just match the Date
-  if (exactMatches.length === 0) {
-      exactMatches = data.flightStatuses.filter(f => {
-        return f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
-      });
-  }
-
-  let hasMultipleDisruptions = false;
-
-  if (exactMatches.length > 0) {
-    // Sort by priority: Diverted gives us the most info, then Cancelled
-    const statusPriority = { 'D': 1, 'C': 2, 'L': 3, 'A': 4, 'S': 5, 'U': 6 };
-    exactMatches.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
-    
-    targetFlight = exactMatches[0];
-    
-    // Check if Cirium split a Diverted + Cancelled flight into two records
-    const uniqueStatuses = [...new Set(exactMatches.map(f => f.status))];
-    if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) {
-        hasMultipleDisruptions = true;
+    if (!flightNumber || flightNumber === 'N/A') {
+      return res.json({ error: 'Valid flight number is required' });
     }
-  }
 
-  // Helpers
-  const formatDate = (dateString) => {
-    if (!dateString) return '--';
-    const d = new Date(dateString);
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
-  };
+    const ciriumAppId = process.env.CIRIUM_APP_ID;
+    const ciriumAppKey = process.env.CIRIUM_APP_KEY;
 
-  const formatTime = (dateString) => {
-    if (!dateString) return '--:--';
-    const d = new Date(dateString);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  };
+    if (!ciriumAppId || !ciriumAppKey) {
+      console.error("[Cirium] Error: CIRIUM_APP_ID or CIRIUM_APP_KEY Missing in config.env!");
+      return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
+    }
 
-  const calculateUtcOffset = (localStr, utcStr) => {
-    if (!localStr || !utcStr) return "Local";
-    const local = new Date(localStr);
-    const utc = new Date(utcStr);
-    const diffHours = Math.round((local - utc) / 3600000);
-    return diffHours >= 0 ? `UTC+${diffHours}` : `UTC${diffHours}`;
-  };
+    // 1. BULLETPROOF CHERRY-PICKING PARSER
+    const match = flightNumber.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})\s*0*(\d{1,4})/);
+    if (!match) {
+      return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
+    }
+    const carrier = match[1].toUpperCase();
+    const fNum = match[2];
 
-  const formatDuration = (mins) => {
-    if (!mins || isNaN(mins)) return '--h --m';
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${h}h ${m}m`;
-  };
+    // 2. Parse Date
+    let year, month, day;
+    if (date && date !== 'Unknown') {
+      const parts = date.split('-');
+      year = parts[0]; month = parts[1]; day = parts[2];
+    } else {
+      const today = new Date();
+      year = today.getFullYear();
+      month = String(today.getMonth() + 1).padStart(2, '0');
+      day = String(today.getDate()).padStart(2, '0');
+    }
 
-  // Operational Times
-  const ops = targetFlight.operationalTimes || {};
-  const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || ops.publishedDeparture || {};
-  const aDep = ops.actualGateDeparture || ops.estimatedGateDeparture || ops.actualRunwayDeparture || sDep;
-  const sArr = ops.scheduledGateArrival || ops.scheduledRunwayArrival || ops.publishedArrival || {};
-  const aArr = ops.actualGateArrival || ops.estimatedGateArrival || ops.actualRunwayArrival || sArr;
+    // 3. Fetch from Cirium
+    const url = `https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/${carrier}/${fNum}/dep/${year}/${month}/${day}?appId=${ciriumAppId}&appKey=${ciriumAppKey}&utc=false`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const data = await response.json();
 
-  const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? "Actual" : (ops.estimatedGateDeparture ? "Estimated" : "Scheduled");
-  const arrActualLabel = (ops.actualGateArrival || ops.actualRunwayArrival) ? "Actual" : (ops.estimatedGateArrival ? "Estimated" : "Scheduled");
+    if (data.error) {
+      return res.json({ error: data.error.errorMessage || 'Cirium API Error' });
+    }
+    if (!data.flightStatuses || data.flightStatuses.length === 0) {
+      return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
+    }
 
-  // Flight Duration & Delay
-  const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
-  const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || targetFlight.delays?.arrivalRunwayDelayMinutes || 0;
+    // 4. Extract Target Flight Data (Handle Multi-Stops & Double-Disruptions)
+    let targetFlight = data.flightStatuses[0];
+    const requestedDateStr = `${year}-${month}-${day}`;
 
-  let arrDelayStr = "On Time";
-  if (arrDelayMins > 0) {
-    arrDelayStr = arrDelayMins >= 60 ? formatDuration(arrDelayMins) : `${arrDelayMins} mins`;
-  }
+    // Priority 1: STRICT MATCH -> Origin + Destination + Date
+    let exactMatches = data.flightStatuses.filter(f => {
+      const originMatches = !origin || origin === 'Unknown' || f.departureAirportFsCode === origin.toUpperCase();
+      const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
+      const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+      return originMatches && destMatches && dateMatches;
+    });
 
-  // 5. Raw status + landed-but-no-arrival flag
-  const rawStatus = targetFlight.status || 'U';
-  const arrTimeDataPending = rawStatus === 'L' &&
-    !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
+    // Priority 2: FALLBACK -> Just match Destination + Date
+    if (exactMatches.length === 0) {
+        exactMatches = data.flightStatuses.filter(f => {
+          const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
+          const dateMatches = f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+          return destMatches && dateMatches;
+        });
+    }
 
-  // 6. Status → Banner
-  const statusMap = { 'S': 'Scheduled', 'A': 'Active', 'L': 'Landed', 'C': 'Cancelled', 'D': 'Diverted', 'U': 'Unknown' };
-  const statusText = statusMap[rawStatus] || 'Unknown';
-  const bannerTextCol = '#ffffff';
-  let bannerBg, bannerText, arrDelayColor;
-  const divertedCode = rawStatus === 'D' ? (targetFlight.divertedAirportFsCode || '???') : null;
+    // Priority 3: FINAL FALLBACK -> Just match Date
+    if (exactMatches.length === 0) {
+        exactMatches = data.flightStatuses.filter(f => {
+          return f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
+        });
+    }
 
-  switch (rawStatus) {
-    case 'S':
-      if (arrDelayMins > 0) {
-        bannerBg = '#f59e0b'; 
-        bannerText = `SCHEDULED | Delayed ${arrDelayStr}`; 
-        arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#3b82f6'; 
-        bannerText = 'SCHEDULED';
-        arrDelayStr = 'Scheduled'; 
-        arrDelayColor = '#3b82f6';
+    let hasMultipleDisruptions = false;
+
+    if (exactMatches.length > 0) {
+      const statusPriority = { 'D': 1, 'C': 2, 'L': 3, 'A': 4, 'S': 5, 'U': 6 };
+      exactMatches.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+      
+      targetFlight = exactMatches[0];
+      
+      const uniqueStatuses = [...new Set(exactMatches.map(f => f.status))];
+      if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) {
+          hasMultipleDisruptions = true;
       }
-      break;
-    case 'A':
-      if (arrDelayMins > 0) {
-        bannerBg = '#f59e0b'; bannerText = `IN FLIGHT | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#3b82f6'; bannerText = 'IN FLIGHT'; arrDelayColor = '#22c55e';
-      }
-      break;
-    case 'L':
-      if (arrDelayMins > 0) {
-        bannerBg = '#f59e0b'; bannerText = `LANDED | ${arrDelayStr} Late`; arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#22c55e'; bannerText = 'LANDED | On Time'; arrDelayColor = '#22c55e';
-      }
-      break;
-    case 'C':
-      bannerBg = '#ef4444'; bannerText = 'FLIGHT CANCELLED';
-      arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444';
-      break;
-    case 'D':
-      if (hasMultipleDisruptions) {
-        bannerBg = '#991b1b'; // Darker red for double disruption
-        bannerText = `DIVERTED & CANCELLED → ${divertedCode}`;
-        arrDelayStr = 'DIVERTED/CANCELLED'; 
-        arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#ef4444'; 
+    }
+
+    // Helpers
+    const formatDate = (dateString) => {
+      if (!dateString) return '--';
+      const d = new Date(dateString);
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+    };
+
+    const formatTime = (dateString) => {
+      if (!dateString) return '--:--';
+      const d = new Date(dateString);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+
+    const calculateUtcOffset = (localStr, utcStr) => {
+      if (!localStr || !utcStr) return "Local";
+      const local = new Date(localStr);
+      const utc = new Date(utcStr);
+      const diffHours = Math.round((local - utc) / 3600000);
+      return diffHours >= 0 ? `UTC+${diffHours}` : `UTC${diffHours}`;
+    };
+
+    const formatDuration = (mins) => {
+      if (!mins || isNaN(mins)) return '--h --m';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}h ${m}m`;
+    };
+
+    // Operational Times
+    const ops = targetFlight.operationalTimes || {};
+    const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || ops.publishedDeparture || {};
+    const aDep = ops.actualGateDeparture || ops.estimatedGateDeparture || ops.actualRunwayDeparture || sDep;
+    const sArr = ops.scheduledGateArrival || ops.scheduledRunwayArrival || ops.publishedArrival || {};
+    const aArr = ops.actualGateArrival || ops.estimatedGateArrival || ops.actualRunwayArrival || sArr;
+
+    const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? "Actual" : (ops.estimatedGateDeparture ? "Estimated" : "Scheduled");
+    const arrActualLabel = (ops.actualGateArrival || ops.actualRunwayArrival) ? "Actual" : (ops.estimatedGateArrival ? "Estimated" : "Scheduled");
+
+    // Flight Duration & Delay
+    const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
+    const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || targetFlight.delays?.arrivalRunwayDelayMinutes || 0;
+
+    let arrDelayStr = "On Time";
+    if (arrDelayMins > 0) {
+      arrDelayStr = arrDelayMins >= 60 ? formatDuration(arrDelayMins) : `${arrDelayMins} mins`;
+    }
+
+    // 5. Raw status + landed-but-no-arrival flag
+    const rawStatus = targetFlight.status || 'U';
+    const arrTimeDataPending = rawStatus === 'L' && !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
+
+    // 6. Status → Banner
+    const statusMap = { 'S': 'Scheduled', 'A': 'Active', 'L': 'Landed', 'C': 'Cancelled', 'D': 'Diverted', 'U': 'Unknown' };
+    const statusText = statusMap[rawStatus] || 'Unknown';
+    const bannerTextCol = '#ffffff';
+    let bannerBg, bannerText, arrDelayColor;
+    const divertedCode = rawStatus === 'D' ? (targetFlight.divertedAirportFsCode || '???') : null;
+
+    switch (rawStatus) {
+      case 'S':
         if (arrDelayMins > 0) {
-            bannerText = `DIVERTED → ${divertedCode} | Delayed ${arrDelayStr}`;
-            arrDelayColor = '#ef4444';
+          bannerBg = '#f59e0b'; bannerText = `SCHEDULED | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444';
         } else {
-            bannerText = `DIVERTED → ${divertedCode}`;
-            arrDelayStr = 'DIVERTED'; 
-            arrDelayColor = '#ef4444';
+          bannerBg = '#3b82f6'; bannerText = 'SCHEDULED'; arrDelayStr = 'Scheduled'; arrDelayColor = '#3b82f6';
         }
-      }
-      break;
-    default: // 'U'
-      bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN';
-      arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
-  }
-
-  // 7. Appendix lookups (airports + operator + diverted airport)
-  let depIata = targetFlight.departureAirportFsCode || 'N/A';
-  let arrIata = targetFlight.arrivalAirportFsCode || 'N/A';
-  let depCity = depIata, arrCity = arrIata, depName = '', arrName = '';
-  let divertedToCity = null;
-  let operatorCode = targetFlight.operatingCarrierFsCode || targetFlight.carrierFsCode || carrier;
-  let operatorName = operatorCode;
-
-  if (data.appendix && data.appendix.airports) {
-    const dPort = data.appendix.airports.find(a => a.fs === depIata);
-    if (dPort) { depCity = dPort.city || depIata; depName = dPort.name || ''; }
-    const aPort = data.appendix.airports.find(a => a.fs === arrIata);
-    if (aPort) { arrCity = aPort.city || arrIata; arrName = aPort.name || ''; }
-    if (divertedCode) {
-      const dvPort = data.appendix.airports.find(a => a.fs === divertedCode);
-      if (dvPort) divertedToCity = dvPort.city || divertedCode;
+        break;
+      case 'A':
+        if (arrDelayMins > 0) {
+          bannerBg = '#f59e0b'; bannerText = `IN FLIGHT | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444';
+        } else {
+          bannerBg = '#3b82f6'; bannerText = 'IN FLIGHT'; arrDelayColor = '#22c55e';
+        }
+        break;
+      case 'L':
+        if (arrTimeDataPending) {
+          bannerBg = '#f59e0b'; bannerText = 'LANDED | FINAL ARRIVAL PENDING'; arrDelayStr = 'Pending / Unknown'; arrDelayColor = '#f59e0b';
+        } else if (arrDelayMins > 0) {
+          bannerBg = '#f59e0b'; bannerText = `LANDED | ${arrDelayStr} Late`; arrDelayColor = '#ef4444';
+        } else {
+          bannerBg = '#22c55e'; bannerText = 'LANDED | On Time'; arrDelayColor = '#22c55e';
+        }
+        break;
+      case 'C':
+        bannerBg = '#ef4444'; bannerText = 'FLIGHT CANCELLED'; arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444';
+        break;
+      case 'D':
+        if (hasMultipleDisruptions) {
+          bannerBg = '#991b1b'; bannerText = `DIVERTED & CANCELLED → ${divertedCode}`;
+          arrDelayStr = 'DIVERTED/CANCELLED'; arrDelayColor = '#ef4444';
+        } else {
+          bannerBg = '#ef4444'; 
+          if (arrDelayMins > 0) {
+              bannerText = `DIVERTED → ${divertedCode} | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444';
+          } else {
+              bannerText = `DIVERTED → ${divertedCode}`; arrDelayStr = 'DIVERTED'; arrDelayColor = '#ef4444';
+          }
+        }
+        break;
+      default:
+        bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN'; arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
     }
+
+    // 7. Appendix lookups
+    let depIata = targetFlight.departureAirportFsCode || 'N/A';
+    let arrIata = targetFlight.arrivalAirportFsCode || 'N/A';
+    let depCity = depIata, arrCity = arrIata, depName = '', arrName = '';
+    let divertedToCity = null;
+    let operatorCode = targetFlight.operatingCarrierFsCode || targetFlight.carrierFsCode || carrier;
+    let operatorName = operatorCode;
+
+    if (data.appendix && data.appendix.airports) {
+      const dPort = data.appendix.airports.find(a => a.fs === depIata);
+      if (dPort) { depCity = dPort.city || depIata; depName = dPort.name || ''; }
+      const aPort = data.appendix.airports.find(a => a.fs === arrIata);
+      if (aPort) { arrCity = aPort.city || arrIata; arrName = aPort.name || ''; }
+      if (divertedCode) {
+        const dvPort = data.appendix.airports.find(a => a.fs === divertedCode);
+        if (dvPort) divertedToCity = dvPort.city || divertedCode;
+      }
+    }
+
+    if (data.appendix && data.appendix.airlines) {
+      const opLine = data.appendix.airlines.find(a => a.fs === operatorCode || a.iata === operatorCode || a.icao === operatorCode);
+      if (opLine) operatorName = opLine.name || operatorCode;
+    }
+
+    // 8. Gemini AI comment (Safely bypassed if Data is Pending)
+    let aiComment = null;
+    if (hasMultipleDisruptions && rawStatus === 'D') {
+      aiComment = `🚨 Double Disruption: The aircraft initially diverted to ${divertedCode || 'another airport'}, and the remainder of the journey was officially cancelled.`;
+    } else if (arrTimeDataPending) {
+      aiComment = `⚠️ Anomaly: The flight landed, but final arrival timestamps are missing from Cirium. This often indicates a prolonged tarmac delay or gate issue.`;
+    } else if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
+      try {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+        const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
+  Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
+        const commentResult = await commentModel.generateContent(commentPrompt);
+        aiComment = commentResult.response.text().trim().replace(/^["']|["']$/g, '');
+      } catch (e) {
+        console.error("AI Comment Error:", e);
+      }
+    }
+
+    // 9. Construct Final UI Object
+    const parsedUIStats = {
+      bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
+      rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
+      depIata, depCity, depName,
+      depDate: formatDate(sDep.dateLocal),
+      depSched: formatTime(sDep.dateLocal),
+      depSchedZone: calculateUtcOffset(sDep.dateLocal, sDep.dateUtc),
+      depActual: formatTime(aDep.dateLocal),
+      depActualZone: calculateUtcOffset(aDep.dateLocal, aDep.dateUtc),
+      depActualLabel,
+      arrIata, arrCity, arrName,
+      arrDate: formatDate(sArr.dateLocal),
+      arrSched: formatTime(sArr.dateLocal),
+      arrSchedZone: calculateUtcOffset(sArr.dateLocal, sArr.dateUtc),
+      arrActual: formatTime(aArr.dateLocal),
+      arrActualZone: calculateUtcOffset(aArr.dateLocal, aArr.dateUtc),
+      arrActualLabel: arrTimeDataPending ? 'Data Pending' : arrActualLabel,
+      arrDelay: arrDelayStr, arrDelayColor, aiComment
+    };
+
+    res.json({ aiStats: parsedUIStats, rawResponse: data });
+
+  } catch (error) {
+    console.error("🔥 Flight Status Crash:", error);
+    // Explicitly return a string so the frontend never says [object Object] again
+    return res.json({ error: error.message || "An unexpected server error occurred." });
   }
-
-  if (data.appendix && data.appendix.airlines) {
-    const opLine = data.appendix.airlines.find(a => a.fs === operatorCode || a.iata === operatorCode || a.icao === operatorCode);
-    if (opLine) operatorName = opLine.name || operatorCode;
-  }
-
-  // 8. Gemini AI comment
-  let aiComment = null;
-  if (hasMultipleDisruptions && rawStatus === 'D') {
-    aiComment = `🚨 Double Disruption: The aircraft initially diverted to ${divertedCode || 'another airport'}, and the remainder of the journey was officially cancelled.`;
-  } else if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
-    try {
-      const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
-      const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
-Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
-      const commentResult = await commentModel.generateContent(commentPrompt);
-      aiComment = commentResult.response.text().trim().replace(/^["']|["']$/g, '');
-    } catch (e) {}
-  }
-
-  // 9. Construct Final UI Object
-  const parsedUIStats = {
-    bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
-    rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
-    depIata, depCity, depName,
-    depDate: formatDate(sDep.dateLocal),
-    depSched: formatTime(sDep.dateLocal),
-    depSchedZone: calculateUtcOffset(sDep.dateLocal, sDep.dateUtc),
-    depActual: formatTime(aDep.dateLocal),
-    depActualZone: calculateUtcOffset(aDep.dateLocal, aDep.dateUtc),
-    depActualLabel,
-    arrIata, arrCity, arrName,
-    arrDate: formatDate(sArr.dateLocal),
-    arrSched: formatTime(sArr.dateLocal),
-    arrSchedZone: calculateUtcOffset(sArr.dateLocal, sArr.dateUtc),
-    arrActual: formatTime(aArr.dateLocal),
-    arrActualZone: calculateUtcOffset(aArr.dateLocal, aArr.dateUtc),
-    arrActualLabel: arrTimeDataPending ? 'Data Pending' : arrActualLabel,
-    arrDelay: arrDelayStr, arrDelayColor, aiComment
-  };
-
-  res.json({ aiStats: parsedUIStats, rawResponse: data });
-});
+};
