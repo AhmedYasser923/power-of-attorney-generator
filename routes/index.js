@@ -32,11 +32,13 @@ router.get('/ticket-analyzer', ticketController.renderAnalyzer);
 
 // --- NEW ISOLATED TOOLS SUITE ROUTES ---
 router.get('/tools', toolsController.renderTools);
-router.get('/api/tools/flight-status', toolsController.checkFlightStatus);
+router.get('/api/tools/flight-status', ticketController.checkFlightStatus);
 router.get('/api/tools/check-eoc', toolsController.checkEOC);
 router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs', toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
+
+router.post('/api/generate-email', toolsController.generateEmail);
 
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);
 router.post('/generate-lufthansa', upload.any(), lufthansaController.generateLufthansaPDF);

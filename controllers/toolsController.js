@@ -92,7 +92,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
   }
 
-  // 1. BULLETPROOF CHERRY-PICKING PARSER
   const match = flightNumber.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})\s*0*(\d{1,4})/);
   if (!match) {
     return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
@@ -100,7 +99,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
   const carrier = match[1].toUpperCase();
   const fNum = match[2];
 
-  // 2. Parse Date
   let year, month, day;
   if (date && date !== 'Unknown') {
     const parts = date.split('-');
@@ -112,7 +110,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     day = String(today.getDate()).padStart(2, '0');
   }
 
-  // 3. Fetch from Cirium
   const url = `https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/${carrier}/${fNum}/dep/${year}/${month}/${day}?appId=${ciriumAppId}&appKey=${ciriumAppKey}&utc=false`;
   const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
   const data = await response.json();
@@ -124,14 +121,12 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
   }
 
-  // 4. Extract Target Flight Data (Find best match based on destination)
   let targetFlight = data.flightStatuses[0];
   if (destination && destination !== 'Unknown') {
     const destMatch = data.flightStatuses.find(f => f.arrivalAirportFsCode === destination.toUpperCase());
     if (destMatch) targetFlight = destMatch;
   }
 
-  // Helpers
   const formatDate = (dateString) => {
     if (!dateString) return '--';
     const d = new Date(dateString);
@@ -160,7 +155,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     return `${h}h ${m}m`;
   };
 
-  // Operational Times
   const ops = targetFlight.operationalTimes || {};
   const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || {};
   const aDep = ops.actualGateDeparture || ops.estimatedGateDeparture || ops.actualRunwayDeparture || sDep;
@@ -170,7 +164,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
   const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? "Actual" : (ops.estimatedGateDeparture ? "Estimated" : "Scheduled");
   const arrActualLabel = (ops.actualGateArrival || ops.actualRunwayArrival) ? "Actual" : (ops.estimatedGateArrival ? "Estimated" : "Scheduled");
 
-  // Flight Duration & Delay
   const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
   const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || 0;
 
@@ -179,12 +172,9 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     arrDelayStr = arrDelayMins >= 60 ? formatDuration(arrDelayMins) : `${arrDelayMins} mins`;
   }
 
-  // 5. Raw status + landed-but-no-arrival flag
   const rawStatus = targetFlight.status || 'U';
-  const arrTimeDataPending = rawStatus === 'L' &&
-    !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
+  const arrTimeDataPending = rawStatus === 'L' && !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
 
-  // 6. Status → Banner (all 6 Cirium codes)
   const statusMap = { 'S': 'Scheduled', 'A': 'Active', 'L': 'Landed', 'C': 'Cancelled', 'D': 'Diverted', 'U': 'Unknown' };
   const statusText = statusMap[rawStatus] || 'Unknown';
   const bannerTextCol = '#ffffff';
@@ -192,38 +182,20 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
   const divertedCode = rawStatus === 'D' ? (targetFlight.divertedAirportFsCode || '???') : null;
 
   switch (rawStatus) {
-    case 'S':
-      bannerBg = '#3b82f6'; bannerText = 'SCHEDULED';
-      arrDelayStr = 'Scheduled'; arrDelayColor = '#3b82f6';
-      break;
+    case 'S': bannerBg = '#3b82f6'; bannerText = 'SCHEDULED'; arrDelayStr = 'Scheduled'; arrDelayColor = '#3b82f6'; break;
     case 'A':
-      if (arrDelayMins > 0) {
-        bannerBg = '#f59e0b'; bannerText = `IN FLIGHT | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#3b82f6'; bannerText = 'IN FLIGHT'; arrDelayColor = '#22c55e';
-      }
+      if (arrDelayMins > 0) { bannerBg = '#f59e0b'; bannerText = `IN FLIGHT | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444'; }
+      else { bannerBg = '#3b82f6'; bannerText = 'IN FLIGHT'; arrDelayColor = '#22c55e'; }
       break;
     case 'L':
-      if (arrDelayMins > 0) {
-        bannerBg = '#f59e0b'; bannerText = `LANDED | ${arrDelayStr} Late`; arrDelayColor = '#ef4444';
-      } else {
-        bannerBg = '#22c55e'; bannerText = 'LANDED | On Time'; arrDelayColor = '#22c55e';
-      }
+      if (arrDelayMins > 0) { bannerBg = '#f59e0b'; bannerText = `LANDED | ${arrDelayStr} Late`; arrDelayColor = '#ef4444'; }
+      else { bannerBg = '#22c55e'; bannerText = 'LANDED | On Time'; arrDelayColor = '#22c55e'; }
       break;
-    case 'C':
-      bannerBg = '#ef4444'; bannerText = 'FLIGHT CANCELLED';
-      arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444';
-      break;
-    case 'D':
-      bannerBg = '#ef4444'; bannerText = `DIVERTED → ${divertedCode}`;
-      arrDelayStr = 'DIVERTED'; arrDelayColor = '#ef4444';
-      break;
-    default: // 'U'
-      bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN';
-      arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
+    case 'C': bannerBg = '#ef4444'; bannerText = 'FLIGHT CANCELLED'; arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444'; break;
+    case 'D': bannerBg = '#ef4444'; bannerText = `DIVERTED → ${divertedCode}`; arrDelayStr = 'DIVERTED'; arrDelayColor = '#ef4444'; break;
+    default: bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN'; arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
   }
 
-  // 7. Appendix lookups (airports + operator + diverted airport)
   let depIata = targetFlight.departureAirportFsCode || 'N/A';
   let arrIata = targetFlight.arrivalAirportFsCode || 'N/A';
   let depCity = depIata, arrCity = arrIata, depName = '', arrName = '';
@@ -247,7 +219,6 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
     if (opLine) operatorName = opLine.name || operatorCode;
   }
 
-  // 8. Gemini AI comment — only for notable situations (cancel / divert / unknown / delay ≥ 30 min)
   let aiComment = null;
   if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
     try {
@@ -256,12 +227,9 @@ exports.checkFlightStatus = catchAsync(async (req, res, next) => {
 Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
       const commentResult = await commentModel.generateContent(commentPrompt);
       aiComment = commentResult.response.text().trim().replace(/^["']|["']$/g, '');
-    } catch (e) {
-      // Silent — AI comment is optional
-    }
+    } catch (e) {}
   }
 
-  // 9. Construct Final UI Object
   const parsedUIStats = {
     bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
     rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
@@ -285,12 +253,9 @@ Write ONE factual sentence (max 25 words) about the most important fact. Only me
   res.json({ aiStats: parsedUIStats, rawResponse: data });
 });
 
-
-
 // ==========================================
 // DOCUMENT CHECKER LOGIC
 // ==========================================
-
 const specificAirlineReqs = [
   { names: ["aeroitalia"], reqs: "ID" },
   { names: ["aerolineas argentinas", "ar"], reqs: "Ticket number, ID number" },
@@ -355,11 +320,9 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
   const query = (req.query.airline || '').toLowerCase().trim();
   if (!query) return res.status(400).json({ error: 'Airline name is required' });
 
-  // Resolve the display name using the JSON DB if available
   const dbMatch = airlineDatabase.find(a => a.name.toLowerCase() === query || a.iata.toLowerCase() === query);
   const displayAirline = dbMatch ? dbMatch.name : query;
 
-  // Check if it matches our specific requirements array
   const specialMatch = specificAirlineReqs.find(a => 
     a.names.some(n => n.toLowerCase() === query || (dbMatch && n.toLowerCase() === dbMatch.iata.toLowerCase()))
   );
@@ -371,7 +334,6 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
       reqs: specialMatch.reqs
     });
   } else {
-    // Definitive empty state
     res.status(200).json({
       airline: displayAirline,
       hasDocs: false,
@@ -380,26 +342,89 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
   }
 });
 
-// (Keep your existing exports.searchAirlines right below this)
-
 exports.searchAirlines = catchAsync(async (req, res, next) => {
   const query = (req.query.q || '').toLowerCase().trim();
-  
-  if (!query || query.length < 2) {
-    return res.json([]);
-  }
+  if (!query || query.length < 2) return res.json([]);
 
   const results = [];
-  
-  // Search the comprehensive JSON database for autocomplete
   for (const airline of airlineDatabase) {
     if (airline.name.toLowerCase().includes(query) || airline.iata.toLowerCase().includes(query)) {
       results.push({ name: airline.name, iata: airline.iata });
     }
-    
-    // Limit to 10 results to keep the UI snappy
     if (results.length >= 10) break; 
   }
-
   res.status(200).json(results);
+});
+
+
+// ==========================================
+// SMART EMAIL BUILDER LOGIC (STREAMLINED)
+// ==========================================
+
+exports.generateEmail = catchAsync(async (req, res, next) => {
+  const { language, missingDocs, customRequest } = req.body;
+
+  if ((!missingDocs || missingDocs.length === 0) && !customRequest) {
+    return next(new AppError('Please select at least one document or enter a custom request', 400));
+  }
+
+  // Retaining the user's requested model
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
+  const prompt = `
+    You are an expert multilingual legal claims assistant for 'ReFly Management Limited'.
+    Your task is to generate a missing information request paragraph based STRICTLY on the template below, filled with the requested items.
+
+    DETAILS:
+    - Target Language: ${language}
+    - Requested Items: ${missingDocs && missingDocs.length > 0 ? missingDocs.join(', ') : 'None'}
+    ${customRequest ? `- Custom Request: ${customRequest}` : ''}
+
+    INSTRUCTIONS FOR REQUESTED ITEMS:
+    Expand the requested items into clear, professional bullet points. 
+    
+    CRITICAL RULE: For EVERY requested item, you MUST explicitly instruct the passenger on exactly HOW and WHERE to find that information. 
+    Use the following exact definitions/instructions for these specific items if requested:
+    - Boarding pass: Please provide a copy of the physical or digital boarding pass you received after checking in for your flight.
+    - Ticket number: This is typically a 13-digit number that can be found on your booking confirmation email or e-ticket receipt.
+    - PNR / Booking Reference: A booking reference is a unique code the airline uses to identify your reservation. It typically consists of 6 characters, a combination of letters and numbers (e.g., DF87G#, REDYYD, or L5W4NW). You can find it on your booking confirmation email or e-ticket, where it may be labeled as 'booking reference', 'reservation reference', 'booking code', or 'PNR' (Passenger Name Record).
+    - ID / Passport: Please provide a clear, color copy of your valid ID or Passport.
+    - Signed Power of Attorney: Please sign and return the attached Power of Attorney document.
+    - Booking confirmation: Please provide the original booking confirmation email or PDF from the airline or travel agency.
+    - Proof of delay: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed delayed, we kindly ask you to provide official proof to support your claim. This could be: An email or SMS from the airline confirming the delay, a screenshot of the flight status showing the delay, the actual arrival time at your final destination, or an elaborate description of the situation.
+    - Proof of cancellation: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed canceled, we kindly ask you to provide official proof. This could be: An email or SMS from the airline confirming the cancellation, a screenshot of the flight status showing it was canceled, a cancellation certificate from the airline, or any other official document serving proof of the cancellation.
+    (Include the Custom Request as a bullet point if one is provided, and explicitly instruct them how to fulfill it).
+
+    BASE TEMPLATE:
+    In order to proceed with your claim and process your compensation, we require the following information and documents:
+
+    [Insert Bullet Points Here]
+
+    Please reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.
+
+    OUTPUT REQUIREMENTS:
+    1. Translate the above template and the filled bullet points perfectly into ${language}.
+    2. Do not include introductory conversational text.
+    3. Keep the spacing and line breaks identical to the template.
+    ${language !== 'English' ? `4. CRITICAL: After the ${language} translation, add EXACTLY the string "|||ENGLISH|||" on a new line, and then print the exact English version below it so the backend can parse it.` : ''}
+  `;
+
+  const result = await model.generateContent(prompt);
+  let resultText = result.response.text().trim();
+  
+  let emailText = resultText;
+  let englishText = null;
+
+  // Split the response cleanly if the target language isn't English
+  if (language !== 'English' && resultText.includes('|||ENGLISH|||')) {
+      const parts = resultText.split('|||ENGLISH|||');
+      emailText = parts[0].trim();
+      englishText = parts[1] ? parts[1].trim() : null;
+  }
+
+  res.status(200).json({
+    success: true,
+    email: emailText,
+    englishTranslation: englishText
+  });
 });

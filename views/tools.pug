@@ -13,6 +13,7 @@ block content
       button.ts-tab-btn(data-tab="eoc") ⚠️ EOC Radar
       button.ts-tab-btn(data-tab="ec261") 💸 Comp Calculator
       button.ts-tab-btn(data-tab="docs") 📄 Doc Check
+      button.ts-tab-btn(data-tab="email") ✉️ Multilingual Information Requisition Tool
 
     //- TAB 1: OAG FLIGHTSTATS
     #cirium.ts-tab-content.active
@@ -78,7 +79,7 @@ block content
         button#btn-ec261.ts-btn-action 💸 Calculate Compensation
         #ec261Result
 
-    //- TAB 4: DOCUMENT CHECKER (MODIFIED UX)
+    //- TAB 4: DOCUMENT CHECKER
     #docs.ts-tab-content
       .ts-card
         .ts-form-group
@@ -86,6 +87,78 @@ block content
           input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
         
         #docsResult.ts-results-row(style="margin-top: 24px;")
+
+    //- TAB 5: SMART EMAIL BUILDER (STREAMLINED)
+    #email.ts-tab-content
+      .ts-card
+        h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 20px; display: flex; align-items: center; gap: 8px;") ✉️ Multilingual Information Requisition Tool
+        
+        form#emailBuilderForm
+          div(style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;")
+            label(style="display: block; font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 10px;") Select Required Information:
+            #emChecklist(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Boarding pass") 
+                | Boarding Pass
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Ticket number") 
+                | Ticket Number (13-digit)
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="PNR / Booking Reference") 
+                | PNR / Booking Reference
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="ID / Passport") 
+                | ID / Passport
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Signed Power of Attorney") 
+                | Signed Power of Attorney
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Booking confirmation") 
+                | Booking Confirmation
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Proof of delay") 
+                | Proof of Delay
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                input(type="checkbox" value="Proof of cancellation") 
+                | Proof of Cancellation
+            div(style="margin-top: 10px;")
+              input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
+
+          .ts-form-grid(style="align-items: flex-end;")
+            .ts-form-group(style="margin-bottom: 0;")
+              label.ts-label Output Language
+              select#emLanguage.ts-input
+                option(value="English") English
+                option(value="Spanish") Spanish
+                option(value="French") French
+                option(value="German") German
+                option(value="Italian") Italian
+                option(value="Dutch") Dutch
+                option(value="Swedish") Swedish
+                option(value="Polish") Polish
+                option(value="Portuguese") Portuguese
+                option(value="Danish") Danish
+                option(value="Norwegian") Norwegian
+                option(value="Finnish") Finnish
+                option(value="Romanian") Romanian
+                option(value="Czech") Czech
+                option(value="Hungarian") Hungarian
+                option(value="Greek") Greek
+                option(value="Turkish") Turkish
+                option(value="Arabic") Arabic
+            button#emGenerateBtn.ts-btn-action(type="submit" style="margin-top: 0;") Generate Content
+
+        #emResultBox(style="display: none; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px;")
+          div(style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;")
+            span(style="font-size: 13px; font-weight: 700; color: #10b981;") ✅ Content Generated
+            button#emCopyBtn(type="button" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; color: #334155;") 📋 Copy to Clipboard
+          
+          textarea#emOutputText(readonly style="width: 100%; height: 250px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical; background: #f8fafc; color: #1e293b; box-sizing: border-box;")
+
+          //- NEW: Distinct Box for English Verification (Won't get copied by the button above)
+          #emEnglishBox(style="display: none; margin-top: 15px;")
+            label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
+            #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
 
   script.
     document.addEventListener('DOMContentLoaded', () => {
@@ -173,25 +246,22 @@ block content
       setupAirportAutocomplete('l-origin', 'l-origin-country');
       setupAirportAutocomplete('l-dest', 'l-dest-country');
 
-      // --- INSTANT DOC FETCH LOGIC (NEW) ---
+      // --- INSTANT DOC FETCH LOGIC ---
       async function fetchAndDisplayDocs(airlineName) {
         const resultDiv = document.getElementById('docsResult');
         resultDiv.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b; font-weight: 600;">⏳ Checking requirements for ${airlineName}...</div>`;
-
         try {
             const res = await fetch(`/api/tools/check-docs?airline=${encodeURIComponent(airlineName)}`);
             const data = await res.json();
 
-            // Distinct UI badges based on whether documents are required
             const statusBadge = data.hasDocs 
                 ? `<div style="font-size: 11px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #fde68a;">⚠️ DOCUMENTS REQUIRED</div>`
                 : `<div style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">✅ NO EXTRA DOCS REQUIRED</div>`;
-
-            // Distinct text colors depending on status
+            
             const reqsDisplay = data.hasDocs
                 ? `<div style="font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5;">${data.reqs}</div>`
                 : `<div style="font-size: 15px; font-weight: 600; color: #16a34a; line-height: 1.5;">${data.reqs}</div>`;
-
+            
             resultDiv.innerHTML = `
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; width: 100%; animation: ts-fadeIn 0.4s ease;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -209,7 +279,7 @@ block content
         }
       }
 
-      // --- AIRLINE AUTOCOMPLETE LOGIC (MODIFIED UX) ---
+      // --- AIRLINE AUTOCOMPLETE LOGIC ---
       function setupAirlineAutocomplete(inputId) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -241,15 +311,12 @@ block content
                         data.forEach(airline => {
                             const item = document.createElement('div');
                             item.className = 'autocomplete-item';
-                            
-                            // IATA initials removed as requested
                             item.innerHTML = `
                                 <div class="ac-top" style="align-items: center; padding: 4px 0;">
                                     <span class="ac-city" style="color: #334155; font-weight: 600; font-size: 14px;">${airline.name}</span>
                                 </div>
                             `;
                             
-                            // The trigger: Filling input and automatically fetching details
                             item.addEventListener('click', () => {
                                 input.value = airline.name;
                                 list.style.display = 'none';
@@ -275,7 +342,7 @@ block content
         const flight = flightInput.value.trim().toUpperCase();
         const date = dateInput.value;
         const resultDiv = document.getElementById('flightResult');
-
+        
         if(!flight || !date) return alert("Flight Number and Date required!");
 
         const flightKey = `${flight}-${date}`;
@@ -285,8 +352,8 @@ block content
 
         const originalText = btn.innerHTML;
         btn.innerHTML = "⏳ Searching..."; 
-        btn.disabled = true; 
-
+        btn.disabled = true;
+        
         try {
             const res = await fetch(`/api/tools/flight-status?flightNumber=${encodeURIComponent(flight)}&date=${encodeURIComponent(date)}`);
             const data = await res.json();
@@ -409,11 +476,13 @@ block content
         const resultDiv = document.getElementById('eocResult');
 
         if(!date) return alert("Date is required to scan EOCs!");
+        
         btn.innerHTML = "⏳ Scanning..."; btn.disabled = true;
         try {
             const query = `date=${date}&originIata=${encodeURIComponent(oIata)}&destIata=${encodeURIComponent(dIata)}&originCountry=${encodeURIComponent(oCount)}&destCountry=${encodeURIComponent(dCount)}`;
             const res = await fetch(`/api/tools/check-eoc?${query}`);
             const data = await res.json();
+            
             if (data.eocFound && data.events.length > 0) {
                 const ev = data.events[0];
                 resultDiv.innerHTML = `<div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; color: #7f1d1d;"><div style="font-weight: 800; color: #dc2626; margin-bottom: 12px; text-transform: uppercase; font-size: 13px;">⚠️ Extraordinary Circumstances Detected</div><div style="display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px;"><strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span><strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span><strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span><strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span></div></div>`;
@@ -509,5 +578,69 @@ block content
                 </div>
             </div>
         `;
+      });
+
+      // --- SMART EMAIL BUILDER LOGIC ---
+      document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('emGenerateBtn');
+          const resultBox = document.getElementById('emResultBox');
+          const outputText = document.getElementById('emOutputText');
+          const englishBox = document.getElementById('emEnglishBox');
+          const englishTextDiv = document.getElementById('emEnglishText');
+          
+          const checkboxes = document.querySelectorAll('#emChecklist input[type="checkbox"]:checked');
+          const missingDocs = Array.from(checkboxes).map(cb => cb.value);
+          
+          const payload = {
+              language: document.getElementById('emLanguage').value,
+              missingDocs: missingDocs,
+              customRequest: document.getElementById('emCustom').value
+          };
+
+          btn.disabled = true;
+          btn.innerHTML = '⏳ Generating...';
+          resultBox.style.display = 'none';
+
+          try {
+              const response = await fetch('/api/generate-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+              });
+
+              const data = await response.json();
+              
+              if (data.success) {
+                  outputText.value = data.email;
+                  
+                  // Show the English verification box only if it exists in the response
+                  if (data.englishTranslation) {
+                      englishTextDiv.textContent = data.englishTranslation;
+                      englishBox.style.display = 'block';
+                  } else {
+                      englishBox.style.display = 'none';
+                  }
+
+                  resultBox.style.display = 'block';
+              } else {
+                  alert('Error generating content: ' + (data.message || 'Server error'));
+              }
+          } catch (err) {
+              console.error(err);
+              alert('Network error while generating content.');
+          } finally {
+              btn.disabled = false;
+              btn.innerHTML = 'Generate Content';
+          }
+      });
+
+      document.getElementById('emCopyBtn').addEventListener('click', () => {
+          const text = document.getElementById('emOutputText');
+          text.select();
+          document.execCommand('copy');
+          const btn = document.getElementById('emCopyBtn');
+          btn.innerHTML = '✅ Copied!';
+          setTimeout(() => btn.innerHTML = '📋 Copy to Clipboard', 2000);
       });
     });
