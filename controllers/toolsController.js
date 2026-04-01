@@ -457,15 +457,21 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const { language, missingDocs, customRequest } = req.body;
 
   if ((!missingDocs || missingDocs.length === 0) && !customRequest) {
-    return next(new AppError('Please select at least one document or enter a custom request', 400));
+    return next(new AppError('Please select at least one document, template, or enter a custom request', 400));
   }
 
   // Retaining the user's requested model
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+  const isRejection = missingDocs && missingDocs.some(item => item.includes('Rejection'));
+
+  const baseTemplate = isRejection
+    ? `BASE TEMPLATE:\n[Insert the exact text for the chosen rejection reason(s) here, translated and formatted professionally. DO NOT add any bullet points. DO NOT add the header "In order to proceed...". DO NOT add the footer "Please reply directly..."]`
+    : `BASE TEMPLATE:\nIn order to proceed with your claim and process your compensation, we require the following information and documents:\n\n[Insert Bullet Points Here]\n\nPlease reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+
   const prompt = `
     You are an expert multilingual legal claims assistant for 'ReFly Management Limited'.
-    Your task is to generate a missing information request paragraph based STRICTLY on the template below, filled with the requested items.
+    Your task is to generate an email body based STRICTLY on the template below, filled with the requested items or templates.
 
     DETAILS:
     - Target Language: ${language}
@@ -473,10 +479,11 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     ${customRequest ? `- Custom Request: ${customRequest}` : ''}
 
     INSTRUCTIONS FOR REQUESTED ITEMS:
-    Expand the requested items into clear, professional bullet points. 
+    ${isRejection 
+      ? 'CRITICAL RULE: This is a REJECTION email. Do NOT ask the user for documents. Output ONLY the provided rejection text appropriately translated.' 
+      : 'Expand the requested items into clear, professional bullet points. CRITICAL RULE: For EVERY requested item, you MUST explicitly instruct the passenger on exactly HOW and WHERE to find that information.'} 
     
-    CRITICAL RULE: For EVERY requested item, you MUST explicitly instruct the passenger on exactly HOW and WHERE to find that information. 
-    Use the following  definitions/instructions for these specific items if requested and refine it more and make it professional and simple:
+    Use the following definitions/instructions for these specific items if requested and refine it more and make it professional and simple:
     - Boarding pass: Please provide a copy of the physical or digital boarding pass you received after checking in for your flight.
     - Ticket number: This is typically a 13-digit number that can be found on your booking confirmation email or e-ticket receipt. To find your ticket number, you can try the following methods:
 Email confirmation: Check your email inbox for a confirmation message from the ticket provider. The ticket number is usually included in this email.
@@ -491,18 +498,16 @@ Physical tickets: If you have a physical ticket, the ticket number is usually pr
     - Booking confirmation: Please provide the original booking confirmation email or PDF from the airline or travel agency.
     - Proof of delay: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed delayed, we kindly ask you to provide official proof to support your claim. This could be: An email or SMS from the airline confirming the delay, a screenshot of the flight status showing the delay, the actual arrival time at your final destination, or an elaborate description of the situation.
     - Proof of cancellation: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed canceled, we kindly ask you to provide official proof. This could be: An email or SMS from the airline confirming the cancellation, a screenshot of the flight status showing it was canceled, a cancellation certificate from the airline, or any other official document serving proof of the cancellation.
+    - Visa/Documentation Rejection: We understand how distressing it must have been for you and your family to be unable to board due to documentation issues. After reviewing your case, we must clarify that EC261/2004 applies only to delays, cancellations, or denied boarding resulting from factors such as overbooking or operational issues. Please note that ensuring all visa and entry requirements are met is the passenger’s responsibility. Any impact on boarding or travel caused by visa or documentation issues falls outside the airline’s responsibility and does not qualify for compensation under EC261. Consequently, we are unable to pursue compensation under EC261 for this incident. We recommend contacting the airline directly regarding any additional costs incurred, as they may be able to provide further assistance.
+    - Short Delay / No Missed Connection Rejection: Unfortunately, we are unable to process your compensation claim as the delay on the first leg of your journey was under three hours, and the subsequent flight was not missed. Consequently, the airline cannot be held responsible for compensation as the arrival in the final destination has been on time or less than 3 hours.
+    
     (Include the Custom Request as a bullet point if one is provided, and explicitly instruct them how to fulfill it).
     - in the custom request always refine it and make it professional and easy to understand
 
-    BASE TEMPLATE:
-    In order to proceed with your claim and process your compensation, we require the following information and documents:
-
-    [Insert Bullet Points Here]
-
-    Please reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.
+    ${baseTemplate}
 
     OUTPUT REQUIREMENTS:
-    1. Translate the above template and the filled bullet points perfectly into ${language}.
+    1. Translate the above template and the filled bullet points/rejection texts perfectly into ${language}.
     2. Do not include introductory conversational text.
     3. Keep the spacing and line breaks identical to the template.
     ${language !== 'English' ? `4. CRITICAL: After the ${language} translation, add EXACTLY the string "|||ENGLISH|||" on a new line, and then print the exact English version below it so the backend can parse it.` : ''}

@@ -88,7 +88,7 @@ block content
         
         #docsResult.ts-results-row(style="margin-top: 24px;")
 
-    //- TAB 5: SMART EMAIL BUILDER (STREAMLINED)
+    //- TAB 5: SMART EMAIL BUILDER
     #email.ts-tab-content
       .ts-card
         h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 20px; display: flex; align-items: center; gap: 8px;") ✉️ Multilingual Information Requisition Tool
@@ -121,6 +121,17 @@ block content
               label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
                 input(type="checkbox" value="Proof of cancellation") 
                 | Proof of Cancellation
+                
+              //- NEW: Rejection Templates
+              div(style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;")
+                label(style="display: block; font-size: 12px; font-weight: 800; color: #991b1b; margin-bottom: 6px;") ❌ Rejection Templates (Overrides Doc Requests)
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                input(type="checkbox" value="Visa/Documentation Rejection") 
+                | Visa or Documentation Issue
+              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                input(type="checkbox" value="Short Delay / No Missed Connection Rejection") 
+                | Short Delay / Didn't Miss Connection
+
             div(style="margin-top: 10px;")
               input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
 
@@ -254,7 +265,7 @@ block content
             const reqsDisplay = data.hasDocs
                 ? `<div style="font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5;">${data.reqs}</div>`
                 : `<div style="font-size: 15px; font-weight: 600; color: #16a34a; line-height: 1.5;">${data.reqs}</div>`;
-            
+                
             resultDiv.innerHTML = `
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; width: 100%; animation: ts-fadeIn 0.4s ease;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -316,7 +327,6 @@ block content
                 } catch (err) { list.style.display = 'none'; }
             }, 150); 
         });
-        
         document.addEventListener('click', (e) => { if (e.target !== input) list.style.display = 'none'; });
       }
 
@@ -352,6 +362,7 @@ block content
             
             if (data.aiStats) {
                 window.searchedFlights.add(flightKey);
+                
                 const ai = data.aiStats;
                 const dismissLogic = `window.searchedFlights.delete('${flightKey}'); this.closest('.fetched-flight-card').remove();`;
 
@@ -359,16 +370,19 @@ block content
                 const isDiverted  = ai.rawStatus === 'D';
 
                 const arrSchedHtml = isCancelled ? `<div style="font-size:22px;font-weight:700;color:#475569;line-height:1;text-decoration:line-through;opacity:0.5;">${ai.arrSched}</div>` : `<div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.arrSched}</div>`;
+                
+                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ?
+                `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
 
-                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ? `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
-
-                const divertedCallout = (isDiverted && ai.divertedTo) ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
-
+                const divertedCallout = (isDiverted && ai.divertedTo) ?
+                `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
+                
                 const aiCommentHtml = ai.aiComment ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>` : '';
-
+                
                 cardWrapper.innerHTML = `
                     <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease; max-width: 500px; position: relative;">
-                        <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.2); border: none; color: #ffffff; cursor: pointer; font-size: 14px; z-index: 10; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.5)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'" title="Dismiss">✖</button>
+                        <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.2); border: none; color: #ffffff; cursor: pointer; font-size: 14px; z-index: 10; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
+                        onmouseover="this.style.background='rgba(0,0,0,0.5)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'" title="Dismiss">✖</button>
                         <div style="background:${ai.bannerBg};color:${ai.bannerTextCol};text-align:center;padding:14px;font-size:15px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;">
                             ${ai.bannerText} (${flight})
                         </div>
@@ -437,7 +451,7 @@ block content
                 resultDiv.insertBefore(cardWrapper, resultDiv.firstChild);
                 flightInput.value = '';
             } else { 
-                cardWrapper.innerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #fecaca; position: relative;">⚠️ Flight ${flight}: ${data.error || 'No Data'}<button type="button" onclick="this.parentElement.parentElement.remove()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; font-size: 16px; cursor: pointer; color: #ef4444;">✖</button></div>`; 
+                cardWrapper.innerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #fecaca; position: relative;">⚠️ Flight ${flight}: ${data.error || 'No Data'}<button type="button" onclick="this.parentElement.parentElement.remove()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; font-size: 16px; cursor: pointer; color: #ef4444;">✖</button></div>`;
                 resultDiv.insertBefore(cardWrapper, resultDiv.firstChild);
             }
         } catch(err) { 
@@ -446,7 +460,7 @@ block content
             resultDiv.insertBefore(errDiv, resultDiv.firstChild);
         }
         
-        btn.innerHTML = originalText; 
+        btn.innerHTML = originalText;
         btn.disabled = false;
       });
 
@@ -483,7 +497,7 @@ block content
         }
         btn.innerHTML = "⚠️ Scan EOC Database"; btn.disabled = false;
       });
-      
+
       // --- COMPENSATION CALCULATOR ---
       document.getElementById('btn-ec261').addEventListener('click', () => {
         const oInput = document.getElementById('l-origin');
@@ -495,7 +509,6 @@ block content
         let dist = 0;
         const lat1 = parseFloat(oInput.dataset.lat);
         const lon1 = parseFloat(oInput.dataset.lon);
-     
         const lat2 = parseFloat(dInput.dataset.lat);
         const lon2 = parseFloat(dInput.dataset.lon);
         const originCountry = (oInput.dataset.country || document.getElementById('l-origin-country').value).trim().toLowerCase();
@@ -552,7 +565,6 @@ block content
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; animation: ts-fadeIn 0.4s ease;">
                 <div>
                     <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">EC261 Status</div>
-             
                     ${statusBadge}
                     <div style="font-size: 13px; color: #475569; margin-top: 4px;">${eligibilityNote}</div>
                 </div>
@@ -573,7 +585,6 @@ block content
 
       // --- SMART EMAIL BUILDER LOGIC ---
       document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
-      
           e.preventDefault();
           const btn = document.getElementById('emGenerateBtn');
           const resultBox = document.getElementById('emResultBox');
@@ -581,8 +592,7 @@ block content
           const englishBox = document.getElementById('emEnglishBox');
           const englishTextDiv = document.getElementById('emEnglishText');
           
-          const checkboxes = document.querySelectorAll('#emChecklist input[type="checkbox"]:checked');
-       
+          const checkboxes = document.querySelectorAll('#emailBuilderForm input[type="checkbox"]:checked');
           const missingDocs = Array.from(checkboxes).map(cb => cb.value);
           
           const payload = {
@@ -590,15 +600,18 @@ block content
               missingDocs: missingDocs,
               customRequest: document.getElementById('emCustom').value
           };
+
           btn.disabled = true;
           btn.innerHTML = '⏳ Generating...';
           resultBox.style.display = 'none';
+
           try {
               const response = await fetch('/api/generate-email', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
               });
+
               const data = await response.json();
               
               if (data.success) {
@@ -623,6 +636,7 @@ block content
               btn.innerHTML = 'Generate Content';
           }
       });
+
       document.getElementById('emCopyBtn').addEventListener('click', () => {
           const text = document.getElementById('emOutputText');
           text.select();
