@@ -133,6 +133,13 @@ const prompt = `
     🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
     You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights.
     
+    🧠 ***THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*** 🧠
+    Before generating the JSON, you must mentally process the documents using this exact sequence:
+    1. Entity Grouping: Identify all unique passengers. If multiple passengers share the exact same flight numbers, dates, and routes, treat them as a single traveling party.
+    2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline.
+    3. Anomaly Detection (Disruptions): Look for logical breaks or overlaps in the timeline. If a passenger has tickets for a direct flight (A ➔ B), AND tickets for a multi-leg flight reaching the same destination (A ➔ C ➔ B) within 48 hours, this is a Disruption/Rebooking. 
+    4. Deductive Reasoning: Apply the EC261 legal rules to the *entire* chronologically sequenced journey, basing the jurisdiction solely on the very first origin point in the timeline.
+
     *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
     1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates. You must physically locate the departure date printed next to that specific leg's origin/destination.
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.

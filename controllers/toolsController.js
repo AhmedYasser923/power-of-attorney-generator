@@ -461,7 +461,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   }
 
   // Retaining the user's requested model
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
     You are an expert multilingual legal claims assistant for 'ReFly Management Limited'.
@@ -476,9 +476,15 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     Expand the requested items into clear, professional bullet points. 
     
     CRITICAL RULE: For EVERY requested item, you MUST explicitly instruct the passenger on exactly HOW and WHERE to find that information. 
-    Use the following exact definitions/instructions for these specific items if requested:
+    Use the following  definitions/instructions for these specific items if requested and refine it more and make it professional and simple:
     - Boarding pass: Please provide a copy of the physical or digital boarding pass you received after checking in for your flight.
-    - Ticket number: This is typically a 13-digit number that can be found on your booking confirmation email or e-ticket receipt.
+    - Ticket number: This is typically a 13-digit number that can be found on your booking confirmation email or e-ticket receipt. To find your ticket number, you can try the following methods:
+Email confirmation: Check your email inbox for a confirmation message from the ticket provider. The ticket number is usually included in this email.
+Account login: If you purchased the ticket through an online platform, log into your account on that website. Your ticket information, including the ticket number, should be available in your order history.
+Mobile app: If you used a mobile app to purchase your ticket, check the app for a section like "My Tickets" or "Purchases".
+Customer service: Contact the ticket provider's customer service. Give them all the information you have (like your name, purchase date, etc.) and they should be able to help you find your ticket number.
+Physical tickets: If you have a physical ticket, the ticket number is usually printed on it.
+
     - PNR / Booking Reference: A booking reference is a unique code the airline uses to identify your reservation. It typically consists of 6 characters, a combination of letters and numbers (e.g., DF87G#, REDYYD, or L5W4NW). You can find it on your booking confirmation email or e-ticket, where it may be labeled as 'booking reference', 'reservation reference', 'booking code', or 'PNR' (Passenger Name Record).
     - ID / Passport: Please provide a clear, color copy of your valid ID or Passport.
     - Signed Power of Attorney: Please sign and return the attached Power of Attorney document.
@@ -486,6 +492,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     - Proof of delay: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed delayed, we kindly ask you to provide official proof to support your claim. This could be: An email or SMS from the airline confirming the delay, a screenshot of the flight status showing the delay, the actual arrival time at your final destination, or an elaborate description of the situation.
     - Proof of cancellation: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed canceled, we kindly ask you to provide official proof. This could be: An email or SMS from the airline confirming the cancellation, a screenshot of the flight status showing it was canceled, a cancellation certificate from the airline, or any other official document serving proof of the cancellation.
     (Include the Custom Request as a bullet point if one is provided, and explicitly instruct them how to fulfill it).
+    - in the custom request always refine it and make it professional and easy to understand
 
     BASE TEMPLATE:
     In order to proceed with your claim and process your compensation, we require the following information and documents:
