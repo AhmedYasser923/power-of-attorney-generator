@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MAIN ANALYSIS TRIGGER ---
     analyzeBtn.addEventListener('click', async (e) => {
-        e.preventDefault(); // Stop Event Leakage immediately
+        e.preventDefault();
 
         if (currentFiles.length === 0) return alert('Please upload a ticket or boarding pass first.');
 
@@ -106,12 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         currentFiles.forEach(file => formData.append('ticket', file));
 
-        // --- NEW FEATURE: Append the Global Year to Request ---
         const globalYear = document.getElementById('globalJourneyYear')?.value;
         if (globalYear) {
             formData.append('journeyYear', globalYear);
         }
-        // ------------------------------------------------------
 
         try {
             const res = await fetch('/api/analyze-ticket', { 
@@ -142,6 +140,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (rawResponse.processingTime) {
                 resultsCard.innerHTML += `<div style="display: flex; justify-content: flex-end; margin-bottom: 15px;"><span style="background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">⏱️ Server Processed in ${rawResponse.processingTime}s</span></div>`;
+            }
+
+            // --- SCAN FOR MISSING PNRS ACROSS ALL LEGS ---
+            let hasMissingLegPnr = false;
+            dataArray.forEach(journey => {
+                if (journey.routes) {
+                    journey.routes.forEach(route => {
+                        if (route.legs) {
+                            route.legs.forEach(leg => {
+                                if (!leg.pnr || leg.pnr === 'Not Provided' || leg.pnr.toLowerCase().includes('scan') || leg.pnr === 'Unknown') {
+                                    hasMissingLegPnr = true;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            // --- SMART QR SCAN WARNING BANNER (Only shows if a PNR is actually missing) ---
+            if (hasMissingLegPnr) {
+                resultsCard.innerHTML += `
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: #1e3a8a; margin-bottom: 6px; font-size: 14px;">
+                            <span>📱</span> Missing PNRs Detected
+                        </div>
+                        <div style="color: #1e40af; font-size: 13px; line-height: 1.5;">
+                            One or more True PNRs could not be clearly extracted from the text. <b>Please use your scanner to read the barcode on the specific flight's boarding pass, and edit the PNR field below.</b>
+                        </div>
+                    </div>
+                `;
             }
 
             dataArray.forEach((data, journeyIndex) => {
@@ -228,7 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 let showPassengerCard = true;
                 if (journeyIndex > 0) {
                     const prevData = dataArray[journeyIndex - 1];
-                    if (data.pnr === prevData.pnr) {
+                    const currentNames = (data.passengers || []).map(p => p.firstName + p.lastName).join('|');
+                    const prevNames = (prevData.passengers || []).map(p => p.firstName + p.lastName).join('|');
+                    if (currentNames === prevNames && currentNames !== '') {
                         showPassengerCard = false; 
                     }
                 }
@@ -246,21 +276,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         passengersListHtml = `<div style="color: var(--text-muted); font-size: 14px;">No passenger data extracted.</div>`;
                     }
                     
-                    let pnrDisplay = data.pnr && data.pnr !== 'Not Provided' ? data.pnr : 'Not Provided';
-                    let pnrNoteHtml = data.pnrNote ? `<div style="font-size: 10px; color: #d97706; margin-top: 8px; background: #fffbeb; padding: 6px; border-radius: 4px; border: 1px solid #fde68a; line-height: 1.4;">${data.pnrNote}</div>` : '';
-
                     journeyWrapper.innerHTML += `
-                     <div class="passenger-card" style="display: flex; flex-direction: column; gap: 20px; padding: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-                                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Passenger Roster & Tickets</div>
-                                
-                                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 24px; text-align: center; min-width: 220px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">PNR / Booking Ref</div>
-                                    <div style="font-size: 18px; font-weight: 700; color: #3b82f6; letter-spacing: 2px;">${pnrDisplay}</div>
-                                    ${pnrNoteHtml}
-                                </div>
-                            </div>
-                            
+                     <div class="passenger-card" style="display: flex; flex-direction: column; gap: 16px; padding: 20px;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Passenger Roster & Tickets</div>
                             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; width: 100%;">
                                 ${passengersListHtml}
                             </div>
@@ -288,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 }
 
-                                // --- SMART MISSING DATE DETECTION ---
                                 let isMissingDate = !flight.date || flight.date === 'Unknown' || flight.date.trim() === '';
                                 let isMissingYear = !isMissingDate && !/\d{4}/.test(flight.date);
 
@@ -315,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                         destStatute = `<div style="font-size: 11px; color: #d97706; font-weight: 700; margin-top: 6px; text-align: right; letter-spacing: 0.3px;">⚖️ Limit: ${formatLimit(exp.destinationYears)}</div>`;
                                     }
 
-                                    // NEW: Prevent EXPIRED hallucination if date is missing
                                     if (isMissingDate) {
                                         expBadgeHtml = `<div class="fc-exp-badge" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047;">⚠️ Date unknown, cannot verify jurisdiction limit</div>`;
                                     } else if (isMissingYear) {
@@ -333,16 +349,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ? `✈️ Operated by: ${operating}` 
                                     : `✈️ Booked: ${marketing} <span style="color:var(--primary); margin-left:8px;">| Operated by: ${operating}</span>`;
                                 
+                                // 👇 NEW: STACKABLE STATUS BADGES 👇
                                 let statusWarningHtml = '';
                                 let opacityStyle = '1';
                                 
                                 if (flight.flightStatus) {
                                     const statusLower = flight.flightStatus.toLowerCase();
+                                    
                                     if (statusLower.includes('cancel')) {
-                                        statusWarningHtml = `<div style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fecaca;">⚠️ FLIGHT CANCELLED</div>`;
+                                        statusWarningHtml += `<div style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; margin-right: 8px; display: inline-block; border: 1px solid #fecaca;">⚠️ FLIGHT CANCELLED</div>`;
                                         opacityStyle = '0.55'; 
-                                    } else if (statusLower.includes('review') || statusLower.includes('change') || statusLower.includes('rebook')) {
-                                        statusWarningHtml = `<div style="background: #ffedd5; color: #c2410c; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; display: inline-block; border: 1px solid #fed7aa;">🔄 SCHEDULE CHANGE / REVIEW TIMELINE</div>`;
+                                    } 
+                                    if (statusLower.includes('review') || statusLower.includes('change') || statusLower.includes('rebook')) {
+                                        statusWarningHtml += `<div style="background: #ffedd5; color: #c2410c; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; margin-right: 8px; display: inline-block; border: 1px solid #fed7aa;">🔄 SCHEDULE CHANGE / REVIEW TIMELINE</div>`;
+                                    } 
+                                    if (statusLower.includes('replacement')) {
+                                        statusWarningHtml += `<div style="background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; margin-right: 8px; display: inline-block; border: 1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>`;
+                                    }
+                                    if (statusLower.includes('missed') || statusLower.includes('unused')) {
+                                        statusWarningHtml += `<div style="background: #f1f5f9; color: #475569; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px; margin-bottom: 16px; margin-right: 8px; display: inline-block; border: 1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED TICKET</div>`;
+                                        opacityStyle = '0.65'; 
                                     }
                                 }
 
@@ -377,7 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     fNums.forEach(fNum => {
                                         const cleanNum = fNum.trim();
                                         if(cleanNum && cleanNum !== 'N/A' && cleanNum !== 'Unknown') {
-                                            // 👇 NEW LOGIC: ADDED data-origin TO THE BUTTON 👇
                                             statusBtnsHtml += `<button type="button" class="btn-check-status" data-flight="${cleanNum}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left: 6px; background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${cleanNum} Stats</button>`;
                                         }
                                     });
@@ -387,7 +412,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 let eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
 
-                                // --- SMART DATE PILL UI (Static) ---
                                 let datePillHtml = '';
                                 if (isMissingDate) {
                                     datePillHtml = `<span class="fc-date-pill needs-date-warning" style="background:#fef08a; color:#9a3412; border:1px dashed #fde047; transition:0.3s;">📅 Missing Date</span>`;
@@ -397,10 +421,38 @@ document.addEventListener('DOMContentLoaded', () => {
                                     datePillHtml = `<span class="fc-date-pill">📅 ${flight.date}</span>`;
                                 }
 
+                                // 👇 SMART PNR BADGE LOGIC 👇
+                                let printedRefStr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
+                                let legPnrStr = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
+                                let legPnrBadge = '';
+
+                                if ((printedRefStr === legPnrStr && legPnrStr !== '') || (printedRefStr === '' && legPnrStr !== '')) {
+                                    // Simplest view: They are the same, or we only have the true PNR
+                                    legPnrBadge = `
+                                        <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; background:#f8fafc; padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1; color:#334155; font-weight:700; transition:0.2s;">
+                                            <span title="Click to manually edit or scan PNR">📱 PNR: 
+                                                <input type="text" value="${legPnrStr}" placeholder="Scan..." style="border:none; background:transparent; outline:none; color:var(--primary); font-weight:800; width:85px; font-size:11px; letter-spacing:1px; text-transform:uppercase;" onfocus="this.select()">
+                                            </span>
+                                        </div>`;
+                                } else {
+                                    // Split view: They are different, OR True PNR requires scanning
+                                    let pDisplay = printedRefStr ? printedRefStr : 'N/A';
+                                    legPnrBadge = `
+                                        <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; background:#f8fafc; padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1; color:#334155; font-weight:700; transition:0.2s;">
+                                            <span title="The internal reference visibly printed on the ticket text" style="color: #64748b;">🖨️ Printed Ref: <span style="color: #475569;">${pDisplay}</span></span>
+                                            <span style="color: #cbd5e1; margin: 0 4px;">|</span>
+                                            <span title="Click to manually edit or scan the true encoded PNR">📱 True PNR: 
+                                                <input type="text" value="${legPnrStr}" placeholder="Scan..." style="border:none; background:transparent; outline:none; color:var(--primary); font-weight:800; width:85px; font-size:11px; letter-spacing:1px; text-transform:uppercase;" onfocus="this.select()">
+                                            </span>
+                                        </div>`;
+                                }
+
                                 flightCardsContainer.innerHTML += `
                                     <div class="flight-card" style="opacity:${opacityStyle};">
 
-                                        ${statusWarningHtml}
+                                        <div style="display: block; width: 100%;">
+                                            ${statusWarningHtml}
+                                        </div>
 
                                         <div class="fc-top">
                                             <div class="fc-airline">${airText}</div>
@@ -440,6 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                             ${datePillHtml}
                                             <span class="fc-strip-sep">·</span>
                                             <span class="fc-flight-num" style="display:flex; align-items:center; flex-wrap:wrap;">✈ ${flightNumsDisplay} ${statusBtnsHtml}</span>
+                                            <span class="fc-strip-sep" style="width:100%; height:1px; background:#e2e8f0; margin:4px 0;"></span>
+                                            ${legPnrBadge}
                                             ${docsHtml ? `<span class="fc-strip-sep" style="width:100%; height:1px; background:#e2e8f0; margin:4px 0;"></span>${docsHtml}` : ''}
                                         </div>
 
@@ -568,7 +622,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!validateDateForAPI(btn, flightCard)) return;
 
-        // 👇 NEW LOGIC: RETRIEVE ORIGIN FROM DATASET 👇
         const flightNum = btn.dataset.flight;
         const date = btn.dataset.date;
         const origin = btn.dataset.origin; 
@@ -579,7 +632,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            // 👇 NEW LOGIC: SEND ORIGIN IN THE FETCH URL 👇
             const response = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
             const data = await response.json();
 
@@ -685,10 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.outerHTML = `<div style="background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 6px; display: inline-block;">✨ ${flightNum} checked</div>`;
                 
             } else {
-                // Grab the specific error sent by the backend, or fallback to a default
                 const errorMsg = data.error || 'Status unavailable';
-                
-                // Display the error with text-wrapping and a max-width so it looks clean
                 btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block; max-width: 280px; white-space: normal; line-height: 1.4; vertical-align: middle;">⚠️ <b>${flightNum}:</b> ${errorMsg}</div>`;
             }
         } catch(err) {

@@ -5,7 +5,7 @@ const AppError = require('../utils/appError');
 
 // --- LOAD DATABASES DIRECTLY FROM JSON ---
 const eocDatabase = require('../eoc_data.json');
-const airportsDatabase = require('../airports_data.json'); // NEW: Loaded for programmatic distance calc
+const airportsDatabase = require('../airports_data.json'); 
 console.log(`[EOC Database] Successfully loaded ${eocDatabase.length} records from JSON.`);
 
 // Initialize Gemini
@@ -71,41 +71,14 @@ const airlineRequirements = [
   { names: ["world2fly"], reqs: "ID / Passport number mandatory" }
 ];
 
-// --- EC261 STATUTE OF LIMITATIONS DATABASE (IN YEARS) ---
 const jurisdictionLimits = {
-  "poland": 1,
-  "belgium": 5,
-  "italy": 2,
-  "netherlands": 2,
-  "the netherlands": 2,
-  "switzerland": 2,
-  "croatia": 2,
-  "iceland": 2,
-  "slovakia": 2,
-  "slovenia": 2,
-  "germany": 3,
-  "austria": 3,
-  "denmark": 3,
-  "finland": 3,
-  "norway": 3,
-  "portugal": 2,
-  "romania": 3,
-  "sweden": 3, 
-  "czech republic": 3,
-  "bulgaria": 3,
-  "estonia": 3,
-  "latvia": 3,
-  "lithuania": 3,
-  "spain": 5,
-  "france": 5,
-  "greece": 5,
-  "hungary": 5,
-  "uk": 6,
-  "united kingdom": 6,
-  "ireland": 6,
-  "cyprus": 6,
-  "malta": 6,
-  "luxembourg": 10
+  "poland": 1, "belgium": 5, "italy": 2, "netherlands": 2, "the netherlands": 2,
+  "switzerland": 2, "croatia": 2, "iceland": 2, "slovakia": 2, "slovenia": 2,
+  "germany": 3, "austria": 3, "denmark": 3, "finland": 3, "norway": 3,
+  "portugal": 2, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
+  "estonia": 3, "latvia": 3, "lithuania": 3, "spain": 5, "france": 5,
+  "greece": 5, "hungary": 5, "uk": 6, "united kingdom": 6, "ireland": 6,
+  "cyprus": 6, "malta": 6, "luxembourg": 10
 };
 
 exports.renderAnalyzer = catchAsync(async (req, res, next) => {
@@ -114,7 +87,7 @@ exports.renderAnalyzer = catchAsync(async (req, res, next) => {
 
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const files = req.files && req.files.length > 0 ? req.files : [];
-  const journeyYear = req.body.journeyYear; // Capture global year from frontend
+  const journeyYear = req.body.journeyYear; 
 
   if (files.length === 0) {
     return next(new AppError('No files uploaded', 400));
@@ -128,7 +101,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   }
 
 const prompt = `
-    You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). 
+    You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). try not to exceed 40s in analyzing
     ${yearDirective}
     🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
     You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights.
@@ -141,68 +114,58 @@ const prompt = `
     4. Deductive Reasoning: Apply the EC261 legal rules to the *entire* chronologically sequenced journey, basing the jurisdiction solely on the very first origin point in the timeline.
 
     *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
-    1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates. You must physically locate the departure date printed next to that specific leg's origin/destination.
-    2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" (e.g., a date at the very top, very bottom, or labeled as "Date of Issue") is NEVER the flight date. Ignore it completely.
-    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar" or "13 Feb") and the year is not explicitly printed for that specific flight, DO NOT assume, guess, or append the current year. Output EXACTLY the explicit day and month you see for the "date" field. Only format as YYYY-MM-DD if the year is explicitly printed on the ticket. unless you can make a conclusion about the year from the reservation date or when 1 leg has a year and the other doesn't you should give it the same year. and if you scanning a more than 1 document about the same journey and one has a year and one doesn't that means all of them happend that year you found
+    1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates.
+    2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" is NEVER the flight date. Ignore it completely.
+    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar"), DO NOT assume or append the current year. Output EXACTLY the explicit day and month you see. Only format as YYYY-MM-DD if the year is explicitly printed.
 
     *CRITICAL JOURNEY SPLITTING LAWS (EC261)*:
     1. ROUND-TRIPS: A round-trip ticket is legally treated as TWO separate journeys. Split them into one Outbound journey object and one Return journey object.
-    2. SELF-TRANSFERS & SEPARATE TICKETS: If the document explicitly states "Self transfer", OR if consecutive flight legs are booked under completely different Airline PNRs (e.g., Leg 1 has PNR 'ABCDEF' and Leg 2 has PNR 'XYZ123'), they are legally SEPARATE contracts. You MUST split them into completely SEPARATE journey objects. Each journey object must contain only the specific leg(s) and the specific PNR associated with that contract.
-    3. PASSENGERS: Combine multiple passengers into the SAME journey object if they share the exact same itinerary and PNR.
-    4. REBOOKINGS & RE-ROUTINGS (THE DISRUPTION OVERRIDE RULE): If the documents show the SAME passenger holding tickets for an original flight (e.g., a direct flight A ➔ B ) AND an alternative/multi-leg flight reaching the SAME final destination (e.g., A ➔ C ➔ B ), this is a REBOOKING due to a disruption. You MUST group them in the SAME journey object, . Mark the original abandoned leg's "flightStatus" strictly as "Cancelled/Rebooked", and the new routing legs as "Scheduled" or "Flown".
+    2. SELF-TRANSFERS & SEPARATE TICKETS: If the document explicitly states "Self transfer", OR if consecutive flights are completely unrelated contracts, split them into SEPARATE journey objects.
+    3. PASSENGERS: Combine multiple passengers into the SAME journey object if they share the exact same itinerary.
+    4. REBOOKINGS & RE-ROUTINGS (THE DISRUPTION OVERRIDE RULE): If the documents show the SAME passenger holding tickets for an original flight AND an alternative/multi-leg flight reaching the SAME final destination, this is a REBOOKING. Group them in the SAME journey object. Sort the timeline logically based on departure time. Mark any abandoned or unused original legs strictly as "Unused / Missed Connection" (unless explicitly printed as Cancelled). Mark the newly issued alternative legs strictly as "Replacement Flight". IF a replacement flight is ALSO missed/unused, mark it strictly as "Unused Replacement Flight".
 
     YOU MUST OUTPUT AN ARRAY OF JOURNEY OBJECTS.
 
-    STEP 1: EXTRACT PASSENGERS, TICKETS & PNRs
-    - PNR / Booking Code: Extract the actual AIRLINE PNR associated strictly with THIS specific journey object. 
-      🚨 CRITICAL RULE 1: Standard airline PNRs are EXACTLY 6 alphanumeric characters.
-      🚨 CRITICAL RULE 2: HIDDEN PNRs (CONCATENATION): Sometimes airlines mash the flight number, PNR, and internal codes into one long barcode string (e.g., "LH220HABMTTA4"). If you see a long mixed string like this, look inside it to extract ONLY the hidden 6-character alphanumeric PNR (e.g., "HABMTT"). Do NOT output the whole long string.
-      🚨 CRITICAL EXCEPTION LIST: The following airlines use strictly NUMERIC PNRs of varying lengths. If the marketing airline is one of these, you MUST extract their numeric PNR instead:
-         - 6 Numbers: Heston Airlines, Sunclass.
-         - 7 Numbers: Corendon DUTCH Airlines CD.
-         - 8 Numbers: Air Arabia Maroc, Arkia Israel, TUI Airways, Condor Flugdienst, Electra Airways.
-         - 9 Numbers: Fly Jinnah.
-         - Variable/Numbers: Neos.
-      🚨 CRITICAL RULE 3: DO NOT confuse the airline PNR with an Online Travel Agency (OTA) booking reference (e.g., Expedia, Booking.com). Unless the airline is on the exception list above, you must ignore long numeric agency references and find the actual 6-character airline locator. If missing, output "Not Provided".
-      🚨 SPECIAL SKYUP RULE: For SkyUp, the PNR shown often corresponds to the agency rather than the airline system directly.
-      
-    - Passengers & Tickets: Create an object for EACH passenger. You MUST accurately map their specific e-ticket number to their name. 🚨 CRITICAL TICKET RULE: Electronic ticket numbers (e-tickets) are strictly NUMERIC ONLY and exactly 13 digits globally. They NEVER contain letters. If a string has letters (like "LH220HABMTTA4"), it is NOT a ticket number. If a purely numeric ticket appears as 14 or 15 digits (due to extra formatting), extract ONLY the core 13-digit identifier. If missing, output "Not Provided".
+    STEP 1: EXTRACT PASSENGERS & TICKETS
+    - Passengers & Tickets: Create an object for EACH passenger. Map their specific e-ticket number to their name. 🚨 TICKET RULE: E-tickets are strictly NUMERIC ONLY and exactly 13 digits globally. NEVER contain letters.
+    - PER-LEG TICKETS (CRITICAL): If e-ticket numbers are listed row-by-row for specific flight legs (e.g., "TRV - BLR: Not required", "BLR - FRA: 2206906706612"), you MUST assign the 13-digit number that corresponds to the flights inside the current journey object you are building. If it says "Not required", output "Not Provided".
+
+    PNR EXCEPTION LIST : 
+    - MASSIVE OTA IDs: Never use massive strings labeled "Booking ID" or "Order ID" (e.g., "MN2Z5OQ0...") as the true airline PNR.
+    - 🚨 OTA "E-TICKET" TRICK: Online Travel Agencies sometimes print a string containing letters under an "E-TICKET NO" or "Ticket Number" label (e.g., "LH220HABMTTA4"). This is NOT an e-ticket. It is masking the Airline PNR. Do NOT place strings with letters into the ticketNumber field.
+    - EMBEDDED PNRS: If you see the PNR hidden inside a longer pseudo e-ticket string (e.g., in "LH220HABMTTA4"), extract ONLY the core 6 characters ("HABMTT").
+    - don't extract true pnr out of a printed ref, ex "LXC6A4E3"
+
     
-    - pnrNote: IF the "PNR" is "Not Provided" AND the marketing airline is in the special list below, output: "💡 Note: For [Airline Name], the 13-digit Ticket Number can be used in place of the PNR." (Replace [Airline Name] with the actual airline, e.g., Emirates). Otherwise, leave empty ("").
-      [SPECIAL AIRLINE LIST: Aero Contractors, Aeromexico, Air Albania, Air Cairo, Air China, Air Corsica, Air India, Air Mediterranean, Air Namibia, Air Nippon, Air Peace, Air Saint-Pierre, Air Senegal, Air Transat, Air Wisconsin, Akasa Air, American Airlines, Anima Wings, Arkia Israeli, Atlantic Airways, Austrian Airlines, Avianca, Azerbaijan Airlines, Azul, Bluebird Airways, BoA Boliviana, Corendon, Egyptair, Emerald Airlines, Emirates, Estelar, Ethiopian Airlines, Euroairlines, Fly Lili, Flyegypt, Flynas, GOL, GP Aviation, Hainan Airlines, Hifly, Icelandair, Kuwait Airways, La Compagnie, Lauda Europe, Nesma Airlines, Nile Air, Nouvelair, Oman Air, Pakistan International, Pegasus, Plus Ultra, Royal Air Maroc, Sky Vision, Skywest, T'way Air, TAP Air Portugal, Tarom, Tassili Airlines, Thai Airways, Tianjin Airlines, TUI, Tunisair, Turkish Airlines, Vietnam Airlines]
 
     STEP 2: EVALUATE OVERALL EC261 & UK261 ELIGIBILITY
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
-    - NON-EU/NON-UK: USA, China, Qatar, Turkey, UAE, Canada, India, Thailand, etc.
     
     🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
-
     RULE 1: THE EU ORIGIN DOCTRINE (BLANKET ELIGIBILITY)
-    If the FIRST leg of the overall journey departs from an airport inside the EU/UK:
-    -> The entire journey and ALL subsequent connecting legs are AUTOMATICALLY ELIGIBLE.
-    -> The operating airlines DO NOT matter. Mark the overall journey and every leg as ELIGIBLE.
-
+    If the FIRST leg of the overall journey departs from an airport inside the EU/UK -> AUTOMATICALLY ELIGIBLE.
     RULE 2: THE STRICT NON-EU ORIGIN RULES
-    If the FIRST leg of the overall journey departs from OUTSIDE the EU/UK, the blanket doctrine dies. You MUST apply these conditions:
-
-       CONDITION A (TOTAL REJECTION):
-       If the journey starts Non-EU, ends Non-EU, and EVERY connecting leg is Non-EU to Non-EU:
-       -> The entire journey and ALL legs are AUTOMATICALLY NOT ELIGIBLE. Operating airlines do not matter.
-
-       CONDITION B (TOTAL ACCEPTANCE VIA EU CARRIER):
-       If the journey starts Non-EU but arrives in the EU/UK, AND EVERY SINGLE LEG is operated by an EU/UK carrier:
-       -> The entire journey and ALL legs are AUTOMATICALLY ELIGIBLE. Do not use mixed eligibility.
-
-       CONDITION C (PER-LEG EVALUATION & MIXED ELIGIBILITY):
-       If the journey starts Non-EU and does NOT perfectly fit Condition A or Condition B, you MUST treat EVERY LEG like its own separate journey and evaluate them individually:
-       - If a Leg departs from EU/UK -> ELIGIBLE.
-       - If a Leg goes from Non-EU to EU/UK -> ELIGIBLE ONLY IF the operating airline is an EU/UK carrier.
-       - If a Leg goes from Non-EU to Non-EU -> NOT ELIGIBLE (Operating airline does not matter at all).
+    If the FIRST leg departs from OUTSIDE the EU/UK:
+       - Starts Non-EU, ends Non-EU -> NOT ELIGIBLE.
+       - Starts Non-EU, arrives EU/UK (All legs EU carrier) -> ELIGIBLE.
+       - Mixed/Other -> Evaluate PER-LEG (Non-EU to EU only eligible if EU carrier).
 
     STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
-    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., the marketing flight number AND the operating codeshare flight number). You MUST output this as an ARRAY OF STRINGS (e.g., ["[String]", "[String]"]).
+    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., marketing and operating flight numbers).
+      🚨 RULE 1: A flight number is an airline code (2-3 characters) attached to digits (1-4 characters).
+      🚨 RULE 2: You MUST remove all spaces and hyphens from inside a single flight number (e.g., "6E 2" or "6E - 2" becomes "6E2").
+      🚨 RULE 3: DO NOT split a single flight number into multiple array items. "6E 2" is ONE flight number ("6E2"), NOT ["6E", "2"].
+      Output this as an ARRAY OF STRINGS.
+      
+    🚨 CRITICAL PNR EXCEPTION LIST:
+      The following airlines use strictly NUMERIC PNRs of varying lengths instead of 6-alphanumeric strings:
+      - 6 Numbers: Heston Airlines, Sunclass.
+      - 7 Numbers: Corendon DUTCH Airlines CD.
+      - 8 Numbers: Air Arabia Maroc, Arkia Israel, TUI Airways, Condor Flugdienst, Electra Airways.
+      - 9 Numbers: Fly Jinnah.
+      - Variable/Numbers: Neos.
     
     STEP 4: OUTPUT FORMAT
     *** IMPORTANT *** If no flight data exists, return ONLY an empty JSON array: []
@@ -217,8 +180,6 @@ const prompt = `
             "ticketNumber": "[String: STRICTLY 13 NUMERIC DIGITS. NO LETTERS.]"
           }
         ],
-        "pnr": "[String: Comma separated list of all PNRs strictly for THIS journey]",
-        "pnrNote": "[String]",
         "ec261": {
           "firstOriginCountry": "[String]",
           "finalDestinationCountry": "[String]",
@@ -230,7 +191,9 @@ const prompt = `
             "type": "[String: Outbound or Return]",
             "legs": [
               {
-                "flightStatus": "[String: Scheduled or Cancelled/Rebooked]",
+                "printedReference": "[String: The raw alphanumeric reference physically printed in text on the document (e.g., '7464F99C', 'LXC6A4E3', '2720911'). Extract exactly as printed. If missing, output 'Not Provided']",
+                "pnr": "[String: The EXACT True airline PNR. Standard airlines use 6 alphanumeric characters. 🚨 NUMERIC EXCEPTION: If the airline is on the Numeric Exception List (e.g., Corendon, TUI, Condor, Sunclass, etc.), their printed numeric code IS the True PNR; output that exact number here. If standard airline and true PNR is hidden/unreadable, output 'Requires Scan'.]",
+                "flightStatus": "[String: 'Scheduled', 'Flown', 'Unused / Missed Connection', 'Cancelled', 'Replacement Flight', or 'Unused Replacement Flight']",
                 "marketingAirline": "[String]",
                 "operatingAirline": "[String]",
                 "operatingAirlineCountry": "[String]",
@@ -239,14 +202,14 @@ const prompt = `
                 "originName": "[String]",
                 "originCity": "[String]",
                 "originCountry": "[String]",
-                "departureTime": "[String]",
+                "departureTime": "[String: Extract the exact departure time. If the departure time is NOT explicitly printed on the document (do NOT use boarding time), output '--:--']",
+                "arrivalTime": "[String: Extract the exact arrival time. If the arrival time is NOT explicitly printed on the document, output '--:--']",
                 "destinationIata": "[String]",
                 "destinationName": "[String]",
                 "destinationCity": "[String]",
                 "destinationCountry": "[String]",
-                "arrivalTime": "[String]",
-                "rawExtractedDate": "[String: STRICTLY the exact characters printed on the ticket for this leg's date. DO NOT INVENT EXAMPLES]",
-                "date": "[String: YYYY-MM-DD if year is explicitly printed, otherwise exact Day and Month seen e.g., '25 Mar']",
+                "rawExtractedDate": "[String]",
+                "date": "[String: YYYY-MM-DD if year is explicitly printed, otherwise exact Day and Month seen]",
                 "ec261Leg": {
                   "legOriginCountry": "[String]",
                   "legDestinationCountry": "[String]",
@@ -308,7 +271,6 @@ const prompt = `
     return next(new AppError('The AI returned an unparseable response. Please try again.', 502));
   }
 
-  // AI returned empty array → document had no flight information
   if (!Array.isArray(parsedJourneys) || parsedJourneys.length === 0) {
     return res.json({
       noFlightData: true,
@@ -317,13 +279,27 @@ const prompt = `
     });
   }
 
-
-parsedJourneys.forEach(journey => {
+  parsedJourneys.forEach(journey => {
     if (journey.routes) {
       journey.routes.forEach(route => {
         if (route.legs) {
           route.legs.forEach(leg => {
             
+            // --- PROGRAMMATIC FAIL-SAFE 1: STRIP SPACES & FIX AI SPLITTING ---
+            if (leg.flightNumbers && Array.isArray(leg.flightNumbers)) {
+              let cleaned = leg.flightNumbers.map(fNum => fNum.replace(/[\s-]/g, '').trim()).filter(Boolean);
+              let merged = [];
+              for (let i = 0; i < cleaned.length; i++) {
+                  if (i < cleaned.length - 1 && /^[A-Za-z0-9]{2,3}$/.test(cleaned[i]) && /^\d{1,4}$/.test(cleaned[i+1])) {
+                      merged.push(cleaned[i] + cleaned[i+1]);
+                      i++; 
+                  } else {
+                      merged.push(cleaned[i]);
+                  }
+              }
+              leg.flightNumbers = merged;
+            }
+
             // 0. --- PROGRAMMATIC DISTANCE & COMPENSATION CALCULATION ---
             const oIata = (leg.originIata || '').toUpperCase();
             const dIata = (leg.destinationIata || '').toUpperCase();
@@ -334,8 +310,7 @@ parsedJourneys.forEach(journey => {
             leg.ec261Leg = leg.ec261Leg || {};
 
             if (originPort && destPort) {
-                // Precise Haversine Formula Math
-                const R = 6371; // Earth's radius in km
+                const R = 6371; 
                 const dLat = (destPort.lat - originPort.lat) * Math.PI / 180;
                 const dLon = (destPort.lon - originPort.lon) * Math.PI / 180;
                 const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -346,7 +321,6 @@ parsedJourneys.forEach(journey => {
 
                 leg.distanceKm = `${distance} km`;
 
-                // EC261 Standard Value Bands (Calculated per individual leg)
                 const euCountries = ["austria", "belgium", "bulgaria", "croatia", "cyprus", "czech republic", "denmark", "estonia", "finland", "france", "germany", "greece", "hungary", "ireland", "italy", "latvia", "lithuania", "luxembourg", "malta", "netherlands", "the netherlands", "poland", "portugal", "romania", "slovakia", "slovenia", "spain", "sweden", "iceland", "norway", "switzerland", "united kingdom", "uk"];
                 
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
@@ -390,7 +364,6 @@ parsedJourneys.forEach(journey => {
             leg.claimDocuments = docsList;
 
             // 2. --- JURISDICTION OVERRIDE LOGIC ---
-            
             if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
                 const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
@@ -445,14 +418,11 @@ parsedJourneys.forEach(journey => {
   });
 });
 
-// --- EOC JSON DATABASE CHECKER ---
 exports.checkEOC = (req, res, next) => {
   try {
     const { date, originIata, destIata, originCountry, destCountry } = req.query;
 
-    if (!date || date === 'Unknown') {
-      return res.json({ eocFound: false });
-    }
+    if (!date || date === 'Unknown') return res.json({ eocFound: false });
 
     const oIata = (originIata || '').toLowerCase();
     const dIata = (destIata || '').toLowerCase();
@@ -462,9 +432,7 @@ exports.checkEOC = (req, res, next) => {
 
     const matchedEvents = eocDatabase.filter(eoc => {
       const eocLoc = (eoc.location || '').toLowerCase();
-
       const locationMatch = (eocLoc === oIata || eocLoc === dIata || eocLoc === oCountry || eocLoc === dCountry || eocLoc === "world wide");
-
       if (!locationMatch) return false;
 
       const eocCat = (eoc.category || '').toLowerCase();
@@ -476,47 +444,30 @@ exports.checkEOC = (req, res, next) => {
       }
     });
 
-    if (matchedEvents.length > 0) {
-      res.json({ eocFound: true, events: matchedEvents });
-    } else {
-      res.json({ eocFound: false });
-    }
+    if (matchedEvents.length > 0) res.json({ eocFound: true, events: matchedEvents });
+    else res.json({ eocFound: false });
   } catch (error) {
     next(error);
   }
 };
 
-
-// --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
-// --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
-// --- INSTANT CIRIUM FLIGHT STATUS EXTRACTOR (AI-FREE) ---
 exports.checkFlightStatus = async (req, res, next) => {
   try {
     const { flightNumber, date, origin, destination } = req.query;
-
-    if (!flightNumber || flightNumber === 'N/A') {
-      return res.json({ error: 'Valid flight number is required' });
-    }
+    if (!flightNumber || flightNumber === 'N/A') return res.json({ error: 'Valid flight number is required' });
 
     const ciriumAppId = process.env.CIRIUM_APP_ID;
     const ciriumAppKey = process.env.CIRIUM_APP_KEY;
 
-    if (!ciriumAppId || !ciriumAppKey) {
-      console.error("[Cirium] Error: CIRIUM_APP_ID or CIRIUM_APP_KEY Missing in config.env!");
-      return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
-    }
+    if (!ciriumAppId || !ciriumAppKey) return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
 
-    // 1. BULLETPROOF CHERRY-PICKING PARSER
-  const cleanFlightNum = flightNumber.replace(/[^A-Za-z0-9]/g, '');
+    const cleanFlightNum = flightNumber.replace(/[^A-Za-z0-9]/g, '');
     const match = cleanFlightNum.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})0*(\d{1,4})/);
+    if (!match) return res.json({ error: `Invalid flight format (${flightNumber}).` });
     
-    if (!match) {
-      return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
-    }
     const carrier = match[1].toUpperCase();
     const fNum = match[2];
 
-    // 2. Parse Date
     let year, month, day;
     if (date && date !== 'Unknown') {
       const parts = date.split('-');
@@ -528,23 +479,16 @@ exports.checkFlightStatus = async (req, res, next) => {
       day = String(today.getDate()).padStart(2, '0');
     }
 
-    // 3. Fetch from Cirium
     const url = `https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/${carrier}/${fNum}/dep/${year}/${month}/${day}?appId=${ciriumAppId}&appKey=${ciriumAppKey}&utc=false`;
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
     const data = await response.json();
 
-    if (data.error) {
-      return res.json({ error: data.error.errorMessage || 'Cirium API Error' });
-    }
-    if (!data.flightStatuses || data.flightStatuses.length === 0) {
-      return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
-    }
+    if (data.error) return res.json({ error: data.error.errorMessage || 'Cirium API Error' });
+    if (!data.flightStatuses || data.flightStatuses.length === 0) return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
 
-    // 4. Extract Target Flight Data (Handle Multi-Stops & Double-Disruptions)
     let targetFlight = data.flightStatuses[0];
     const requestedDateStr = `${year}-${month}-${day}`;
 
-    // Priority 1: STRICT MATCH -> Origin + Destination + Date
     let exactMatches = data.flightStatuses.filter(f => {
       const originMatches = !origin || origin === 'Unknown' || f.departureAirportFsCode === origin.toUpperCase();
       const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
@@ -552,7 +496,6 @@ exports.checkFlightStatus = async (req, res, next) => {
       return originMatches && destMatches && dateMatches;
     });
 
-    // Priority 2: FALLBACK -> Just match Destination + Date
     if (exactMatches.length === 0) {
         exactMatches = data.flightStatuses.filter(f => {
           const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
@@ -561,7 +504,6 @@ exports.checkFlightStatus = async (req, res, next) => {
         });
     }
 
-    // Priority 3: FINAL FALLBACK -> Just match Date
     if (exactMatches.length === 0) {
         exactMatches = data.flightStatuses.filter(f => {
           return f.departureDate && f.departureDate.dateLocal && f.departureDate.dateLocal.startsWith(requestedDateStr);
@@ -569,20 +511,14 @@ exports.checkFlightStatus = async (req, res, next) => {
     }
 
     let hasMultipleDisruptions = false;
-
     if (exactMatches.length > 0) {
       const statusPriority = { 'D': 1, 'C': 2, 'L': 3, 'A': 4, 'S': 5, 'U': 6 };
       exactMatches.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
-      
       targetFlight = exactMatches[0];
-      
       const uniqueStatuses = [...new Set(exactMatches.map(f => f.status))];
-      if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) {
-          hasMultipleDisruptions = true;
-      }
+      if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) hasMultipleDisruptions = true;
     }
 
-    // Helpers
     const formatDate = (dateString) => {
       if (!dateString) return '--';
       const d = new Date(dateString);
@@ -611,7 +547,6 @@ exports.checkFlightStatus = async (req, res, next) => {
       return `${h}h ${m}m`;
     };
 
-    // Operational Times
     const ops = targetFlight.operationalTimes || {};
     const sDep = ops.scheduledGateDeparture || ops.scheduledRunwayDeparture || ops.publishedDeparture || {};
     const aDep = ops.actualGateDeparture || ops.estimatedGateDeparture || ops.actualRunwayDeparture || sDep;
@@ -621,7 +556,6 @@ exports.checkFlightStatus = async (req, res, next) => {
     const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? "Actual" : (ops.estimatedGateDeparture ? "Estimated" : "Scheduled");
     const arrActualLabel = (ops.actualGateArrival || ops.actualRunwayArrival) ? "Actual" : (ops.estimatedGateArrival ? "Estimated" : "Scheduled");
 
-    // Flight Duration & Delay
     const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
     const arrDelayMins = targetFlight.delays?.arrivalGateDelayMinutes || targetFlight.delays?.arrivalRunwayDelayMinutes || 0;
 
@@ -630,11 +564,9 @@ exports.checkFlightStatus = async (req, res, next) => {
       arrDelayStr = arrDelayMins >= 60 ? formatDuration(arrDelayMins) : `${arrDelayMins} mins`;
     }
 
-    // 5. Raw status + landed-but-no-arrival flag
     const rawStatus = targetFlight.status || 'U';
     const arrTimeDataPending = rawStatus === 'L' && !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
 
-    // 6. Status → Banner
     const statusMap = { 'S': 'Scheduled', 'A': 'Active', 'L': 'Landed', 'C': 'Cancelled', 'D': 'Diverted', 'U': 'Unknown' };
     const statusText = statusMap[rawStatus] || 'Unknown';
     const bannerTextCol = '#ffffff';
@@ -685,7 +617,6 @@ exports.checkFlightStatus = async (req, res, next) => {
         bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN'; arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
     }
 
-    // 7. Appendix lookups
     let depIata = targetFlight.departureAirportFsCode || 'N/A';
     let arrIata = targetFlight.arrivalAirportFsCode || 'N/A';
     let depCity = depIata, arrCity = arrIata, depName = '', arrName = '';
@@ -709,7 +640,6 @@ exports.checkFlightStatus = async (req, res, next) => {
       if (opLine) operatorName = opLine.name || operatorCode;
     }
 
-    // 8. Gemini AI comment (Safely bypassed if Data is Pending)
     let aiComment = null;
     if (hasMultipleDisruptions && rawStatus === 'D') {
       aiComment = `🚨 Double Disruption: The aircraft initially diverted to ${divertedCode || 'another airport'}, and the remainder of the journey was officially cancelled.`;
@@ -729,7 +659,6 @@ exports.checkFlightStatus = async (req, res, next) => {
       }
     }
 
-    // 9. Construct Final UI Object
     const parsedUIStats = {
       bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
       rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
@@ -754,7 +683,6 @@ exports.checkFlightStatus = async (req, res, next) => {
 
   } catch (error) {
     console.error("🔥 Flight Status Crash:", error);
-    // Explicitly return a string so the frontend never says [object Object] again
     return res.json({ error: error.message || "An unexpected server error occurred." });
   }
 };
