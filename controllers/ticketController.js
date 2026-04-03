@@ -733,7 +733,7 @@ exports.checkFlightStatus = async (req, res, next) => {
 exports.keepAliveHeartbeat = catchAsync(async (req, res, next) => {
   try {
     // Swapped to gemini-2.5-flash for a fast, cheap background ping
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2-flash" });
     
     // We send a 1-word prompt and strictly limit the AI to a 1-token response 
     // This makes the cost virtually $0.00 and takes milliseconds
