@@ -118,9 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 signal: fetchAbortController.signal
             });
 
-            if (!res.ok) throw new Error('Analysis failed');
+if (!res.ok) {
+    // Try to grab the exact error message your backend sent
+    const errData = await res.json().catch(() => ({})); 
+    throw new Error(errData.message || `Server responded with status: ${res.status}`);
+}
 
-            let rawResponse = await res.json();
+let rawResponse = await res.json();
 
             resultsCard.innerHTML = '';
             resultsCard.style.display = 'block';
@@ -253,12 +257,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>`;
                 }
                 
-                let showPassengerCard = true;
+ let showPassengerCard = true;
                 if (journeyIndex > 0) {
                     const prevData = dataArray[journeyIndex - 1];
-                    const currentNames = (data.passengers || []).map(p => p.firstName + p.lastName).join('|');
-                    const prevNames = (prevData.passengers || []).map(p => p.firstName + p.lastName).join('|');
-                    if (currentNames === prevNames && currentNames !== '') {
+                    
+                    // Include the ticketNumber in the comparison string
+                    const currentRoster = (data.passengers || []).map(p => p.firstName + p.lastName + p.ticketNumber).join('|');
+                    const prevRoster = (prevData.passengers || []).map(p => p.firstName + p.lastName + p.ticketNumber).join('|');
+                    
+                    if (currentRoster === prevRoster && currentRoster !== '') {
                         showPassengerCard = false; 
                     }
                 }
@@ -523,10 +530,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             resultsCard.style.display = 'block';
         } catch (error) {
-            if (error.name !== 'AbortError') {
-                alert('Failed to extract data. Ensure the images are clear.');
-                console.error(error);
-            }
+          if (error.name !== 'AbortError') {
+        // Now the alert will tell you exactly what failed!
+        alert(`Analysis Error: ${error.message}\n\nIf this persists, check the server console.`);
+        console.error(error);
+    }
         } finally {
             clearInterval(timerInterval);
             analyzeBtn.innerHTML = 'Analyze Document';

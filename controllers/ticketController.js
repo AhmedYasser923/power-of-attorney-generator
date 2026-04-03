@@ -93,7 +93,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     return next(new AppError('No files uploaded', 400));
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
   let yearDirective = "";
   if (journeyYear) {
@@ -142,14 +142,15 @@ const prompt = `
     - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
     - UK: England, Scotland, Wales, Northern Ireland.
     
-    🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
-    RULE 1: THE EU ORIGIN DOCTRINE (BLANKET ELIGIBILITY)
+🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
+   RULE 1: THE STRICT THIRD-COUNTRY TO THIRD-COUNTRY DOCTRINE (CASE C-451/20)
+    If the overall journey starts outside the EU/UK AND the final destination is outside the EU/UK (e.g., USA to India), the ENTIRE journey is strictly NOT ELIGIBLE. You MUST mark the overall journey status AND EVERY SINGLE INDIVIDUAL LEG as "Not Eligible," regardless of where it connects or what airline operates it. Do not evaluate per-leg. 
+    👉 CRITICAL: For the "reason" field, you MUST output exactly: "Not Covered: Both the origin and final destination are outside the EU/UK." Do not use the phrase "third country".
+    RULE 2: THE EU ORIGIN DOCTRINE
     If the FIRST leg of the overall journey departs from an airport inside the EU/UK -> AUTOMATICALLY ELIGIBLE.
-    RULE 2: THE STRICT NON-EU ORIGIN RULES
-    If the FIRST leg departs from OUTSIDE the EU/UK:
-       - Starts Non-EU, ends Non-EU -> NOT ELIGIBLE.
-       - Starts Non-EU, arrives EU/UK (All legs EU carrier) -> ELIGIBLE.
-       - Mixed/Other -> Evaluate PER-LEG (Non-EU to EU only eligible if EU carrier).
+    
+    RULE 3: ARRIVING IN THE EU/UK FROM OUTSIDE
+    If the FIRST leg departs from OUTSIDE the EU/UK but the final destination is INSIDE the EU/UK -> Evaluate PER-LEG (Only legs arriving in the EU/UK operated by an EU/UK carrier are eligible).
 
     STEP 3: EXTRACT ROUTES & LEGS
     For each leg:
@@ -250,16 +251,26 @@ const prompt = `
     });
   }
 
-  const startTime = Date.now();
+const startTime = Date.now();
 
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }, ...documentParts] }],
-    generationConfig: {
-      responseMimeType: "application/json"
-    }
-  });
+  let result;
+  try {
+    console.log("⏳ Sending request to Gemini API...");
+    result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }, ...documentParts] }],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    });
+    console.log("✅ Received response from Gemini.");
+  } catch (apiError) {
+    console.error("🔥 GEMINI API CRASHED:");
+    console.error(apiError); // This forces the exact error into your terminal
+    return next(new AppError(`AI Processing Failed: ${apiError.message}`, 500));
+  }
 
   const endTime = Date.now();
+
   const processingTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
 
   const responseText = result.response.text();
