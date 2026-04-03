@@ -92,32 +92,14 @@ block content
               input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
           button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
           #eocResult
-
-        //- TOOL: COMPENSATION CALCULATOR (Full Width)
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 💸 EC261 Comp Calculator
-          .ts-route
-            .ts-route__node
-              .ts-form-grid(style="margin-bottom: 0;")
-                .ts-form-group
-                  label.ts-label Origin Airport
-                  input#l-origin.ts-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
-                .ts-form-group
-                  label.ts-label Origin Country
-                  input#l-origin-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-            
-            .ts-route__node
-              .ts-form-grid(style="margin-bottom: 0;")
-                .ts-form-group
-                  label.ts-label Final Destination Airport
-                  input#l-dest.ts-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
-                .ts-form-group
-                  label.ts-label Destination Country
-                  input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-
-          button#btn-ec261.ts-btn-action 💸 Calculate Compensation
-          #ec261Result
-
+        //- TOOL: DOCUMENT CHECKER (Half Width - Right Side)
+        .ts-card
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 📄 Document Check
+          .ts-form-group
+            label.ts-label Search Airline
+            input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
+          
+          #docsResult.ts-results-row(style="margin-top: 24px;")          
         //- TOOL: JURISDICTION CHECKER (Half Width - Left Side)
         .ts-card
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 🏛️ Jurisdiction Checker
@@ -127,14 +109,7 @@ block content
           
           #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
 
-        //- TOOL: DOCUMENT CHECKER (Half Width - Right Side)
-        .ts-card
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 📄 Document Check
-          .ts-form-group
-            label.ts-label Search Airline
-            input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
-          
-          #docsResult.ts-results-row(style="margin-top: 24px;")
+
 
         //- TOOL: SMART EMAIL BUILDER (Full Width)
         .ts-card.ts-grid-full
@@ -217,6 +192,34 @@ block content
             #emEnglishBox(style="display: none; margin-top: 15px;")
               label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
               #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
+
+
+        //- TOOL: COMPENSATION CALCULATOR (Full Width)
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 💸 EC261 Comp Calculator
+          .ts-route
+            .ts-route__node
+              .ts-form-grid(style="margin-bottom: 0;")
+                .ts-form-group
+                  label.ts-label Origin Airport
+                  input#l-origin.ts-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
+                .ts-form-group
+                  label.ts-label Origin Country
+                  input#l-origin-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+            
+            .ts-route__node
+              .ts-form-grid(style="margin-bottom: 0;")
+                .ts-form-group
+                  label.ts-label Final Destination Airport
+                  input#l-dest.ts-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
+                .ts-form-group
+                  label.ts-label Destination Country
+                  input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+
+          button#btn-ec261.ts-btn-action 💸 Calculate Compensation
+          #ec261Result
+
+
 
   script.
     document.addEventListener('DOMContentLoaded', () => {
