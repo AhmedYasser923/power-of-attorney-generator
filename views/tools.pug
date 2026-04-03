@@ -684,78 +684,66 @@ block content
         const lon1 = parseFloat(oInput.dataset.lon);
         const lat2 = parseFloat(dInput.dataset.lat);
         const lon2 = parseFloat(dInput.dataset.lon);
-        const originCountry = (oInput.dataset.country || document.getElementById('l-origin-country').value).trim().toLowerCase();
-        const destCountry = (dInput.dataset.country || document.getElementById('l-dest-country').value).trim().toLowerCase();
+        
+        // Grab country data for the Intra-EU €400 cap rule
+        const originCountry = (oInput.dataset.country || document.getElementById('l-origin-country').value || '').trim().toLowerCase();
+        const destCountry = (dInput.dataset.country || document.getElementById('l-dest-country').value || '').trim().toLowerCase();
 
-        if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2) && lat1 !== 0) {
-            const R = 6371;
+        // 1. DISTANCE CALCULATION
+        if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2) && (lat1 !== 0 || lon1 !== 0)) {
+            // Calculate via GPS if dropdown was used
+            const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             dist = Math.round(R * c);
         } else {
-            const manualDist = prompt("Could not automatically calculate distance (No GPS data). Please manually enter the distance in KM:");
+            // Fallback if user just typed an IATA code without clicking the dropdown
+            const manualDist = prompt("Please select airports from the dropdown so we can calculate GPS distance, OR manually enter the flight distance in KM here:");
+            if (manualDist === null || manualDist.trim() === '') return; 
             dist = parseFloat(manualDist);
-            if (isNaN(dist)) return alert("Valid distance is required to calculate compensation.");
+            if (isNaN(dist)) return alert("A valid number is required for distance.");
         }
 
+        // EU list required solely for the Intra-EU compensation cap
         const euList = ["austria","belgium","bulgaria","croatia","cyprus","czech republic","denmark","estonia","finland","france","germany","greece","hungary","ireland","italy","latvia","lithuania","luxembourg","malta","netherlands","the netherlands","poland","portugal","romania","slovakia","slovenia","spain","sweden","iceland","norway","switzerland","united kingdom","uk","guadeloupe","reunion","martinique","french guiana","mayotte"];
 
         const isOriginEU = euList.includes(originCountry);
         const isDestEU = euList.includes(destCountry);
 
-        let comp = "€250"; let type = "Short Haul";
+        // 2. COMPENSATION AMOUNT LOGIC
+        let comp = "€250"; 
+        let type = "Short Haul";
+        
         if (dist > 1500 && dist <= 3500) { 
-            comp = "€400";
+            comp = "€400"; 
             type = "Medium Haul"; 
         } else if (dist > 3500) { 
-            if (isOriginEU && isDestEU) {
-                comp = "€400";
-                type = "Intra-EU Long Haul";
-            } else {
-                comp = "€600";
+            if (isOriginEU && isDestEU) { 
+                comp = "€400"; 
+                type = "Intra-EU Long Haul (Capped)"; 
+            } else { 
+                comp = "€600"; 
                 type = "Long Haul"; 
             }
         }
 
-        let eligibilityNote = "";
-        let statusBadge = "";
-        
-        if (!isOriginEU && !isDestEU) {
-            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #dc2626;">❌ NOT ELIGIBLE</div>`;
-            eligibilityNote = `Neither <b>${oInput.dataset.country || "Origin"}</b> nor <b>${dInput.dataset.country || "Destination"}</b> are in the EU/UK. EC261 does not apply.`;
-            comp = "N/A";
-        } else if (!isOriginEU && isDestEU) {
-            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #f59e0b;">⚠️ CONDITIONALLY ELIGIBLE</div>`;
-            eligibilityNote = `Since the flight departs from a Non-EU country (<b>${oInput.dataset.country || "Origin"}</b>) to the EU, it is ONLY eligible if operated by an EU/UK airline.`;
-        } else {
-            statusBadge = `<div style="font-size: 20px; font-weight: 800; color: #16a34a;">✅ ELIGIBLE</div>`;
-            eligibilityNote = `Flight departs from the EU/UK (<b>${oInput.dataset.country || "Origin"}</b>). All airlines are covered.`;
-        }
-
+        // 3. RENDER STRICTLY DISTANCE & AMOUNT (EC261 Eligibility Removed)
         resultDiv.innerHTML = `
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; animation: ts-fadeIn 0.4s ease;">
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; animation: ts-fadeIn 0.4s ease;">
                 <div>
-                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">EC261 Status</div>
-                    ${statusBadge}
-                    <div style="font-size: 13px; color: #475569; margin-top: 4px;">${eligibilityNote}</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Flight Distance</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #0f172a;">${dist} km</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${type}</div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid #cbd5e1; padding-top: 16px;">
-                    <div>
-                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Flight Distance</div>
-                        <div style="font-size: 20px; font-weight: 800; color: #0f172a;">${dist} km</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${type}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Estimated Compensation</div>
-                        <div style="font-size: 24px; font-weight: 800; color: #16a34a;">${comp !== "N/A" ? '💸 ' : ''}${comp}</div>
-                    </div>
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Compensation Amount</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #16a34a;">💸 ${comp}</div>
                 </div>
             </div>
         `;
       });
-
       // --- SMART EMAIL BUILDER LOGIC ---
       document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
           e.preventDefault();
