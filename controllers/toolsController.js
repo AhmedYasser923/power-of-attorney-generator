@@ -305,7 +305,7 @@ exports.checkFlightStatus = async (req, res, next) => {
       try {
         const { GoogleGenerativeAI } = require('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash--preview' });
         const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
   Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
         const commentResult = await commentModel.generateContent(commentPrompt);

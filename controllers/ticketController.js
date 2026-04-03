@@ -689,7 +689,7 @@ exports.checkFlightStatus = async (req, res, next) => {
       try {
         const { GoogleGenerativeAI } = require('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash--preview' });
         const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
   Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
         const commentResult = await commentModel.generateContent(commentPrompt);
@@ -733,7 +733,7 @@ exports.checkFlightStatus = async (req, res, next) => {
 exports.keepAliveHeartbeat = catchAsync(async (req, res, next) => {
   try {
     // Swapped to gemini-2.5-flash for a fast, cheap background ping
-    const model = genAI.getGenerativeModel({ model: "gemini-2-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
     
     // We send a 1-word prompt and strictly limit the AI to a 1-token response 
     // This makes the cost virtually $0.00 and takes milliseconds
