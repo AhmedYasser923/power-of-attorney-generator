@@ -109,7 +109,7 @@ const prompt = `
     🧠 ***THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*** 🧠
     Before generating the JSON, you must mentally process the documents using this exact sequence:
     1. Entity Grouping: Identify all unique passengers. If multiple passengers share the exact same flight numbers, dates, and routes, treat them as a single traveling party.
-    2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline.
+    2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline. FLIGHTS WITH THE SAME PNR SHOULD BE GROUPED TOGETHER IN IT'S OWN JOURNEY
     3. Anomaly Detection (Disruptions): Look for logical breaks or overlaps in the timeline. If a passenger has tickets for a direct flight (A ➔ B), AND tickets for a multi-leg flight reaching the same destination (A ➔ C ➔ B) within 48 hours, this is a Disruption/Rebooking. 
     4. Deductive Reasoning: Apply the EC261 legal rules to the *entire* chronologically sequenced journey, basing the jurisdiction solely on the very first origin point in the timeline.
 
