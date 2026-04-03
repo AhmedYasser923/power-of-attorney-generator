@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const sharp = require('sharp');
+const pdfParse = require('pdf-parse');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -233,7 +234,7 @@ const prompt = `
       }
     ]
   `;
-  const documentParts = [];
+const documentParts = [];
   for (const file of files) {
     let processedBuffer = file.buffer;
     let mimeType = file.mimetype;
@@ -351,8 +352,15 @@ const startTime = Date.now();
             }
 
             // 1. --- DOCUMENT CHECKER LOGIC ---
+      // 1. --- DOCUMENT CHECKER LOGIC ---
             let marketing = leg.marketingAirline || "Unknown";
             let operating = leg.operatingAirline || marketing;
+
+            // Get airline HQ jurisdiction limit
+            const opCountry = (leg.operatingAirlineCountry || '').toLowerCase().trim();
+            const opLimitRaw = jurisdictionLimits[opCountry] || 'N/A';
+            const opLimitFormatted = opLimitRaw !== 'N/A' ? `${opLimitRaw} years` : 'N/A';
+            const displayOpCountry = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
 
             const getReqs = (airlineName) => {
               if (!airlineName || airlineName === "Unknown") return "No documents required";
@@ -367,23 +375,28 @@ const startTime = Date.now();
 
             let docsList = [];
             if (marketing === operating) {
-                docsList.push({ airline: marketing, role: "", reqs: getReqs(marketing) });
+                docsList.push({ airline: marketing, role: "", reqs: getReqs(marketing), hq: displayOpCountry, limit: opLimitFormatted });
             } else {
                 docsList.push({ airline: marketing, role: "Booked", reqs: getReqs(marketing) });
-                docsList.push({ airline: operating, role: "Operated", reqs: getReqs(operating) });
+                // We only attach the jurisdiction badge to the operating airline
+                docsList.push({ airline: operating, role: "Operated", reqs: getReqs(operating), hq: displayOpCountry, limit: opLimitFormatted });
             }
             leg.claimDocuments = docsList;
 
             // 2. --- JURISDICTION OVERRIDE LOGIC ---
+            // 2. --- JURISDICTION OVERRIDE LOGIC ---
             if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
                 const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
+                const aCountry = (leg.operatingAirlineCountry || '').toLowerCase().trim();
                 
                 let oLimit = jurisdictionLimits[oCountry] || 'N/A';
                 let dLimit = jurisdictionLimits[dCountry] || 'N/A';
+                let aLimit = jurisdictionLimits[aCountry] || 'N/A';
                 
                 leg.ec261Leg.claimExpiration.originYears = oLimit;
                 leg.ec261Leg.claimExpiration.destinationYears = dLimit;
+                leg.ec261Leg.claimExpiration.airlineYears = aLimit;
 
                 let bestLimit = 0;
                 let bestCountryName = 'Unknown';
@@ -396,6 +409,11 @@ const startTime = Date.now();
                 if (dLimit !== 'N/A' && dLimit > bestLimit) {
                     bestLimit = dLimit;
                     bestCountryName = leg.destinationCountry;
+                }
+
+                if (aLimit !== 'N/A' && aLimit > bestLimit) {
+                    bestLimit = aLimit;
+                    bestCountryName = leg.operatingAirlineCountry + " (Airline HQ)";
                 }
 
                 if (bestLimit > 0 && leg.date && leg.date !== "Unknown") {
