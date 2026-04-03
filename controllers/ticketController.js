@@ -254,20 +254,33 @@ const documentParts = [];
 
 const startTime = Date.now();
 
+  // 🚨 NEW AUTO-RETRY LOGIC WITH EXPONENTIAL BACKOFF 🚨
   let result;
-  try {
-    console.log("⏳ Sending request to Gemini API...");
-    result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }, ...documentParts] }],
-      generationConfig: {
-        responseMimeType: "application/json"
+  const maxRetries = 2; // Total of 3 attempts
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`⏳ Sending request to Gemini API... (Attempt ${attempt + 1})`);
+      result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }, ...documentParts] }],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      });
+      console.log("✅ Received response from Gemini.");
+      break; // Success! Break out of the retry loop
+    } catch (apiError) {
+      if (attempt === maxRetries) {
+        // Out of retries, throw the error back to the user
+        console.error("🔥 GEMINI API CRASHED (All retries failed):");
+        console.error(apiError);
+        return next(new AppError(`AI Processing Failed after 3 attempts: ${apiError.message}`, 500));
       }
-    });
-    console.log("✅ Received response from Gemini.");
-  } catch (apiError) {
-    console.error("🔥 GEMINI API CRASHED:");
-    console.error(apiError); // This forces the exact error into your terminal
-    return next(new AppError(`AI Processing Failed: ${apiError.message}`, 500));
+      // Wait 2 seconds, then 4 seconds...
+      const waitTime = (attempt + 1) * 2000;
+      console.warn(`[Gemini API] Transient error detected: ${apiError.message}. Retrying in ${waitTime/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime)); 
+    }
   }
 
   const endTime = Date.now();
@@ -352,7 +365,6 @@ const startTime = Date.now();
             }
 
             // 1. --- DOCUMENT CHECKER LOGIC ---
-      // 1. --- DOCUMENT CHECKER LOGIC ---
             let marketing = leg.marketingAirline || "Unknown";
             let operating = leg.operatingAirline || marketing;
 
@@ -383,7 +395,6 @@ const startTime = Date.now();
             }
             leg.claimDocuments = docsList;
 
-            // 2. --- JURISDICTION OVERRIDE LOGIC ---
             // 2. --- JURISDICTION OVERRIDE LOGIC ---
             if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
@@ -715,3 +726,26 @@ exports.checkFlightStatus = async (req, res, next) => {
     return res.json({ error: error.message || "An unexpected server error occurred." });
   }
 };
+
+
+// --- TCP CONNECTION KEEPALIVE (HEARTBEAT) ---
+// --- TCP CONNECTION KEEPALIVE (HEARTBEAT) ---
+exports.keepAliveHeartbeat = catchAsync(async (req, res, next) => {
+  try {
+    // Swapped to gemini-2.5-flash for a fast, cheap background ping
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    // We send a 1-word prompt and strictly limit the AI to a 1-token response 
+    // This makes the cost virtually $0.00 and takes milliseconds
+    await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: "hi" }] }],
+      generationConfig: { maxOutputTokens: 1 }
+    });
+    
+    console.log("💓 Heartbeat ping successful: Gemini TCP connection kept warm.");
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("Heartbeat ping failed:", error.message);
+    res.status(500).send("Fail");
+  }
+});

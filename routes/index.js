@@ -30,6 +30,9 @@ router.get('/poa', reflyController.showForm);
 router.get('/preview-lufthansa', lufthansaController.preview);
 router.get('/ticket-analyzer', ticketController.renderAnalyzer);
 
+
+router.get('/api/heartbeat', ticketController.keepAliveHeartbeat);
+
 // --- NEW ISOLATED TOOLS SUITE ROUTES ---
 router.get('/tools', toolsController.renderTools);
 router.get('/api/tools/flight-status', toolsController.checkFlightStatus);
