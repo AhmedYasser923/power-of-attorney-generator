@@ -76,7 +76,7 @@ const jurisdictionLimits = {
   "poland": 1, "belgium": 5, "italy": 2, "netherlands": 2, "the netherlands": 2,
   "switzerland": 2, "croatia": 2, "iceland": 2, "slovakia": 2, "slovenia": 2,
   "germany": 3, "austria": 3, "denmark": 3, "finland": 3, "norway": 3,
-  "portugal": 2, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
+  "portugal": 3, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
   "estonia": 3, "latvia": 3, "lithuania": 3, "spain": 5, "france": 5,
   "greece": 5, "hungary": 5, "uk": 6, "united kingdom": 6, "ireland": 6,
   "cyprus": 6, "malta": 6, "luxembourg": 10

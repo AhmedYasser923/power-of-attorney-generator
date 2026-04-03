@@ -35,7 +35,7 @@ async function processSignature(file, processingMethod) {
 
   if (processingMethod === 'gemini') {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-image-preview' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
       const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);

@@ -2,6 +2,46 @@ extends layout
 
 block content
   //- Note: Assumes tools.css is loaded via layout.pug
+  style.
+    /* Make tabs horizontally scrollable */
+    .ts-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 12px;
+        -webkit-overflow-scrolling: touch; 
+        scrollbar-width: none;
+    }
+    .ts-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .ts-tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    /* THE NEW BENTO BOX GRID */
+    .ts-toolkit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start; /* Prevents short cards from stretching */
+    }
+    .ts-card {
+        margin-bottom: 0 !important; /* Overrides old stacked margins */
+        height: 100%; /* Makes side-by-side cards equal height */
+    }
+    .ts-grid-full {
+        grid-column: 1 / -1; /* Forces wide tools to span both columns */
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .ts-toolkit-grid {
+            grid-template-columns: 1fr; /* Stacks everything on phones */
+        }
+    }
 
   .ts-container
     .ts-header
@@ -9,13 +49,10 @@ block content
       p.ts-header__sub Run individual checks for claims without travel documents.
 
     .ts-tabs
-      button.ts-tab-btn.active(data-tab="cirium") 📡FlightStats
-      button.ts-tab-btn(data-tab="eoc") ⚠️ EOC Radar
-      button.ts-tab-btn(data-tab="ec261") 💸 Comp Calculator
-      button.ts-tab-btn(data-tab="docs") 📄 Doc Check
-      button.ts-tab-btn(data-tab="email") ✉️ Multilingual Information Requisition Tool
+      button.ts-tab-btn.active(data-tab="cirium") 📡 FlightStats
+      button.ts-tab-btn(data-tab="toolkit") 🧰 Claim Toolkit
 
-    //- TAB 1: OAG FLIGHTSTATS
+    //- TAB 1: FLIGHTSTATS
     #cirium.ts-tab-content.active
       .ts-card
         .ts-form-row
@@ -30,146 +67,156 @@ block content
             
         #flightResult.ts-results-row
 
-    //- TAB 2: EOC RADAR
-    #eoc.ts-tab-content
-      .ts-card
-        .ts-form-grid
-          .ts-form-group
-            label.ts-label Flight Date
-            input#e-date.ts-input(type="date" required)
-          .ts-form-group
-            label.ts-label (Optional) Origin Airport
-            input#e-o-iata.ts-input(type="text" placeholder="e.g. LHR or Heathrow")
-          .ts-form-group
-            label.ts-label (Optional) Dest Airport
-            input#e-d-iata.ts-input(type="text" placeholder="e.g. BER or Berlin")
-          .ts-form-group
-            label.ts-label (Optional) Origin Country
-            input#e-o-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-          .ts-form-group
-            label.ts-label (Optional) Dest Country
-            input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-        button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
-        #eocResult
-
-    //- TAB 3: COMPENSATION CALCULATOR
-    #ec261.ts-tab-content
-      .ts-card
-        .ts-route__header 🗺️ Flight Route Distance
+    //- TAB 2: COMBINED TOOLKIT (Grid Layout)
+    #toolkit.ts-tab-content
+      .ts-toolkit-grid
         
-        .ts-route
-          .ts-route__node
-            .ts-form-grid(style="margin-bottom: 0;")
-              .ts-form-group
-                label.ts-label Origin Airport
-                input#l-origin.ts-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
-              .ts-form-group
-                label.ts-label Origin Country
-                input#l-origin-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+        //- TOOL: EOC RADAR (Full Width)
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ⚠️ EOC Radar
+          .ts-form-grid
+            .ts-form-group
+              label.ts-label Flight Date
+              input#e-date.ts-input(type="date" required)
+            .ts-form-group
+              label.ts-label (Optional) Origin Airport
+              input#e-o-iata.ts-input(type="text" placeholder="e.g. LHR or Heathrow")
+            .ts-form-group
+              label.ts-label (Optional) Dest Airport
+              input#e-d-iata.ts-input(type="text" placeholder="e.g. BER or Berlin")
+            .ts-form-group
+              label.ts-label (Optional) Origin Country
+              input#e-o-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+            .ts-form-group
+              label.ts-label (Optional) Dest Country
+              input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+          button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
+          #eocResult
+
+        //- TOOL: COMPENSATION CALCULATOR (Full Width)
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 💸 EC261 Comp Calculator
+          .ts-route
+            .ts-route__node
+              .ts-form-grid(style="margin-bottom: 0;")
+                .ts-form-group
+                  label.ts-label Origin Airport
+                  input#l-origin.ts-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
+                .ts-form-group
+                  label.ts-label Origin Country
+                  input#l-origin-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+            
+            .ts-route__node
+              .ts-form-grid(style="margin-bottom: 0;")
+                .ts-form-group
+                  label.ts-label Final Destination Airport
+                  input#l-dest.ts-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
+                .ts-form-group
+                  label.ts-label Destination Country
+                  input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+
+          button#btn-ec261.ts-btn-action 💸 Calculate Compensation
+          #ec261Result
+
+        //- TOOL: JURISDICTION CHECKER (Half Width - Left Side)
+        .ts-card
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 🏛️ Jurisdiction Checker
+          .ts-form-group
+            label.ts-label Search Country
+            input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
           
-          .ts-route__node
-            .ts-form-grid(style="margin-bottom: 0;")
-              .ts-form-group
-                label.ts-label Final Destination Airport
-                input#l-dest.ts-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
-              .ts-form-group
-                label.ts-label Destination Country
-                input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+          #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
 
-        button#btn-ec261.ts-btn-action 💸 Calculate Compensation
-        #ec261Result
-
-    //- TAB 4: DOCUMENT CHECKER
-    #docs.ts-tab-content
-      .ts-card
-        .ts-form-group
-          label.ts-label Search Airline
-          input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
-        
-        #docsResult.ts-results-row(style="margin-top: 24px;")
-
-    //- TAB 5: SMART EMAIL BUILDER
-    #email.ts-tab-content
-      .ts-card
-        h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 20px; display: flex; align-items: center; gap: 8px;") ✉️ Multilingual Information Requisition Tool
-        
-        form#emailBuilderForm
-          div(style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;")
-            label(style="display: block; font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 10px;") Select Required Information:
-            #emChecklist(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Boarding pass") 
-                | Boarding Pass
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Ticket number") 
-                | Ticket Number (13-digit)
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="PNR / Booking Reference") 
-                | PNR / Booking Reference
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="ID / Passport") 
-                | ID / Passport
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Signed Power of Attorney") 
-                | Signed Power of Attorney
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Booking confirmation") 
-                | Booking Confirmation
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Proof of delay") 
-                | Proof of Delay
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                input(type="checkbox" value="Proof of cancellation") 
-                | Proof of Cancellation
-                
-              //- NEW: Rejection Templates
-              div(style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;")
-                label(style="display: block; font-size: 12px; font-weight: 800; color: #991b1b; margin-bottom: 6px;") ❌ Rejection Templates (Overrides Doc Requests)
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
-                input(type="checkbox" value="Visa/Documentation Rejection") 
-                | Visa or Documentation Issue
-              label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
-                input(type="checkbox" value="Short Delay / No Missed Connection Rejection") 
-                | Short Delay / Didn't Miss Connection
-
-            div(style="margin-top: 10px;")
-              input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
-
-          .ts-form-grid(style="align-items: flex-end;")
-            .ts-form-group(style="margin-bottom: 0;")
-              label.ts-label Output Language
-              select#emLanguage.ts-input
-                option(value="English") English
-                option(value="Spanish") Spanish
-                option(value="French") French
-                option(value="German") German
-                option(value="Italian") Italian
-                option(value="Dutch") Dutch
-                option(value="Swedish") Swedish
-                option(value="Polish") Polish
-                option(value="Portuguese") Portuguese
-                option(value="Danish") Danish
-                option(value="Norwegian") Norwegian
-                option(value="Finnish") Finnish
-                option(value="Romanian") Romanian
-                option(value="Czech") Czech
-                option(value="Hungarian") Hungarian
-                option(value="Greek") Greek
-                option(value="Turkish") Turkish
-                option(value="Arabic") Arabic
-            button#emGenerateBtn.ts-btn-action(type="submit" style="margin-top: 0;") Generate Content
-
-        #emResultBox(style="display: none; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px;")
-          div(style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;")
-            span(style="font-size: 13px; font-weight: 700; color: #10b981;") ✅ Content Generated
-            button#emCopyBtn(type="button" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; color: #334155;") 📋 Copy to Clipboard
+        //- TOOL: DOCUMENT CHECKER (Half Width - Right Side)
+        .ts-card
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 📄 Document Check
+          .ts-form-group
+            label.ts-label Search Airline
+            input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
           
-          textarea#emOutputText(readonly style="width: 100%; height: 250px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical; background: #f8fafc; color: #1e293b; box-sizing: border-box;")
+          #docsResult.ts-results-row(style="margin-top: 24px;")
 
-          //- NEW: Distinct Box for English Verification
-          #emEnglishBox(style="display: none; margin-top: 15px;")
-            label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
-            #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
+        //- TOOL: SMART EMAIL BUILDER (Full Width)
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Request Builder
+          
+          form#emailBuilderForm
+            div(style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;")
+              label(style="display: block; font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 10px;") Select Required Information:
+              #emChecklist(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Boarding pass") 
+                  | Boarding Pass
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Ticket number") 
+                  | Ticket Number (13-digit)
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="PNR / Booking Reference") 
+                  | PNR / Booking Reference
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="ID / Passport") 
+                  | ID / Passport
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Signed Power of Attorney") 
+                  | Signed Power of Attorney
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Booking confirmation") 
+                  | Booking Confirmation
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Proof of delay") 
+                  | Proof of Delay
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                  input(type="checkbox" value="Proof of cancellation") 
+                  | Proof of Cancellation
+                  
+                //- NEW: Rejection Templates
+                div(style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;")
+                  label(style="display: block; font-size: 12px; font-weight: 800; color: #991b1b; margin-bottom: 6px;") ❌ Rejection Templates (Overrides Doc Requests)
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                  input(type="checkbox" value="Visa/Documentation Rejection") 
+                  | Visa or Documentation Issue
+                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                  input(type="checkbox" value="Short Delay / No Missed Connection Rejection") 
+                  | Short Delay / Didn't Miss Connection
+
+              div(style="margin-top: 10px;")
+                input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
+
+            .ts-form-grid(style="align-items: flex-end;")
+              .ts-form-group(style="margin-bottom: 0;")
+                label.ts-label Output Language
+                select#emLanguage.ts-input
+                  option(value="English") English
+                  option(value="Spanish") Spanish
+                  option(value="French") French
+                  option(value="German") German
+                  option(value="Italian") Italian
+                  option(value="Dutch") Dutch
+                  option(value="Swedish") Swedish
+                  option(value="Polish") Polish
+                  option(value="Portuguese") Portuguese
+                  option(value="Danish") Danish
+                  option(value="Norwegian") Norwegian
+                  option(value="Finnish") Finnish
+                  option(value="Romanian") Romanian
+                  option(value="Czech") Czech
+                  option(value="Hungarian") Hungarian
+                  option(value="Greek") Greek
+                  option(value="Turkish") Turkish
+                  option(value="Arabic") Arabic
+              button#emGenerateBtn.ts-btn-action(type="submit" style="margin-top: 0;") Generate Content
+
+          #emResultBox(style="display: none; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px;")
+            div(style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;")
+              span(style="font-size: 13px; font-weight: 700; color: #10b981;") ✅ Content Generated
+              button#emCopyBtn(type="button" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; color: #334155;") 📋 Copy to Clipboard
+            
+            textarea#emOutputText(readonly style="width: 100%; height: 250px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical; background: #f8fafc; color: #1e293b; box-sizing: border-box;")
+
+            //- NEW: Distinct Box for English Verification
+            #emEnglishBox(style="display: none; margin-top: 15px;")
+              label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
+              #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
 
   script.
     document.addEventListener('DOMContentLoaded', () => {
@@ -183,10 +230,34 @@ block content
         btn.addEventListener('click', () => {
           tabBtns.forEach(b => b.classList.remove('active'));
           tabContents.forEach(c => c.classList.remove('active'));
+          
           btn.classList.add('active');
           document.getElementById(btn.dataset.tab).classList.add('active');
         });
       });
+
+      // --- SMART DATE PASTE HANDLER ---
+      function handleSmartDatePaste(e) {
+          e.preventDefault();
+          const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+          
+          // Attempt to parse the human-readable date (e.g. "16 March 2026")
+          const parsedDate = new Date(pastedText);
+          
+          if (!isNaN(parsedDate.getTime())) {
+              const yyyy = parsedDate.getFullYear();
+              const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
+              const dd = String(parsedDate.getDate()).padStart(2, '0');
+              e.target.value = `${yyyy}-${mm}-${dd}`;
+          } else {
+              alert("Could not automatically read that date. Please use the calendar or type YYYY-MM-DD.");
+          }
+      }
+
+      const cDate = document.getElementById('c-date');
+      const eDate = document.getElementById('e-date');
+      if(cDate) cDate.addEventListener('paste', handleSmartDatePaste);
+      if(eDate) eDate.addEventListener('paste', handleSmartDatePaste);
 
       // --- AIRPORT AUTOCOMPLETE LOGIC ---
       function setupAirportAutocomplete(inputId, countryInputId = null) {
@@ -212,6 +283,7 @@ block content
             if (countryInput) countryInput.value = '';
             
             clearTimeout(timeout);
+        
             const val = e.target.value;
             if (val.length < 2) { list.style.display = 'none'; return; }
 
@@ -233,6 +305,7 @@ block content
                                 input.dataset.country = airport.country;
                                 input.dataset.lat = airport.lat; 
                                 input.dataset.lon = airport.lon;
+                        
                                 if (countryInput) countryInput.value = airport.country;
                                 list.style.display = 'none';
                             });
@@ -250,6 +323,114 @@ block content
       setupAirportAutocomplete('l-origin', 'l-origin-country');
       setupAirportAutocomplete('l-dest', 'l-dest-country');
 
+      // --- JURISDICTION CHECKER LOGIC ---
+      const jurisdictionLimits = {
+        "poland": 1, "belgium": 5, "italy": 2, "netherlands": 2, "the netherlands": 2,
+        "switzerland": 2, "croatia": 2, "iceland": 2, "slovakia": 2, "slovenia": 2,
+        "germany": 3, "austria": 3, "denmark": 3, "finland": 3, "norway": 3,
+        "portugal": 3, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
+        "estonia": 3, "latvia": 3, "lithuania": 3, "spain": 5, "france": 5,
+        "greece": 5, "hungary": 5, "uk": 6, "united kingdom": 6, "ireland": 6,
+        "cyprus": 6, "malta": 6, "luxembourg": 10
+      };
+
+      // 1. Reusable function to render the UI card
+      function displayJurisdictionResult(query) {
+          const jResult = document.getElementById('jurisdictionResult');
+          if (!query) {
+              jResult.innerHTML = '';
+              return;
+          }
+
+          const match = jurisdictionLimits[query];
+          if (match) {
+              // Flex-wrap layout matches the mockup and prevents squishing on mobile
+              jResult.innerHTML = `
+                  <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 20px; border-radius: 12px; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; animation: ts-fadeIn 0.3s ease;">
+                      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 80px;">
+                          <span style="font-size: 24px;">🏛️</span>
+                          <span style="font-size: 16px; font-weight: 800; color: #b45309; text-transform: capitalize;">${query}</span>
+                      </div>
+                      <div style="background: #fef3c7; padding: 14px 20px; border-radius: 8px; border: 1px solid #fcd34d; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-grow: 1; max-width: max-content; justify-content: center;">
+                          <span style="font-size: 18px;">⚖️</span>
+                          <span style="font-size: 16px; font-weight: 800; color: #d97706;">Limit: ${match} years</span>
+                      </div>
+                  </div>
+              `;
+          } else {
+              // Fallback suggestions
+              const partials = Object.keys(jurisdictionLimits).filter(k => k.includes(query));
+              if (partials.length > 0) {
+                   jResult.innerHTML = `<div style="color: #64748b; font-size: 14px; padding: 10px;">Did you mean: ${partials.map(p => `<span style="color:var(--primary);cursor:pointer;font-weight:600;text-transform:capitalize;" onclick="document.getElementById('j-country').value='${p}'; document.getElementById('j-country').dispatchEvent(new Event('input'))">${p}</span>`).join(', ')}?</div>`;
+              } else {
+                   jResult.innerHTML = `
+                      <div style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; color: #64748b; font-weight: 600;">
+                          No specific EC261 jurisdiction limit found for "${query}". 
+                      </div>
+                  `;
+              }
+          }
+      }
+
+      // 2. Setup Autocomplete List functionality
+      function setupJurisdictionAutocomplete(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        // Wrap the input to attach the dropdown list seamlessly
+        const wrapper = document.createElement('div');
+        wrapper.className = 'autocomplete-wrapper';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const list = document.createElement('div');
+        list.className = 'autocomplete-list';
+        wrapper.appendChild(list);
+
+        let timeout = null;
+        
+        input.addEventListener('input', (e) => {
+            clearTimeout(timeout);
+            const val = e.target.value.toLowerCase().trim();
+            
+            // Instantly display results if they type the full word or backspace
+            displayJurisdictionResult(val);
+            
+            if (val.length < 1) { list.style.display = 'none'; return; }
+
+            timeout = setTimeout(() => {
+                // Filter matches, but don't show the dropdown if they perfectly typed the country
+                const matches = Object.keys(jurisdictionLimits).filter(k => k.includes(val) && k !== val);
+                list.innerHTML = '';
+                
+                if (matches.length > 0) {
+                    list.style.display = 'block';
+                    matches.forEach(country => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.innerHTML = `<div class="ac-top" style="align-items: center; padding: 4px 0;"><span class="ac-city" style="color: #334155; font-weight: 600; font-size: 14px; text-transform: capitalize;">🏛️ ${country}</span></div>`;
+                        
+                        item.addEventListener('click', () => {
+                            input.value = country;
+                            list.style.display = 'none';
+                            displayJurisdictionResult(country);
+                        });
+                        list.appendChild(item);
+                    });
+                } else { 
+                    list.style.display = 'none'; 
+                }
+            }, 150); 
+        });
+
+        // Hide dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => { if (e.target !== input) list.style.display = 'none'; });
+      }
+
+      // 3. Initialize it
+      setupJurisdictionAutocomplete('j-country');
+
+
       // --- INSTANT DOC FETCH LOGIC ---
       async function fetchAndDisplayDocs(airlineName) {
         const resultDiv = document.getElementById('docsResult');
@@ -261,11 +442,9 @@ block content
             const statusBadge = data.hasDocs 
                 ? `<div style="font-size: 11px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #fde68a;">⚠️ DOCUMENTS REQUIRED</div>`
                 : `<div style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">✅ NO EXTRA DOCS REQUIRED</div>`;
-            
             const reqsDisplay = data.hasDocs
                 ? `<div style="font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5;">${data.reqs}</div>`
                 : `<div style="font-size: 15px; font-weight: 600; color: #16a34a; line-height: 1.5;">${data.reqs}</div>`;
-                
             resultDiv.innerHTML = `
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; width: 100%; animation: ts-fadeIn 0.4s ease;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -359,10 +538,8 @@ block content
             const cardWrapper = document.createElement('div');
             cardWrapper.className = 'fetched-flight-card';
             cardWrapper.style.marginBottom = '20px';
-            
             if (data.aiStats) {
                 window.searchedFlights.add(flightKey);
-                
                 const ai = data.aiStats;
                 const dismissLogic = `window.searchedFlights.delete('${flightKey}'); this.closest('.fetched-flight-card').remove();`;
 
@@ -370,19 +547,13 @@ block content
                 const isDiverted  = ai.rawStatus === 'D';
 
                 const arrSchedHtml = isCancelled ? `<div style="font-size:22px;font-weight:700;color:#475569;line-height:1;text-decoration:line-through;opacity:0.5;">${ai.arrSched}</div>` : `<div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.arrSched}</div>`;
-                
-                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ?
-                `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
+                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ? `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
 
-                const divertedCallout = (isDiverted && ai.divertedTo) ?
-                `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
-                
+                const divertedCallout = (isDiverted && ai.divertedTo) ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
                 const aiCommentHtml = ai.aiComment ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>` : '';
-                
                 cardWrapper.innerHTML = `
                     <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease; max-width: 500px; position: relative;">
-                        <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.2); border: none; color: #ffffff; cursor: pointer; font-size: 14px; z-index: 10; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
-                        onmouseover="this.style.background='rgba(0,0,0,0.5)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'" title="Dismiss">✖</button>
+                        <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.2); border: none; color: #ffffff; cursor: pointer; font-size: 14px; z-index: 10; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.5)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'" title="Dismiss">✖</button>
                         <div style="background:${ai.bannerBg};color:${ai.bannerTextCol};text-align:center;padding:14px;font-size:15px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;">
                             ${ai.bannerText} (${flight})
                         </div>
@@ -447,7 +618,6 @@ block content
                         </div>
                     </div>
                 `;
-           
                 resultDiv.insertBefore(cardWrapper, resultDiv.firstChild);
                 flightInput.value = '';
             } else { 
@@ -600,18 +770,18 @@ block content
               missingDocs: missingDocs,
               customRequest: document.getElementById('emCustom').value
           };
-
+          
           btn.disabled = true;
           btn.innerHTML = '⏳ Generating...';
           resultBox.style.display = 'none';
-
+          
           try {
               const response = await fetch('/api/generate-email', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
               });
-
+              
               const data = await response.json();
               
               if (data.success) {
@@ -636,7 +806,7 @@ block content
               btn.innerHTML = 'Generate Content';
           }
       });
-
+      
       document.getElementById('emCopyBtn').addEventListener('click', () => {
           const text = document.getElementById('emOutputText');
           text.select();
