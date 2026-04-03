@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const sharp = require('sharp');
-const pdfParse = require('pdf-parse');
+
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
