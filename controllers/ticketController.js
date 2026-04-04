@@ -94,7 +94,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     return next(new AppError('No files uploaded', 400));
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
   let yearDirective = "";
   if (journeyYear) {
