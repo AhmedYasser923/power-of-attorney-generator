@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const clearBtn = document.getElementById('clearFilesBtn');
     const resultsCard = document.getElementById('resultsCard');
-
-    // --- NEW: INJECT PULSY GLASSY RED ANIMATION ---
+    
+     // --- NEW: INJECT PULSY GLASSY RED ANIMATION ---
     const eocStyle = document.createElement('style');
     eocStyle.innerHTML = `
         @keyframes pulsyGlassyRed {
@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
     document.head.appendChild(eocStyle);
-    
+
+
+
     // --- NEW FEATURE: Inject Global YEAR Input Before Dropzone ---
     const dateInputHtml = `
         <div style="margin-bottom: 20px; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px;">
@@ -698,9 +700,7 @@ if (data.eocFound && data.events && data.events.length > 0) {
                     ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>`
                     : '';
 
-                const aiCommentHtml = ai.aiComment
-                    ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>`
-                    : '';
+
 
                 const statsCard = document.createElement('div');
                 statsCard.style.cssText = "margin-top: 20px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease;";
@@ -772,7 +772,7 @@ if (data.eocFound && data.events && data.events.length > 0) {
                             <strong style="margin-left:10px;font-size:18px;color:${ai.arrDelayColor};background:${ai.arrDelayColor}15;border:1px solid ${ai.arrDelayColor}30;padding:6px 16px;border-radius:8px;">${ai.arrDelay}</strong>
                         </div>
 
-                        ${aiCommentHtml}
+                     
                     </div>
                 `;
 
