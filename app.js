@@ -1,4 +1,6 @@
+//Perfect version- Revert to incase anything goes wrong
 // MUST be first: catch synchronous exceptions before anything else loads
+
 process.on('uncaughtException', err => {
   console.error('UNCAUGHT EXCEPTION! Shutting down...');
   console.error(err.name, err.message, err.stack);
