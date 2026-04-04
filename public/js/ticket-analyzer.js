@@ -6,6 +6,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const clearBtn = document.getElementById('clearFilesBtn');
     const resultsCard = document.getElementById('resultsCard');
+
+    // --- NEW: INJECT PULSY GLASSY RED ANIMATION ---
+    const eocStyle = document.createElement('style');
+    eocStyle.innerHTML = `
+        @keyframes pulsyGlassyRed {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5), inset 0 0 10px rgba(220, 38, 38, 0.1);
+                background-color: rgba(254, 242, 242, 0.4);
+                border-color: rgba(239, 68, 68, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 20px 8px rgba(220, 38, 38, 0), inset 0 0 30px rgba(220, 38, 38, 0.2);
+                background-color: rgba(254, 242, 242, 0.85);
+                border-color: rgba(220, 38, 38, 1);
+            }
+        }
+        .flight-card.eoc-alert-active {
+            animation: pulsyGlassyRed 1.5s infinite alternate ease-in-out !important;
+            border-width: 2px !important;
+            backdrop-filter: blur(8px) !important;
+            transition: all 0.3s ease;
+        }
+    `;
+    document.head.appendChild(eocStyle);
     
     // --- NEW FEATURE: Inject Global YEAR Input Before Dropzone ---
     const dateInputHtml = `
@@ -118,13 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 signal: fetchAbortController.signal
             });
 
-if (!res.ok) {
-    // Try to grab the exact error message your backend sent
-    const errData = await res.json().catch(() => ({})); 
-    throw new Error(errData.message || `Server responded with status: ${res.status}`);
-}
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({})); 
+                throw new Error(errData.message || `Server responded with status: ${res.status}`);
+            }
 
-let rawResponse = await res.json();
+            let rawResponse = await res.json();
 
             resultsCard.innerHTML = '';
             resultsCard.style.display = 'block';
@@ -146,7 +169,6 @@ let rawResponse = await res.json();
                 resultsCard.innerHTML += `<div style="display: flex; justify-content: flex-end; margin-bottom: 15px;"><span style="background: #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">⏱️ Server Processed in ${rawResponse.processingTime}s</span></div>`;
             }
 
-            // --- SCAN FOR MISSING PNRS ACROSS ALL LEGS ---
             let hasMissingLegPnr = false;
             dataArray.forEach(journey => {
                 if (journey.routes) {
@@ -162,7 +184,6 @@ let rawResponse = await res.json();
                 }
             });
 
-            // --- SMART QR SCAN WARNING BANNER (Only shows if a PNR is actually missing) ---
             if (hasMissingLegPnr) {
                 resultsCard.innerHTML += `
                     <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
@@ -257,11 +278,9 @@ let rawResponse = await res.json();
                         </div>`;
                 }
                 
- let showPassengerCard = true;
+                let showPassengerCard = true;
                 if (journeyIndex > 0) {
                     const prevData = dataArray[journeyIndex - 1];
-                    
-                    // Include the ticketNumber in the comparison string
                     const currentRoster = (data.passengers || []).map(p => p.firstName + p.lastName + p.ticketNumber).join('|');
                     const prevRoster = (prevData.passengers || []).map(p => p.firstName + p.lastName + p.ticketNumber).join('|');
                     
@@ -356,7 +375,6 @@ let rawResponse = await res.json();
                                     ? `✈️ Operated by: ${operating}` 
                                     : `✈️ Booked: ${marketing} <span style="color:var(--primary); margin-left:8px;">| Operated by: ${operating}</span>`;
                                 
-                                // 👇 NEW: STACKABLE STATUS BADGES 👇
                                 let statusWarningHtml = '';
                                 let opacityStyle = '1';
                                 
@@ -381,7 +399,7 @@ let rawResponse = await res.json();
 
                                 let distanceHtml = flight.distanceKm ? `<div style="position: absolute; top: -20px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-soft); z-index: 3; letter-spacing: 0.5px;">${flight.distanceKm}</div>` : '';
 
-      let docsHtml = '';
+                                let docsHtml = '';
                                 if (flight.claimDocuments && Array.isArray(flight.claimDocuments)) {
                                     const docsItemsHtml = flight.claimDocuments.map(doc => {
                                         const isDefault = doc.reqs === 'No documents required';
@@ -389,10 +407,8 @@ let rawResponse = await res.json();
                                         const docColor = isDefault ? 'var(--text-muted)' : '#0369a1';
                                         const docBg   = isDefault ? 'transparent' : '#f0f9ff';
                                         const docBorder = isDefault ? '1px dashed #cbd5e1' : '1px solid #bae6fd';
-                                        
                                         const rolePrefix = doc.role ? `[${doc.role}] ` : '';
                                         
-                                        // Generate the Jurisdiction Badge if data exists
                                         let jurisdictionBadge = '';
                                         if (doc.hq && doc.limit) {
                                             const badgeColor = doc.limit === 'N/A' ? '#94a3b8' : '#d97706';
@@ -427,7 +443,8 @@ let rawResponse = await res.json();
                                     flightNumsDisplay = 'N/A';
                                 }
 
-                                let eocBtnHtml = `<button type="button" class="btn-check-eoc" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#fef08a;color:#9a3412;border:1px solid #fde047;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⚠️ Check EOC</button>`;
+                                // 🚨 NEW AUTO-CHECK EOC PLACEHOLDER 🚨
+                                let eocBtnHtml = `<div class="auto-eoc-check" data-date="${flight.date || 'Unknown'}" data-oiata="${flight.originIata || ''}" data-diata="${flight.destinationIata || ''}" data-ocountry="${flight.originCountry || ''}" data-dcountry="${flight.destinationCountry || ''}" style="background:#f8fafc;color:#475569;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⏳ Checking EOC...</div>`;
 
                                 let datePillHtml = '';
                                 if (isMissingDate) {
@@ -438,13 +455,11 @@ let rawResponse = await res.json();
                                     datePillHtml = `<span class="fc-date-pill">📅 ${flight.date}</span>`;
                                 }
 
-                                // 👇 SMART PNR BADGE LOGIC 👇
                                 let printedRefStr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
                                 let legPnrStr = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
                                 let legPnrBadge = '';
 
                                 if ((printedRefStr === legPnrStr && legPnrStr !== '') || (printedRefStr === '' && legPnrStr !== '')) {
-                                    // Simplest view: They are the same, or we only have the true PNR
                                     legPnrBadge = `
                                         <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; background:#f8fafc; padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1; color:#334155; font-weight:700; transition:0.2s;">
                                             <span title="Click to manually edit or scan PNR">📱 PNR: 
@@ -452,7 +467,6 @@ let rawResponse = await res.json();
                                             </span>
                                         </div>`;
                                 } else {
-                                    // Split view: They are different, OR True PNR requires scanning
                                     let pDisplay = printedRefStr ? printedRefStr : 'N/A';
                                     legPnrBadge = `
                                         <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; background:#f8fafc; padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1; color:#334155; font-weight:700; transition:0.2s;">
@@ -538,13 +552,71 @@ let rawResponse = await res.json();
                 resultsCard.appendChild(journeyWrapper);
             });
 
+            // Make results visible BEFORE starting the parallel EOC fetch loop
             resultsCard.style.display = 'block';
+
+            // 🚨 NEW AUTO-TRIGGER EOC CHECK LOOP 🚨
+            const eocElements = document.querySelectorAll('.auto-eoc-check');
+            eocElements.forEach(async (eocEl) => {
+                const flightCard = eocEl.closest('.flight-card');
+                const { date, oiata, diata, ocountry, dcountry } = eocEl.dataset;
+
+                if (!date || date === 'Unknown' || !/\d{4}/.test(date)) {
+                    eocEl.outerHTML = `<div style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fecaca;">⚠️ Date Incomplete (No EOC Check)</div>`;
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/check-eoc?date=${encodeURIComponent(date)}&originIata=${encodeURIComponent(oiata)}&destIata=${encodeURIComponent(diata)}&originCountry=${encodeURIComponent(ocountry)}&destCountry=${encodeURIComponent(dcountry)}`);
+                    const data = await res.json();
+                    
+if (data.eocFound && data.events && data.events.length > 0) {
+                        // Apply the pulsy red animation to the card
+                        flightCard.classList.add('eoc-alert-active');
+                        
+                        // Update the badge to show how many EOCs were found
+                        const badgeText = data.events.length > 1 ? `${data.events.length} EOCs Found` : `EOC Found`;
+                        eocEl.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fecaca;" title="Claim Invalidated by EOC">🚨 ${badgeText}</div>`;
+                        
+                        const eocAlert = document.createElement('div');
+                        eocAlert.style.cssText = "margin-top: 16px; background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; font-size: 13px; color: #7f1d1d; line-height: 1.6; animation: fadeIn 0.4s ease; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);";
+                        
+                        // Change header if there are multiple
+                        const headerText = data.events.length > 1 
+                            ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${data.events.length})` 
+                            : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
+
+                        // Loop through all found events and stack them
+                        let eventsHtml = data.events.map((ev, index) => `
+                            <div style="${index > 0 ? 'margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fca5a5;' : ''} color: #450a0a; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; align-items: baseline;">
+                                <strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span>
+                                <strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span>
+                                <strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span>
+                                <strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span>
+                            </div>
+                        `).join('');
+
+                        eocAlert.innerHTML = `
+                            <div style="font-weight: 800; color: #dc2626; margin-bottom: 12px; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                                ${headerText}
+                            </div>
+                            ${eventsHtml}
+                        `;
+                        flightCard.appendChild(eocAlert);
+                    } else {
+                        eocEl.outerHTML = `<div style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #bbf7d0;">✅ No EOC Found</div>`;
+                    }
+                } catch(err) {
+                    console.error("EOC Auto-Check Error:", err);
+                    eocEl.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fecaca;">❌ EOC Check Failed</div>`;
+                }
+            });
+
         } catch (error) {
           if (error.name !== 'AbortError') {
-        // Now the alert will tell you exactly what failed!
-        alert(`Analysis Error: ${error.message}\n\nIf this persists, check the server console.`);
-        console.error(error);
-    }
+              alert(`Analysis Error: ${error.message}\n\nIf this persists, check the server console.`);
+              console.error(error);
+          }
         } finally {
             clearInterval(timerInterval);
             analyzeBtn.innerHTML = 'Analyze Document';
@@ -584,52 +656,6 @@ let rawResponse = await res.json();
         }
         return true;
     }
-
-    /* --- EOC CHECKER UI LOGIC --- */
-    resultsCard.addEventListener('click', async (e) => {
-        const eocBtn = e.target.closest('.btn-check-eoc');
-        if (eocBtn) {
-            const flightCard = eocBtn.closest('.flight-card');
-            
-            if (!validateDateForAPI(eocBtn, flightCard)) return;
-
-            eocBtn.innerHTML = '⏳ Checking...';
-            eocBtn.disabled = true;
-            
-            const { date, oiata, diata, ocountry, dcountry } = eocBtn.dataset;
-            
-            try {
-                const res = await fetch(`/api/check-eoc?date=${encodeURIComponent(date)}&originIata=${encodeURIComponent(oiata)}&destIata=${encodeURIComponent(diata)}&originCountry=${encodeURIComponent(ocountry)}&destCountry=${encodeURIComponent(dcountry)}`);
-                const data = await res.json();
-                
-                if (data.eocFound && data.events && data.events.length > 0) {
-                    const ev = data.events[0]; 
-                    eocBtn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #fecaca;" title="Claim Invalidated by EOC">🚨 EOC Found</div>`;
-                    const eocAlert = document.createElement('div');
-                    eocAlert.style.cssText = "margin-top: 16px; background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; font-size: 13px; color: #7f1d1d; line-height: 1.6; animation: fadeIn 0.4s ease; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);";
-                    eocAlert.innerHTML = `
-                        <div style="font-weight: 800; color: #dc2626; margin-bottom: 8px; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                            ⚠️ Extraordinary Circumstances Detected
-                        </div>
-                        <div style="color: #450a0a; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; align-items: baseline;">
-                            <strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span>
-                            <strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span>
-                            <strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span>
-                            <strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span>
-                        </div>
-                    `;
-                    flightCard.appendChild(eocAlert);
-                } else {
-                    eocBtn.outerHTML = `<div style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid #bbf7d0;">✅ No EOC Found</div>`;
-                }
-            } catch(err) {
-                console.error(err);
-                eocBtn.innerHTML = '❌ Error';
-                eocBtn.disabled = false;
-            }
-            return; 
-        }
-    });
 
     /* --- FLIGHTY-INSPIRED AI DASHBOARD --- */
     resultsCard.addEventListener('click', async (e) => {
@@ -763,5 +789,4 @@ let rawResponse = await res.json();
             btn.outerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fecaca; margin-left: 6px; display: inline-block;">❌ Network/Server Error</div>`;
         }
     });
-
 });

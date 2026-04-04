@@ -3,6 +3,25 @@ extends layout
 block content
   //- Note: Assumes tools.css is loaded via layout.pug
   style.
+    @keyframes pulsyGlassyRed {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5), inset 0 0 10px rgba(220, 38, 38, 0.1);
+            background-color: rgba(254, 242, 242, 0.4);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            box-shadow: 0 0 20px 8px rgba(220, 38, 38, 0), inset 0 0 30px rgba(220, 38, 38, 0.2);
+            background-color: rgba(254, 242, 242, 0.85);
+            border-color: rgba(220, 38, 38, 1);
+        }
+    }
+    .eoc-alert-active {
+        animation: pulsyGlassyRed 1.5s infinite alternate ease-in-out !important;
+        border-width: 2px !important;
+        backdrop-filter: blur(8px) !important;
+        transition: all 0.3s ease;
+    }
+
     /* Make tabs horizontally scrollable */
     .ts-tabs {
         display: flex;
@@ -47,7 +66,6 @@ block content
     .ts-header
       h1.ts-header__title 🛠️ Manual Tools Suite
       p.ts-header__sub Run individual checks for claims without travel documents.
-
     .ts-tabs
       button.ts-tab-btn.active(data-tab="cirium") 📡 FlightStats
       button.ts-tab-btn(data-tab="toolkit") 🧰 Claim Toolkit
@@ -92,6 +110,7 @@ block content
               input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
           button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
           #eocResult
+
         //- TOOL: DOCUMENT CHECKER (Half Width - Right Side)
         .ts-card
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 📄 Document Check
@@ -100,6 +119,7 @@ block content
             input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
           
           #docsResult.ts-results-row(style="margin-top: 24px;")          
+
         //- TOOL: JURISDICTION CHECKER (Half Width - Left Side)
         .ts-card
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 🏛️ Jurisdiction Checker
@@ -108,8 +128,6 @@ block content
             input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
           
           #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
-
-
 
         //- TOOL: SMART EMAIL BUILDER (Full Width)
         .ts-card.ts-grid-full
@@ -153,18 +171,15 @@ block content
                 label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
                   input(type="checkbox" value="Short Delay / No Missed Connection Rejection") 
                   | Short Delay / Didn't Miss Connection
-
                 label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
                   input(type="checkbox" value="No Disruption Found Rejection") 
                   | No Disruption Found 
-
                 label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
                   input(type="checkbox" value="Jurisdiction expired Rejection") 
                   | Jurisdiction expired          
-
                 label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
                   input(type="checkbox" value="disrupted and affected flights not under same booking Rejection") 
-                  |disrupted and affected flights not under same booking                                               
+                  | disrupted and affected flights not under same booking     
 
               div(style="margin-top: 10px;")
                 input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
@@ -205,7 +220,6 @@ block content
               label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
               #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
 
-
         //- TOOL: COMPENSATION CALCULATOR (Full Width)
         .ts-card.ts-grid-full
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 💸 EC261 Comp Calculator
@@ -230,8 +244,6 @@ block content
 
           button#btn-ec261.ts-btn-action 💸 Calculate Compensation
           #ec261Result
-
-
 
   script.
     document.addEventListener('DOMContentLoaded', () => {
@@ -258,7 +270,6 @@ block content
           
           // Attempt to parse the human-readable date (e.g. "16 March 2026")
           const parsedDate = new Date(pastedText);
-          
           if (!isNaN(parsedDate.getTime())) {
               const yyyy = parsedDate.getFullYear();
               const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
@@ -410,14 +421,13 @@ block content
             
             // Instantly display results if they type the full word or backspace
             displayJurisdictionResult(val);
-            
             if (val.length < 1) { list.style.display = 'none'; return; }
 
             timeout = setTimeout(() => {
                 // Filter matches, but don't show the dropdown if they perfectly typed the country
                 const matches = Object.keys(jurisdictionLimits).filter(k => k.includes(val) && k !== val);
                 list.innerHTML = '';
-                
+                 
                 if (matches.length > 0) {
                     list.style.display = 'block';
                     matches.forEach(country => {
@@ -433,7 +443,7 @@ block content
                         list.appendChild(item);
                     });
                 } else { 
-                    list.style.display = 'none'; 
+                    list.style.display = 'none';
                 }
             }, 150); 
         });
@@ -444,7 +454,6 @@ block content
 
       // 3. Initialize it
       setupJurisdictionAutocomplete('j-country');
-
 
       // --- INSTANT DOC FETCH LOGIC ---
       async function fetchAndDisplayDocs(airlineName) {
@@ -553,6 +562,7 @@ block content
             const cardWrapper = document.createElement('div');
             cardWrapper.className = 'fetched-flight-card';
             cardWrapper.style.marginBottom = '20px';
+
             if (data.aiStats) {
                 window.searchedFlights.add(flightKey);
                 const ai = data.aiStats;
@@ -562,10 +572,14 @@ block content
                 const isDiverted  = ai.rawStatus === 'D';
 
                 const arrSchedHtml = isCancelled ? `<div style="font-size:22px;font-weight:700;color:#475569;line-height:1;text-decoration:line-through;opacity:0.5;">${ai.arrSched}</div>` : `<div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.arrSched}</div>`;
-                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ? `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
+                const arrActualHtml = isCancelled ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ?
+                `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
 
-                const divertedCallout = (isDiverted && ai.divertedTo) ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
+                const divertedCallout = (isDiverted && ai.divertedTo) ?
+                `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
+
                 const aiCommentHtml = ai.aiComment ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>` : '';
+
                 cardWrapper.innerHTML = `
                     <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease; max-width: 500px; position: relative;">
                         <button type="button" onclick="${dismissLogic}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.2); border: none; color: #ffffff; cursor: pointer; font-size: 14px; z-index: 10; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.5)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'" title="Dismiss">✖</button>
@@ -649,7 +663,7 @@ block content
         btn.disabled = false;
       });
 
-      // --- EOC SCANNER ---
+      // --- 🚨 NEW EOC SCANNER 🚨 ---
       document.getElementById('btn-eoc').addEventListener('click', async (e) => {
         const btn = e.target;
         
@@ -663,7 +677,6 @@ block content
         const resultDiv = document.getElementById('eocResult');
 
         if(!date) return alert("Date is required to scan EOCs!");
- 
         
         btn.innerHTML = "⏳ Scanning...";
         btn.disabled = true;
@@ -671,9 +684,29 @@ block content
             const query = `date=${date}&originIata=${encodeURIComponent(oIata)}&destIata=${encodeURIComponent(dIata)}&originCountry=${encodeURIComponent(oCount)}&destCountry=${encodeURIComponent(dCount)}`;
             const res = await fetch(`/api/tools/check-eoc?${query}`);
             const data = await res.json();
-            if (data.eocFound && data.events.length > 0) {
-                const ev = data.events[0];
-                resultDiv.innerHTML = `<div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; color: #7f1d1d;"><div style="font-weight: 800; color: #dc2626; margin-bottom: 12px; text-transform: uppercase; font-size: 13px;">⚠️ Extraordinary Circumstances Detected</div><div style="display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px;"><strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span><strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span><strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span><strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span></div></div>`;
+            
+            if (data.eocFound && data.events && data.events.length > 0) {
+                const headerText = data.events.length > 1 
+                    ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${data.events.length})` 
+                    : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
+
+                let eventsHtml = data.events.map((ev, index) => `
+                    <div style="${index > 0 ? 'margin-top: 12px; padding-top: 12px; border-top: 1px dashed #fca5a5;' : ''} color: #450a0a; display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: baseline;">
+                        <strong style="color: #991b1b;">Category:</strong> <span>${ev.category}</span>
+                        <strong style="color: #991b1b;">Event:</strong> <span>${ev.event}</span>
+                        <strong style="color: #991b1b;">Location:</strong> <span>${ev.location}</span>
+                        <strong style="color: #991b1b;">Decision:</strong> <span style="font-weight: 800; color: #dc2626;">${ev.decision}</span>
+                    </div>
+                `).join('');
+
+                resultDiv.innerHTML = `
+                    <div class="eoc-alert-active" style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; color: #7f1d1d;">
+                        <div style="font-weight: 800; color: #dc2626; margin-bottom: 12px; text-transform: uppercase; font-size: 13px;">
+                            ${headerText}
+                        </div>
+                        ${eventsHtml}
+                    </div>
+                `;
             } else { 
                 resultDiv.innerHTML = `<div style="background: #dcfce7; color: #166534; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #bbf7d0;">✅ No EOCs found for this route on this date.</div>`;
             }
@@ -704,7 +737,7 @@ block content
         // 1. DISTANCE CALCULATION
         if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2) && (lat1 !== 0 || lon1 !== 0)) {
             // Calculate via GPS if dropdown was used
-            const R = 6371; 
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -720,23 +753,22 @@ block content
 
         // EU list required solely for the Intra-EU compensation cap
         const euList = ["austria","belgium","bulgaria","croatia","cyprus","czech republic","denmark","estonia","finland","france","germany","greece","hungary","ireland","italy","latvia","lithuania","luxembourg","malta","netherlands","the netherlands","poland","portugal","romania","slovakia","slovenia","spain","sweden","iceland","norway","switzerland","united kingdom","uk","guadeloupe","reunion","martinique","french guiana","mayotte"];
-
         const isOriginEU = euList.includes(originCountry);
         const isDestEU = euList.includes(destCountry);
 
         // 2. COMPENSATION AMOUNT LOGIC
-        let comp = "€250"; 
+        let comp = "€250";
         let type = "Short Haul";
         
         if (dist > 1500 && dist <= 3500) { 
-            comp = "€400"; 
+            comp = "€400";
             type = "Medium Haul"; 
         } else if (dist > 3500) { 
             if (isOriginEU && isDestEU) { 
-                comp = "€400"; 
+                comp = "€400";
                 type = "Intra-EU Long Haul (Capped)"; 
             } else { 
-                comp = "€600"; 
+                comp = "€600";
                 type = "Long Haul"; 
             }
         }
@@ -756,6 +788,7 @@ block content
             </div>
         `;
       });
+
       // --- SMART EMAIL BUILDER LOGIC ---
       document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -784,7 +817,6 @@ block content
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
               });
-              
               const data = await response.json();
               
               if (data.success) {
@@ -809,7 +841,7 @@ block content
               btn.innerHTML = 'Generate Content';
           }
       });
-      
+
       document.getElementById('emCopyBtn').addEventListener('click', () => {
           const text = document.getElementById('emOutputText');
           text.select();
