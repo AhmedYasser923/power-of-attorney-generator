@@ -179,7 +179,7 @@ const prompt = `
           {
             "firstName": "[String]",
             "lastName": "[String]",
-            "ticketNumber": "[String: STRICTLY 13 NUMERIC DIGITS. NO LETTERS.]"
+            "ticketNumber": "[String: STRICTLY 13 NUMERIC DIGITS. NO LETTERS. If listed per-leg, match the number to this journey's flights. If missing or 'Not required', output 'Not Provided']"
           }
         ],
         "ec261": {
@@ -197,8 +197,9 @@ const prompt = `
                 "pnr": "[String: The EXACT True airline PNR. Standard airlines use 6 alphanumeric characters. 🚨 NUMERIC EXCEPTION: If the airline is on the Numeric Exception List (e.g., Corendon, TUI, Condor, Sunclass, etc.), their printed numeric code IS the True PNR; output that exact number here. If standard airline and true PNR is hidden/unreadable, output 'Requires Scan'.]",
                 "flightStatus": "[String: 'Scheduled', 'Flown', 'Unused / Missed Connection', 'Cancelled', 'Replacement Flight', or 'Unused Replacement Flight']",
                 "marketingAirline": "[String]",
+                "marketingAirlineCountry": "[String: Home country of the booked/marketing airline, e.g., 'France']",
                 "operatingAirline": "[String]",
-                "operatingAirlineCountry": "[String]",
+                "operatingAirlineCountry": "[String: Home country of the operating airline, e.g., 'Germany']",
                 "flightNumbers": ["[String]", "[String]"],
                 "originIata": "[String]",
                 "originName": "[String]",
@@ -220,7 +221,8 @@ const prompt = `
                   "claimExpiration": {
                     "originYears": "[String]",
                     "destinationYears": "[String]",
-                    "airlineYears": "[String]",
+                    "marketingAirlineYears": "[String]",
+                    "operatingAirlineYears": "[String]",
                     "bestCountry": "[String]",
                     "bestYears": "[String]",
                     "expirationDate": "[String: YYYY-MM-DD or N/A]",
@@ -368,11 +370,17 @@ const startTime = Date.now();
             let marketing = leg.marketingAirline || "Unknown";
             let operating = leg.operatingAirline || marketing;
 
-            // Get airline HQ jurisdiction limit
+            // Get airline HQ jurisdiction limit (Operating)
             const opCountry = (leg.operatingAirlineCountry || '').toLowerCase().trim();
             const opLimitRaw = jurisdictionLimits[opCountry] || 'N/A';
             const opLimitFormatted = opLimitRaw !== 'N/A' ? `${opLimitRaw} years` : 'N/A';
             const displayOpCountry = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
+
+            // Get airline HQ jurisdiction limit (Marketing)
+            const mktCountry = (leg.marketingAirlineCountry || '').toLowerCase().trim();
+            const mktLimitRaw = jurisdictionLimits[mktCountry] || 'N/A';
+            const mktLimitFormatted = mktLimitRaw !== 'N/A' ? `${mktLimitRaw} years` : 'N/A';
+            const displayMktCountry = leg.marketingAirlineCountry && leg.marketingAirlineCountry !== 'Unknown' ? leg.marketingAirlineCountry : 'Unknown HQ';
 
             const getReqs = (airlineName) => {
               if (!airlineName || airlineName === "Unknown") return "No documents required";
@@ -389,30 +397,29 @@ const startTime = Date.now();
             if (marketing === operating) {
                 docsList.push({ airline: marketing, role: "", reqs: getReqs(marketing), hq: displayOpCountry, limit: opLimitFormatted });
             } else {
-                docsList.push({ airline: marketing, role: "Booked", reqs: getReqs(marketing) });
-                // We only attach the jurisdiction badge to the operating airline
+                // Attach the marketing HQ limit to the booked airline row
+                docsList.push({ airline: marketing, role: "Booked", reqs: getReqs(marketing), hq: displayMktCountry, limit: mktLimitFormatted });
                 docsList.push({ airline: operating, role: "Operated", reqs: getReqs(operating), hq: displayOpCountry, limit: opLimitFormatted });
             }
             leg.claimDocuments = docsList;
 
-            // 2. --- JURISDICTION OVERRIDE LOGIC ---
+            // 2. --- ENHANCED JURISDICTION OVERRIDE LOGIC ---
             if (leg.ec261Leg && leg.ec261Leg.claimExpiration) {
                 const oCountry = (leg.originCountry || '').toLowerCase().trim();
                 const dCountry = (leg.destinationCountry || '').toLowerCase().trim();
-                const aCountry = (leg.operatingAirlineCountry || '').toLowerCase().trim();
                 
                 let oLimit = jurisdictionLimits[oCountry] || 'N/A';
                 let dLimit = jurisdictionLimits[dCountry] || 'N/A';
-                let aLimit = jurisdictionLimits[aCountry] || 'N/A';
                 
                 leg.ec261Leg.claimExpiration.originYears = oLimit;
                 leg.ec261Leg.claimExpiration.destinationYears = dLimit;
-                leg.ec261Leg.claimExpiration.airlineYears = aLimit;
+                leg.ec261Leg.claimExpiration.operatingAirlineYears = opLimitRaw;
+                leg.ec261Leg.claimExpiration.marketingAirlineYears = mktLimitRaw;
 
                 let bestLimit = 0;
                 let bestCountryName = 'Unknown';
 
-                if (oLimit !== 'N/A') {
+                if (oLimit !== 'N/A' && oLimit > bestLimit) {
                     bestLimit = oLimit;
                     bestCountryName = leg.originCountry;
                 }
@@ -422,9 +429,14 @@ const startTime = Date.now();
                     bestCountryName = leg.destinationCountry;
                 }
 
-                if (aLimit !== 'N/A' && aLimit > bestLimit) {
-                    bestLimit = aLimit;
-                    bestCountryName = leg.operatingAirlineCountry + " (Airline HQ)";
+                if (opLimitRaw !== 'N/A' && opLimitRaw > bestLimit) {
+                    bestLimit = opLimitRaw;
+                    bestCountryName = leg.operatingAirlineCountry;
+                }
+
+                if (mktLimitRaw !== 'N/A' && mktLimitRaw > bestLimit) {
+                    bestLimit = mktLimitRaw;
+                    bestCountryName = leg.marketingAirlineCountry;
                 }
 
                 if (bestLimit > 0 && leg.date && leg.date !== "Unknown") {
