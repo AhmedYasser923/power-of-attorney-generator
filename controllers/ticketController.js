@@ -101,7 +101,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     yearDirective = `\n    🚨 *** GLOBAL JOURNEY YEAR PROVIDED: ${journeyYear} *** 🚨\n    The user has explicitly confirmed the travel year is ${journeyYear}. If a flight date on the ticket only shows Day and Month (e.g., '25 Mar'), you MUST use ${journeyYear} to format the 'date' field as 'YYYY-MM-DD' (e.g., '${journeyYear}-03-25').`;
   }
 
-const prompt = `
+const rawPrompt = `
     You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). try not to exceed 40s in analyzing
     ${yearDirective}
     🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
@@ -236,6 +236,8 @@ const prompt = `
       }
     ]
   `;
+
+  const prompt = rawPrompt.replace(/\s+/g, ' ').trim();
 const documentParts = [];
   for (const file of files) {
     let processedBuffer = file.buffer;
