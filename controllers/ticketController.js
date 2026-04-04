@@ -73,13 +73,39 @@ const airlineRequirements = [
 ];
 
 const jurisdictionLimits = {
-  "poland": 1, "belgium": 5, "italy": 2, "netherlands": 2, "the netherlands": 2,
-  "switzerland": 2, "croatia": 2, "iceland": 2, "slovakia": 2, "slovenia": 2,
-  "germany": 3, "austria": 3, "denmark": 3, "finland": 3, "norway": 3,
-  "portugal": 3, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
-  "estonia": 3, "latvia": 3, "lithuania": 3, "spain": 5, "france": 5,
-  "greece": 5, "hungary": 5, "uk": 6, "united kingdom": 6, "ireland": 6,
-  "cyprus": 6, "malta": 6, "luxembourg": 10
+  "poland": 1,
+"belgium": 5,
+"italy": 2,
+"netherlands": 2,
+"the netherlands": 2,
+"switzerland": 2,
+"croatia": 3,
+"iceland": 2,
+"slovakia": 2,
+"slovenia": 2,
+"germany": 3,
+"austria": 3,
+"denmark": 3,
+"finland": 3,
+"norway": 3,
+"portugal": 2,
+"romania": 3,
+"sweden": "2 Months - 10",
+ "czech republic": "6 Months - 3",
+ "bulgaria": 1,
+"estonia": 3,
+"latvia": 1,
+"lithuania": 3,
+"spain": 5,
+"france": 5,
+"greece": 5,
+"hungary": 2,
+ "uk": 6,
+"united kingdom": 6,
+"ireland": 6,
+"cyprus": 6,
+"malta": "No Limit",
+"luxembourg": 10
 };
 
 exports.renderAnalyzer = catchAsync(async (req, res, next) => {
@@ -694,24 +720,7 @@ exports.checkFlightStatus = async (req, res, next) => {
       if (opLine) operatorName = opLine.name || operatorCode;
     }
 
-    let aiComment = null;
-    if (hasMultipleDisruptions && rawStatus === 'D') {
-      aiComment = `🚨 Double Disruption: The aircraft initially diverted to ${divertedCode || 'another airport'}, and the remainder of the journey was officially cancelled.`;
-    } else if (arrTimeDataPending) {
-      aiComment = `⚠️ Anomaly: The flight landed, but final arrival timestamps are missing from Cirium. This often indicates a prolonged tarmac delay or gate issue.`;
-    } else if (['C', 'D', 'U'].includes(rawStatus) || arrDelayMins >= 30) {
-      try {
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const commentModel = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-        const commentPrompt = `Flight data: status=${statusText}, dep scheduled=${formatTime(sDep.dateLocal)} actual=${formatTime(aDep.dateLocal)}, arr scheduled=${formatTime(sArr.dateLocal)} actual=${formatTime(aArr.dateLocal)}, delay=${arrDelayMins} mins${divertedCode ? `, diverted to ${divertedCode}${divertedToCity ? ` (${divertedToCity})` : ''}` : ''}.
-  Write ONE factual sentence (max 25 words) about the most important fact. Only mention departure time, arrival time, delay amount, or diversion destination. No filler.`;
-        const commentResult = await commentModel.generateContent(commentPrompt);
-        aiComment = commentResult.response.text().trim().replace(/^["']|["']$/g, '');
-      } catch (e) {
-        console.error("AI Comment Error:", e);
-      }
-    }
+
 
     const parsedUIStats = {
       bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
@@ -730,7 +739,7 @@ exports.checkFlightStatus = async (req, res, next) => {
       arrActual: formatTime(aArr.dateLocal),
       arrActualZone: calculateUtcOffset(aArr.dateLocal, aArr.dateUtc),
       arrActualLabel: arrTimeDataPending ? 'Data Pending' : arrActualLabel,
-      arrDelay: arrDelayStr, arrDelayColor, aiComment
+      arrDelay: arrDelayStr, arrDelayColor
     };
 
     res.json({ aiStats: parsedUIStats, rawResponse: data });

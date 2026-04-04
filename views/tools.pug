@@ -350,15 +350,41 @@ block content
       setupAirportAutocomplete('l-dest', 'l-dest-country');
 
       // --- JURISDICTION CHECKER LOGIC ---
-      const jurisdictionLimits = {
-        "poland": 1, "belgium": 5, "italy": 2, "netherlands": 2, "the netherlands": 2,
-        "switzerland": 2, "croatia": 2, "iceland": 2, "slovakia": 2, "slovenia": 2,
-        "germany": 3, "austria": 3, "denmark": 3, "finland": 3, "norway": 3,
-        "portugal": 3, "romania": 3, "sweden": 3, "czech republic": 3, "bulgaria": 3,
-        "estonia": 3, "latvia": 3, "lithuania": 3, "spain": 5, "france": 5,
-        "greece": 5, "hungary": 5, "uk": 6, "united kingdom": 6, "ireland": 6,
-        "cyprus": 6, "malta": 6, "luxembourg": 10
-      };
+    const jurisdictionLimits = {
+    "poland": 1,
+    "belgium": 5,
+    "italy": 2,
+    "netherlands": 2,
+    "the netherlands": 2,
+    "switzerland": 2,
+    "croatia": 3,
+    "iceland": 2,
+    "slovakia": 2,
+    "slovenia": 2,
+    "germany": 3,
+    "austria": 3,
+    "denmark": 3,
+    "finland": 3,
+    "norway": 3,
+    "portugal": 2,
+    "romania": 3,
+    "sweden": "2 Months - 10",
+    "czech republic": "6 Months - 3",
+    "bulgaria": 1,
+    "estonia": 3,
+    "latvia": 1,
+    "lithuania": 3,
+    "spain": 5,
+    "france": 5,
+    "greece": 5,
+    "hungary": 2,
+    "uk": 6,
+    "united kingdom": 6,
+    "ireland": 6,
+    "cyprus": 6,
+    "malta": "No Limit",
+    "luxembourg": 10
+    };
 
       // 1. Reusable function to render the UI card
       function displayJurisdictionResult(query) {
@@ -578,7 +604,7 @@ block content
                 const divertedCallout = (isDiverted && ai.divertedTo) ?
                 `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
 
-                const aiCommentHtml = ai.aiComment ? `<div style="margin-top:16px;background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic;line-height:1.5;">💬 ${ai.aiComment}</div>` : '';
+                
 
                 cardWrapper.innerHTML = `
                     <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; animation: fadeIn 0.4s ease; max-width: 500px; position: relative;">
@@ -643,7 +669,7 @@ block content
                                 <span style="font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Flight Status:</span>
                                 <strong style="margin-left:10px;font-size:18px;color:${ai.arrDelayColor};background:${ai.arrDelayColor}15;border:1px solid ${ai.arrDelayColor}30;padding:6px 16px;border-radius:8px;">${ai.arrDelay}</strong>
                             </div>
-                            ${aiCommentHtml}
+                           
                         </div>
                     </div>
                 `;
