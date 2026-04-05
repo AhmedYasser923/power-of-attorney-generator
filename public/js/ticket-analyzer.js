@@ -404,12 +404,19 @@ document.addEventListener('DOMContentLoaded', () => {
       let dataArray = rawResponse.journeys || rawResponse;
       if (!Array.isArray(dataArray)) dataArray = [dataArray];
 
-      if (rawResponse.processingTime) {
+if (rawResponse.processingTime) {
         resultsCard.innerHTML += `
-          <div style="display:flex;justify-content:flex-end;margin-bottom:15px;">
+          <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;">
             <span style="background:#e2e8f0;color:#475569;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-              ⏱️ Server Processed in ${rawResponse.processingTime}s
+              ⏱️ Processed in ${rawResponse.processingTime}s
             </span>
+            ${rawResponse.costUSD ? `
+            <span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1px solid #bbf7d0;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              💸 ${rawResponse.costUSD}
+            </span>
+            <span style="background:#fef3c7;color:#b45309;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1px solid #fde68a;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              🌍 ${rawResponse.costEGP} EGP
+            </span>` : ''}
           </div>`;
       }
 

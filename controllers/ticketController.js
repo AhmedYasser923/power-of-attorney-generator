@@ -232,24 +232,33 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
   const responseText = result.response.text();
 
+  let requestCostUSD = 0;
+  let requestCostEGP = 0;
+
   if (result.response.usageMetadata) {
     const usage = result.response.usageMetadata;
     const inTokens = usage.promptTokenCount || 0;
     const outTokens = usage.candidatesTokenCount || 0;
     
-    // Calculate cost based on Gemini Flash pricing ($0.075/1M input, $0.30/1M output)
-    const cost = ((inTokens / 1000000) * 0.075) + ((outTokens / 1000000) * 0.30);
+    // Calculate costs
+    requestCostUSD = ((inTokens / 1000000) * 0.075) + ((outTokens / 1000000) * 0.30);
+    requestCostEGP = requestCostUSD * 54.33;
 
     console.log(`\n=========================================`);
     console.log(`🎫 TICKET ANALYZED IN ${processingTimeInSeconds}s`);
     console.log(`=========================================`);
     console.log(`📥 Input Tokens Read:  ${inTokens.toLocaleString()}`);
     console.log(`📤 Output Tokens Typed: ${outTokens.toLocaleString()}`);
-    console.log(`💸 Estimated Cost:      $${cost.toFixed(6)}`);
+    console.log(`💸 Estimated Cost:      $${requestCostUSD.toFixed(6)} USD`);
+    console.log(`🌍 Equivalent in EGP:   £${requestCostEGP.toFixed(6)} EGP`);
     console.log(`=========================================\n`);
   }
+  
+  // Now requestCost has the actual number, not 0!
+  const formattedCostUSD = `$${requestCostUSD.toFixed(6)}`;
+  const formattedCostEGP = `£${requestCostEGP.toFixed(6)}`;
 
-  let parsedJourneys;
+let parsedJourneys;
   try {
     parsedJourneys = JSON.parse(responseText);
   } catch (parseErr) {
@@ -257,7 +266,13 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   }
 
   if (!Array.isArray(parsedJourneys) || parsedJourneys.length === 0) {
-    return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, journeys: [] });
+    return res.json({ 
+      noFlightData: true, 
+      processingTime: processingTimeInSeconds, 
+      costUSD: formattedCostUSD, // Send USD
+      costEGP: formattedCostEGP, // Send EGP
+      journeys: [] 
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -416,7 +431,8 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     });
   });
 
-  res.json({ processingTime: processingTimeInSeconds, journeys: parsedJourneys });
+  res.json({ processingTime: processingTimeInSeconds, costUSD: formattedCostUSD,
+    costEGP: formattedCostEGP, journeys: parsedJourneys });
 });
 
 // ---------------------------------------------------------------------------
