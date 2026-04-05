@@ -232,6 +232,23 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
   const responseText = result.response.text();
 
+  if (result.response.usageMetadata) {
+    const usage = result.response.usageMetadata;
+    const inTokens = usage.promptTokenCount || 0;
+    const outTokens = usage.candidatesTokenCount || 0;
+    
+    // Calculate cost based on Gemini Flash pricing ($0.075/1M input, $0.30/1M output)
+    const cost = ((inTokens / 1000000) * 0.075) + ((outTokens / 1000000) * 0.30);
+
+    console.log(`\n=========================================`);
+    console.log(`🎫 TICKET ANALYZED IN ${processingTimeInSeconds}s`);
+    console.log(`=========================================`);
+    console.log(`📥 Input Tokens Read:  ${inTokens.toLocaleString()}`);
+    console.log(`📤 Output Tokens Typed: ${outTokens.toLocaleString()}`);
+    console.log(`💸 Estimated Cost:      $${cost.toFixed(6)}`);
+    console.log(`=========================================\n`);
+  }
+
   let parsedJourneys;
   try {
     parsedJourneys = JSON.parse(responseText);

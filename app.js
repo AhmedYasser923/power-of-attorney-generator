@@ -17,6 +17,7 @@ const app = express();
 const globalErrorHandler = require('./controllers/errorController');
 
 
+
 // View engine setup
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));

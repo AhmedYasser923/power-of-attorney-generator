@@ -1,0 +1,47 @@
+extends layout
+block content
+  .dashboard-container
+    header.dashboard-header
+      h1 Workspace Admin Panel
+      p Total Platform API Cost: 
+        strong(style="color: #dc2626;") $#{totalSystemCost}
+    
+    table.records-table
+      thead
+        tr
+          th Name
+          th Email
+          th Status
+          th Role
+          th API Cost
+          th Actions
+      tbody
+        each user in users
+          tr
+            td= user.name
+            td= user.email
+            td 
+              span(style=`font-weight:bold; color: ${user.status === 'approved' ? 'green' : user.status === 'rejected' ? 'red' : 'orange'}`)= user.status.toUpperCase()
+            td= user.role
+            td $#{user.apiUsage.totalCost.toFixed(4)}
+            td
+              if user.role !== 'admin'
+                select.status-select(data-id=user._id)
+                  option(value="pending" selected=user.status==='pending') Pending
+                  option(value="approved" selected=user.status==='approved') Approved
+                  option(value="rejected" selected=user.status==='rejected') Rejected
+
+  script.
+    document.querySelectorAll('.status-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const userId = e.target.dataset.id;
+        const newStatus = e.target.value;
+        const res = await fetch(`/api/users/${userId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Error updating status');
+      });
+    });

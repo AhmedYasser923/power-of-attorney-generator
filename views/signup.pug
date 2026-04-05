@@ -1,0 +1,32 @@
+extends layout
+block content
+  .container(style="max-width: 400px; margin: 50px auto;")
+    h2 Request Access
+    form#signupForm
+      .form-group
+        label Full Name
+        input#name(type="text" required)
+      .form-group
+        label Email
+        input#email(type="email" required)
+      .form-group
+        label Password
+        input#password(type="password" required minlength="8")
+      button.btn.btn-primary(type="submit") Sign Up
+
+  script.
+    document.getElementById('signupForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await fetch('/api/signup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert("Account created! Please wait for an admin to approve your access.");
+        window.location.assign('/login');
+      } else alert(data.message);
+    });
