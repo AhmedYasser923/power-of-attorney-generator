@@ -238,6 +238,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates.
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" is NEVER the flight date. Ignore it completely.
     3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar"), DO NOT assume or append the current year. Output EXACTLY the explicit day and month you see. Only format as YYYY-MM-DD if the year is explicitly printed.
+  
 
     🚨 JOURNEY SPLITTING ALGORITHM (FOLLOW EXACTLY IN ORDER) 🚨
     RULE 1 - THE "SELF-TRANSFER" SPLIT: Scan the document for the exact words "Self-transfer", "Self transfer", or "Separate tickets". 
