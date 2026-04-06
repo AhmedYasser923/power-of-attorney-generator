@@ -5,6 +5,8 @@ const sharp = require('sharp');
 
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { PDFExtract } = require('pdf.js-extract');
+const pdfExtract = new PDFExtract();
 
 // --- Load databases ---
 const eocDatabase      = require('../eoc_data.json');
@@ -185,22 +187,43 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
 
   const prompt = rawPrompt.replace(/\s+/g, ' ').trim();
 
-  const documentParts = [];
+   const documentParts = [];
+ 
   for (const file of files) {
-    let processedBuffer = file.buffer;
-    let mimeType = file.mimetype;
+    if (file.mimetype === 'application/pdf') {
+      try {
+        // 🚨 BULLETPROOF ALTERNATIVE: Use pdf.js-extract natively
+        const data = await pdfExtract.extractBuffer(file.buffer);
+        
+        // Loop through all pages and join the text fragments together
+        const text = data.pages
+          .map(page => page.content.map(item => item.str).join(' '))
+          .join('\n')
+          .trim();
 
-    if (file.mimetype.startsWith('image/')) {
-      processedBuffer = await sharp(file.buffer)
+        if (text.length > 100) {
+          // Digital PDF — push extracted text, skip vision entirely
+          console.log(`[PDF] Digital (${text.length} chars) → sending as text part.`);
+          documentParts.push({ text: `[PDF text content]\n${text}` });
+        } else {
+          throw new Error(`Insufficient text extracted (${text.length} chars)`);
+        }
+      } catch (pdfErr) {
+        // Scanned / image-only PDF or extraction failure — fall back to vision
+        console.log(`[PDF] Scanned (${pdfErr.message}) → sending as inlineData.`);
+        documentParts.push({
+          inlineData: { data: file.buffer.toString('base64'), mimeType: 'application/pdf' },
+        });
+      }
+    } else if (file.mimetype.startsWith('image/')) {
+      const processed = await sharp(file.buffer)
         .resize({ width: 1600, withoutEnlargement: true })
         .jpeg({ quality: 75 })
         .toBuffer();
-      mimeType = 'image/jpeg';
+      documentParts.push({ inlineData: { data: processed.toString('base64'), mimeType: 'image/jpeg' } });
+    } else {
+      documentParts.push({ inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } });
     }
-
-    documentParts.push({
-      inlineData: { data: processedBuffer.toString('base64'), mimeType },
-    });
   }
 
   const startTime = Date.now();
