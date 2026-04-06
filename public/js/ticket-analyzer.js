@@ -1,13 +1,5 @@
 /* =============================================================================
    ticket-analyzer.js
-   Features:
-   - Expanded isMissingDate: catches "Unknown", "Not Provided", "N/A", blank
-   - Date picker inline on cards with no date
-   - "Enter ✓" pulsing button to bulk-apply a year to partial-date cards
-   - Every confirmed date pill has a small ✏️ edit button to re-open the picker
-     and re-trigger EOC + expiry calculations
-   - EOC uses stable .fc-eoc-wrapper so it can be re-triggered without losing
-     the element reference
    ============================================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,14 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
     .fc-date-set-btn { animation: setDatePulse 2s infinite; }
     .fc-date-set-btn:disabled { animation: none; }
 
-    /* Edit button on confirmed date pills */
     .fc-date-edit-btn {
       background: none; border: none; cursor: pointer; font-size: 11px; padding: 2px 4px;
       color: #94a3b8; border-radius: 3px; line-height: 1; transition: color 0.2s, background 0.2s;
     }
     .fc-date-edit-btn:hover { color: #2563eb; background: #eff6ff; }
 
-    /* Inline date-edit row that replaces a confirmed pill on edit */
     .fc-date-edit-row {
       display: inline-flex; align-items: center; gap: 5px; background: #f0f9ff;
       border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 8px;
@@ -75,12 +65,29 @@ document.addEventListener('DOMContentLoaded', () => {
       padding: 3px 6px; font-size: 11px; font-weight: 700; cursor: pointer;
     }
 
+    /* Rescheduled badge */
+    .fc-rescheduled-badge {
+      background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+      padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px;
+      margin-bottom: 12px; margin-right: 8px; display: inline-block;
+    }
+    /* Original time strikethrough inside rescheduled card */
+    .fc-original-time {
+      font-size: 13px; color: #94a3b8; text-decoration: line-through;
+      margin-right: 6px; font-weight: 600;
+    }
+    .fc-new-time-arrow { color: #f59e0b; font-weight: 800; margin-right: 6px; font-size: 13px; }
+    .fc-new-time { color: #b45309; font-weight: 800; font-size: 15px; }
+
+    .pnr-editable { outline:none; color:var(--primary); font-weight:800; min-width:85px; display:inline-block; word-break:break-word; max-width:100%; text-transform:uppercase; cursor:text; }
+    .pnr-editable:empty:before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   `;
   document.head.appendChild(styleEl);
 
   // ---------------------------------------------------------------------------
-  // YEAR INPUT WRAPPER (injected before dropzone)
+  // YEAR INPUT WRAPPER
   // ---------------------------------------------------------------------------
   if (ticketDropZone) {
     ticketDropZone.insertAdjacentHTML('beforebegin', `
@@ -138,18 +145,111 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // STATUS BADGE RENDERER
+  // ---------------------------------------------------------------------------
+  // Maps the exact AI flightStatus string → { badge HTML, opacity, isRescheduled }
+  // Using exact normalised matching — never loose substring includes().
+  // This is the single source of truth for all status display logic.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Normalise a flightStatus string so small variations don't break matching.
+   * Lowercases and trims only — we still do exact comparisons after.
+   */
+  function normalizeStatus(raw) {
+    return (raw || '').toLowerCase().trim();
+  }
+
+  /**
+   * Build the status warning banners and return an object:
+   *   { html: string, opacity: string, isRescheduled: boolean }
+   *
+   * Logic is strictly switch-like — each status maps to exactly one set of
+   * banners and one opacity. There is NO fallthrough and NO substring matching.
+   */
+  function buildStatusBadges(flightStatus, flight) {
+    const s = normalizeStatus(flightStatus);
+
+    // ── Cancelled: airline did not operate this flight ──────────────────────
+    if (s === 'cancelled') {
+      return {
+        html: `<div style="background:#fee2e2;color:#dc2626;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #fecaca;">✈️ FLIGHT CANCELLED BY AIRLINE</div>`,
+        opacity: '0.55',
+        isRescheduled: false,
+      };
+    }
+
+    // ── Unused / Missed Connection: passenger did not board ──────────────────
+    if (s === 'unused / missed connection') {
+      return {
+        html: `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED TICKET</div>`,
+        opacity: '0.65',
+        isRescheduled: false,
+      };
+    }
+
+    // ── Replacement Flight: newly issued alternative ─────────────────────────
+    if (s === 'replacement flight') {
+      return {
+        html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>`,
+        opacity: '1',
+        isRescheduled: false,
+      };
+    }
+
+    // ── Unused Replacement Flight ────────────────────────────────────────────
+    if (s === 'unused replacement flight') {
+      return {
+        html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>` +
+              `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED</div>`,
+        opacity: '0.65',
+        isRescheduled: false,
+      };
+    }
+
+    // ── Rescheduled: same flight, different time ─────────────────────────────
+    if (s === 'rescheduled') {
+      const origDep = flight.originalDepartureTime && flight.originalDepartureTime !== '--:--' ? flight.originalDepartureTime : null;
+      const origArr = flight.originalArrivalTime   && flight.originalArrivalTime   !== '--:--' ? flight.originalArrivalTime   : null;
+
+      let timeChangeHtml = '';
+      if (origDep) {
+        timeChangeHtml = `
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:4px;">
+            <span style="font-size:11px;color:#64748b;font-weight:700;margin-right:4px;">Dep:</span>
+            <span class="fc-original-time">${origDep}</span>
+            <span class="fc-new-time-arrow">→</span>
+            <span class="fc-new-time">${flight.departureTime || '--:--'}</span>
+            ${origArr ? `<span style="font-size:11px;color:#64748b;font-weight:700;margin-left:10px;margin-right:4px;">Arr:</span><span class="fc-original-time">${origArr}</span><span class="fc-new-time-arrow">→</span><span class="fc-new-time">${flight.arrivalTime || '--:--'}</span>` : ''}
+          </div>`;
+      }
+
+      return {
+        html: `
+          <div class="fc-rescheduled-badge">
+            🕐 RESCHEDULED — TIME CHANGE
+            ${timeChangeHtml}
+          </div>`,
+        opacity: '1',
+        isRescheduled: true,  // signals the card to suppress normal time display
+      };
+    }
+
+    // ── Flown / Scheduled / anything else → no badge ────────────────────────
+    return { html: '', opacity: '1', isRescheduled: false };
+  }
+
+  // ---------------------------------------------------------------------------
   // DATE HELPERS
   // ---------------------------------------------------------------------------
 
-  /** Classify a raw AI date string */
   function classifyDate(raw) {
-    const MISSING_VALUES = ['', 'unknown', 'not provided', 'n/a', 'not available', 'none', 'null'];
-    if (!raw || MISSING_VALUES.includes(raw.trim().toLowerCase())) return 'missing';   // no date at all
-    if (/\d{4}/.test(raw)) return 'full';        // has a 4-digit year → good
-    return 'partial';                             // has day+month but no year
+    const MISSING = ['', 'unknown', 'not provided', 'n/a', 'not available', 'none', 'null'];
+    if (!raw || MISSING.includes(raw.trim().toLowerCase())) return 'missing';
+    if (/\d{4}/.test(raw)) return 'full';
+    return 'partial';
   }
 
-  /** Try to reconstruct YYYY-MM-DD from a "DD Mon" / "Mon DD" partial + year */
   function buildFullDate(partial, year) {
     if (!partial || !year) return null;
     const y = String(year).trim();
@@ -164,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  /** Re-render the expiry badge from stored data-years / data-country */
   function updateExpirationBadge(container, fullDate) {
     const rawYears = container.dataset.years, country = container.dataset.country;
     if (!rawYears || rawYears === 'N/A' || rawYears === 'undefined') {
@@ -181,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
       : `<div class="fc-exp-badge" title="Valid under ${country} law (${years} years)">⏳ Valid to ${expStr}</div>`;
   }
 
-  /** Fetch EOC and update the wrapper + flight card styling */
   async function runEOCCheck(eocWrapper, flightCard) {
     const { date, oiata, diata, ocountry, dcountry } = eocWrapper.dataset;
     flightCard.classList.remove('eoc-alert-active');
@@ -219,54 +317,30 @@ document.addEventListener('DOMContentLoaded', () => {
         eocWrapper.innerHTML = `<div style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #bbf7d0;">✅ No EOC Found</div>`;
       }
     } catch (err) {
-      console.error('EOC check failed:', err);
       eocWrapper.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #fecaca;">❌ EOC Check Failed</div>`;
     }
   }
 
-  /**
-   * Apply a confirmed full date to a card:
-   *  1. Render green confirmed pill with ✏️ edit button
-   *  2. Re-run EOC (with new date)
-   *  3. Recalculate expiry badge client-side
-   *  4. Update data-date on flight-status buttons
-   */
   async function applyDateToCard(flightCard, fullDate) {
-    // 1. Pill + edit button
     const wrapper = flightCard.querySelector('.fc-date-pill-wrapper');
     if (wrapper) {
       wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:4px;';
       wrapper.innerHTML = `
-        <span class="fc-date-pill" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">
-          📅 ${fullDate}
-        </span>
+        <span class="fc-date-pill" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">📅 ${fullDate}</span>
         <button class="fc-date-edit-btn" type="button" title="Edit date">✏️</button>`;
     }
-
-    // 2. EOC
     const eocW = flightCard.querySelector('.fc-eoc-wrapper');
     if (eocW) { eocW.dataset.date = fullDate; await runEOCCheck(eocW, flightCard); }
-
-    // 3. Expiry
     const expC = flightCard.querySelector('.exp-badge-container');
     if (expC) updateExpirationBadge(expC, fullDate);
-
-    // 4. Status buttons
     flightCard.querySelectorAll('.btn-check-status').forEach(b => b.dataset.date = fullDate);
-
-    // Store applied date so re-edits can pre-fill the picker
     flightCard.dataset.confirmedDate = fullDate;
   }
 
-  /**
-   * Show the inline date-editor row inside .fc-date-pill-wrapper.
-   * previousHtml = what to restore on cancel.
-   */
   function showDateEditor(flightCard, currentDate) {
     const wrapper = flightCard.querySelector('.fc-date-pill-wrapper');
     if (!wrapper) return;
-    const savedHtml  = wrapper.innerHTML;
-    const savedStyle = wrapper.style.cssText;
+    const savedHtml = wrapper.innerHTML, savedStyle = wrapper.style.cssText;
     wrapper.style.cssText = 'display:inline-flex;';
     wrapper.innerHTML = `
       <div class="fc-date-edit-row">
@@ -275,32 +349,23 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="fc-date-confirm-btn" type="button">✓ Confirm</button>
         <button class="fc-date-cancel-btn" type="button">✕</button>
       </div>`;
-
-    // Cancel restores previous view
-    wrapper.querySelector('.fc-date-cancel-btn').addEventListener('click', () => {
-      wrapper.style.cssText = savedStyle;
-      wrapper.innerHTML     = savedHtml;
-    });
-
-    // Confirm applies new date
+    wrapper.querySelector('.fc-date-cancel-btn').addEventListener('click', () => { wrapper.style.cssText = savedStyle; wrapper.innerHTML = savedHtml; });
     wrapper.querySelector('.fc-date-confirm-btn').addEventListener('click', async () => {
       const picker = wrapper.querySelector('.fc-inline-date-picker');
       if (!picker?.value) { alert('Please select a date first.'); return; }
       const btn = wrapper.querySelector('.fc-date-confirm-btn');
-      btn.disabled     = true;
-      btn.textContent  = '⏳';
+      btn.disabled = true; btn.textContent = '⏳';
       await applyDateToCard(flightCard, picker.value);
     });
   }
 
   // ---------------------------------------------------------------------------
-  // "ENTER ✓" YEAR BUTTON — bulk-apply year to partial-date cards
+  // "ENTER ✓" YEAR BUTTON
   // ---------------------------------------------------------------------------
   document.getElementById('applyYearBtn').addEventListener('click', async function () {
     const year = (document.getElementById('globalJourneyYear').value || '').trim();
     if (!year || !/^\d{4}$/.test(year)) { alert('Please enter a valid 4-digit year (e.g. 2024)'); return; }
     this.disabled = true; this.textContent = '⏳ Updating...';
-
     const promises = [];
     document.querySelectorAll('.flight-card[data-partial-date]').forEach(card => {
       const partial = card.dataset.partialDate;
@@ -309,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (full) promises.push(applyDateToCard(card, full));
     });
     await Promise.all(promises);
-
     const remaining = [...document.querySelectorAll('.flight-card[data-partial-date]')]
       .filter(c => { const p = c.dataset.partialDate; return p && p !== 'Unknown' && !/\d{4}/.test(p); });
     this.style.display = remaining.length ? 'inline-flex' : 'none';
@@ -365,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>`;
       }
 
-      // Pre-scan banners
       let hasMissingPnr = false, hasMissingYear = false;
       dataArray.forEach(j => (j.routes||[]).forEach(r => (r.legs||[]).forEach(leg => {
         if (!leg.pnr || leg.pnr === 'Not Provided' || leg.pnr.toLowerCase().includes('scan') || leg.pnr === 'Unknown') hasMissingPnr = true;
@@ -376,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsCard.innerHTML += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#1e3a8a;margin-bottom:6px;font-size:14px;"><span>📱</span> Missing PNRs Detected</div><div style="color:#1e40af;font-size:13px;line-height:1.5;">One or more True PNRs could not be clearly extracted. <b>Please use your scanner to read the barcode and edit the PNR field below.</b></div></div>`;
       }
 
-      // Render journeys
       dataArray.forEach((data, ji) => {
         const jw = document.createElement('div');
         jw.style.marginBottom  = '60px';
@@ -405,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
           jw.innerHTML += `<div class="ec261-card ${cc}" style="${is_}"><div class="ec-icon">${ico}</div><div class="ec-content">${th}${rh}</div></div>`;
         }
 
-        // Passenger card (deduped)
+        // Passenger card
         let showP = true;
         if (ji > 0) { const c=(data.passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'), pv=(dataArray[ji-1].passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'); if (c===pv&&c!=='') showP=false; }
         if (showP) {
@@ -413,7 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
           jw.innerHTML += `<div class="passenger-card" style="display:flex;flex-direction:column;gap:16px;padding:20px;"><div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Passenger Roster & Tickets</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;">${ph}</div></div>`;
         }
 
-        // Flight cards
         const fcc = document.createElement('div');
 
         if (data.routes?.length) {
@@ -425,6 +486,9 @@ document.addEventListener('DOMContentLoaded', () => {
               const dateCls      = classifyDate(flight.date);
               const isMissing    = dateCls === 'missing';
               const isPartial    = dateCls === 'partial';
+
+              // ── STATUS BADGES (bulletproof exact-match) ──────────────────
+              const { html: swarn, opacity: opa, isRescheduled } = buildStatusBadges(flight.flightStatus, flight);
 
               // EC261 badge
               let legBadge = '';
@@ -448,22 +512,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 else expBadge = `<div class="fc-exp-badge" title="Valid under ${exp.bestCountry} law (${exp.bestYears} years)">⏳ Valid to ${exp.expirationDate}</div>`;
               }
 
-              // Airline text
+              // Airline label
               const mkt = flight.marketingAirline||'Unknown', op = flight.operatingAirline||mkt;
               const airText = mkt===op ? `✈️ Operated by: ${op}` : `✈️ Booked: ${mkt} <span style="color:var(--primary);margin-left:8px;">| Operated by: ${op}</span>`;
 
-              // Status warnings
-              let swarn = '', opa = '1';
-              if (flight.flightStatus) {
-                const sl = flight.flightStatus.toLowerCase();
-                if (sl.includes('cancel')) { swarn += `<div style="background:#fee2e2;color:#dc2626;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #fecaca;">⚠️ FLIGHT CANCELLED</div>`; opa='0.55'; }
-                if (sl.includes('review')||sl.includes('change')||sl.includes('rebook')) swarn += `<div style="background:#ffedd5;color:#c2410c;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #fed7aa;">🔄 SCHEDULE CHANGE</div>`;
-                if (sl.includes('replacement')) swarn += `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>`;
-                if (sl.includes('missed')||sl.includes('unused')) { swarn += `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED</div>`; opa='0.65'; }
-              }
-
               // Distance
               const distHtml = flight.distanceKm ? `<div style="position:absolute;top:-20px;font-size:10px;font-weight:700;color:var(--text-muted);background:var(--surface);padding:2px 8px;border-radius:10px;border:1px solid var(--border-soft);z-index:3;letter-spacing:0.5px;">${flight.distanceKm}</div>` : '';
+
+              // For rescheduled legs the badge already shows the time change inline,
+              // so we suppress the normal departure/arrival time display to avoid duplication.
+              const depTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">See reschedule details above</span>` : (flight.departureTime || '--:--');
+              const arrTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">—</span>` : (flight.arrivalTime   || '--:--');
 
               // Docs
               let docsHtml = '';
@@ -486,12 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fns.forEach(fn => { const c=fn.trim(); if (c&&c!=='N/A'&&c!=='Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date||'Unknown'}" data-origin="${flight.originIata||''}" data-dest="${flight.destinationIata||''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
               } else { fnDisp = 'N/A'; }
 
-              // -----------------------------------------------------------------
-              // DATE PILL — three variants:
-              //   missing  → red inline date-picker + pulsing Set button
-              //   partial  → yellow warning pill (Enter button handles globally)
-              //   full     → green confirmed pill + ✏️ edit button
-              // -----------------------------------------------------------------
+              // Date pill
               let datePillHtml = '';
               if (isMissing) {
                 datePillHtml = `
@@ -507,7 +561,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="fc-date-edit-btn" type="button" title="Edit date">✏️</button>
                   </div>`;
               } else {
-                // Full date — show confirmed green pill + edit button
                 datePillHtml = `
                   <div class="fc-date-pill-wrapper" style="display:inline-flex;align-items:center;gap:4px;">
                     <span class="fc-date-pill">📅 ${flight.date}</span>
@@ -515,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>`;
               }
 
-              // EOC wrapper (stable, re-triggerable)
+              // EOC wrapper
               const eocHtml = `
                 <div class="fc-eoc-wrapper"
                      data-date="${flight.date||'Unknown'}"
@@ -529,11 +582,11 @@ document.addEventListener('DOMContentLoaded', () => {
               // PNR badge
               const pr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
               const pn = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
+              const editableSpan = `<span class="pnr-editable" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
               const pnrBadge = (pr===pn&&pn!=='')||(pr===''&&pn!=='')
-                ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;background:#f8fafc;padding:2px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;"><span>📱 PNR: <input type="text" value="${pn}" placeholder="Scan..." style="border:none;background:transparent;outline:none;color:var(--primary);font-weight:800;width:85px;font-size:11px;letter-spacing:1px;text-transform:uppercase;" onfocus="this.select()"></span></div>`
-                : `<div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;background:#f8fafc;padding:2px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;"><span style="color:#64748b;">🖨️ Printed Ref: <span style="color:#475569;">${pr||'N/A'}</span></span><span style="color:#cbd5e1;margin:0 4px;">|</span><span>📱 True PNR: <input type="text" value="${pn}" placeholder="Scan..." style="border:none;background:transparent;outline:none;color:var(--primary);font-weight:800;width:85px;font-size:11px;letter-spacing:1px;text-transform:uppercase;" onfocus="this.select()"></span></div>`;
+                ? `<div style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
+                : `<div style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr||'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
 
-              // data-partial-date: raw AI date for Enter button reconstruction
               const partialAttr = isMissing ? '' : (flight.date || '');
 
               fcc.innerHTML += `
@@ -556,8 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                   </div>
                   <div class="fc-times-row">
-                    <div><div class="fc-time">${flight.departureTime||'--:--'}</div></div>
-                    <div style="text-align:right;"><div class="fc-time">${flight.arrivalTime||'--:--'}</div></div>
+                    <div><div class="fc-time">${depTimeDisplay}</div></div>
+                    <div style="text-align:right;"><div class="fc-time">${arrTimeDisplay}</div></div>
                   </div>
                   <div class="fc-info-strip" style="flex-wrap:wrap;">
                     ${datePillHtml}
@@ -587,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (hasMissingYear) applyYearBtn.style.display = 'inline-flex';
 
-      // Fire EOC checks in parallel
       document.querySelectorAll('.fc-eoc-wrapper').forEach(w => {
         runEOCCheck(w, w.closest('.flight-card'));
       });
@@ -618,32 +670,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // EVENT DELEGATION on resultsCard
+  // EVENT DELEGATION
   // ---------------------------------------------------------------------------
   resultsCard.addEventListener('click', async (e) => {
 
-    // ✏️ Edit-date button (on confirmed or partial pills)
     const editBtn = e.target.closest('.fc-date-edit-btn');
     if (editBtn) {
       const card = editBtn.closest('.flight-card');
-      const currentDate = card.dataset.confirmedDate || '';
-      showDateEditor(card, currentDate);
+      showDateEditor(card, card.dataset.confirmedDate || '');
       return;
     }
 
-    // "✓ Set" button (on missing-date cards)
     const setBtn = e.target.closest('.fc-date-set-btn');
     if (setBtn) {
-      const pw     = setBtn.closest('.fc-date-pill-wrapper');
+      const pw = setBtn.closest('.fc-date-pill-wrapper');
       const picker = pw?.querySelector('.fc-inline-date-picker');
-      const card   = setBtn.closest('.flight-card');
+      const card = setBtn.closest('.flight-card');
       if (!picker?.value) { alert('Please select a date first.'); return; }
       setBtn.disabled = true; setBtn.textContent = '⏳';
       await applyDateToCard(card, picker.value);
       return;
     }
 
-    // 📡 Flight status button
     const statusBtn = e.target.closest('.btn-check-status');
     if (!statusBtn) return;
     const card = statusBtn.closest('.flight-card');
@@ -651,7 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const flightNum = statusBtn.dataset.flight, date = statusBtn.dataset.date;
     const origin    = statusBtn.dataset.origin,  dest = statusBtn.dataset.dest;
-    const origHtml  = statusBtn.innerHTML;
     statusBtn.innerHTML = `⏳ ${flightNum} Thinking...`; statusBtn.disabled = true;
 
     try {
@@ -698,7 +745,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <strong style="margin-left:10px;font-size:18px;color:${ai.arrDelayColor};background:${ai.arrDelayColor}15;border:1px solid ${ai.arrDelayColor}30;padding:6px 16px;border-radius:8px;">${ai.arrDelay}</strong>
             </div>
           </div>`;
-
         card.appendChild(sc);
         statusBtn.outerHTML = `<div style="background:#e2e8f0;color:#475569;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px;display:inline-block;">✨ ${flightNum} checked</div>`;
       } else {
