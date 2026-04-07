@@ -73,9 +73,6 @@ const TICKET_RESPONSE_SCHEMA = {
                     type: SchemaType.STRING,
                     description: 'True airline PNR. If multiple passengers have DIFFERENT PNRs on this exact leg, combine them like "PNR (Name) / PNR (Name)". Otherwise, just output the single PNR.',
                   },
-                  // ─────────────────────────────────────────────────────────────
-                  // flightStatus — THE MOST IMPORTANT FIELD. READ RULES CAREFULLY.
-                  // ─────────────────────────────────────────────────────────────
                   flightStatus: {
                     type: SchemaType.STRING,
                     description: `CHOOSE EXACTLY ONE of these seven values based on the strict rules below.
@@ -137,7 +134,6 @@ VALUE DEFINITIONS (mutually exclusive — pick the first one that matches):
                     type: SchemaType.STRING,
                     description: 'YYYY-MM-DD if the year is explicitly printed. Otherwise output only the Day and Month seen (e.g. "25 Mar"). NEVER assume or append a year.',
                   },
-                  // For Rescheduled legs: store the originally-booked times
                   originalDepartureTime: {
                     type: SchemaType.STRING,
                     description: 'ONLY for Rescheduled legs: the originally-booked departure time printed on the document (before the change). Output "--:--" for all other statuses.',
@@ -216,9 +212,33 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
 
   const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
+  // ---------------------------------------------------------------------------
+  // YEAR DIRECTIVE — LAST-RESORT FALLBACK ONLY
+  //
+  // Key fix: the old wording said "you MUST output it as ${year}-..." which the
+  // AI sometimes applied even when a full year was printed on the document.
+  // The new wording makes clear the document year ALWAYS wins; the user-supplied
+  // year is ONLY used when no year at all appears on the document for that leg.
+  // ---------------------------------------------------------------------------
   let yearDirective = '';
   if (journeyYear) {
-    yearDirective = `\n🚨 GLOBAL JOURNEY YEAR: ${journeyYear}. If a flight date only shows Day and Month (e.g. "25 Mar"), you MUST output it as "${journeyYear}-03-25".`;
+    yearDirective = `
+🚨 FALLBACK YEAR PROVIDED BY USER: ${journeyYear}
+
+CRITICAL PRIORITY RULE — THREE CASES, apply in order:
+1. If the flight date on this document EXPLICITLY shows a 4-digit year
+   (e.g. "25 Mar 2024", "2024-03-25", "25/03/2024", "March 25, 2024"),
+   you MUST use the year FROM THE DOCUMENT. Output it as YYYY-MM-DD using
+   the year you read. NEVER replace a document year with ${journeyYear}.
+
+2. If the flight date shows ONLY day and month with NO year anywhere
+   (e.g. "25 Mar", "Mar 25", "25/03"),
+   THEN — and ONLY then — use ${journeyYear} and output "${journeyYear}-MM-DD".
+
+3. If no date at all is visible, output an empty string for the date field.
+
+The user-supplied year ${journeyYear} is a safety net, NOT an override.
+Document years always take precedence.`;
   }
 
   const rawPrompt = `
@@ -237,8 +257,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
     *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
     1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates.
     2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" is NEVER the flight date. Ignore it completely.
-    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar"), DO NOT assume or append the current year. Output EXACTLY the explicit day and month you see. Only format as YYYY-MM-DD if the year is explicitly printed.
-  
+    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar"), DO NOT assume or append the current year. Output EXACTLY the explicit day and month you see. Only format as YYYY-MM-DD if the year is explicitly printed (or a fallback year was provided above).
 
     🚨 JOURNEY SPLITTING ALGORITHM (FOLLOW EXACTLY IN ORDER) 🚨
     RULE 1 - THE "SELF-TRANSFER" SPLIT: Scan the document for the exact words "Self-transfer", "Self transfer", or "Separate tickets". 

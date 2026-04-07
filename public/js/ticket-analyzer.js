@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
       padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 12px;
       margin-bottom: 12px; margin-right: 8px; display: inline-block;
     }
-    /* Original time strikethrough inside rescheduled card */
     .fc-original-time {
       font-size: 13px; color: #94a3b8; text-decoration: line-through;
       margin-right: 6px; font-weight: 600;
@@ -97,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </label>
         <div style="font-size:12px;color:#92400e;margin-bottom:12px;line-height:1.4;">
           Boarding passes often hide the year. Enter the year of travel (e.g., 2024) before
-          analyzing to guarantee the AI calculates perfect Jurisdiction &amp; Expiration limits.
+          analyzing to guarantee correct Jurisdiction &amp; Expiration calculations.
+          If the year is printed on the document, that document year is always used instead.
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <input type="number" id="globalJourneyYear" placeholder="YYYY" min="2000" max="2050"
@@ -145,73 +145,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // STATUS BADGE RENDERER
+  // STATUS BADGE RENDERER — exact-match, never substring
   // ---------------------------------------------------------------------------
-  // Maps the exact AI flightStatus string → { badge HTML, opacity, isRescheduled }
-  // Using exact normalised matching — never loose substring includes().
-  // This is the single source of truth for all status display logic.
-  // ---------------------------------------------------------------------------
+  function normalizeStatus(raw) { return (raw || '').toLowerCase().trim(); }
 
-  /**
-   * Normalise a flightStatus string so small variations don't break matching.
-   * Lowercases and trims only — we still do exact comparisons after.
-   */
-  function normalizeStatus(raw) {
-    return (raw || '').toLowerCase().trim();
-  }
-
-  /**
-   * Build the status warning banners and return an object:
-   *   { html: string, opacity: string, isRescheduled: boolean }
-   *
-   * Logic is strictly switch-like — each status maps to exactly one set of
-   * banners and one opacity. There is NO fallthrough and NO substring matching.
-   */
   function buildStatusBadges(flightStatus, flight) {
     const s = normalizeStatus(flightStatus);
 
-    // ── Cancelled: airline did not operate this flight ──────────────────────
     if (s === 'cancelled') {
-      return {
-        html: `<div style="background:#fee2e2;color:#dc2626;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #fecaca;">✈️ FLIGHT CANCELLED BY AIRLINE</div>`,
-        opacity: '0.55',
-        isRescheduled: false,
-      };
+      return { html: `<div style="background:#fee2e2;color:#dc2626;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #fecaca;">✈️ FLIGHT CANCELLED BY AIRLINE</div>`, opacity: '0.55', isRescheduled: false };
     }
-
-    // ── Unused / Missed Connection: passenger did not board ──────────────────
     if (s === 'unused / missed connection') {
-      return {
-        html: `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED TICKET</div>`,
-        opacity: '0.65',
-        isRescheduled: false,
-      };
+      return { html: `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED TICKET</div>`, opacity: '0.65', isRescheduled: false };
     }
-
-    // ── Replacement Flight: newly issued alternative ─────────────────────────
     if (s === 'replacement flight') {
-      return {
-        html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>`,
-        opacity: '1',
-        isRescheduled: false,
-      };
+      return { html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>`, opacity: '1', isRescheduled: false };
     }
-
-    // ── Unused Replacement Flight ────────────────────────────────────────────
     if (s === 'unused replacement flight') {
       return {
         html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>` +
               `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED</div>`,
-        opacity: '0.65',
-        isRescheduled: false,
+        opacity: '0.65', isRescheduled: false,
       };
     }
-
-    // ── Rescheduled: same flight, different time ─────────────────────────────
     if (s === 'rescheduled') {
       const origDep = flight.originalDepartureTime && flight.originalDepartureTime !== '--:--' ? flight.originalDepartureTime : null;
       const origArr = flight.originalArrivalTime   && flight.originalArrivalTime   !== '--:--' ? flight.originalArrivalTime   : null;
-
       let timeChangeHtml = '';
       if (origDep) {
         timeChangeHtml = `
@@ -223,26 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ${origArr ? `<span style="font-size:11px;color:#64748b;font-weight:700;margin-left:10px;margin-right:4px;">Arr:</span><span class="fc-original-time">${origArr}</span><span class="fc-new-time-arrow">→</span><span class="fc-new-time">${flight.arrivalTime || '--:--'}</span>` : ''}
           </div>`;
       }
-
-      return {
-        html: `
-          <div class="fc-rescheduled-badge">
-            🕐 RESCHEDULED — TIME CHANGE
-            ${timeChangeHtml}
-          </div>`,
-        opacity: '1',
-        isRescheduled: true,  // signals the card to suppress normal time display
-      };
+      return { html: `<div class="fc-rescheduled-badge">🕐 RESCHEDULED — TIME CHANGE${timeChangeHtml}</div>`, opacity: '1', isRescheduled: true };
     }
-
-    // ── Flown / Scheduled / anything else → no badge ────────────────────────
     return { html: '', opacity: '1', isRescheduled: false };
   }
 
   // ---------------------------------------------------------------------------
   // DATE HELPERS
   // ---------------------------------------------------------------------------
-
   function classifyDate(raw) {
     const MISSING = ['', 'unknown', 'not provided', 'n/a', 'not available', 'none', 'null'];
     if (!raw || MISSING.includes(raw.trim().toLowerCase())) return 'missing';
@@ -266,9 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateExpirationBadge(container, fullDate) {
     const rawYears = container.dataset.years, country = container.dataset.country;
-    if (!rawYears || rawYears === 'N/A' || rawYears === 'undefined') {
-      container.innerHTML = `<div class="fc-exp-badge">⚠️ Jurisdiction limit unknown</div>`; return;
-    }
+    if (!rawYears || rawYears === 'N/A' || rawYears === 'undefined') { container.innerHTML = `<div class="fc-exp-badge">⚠️ Jurisdiction limit unknown</div>`; return; }
     const years = parseInt(rawYears, 10);
     if (isNaN(years)) { container.innerHTML = `<div class="fc-exp-badge" title="${country}">⏳ ${rawYears}</div>`; return; }
     const fd = new Date(fullDate);
@@ -284,18 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const { date, oiata, diata, ocountry, dcountry } = eocWrapper.dataset;
     flightCard.classList.remove('eoc-alert-active');
     flightCard.querySelectorAll('.eoc-flight-alert').forEach(el => el.remove());
-
     if (!date || date === 'Unknown' || !/\d{4}/.test(date)) {
       eocWrapper.innerHTML = `<div style="background:#fef2f2;color:#dc2626;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #fecaca;">⚠️ Date Incomplete — No EOC Check</div>`;
       return;
     }
-
     eocWrapper.innerHTML = `<div style="background:#f8fafc;color:#475569;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⏳ Checking EOC...</div>`;
-
     try {
       const r = await fetch(`/api/check-eoc?date=${encodeURIComponent(date)}&originIata=${encodeURIComponent(oiata)}&destIata=${encodeURIComponent(diata)}&originCountry=${encodeURIComponent(ocountry)}&destCountry=${encodeURIComponent(dcountry)}`);
       const d = await r.json();
-
       if (d.eocFound && d.events?.length) {
         flightCard.classList.add('eoc-alert-active');
         const bt  = d.events.length > 1 ? `${d.events.length} EOCs Found` : `EOC Found`;
@@ -360,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // "ENTER ✓" YEAR BUTTON
+  // "ENTER ✓" YEAR BUTTON — shown only when the input is empty after analysis
   // ---------------------------------------------------------------------------
   document.getElementById('applyYearBtn').addEventListener('click', async function () {
     const year = (document.getElementById('globalJourneyYear').value || '').trim();
@@ -403,6 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fd = new FormData();
     currentFiles.forEach(f => fd.append('ticket', f));
+    // Always send whatever year the user typed — on the server it's now a
+    // strict fallback that never overrides a year found in the document.
     const globalYear = document.getElementById('globalJourneyYear')?.value;
     if (globalYear) fd.append('journeyYear', globalYear);
 
@@ -446,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         jw.style.paddingBottom = ji < dataArray.length - 1 ? '40px' : '0';
         if (dataArray.length > 1) jw.innerHTML += `<h3 style="color:var(--primary);border-bottom:1px solid var(--border-soft);padding-bottom:10px;">🎫 Ticket / Journey ${ji+1}</h3>`;
 
-        // EC261 overall card
         if (data.ec261 || data.routes?.length) {
           let el = [], il = [];
           (data.routes||[]).forEach(r => (r.legs||[]).forEach(leg => {
@@ -467,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
           jw.innerHTML += `<div class="ec261-card ${cc}" style="${is_}"><div class="ec-icon">${ico}</div><div class="ec-content">${th}${rh}</div></div>`;
         }
 
-        // Passenger card
         let showP = true;
         if (ji > 0) { const c=(data.passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'), pv=(dataArray[ji-1].passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'); if (c===pv&&c!=='') showP=false; }
         if (showP) {
@@ -487,10 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
               const isMissing    = dateCls === 'missing';
               const isPartial    = dateCls === 'partial';
 
-              // ── STATUS BADGES (bulletproof exact-match) ──────────────────
               const { html: swarn, opacity: opa, isRescheduled } = buildStatusBadges(flight.flightStatus, flight);
 
-              // EC261 badge
               let legBadge = '';
               if (flight.ec261Leg?.status) {
                 const ok = !flight.ec261Leg.status.toLowerCase().includes('not');
@@ -498,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (ok && flight.ec261Leg.estimatedClaimValue && flight.ec261Leg.estimatedClaimValue!=='N/A') legBadge += `<div class="leg-claim-value">💸 ${flight.ec261Leg.estimatedClaimValue}</div>`;
               }
 
-              // Expiry badge
               let expBadge = '', expYears = 'N/A', expCountry = 'N/A', originSt = '', destSt = '';
               if (flight.ec261Leg?.claimExpiration) {
                 const exp = flight.ec261Leg.claimExpiration;
@@ -512,19 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 else expBadge = `<div class="fc-exp-badge" title="Valid under ${exp.bestCountry} law (${exp.bestYears} years)">⏳ Valid to ${exp.expirationDate}</div>`;
               }
 
-              // Airline label
               const mkt = flight.marketingAirline||'Unknown', op = flight.operatingAirline||mkt;
               const airText = mkt===op ? `✈️ Operated by: ${op}` : `✈️ Booked: ${mkt} <span style="color:var(--primary);margin-left:8px;">| Operated by: ${op}</span>`;
-
-              // Distance
               const distHtml = flight.distanceKm ? `<div style="position:absolute;top:-20px;font-size:10px;font-weight:700;color:var(--text-muted);background:var(--surface);padding:2px 8px;border-radius:10px;border:1px solid var(--border-soft);z-index:3;letter-spacing:0.5px;">${flight.distanceKm}</div>` : '';
-
-              // For rescheduled legs the badge already shows the time change inline,
-              // so we suppress the normal departure/arrival time display to avoid duplication.
               const depTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">See reschedule details above</span>` : (flight.departureTime || '--:--');
               const arrTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">—</span>` : (flight.arrivalTime   || '--:--');
 
-              // Docs
               let docsHtml = '';
               if (flight.claimDocuments?.length) {
                 docsHtml = `<div style="width:100%;display:flex;flex-direction:column;margin-top:8px;">${flight.claimDocuments.map(doc => {
@@ -537,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('')}</div>`;
               }
 
-              // Flight numbers + status buttons
               let stBtns = '', fnDisp = '';
               const fns = Array.isArray(flight.flightNumbers) ? flight.flightNumbers : [];
               if (fns.length) {
@@ -545,7 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fns.forEach(fn => { const c=fn.trim(); if (c&&c!=='N/A'&&c!=='Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date||'Unknown'}" data-origin="${flight.originIata||''}" data-dest="${flight.destinationIata||''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
               } else { fnDisp = 'N/A'; }
 
-              // Date pill
               let datePillHtml = '';
               if (isMissing) {
                 datePillHtml = `
@@ -568,7 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>`;
               }
 
-              // EOC wrapper
               const eocHtml = `
                 <div class="fc-eoc-wrapper"
                      data-date="${flight.date||'Unknown'}"
@@ -579,7 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="background:#f8fafc;color:#475569;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⏳ Checking EOC...</div>
                 </div>`;
 
-              // PNR badge
               const pr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
               const pn = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
               const editableSpan = `<span class="pnr-editable" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
@@ -638,8 +565,49 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsCard.appendChild(jw);
       });
 
-      if (hasMissingYear) applyYearBtn.style.display = 'inline-flex';
+      // -----------------------------------------------------------------------
+      // YEAR RESOLUTION — CHANGED BLOCK
+      //
+      // Previous code: always showed the Enter ✓ button when hasMissingYear.
+      // Bug: if the user had pre-filled the input, the button would appear even
+      // though the answer was already there, and—worse—nothing prevented the
+      // field from being applied manually AFTER the server had already (wrongly)
+      // overridden document years with the pre-filled year.
+      //
+      // New behaviour:
+      //   • If the input already has a valid year → apply it silently to all
+      //     partial-date cards right now. No button needed.
+      //   • If the input is empty → show the pulsing Enter ✓ button so the
+      //     user can type a year and apply it manually.
+      //   • Cards whose AI date already contains a 4-digit year are always
+      //     skipped — their date came from the document and must not change.
+      // -----------------------------------------------------------------------
+      if (hasMissingYear) {
+        const preFilledYear = (document.getElementById('globalJourneyYear')?.value || '').trim();
 
+        if (preFilledYear && /^\d{4}$/.test(preFilledYear)) {
+          // Year was already in the input — apply silently, no button required
+          const autoPromises = [];
+          document.querySelectorAll('.flight-card[data-partial-date]').forEach(card => {
+            const partial = card.dataset.partialDate;
+            // Skip: no partial date, or already has a 4-digit year from the doc
+            if (!partial || partial === 'Unknown' || /\d{4}/.test(partial)) return;
+            const full = buildFullDate(partial, preFilledYear);
+            if (full) autoPromises.push(applyDateToCard(card, full));
+          });
+          await Promise.all(autoPromises);
+
+          // Safety net: if any cards are still unresolved, show the button
+          const stillPartial = [...document.querySelectorAll('.flight-card[data-partial-date]')]
+            .filter(c => { const p = c.dataset.partialDate; return p && p !== 'Unknown' && !/\d{4}/.test(p); });
+          if (stillPartial.length > 0) applyYearBtn.style.display = 'inline-flex';
+        } else {
+          // Input is empty — user needs to type a year manually
+          applyYearBtn.style.display = 'inline-flex';
+        }
+      }
+
+      // Fire EOC checks in parallel for all cards (including the ones just updated above)
       document.querySelectorAll('.fc-eoc-wrapper').forEach(w => {
         runEOCCheck(w, w.closest('.flight-card'));
       });
@@ -675,11 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
   resultsCard.addEventListener('click', async (e) => {
 
     const editBtn = e.target.closest('.fc-date-edit-btn');
-    if (editBtn) {
-      const card = editBtn.closest('.flight-card');
-      showDateEditor(card, card.dataset.confirmedDate || '');
-      return;
-    }
+    if (editBtn) { const card = editBtn.closest('.flight-card'); showDateEditor(card, card.dataset.confirmedDate || ''); return; }
 
     const setBtn = e.target.closest('.fc-date-set-btn');
     if (setBtn) {

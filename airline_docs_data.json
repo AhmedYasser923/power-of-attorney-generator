@@ -15,7 +15,7 @@
   { "names": ["air serbia", "ju"],                        "reqs": "Ticket number, Boarding pass (Boarding pass only if delayed)" },
   { "names": ["air tahiti nui"],                          "reqs": "DOB" },
   { "names": ["air caraibes", "tx"],                      "reqs": "Ticket number" },
-  { "names": ["bintercanarias", "binter canarias"],       "reqs": "Passport" },
+  { "names": ["bintercanarias", "binter"],       "reqs": "Passport" },
   { "names": ["canaryfly"],                               "reqs": "ID / Passport number" },
   { "names": ["corendon dutch"],                          "reqs": "Ticket, Boarding pass, Reservation confirmation" },
   { "names": ["corendon", "xc"],                          "reqs": "DOB" },
