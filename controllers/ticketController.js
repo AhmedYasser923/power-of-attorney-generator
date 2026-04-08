@@ -310,7 +310,7 @@ Document years always take precedence.`;
     RULE 2: THE EU ORIGIN DOCTRINE
     If the FIRST leg of the overall journey departs from an airport inside the EU/UK -> AUTOMATICALLY ELIGIBLE.
 
-    RULE : if the overall journey starts from non-eu/uk and ends in non-eu/uk the whole journey isn't eligible, even if it has a leg arriving in eu/uk. Do not evaluate per-leg eligibility in this case, mark the whole journey and all legs as not eligible with reason "Not Covered: Both the origin and final destination are outside the EU/UK."
+
     
     RULE 3: ARRIVING IN THE EU/UK FROM OUTSIDE
     If the FIRST leg departs from OUTSIDE the EU/UK but the final destination is INSIDE the EU/UK -> Evaluate PER-LEG (Only legs arriving in the EU/UK operated by an EU/UK carrier are eligible).
