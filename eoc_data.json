@@ -846,6 +846,13 @@
     "location": "CLT",
     "decision": "REJECT"
   },
+{
+"category": "Airport Issues",
+"date": "2026-01-8",
+"event": "Storm Goretti",
+"location": "LHR",
+"decision": "REJECT"
+},
   {
     "category": "Airport Issues",
     "date": "2026-01-26",
