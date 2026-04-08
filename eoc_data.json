@@ -763,6 +763,13 @@
     "decision": "REJECT"
   },
   {
+    "category": "Country Wide Issues",
+    "date": "2026-02-15",
+    "event": "snow Storm",
+    "location": "France",
+    "decision": "REJECT"
+  },
+  {
     "category": "Airport Issues",
     "date": "2026-02-15",
     "event": "Snow Storm",
@@ -846,13 +853,6 @@
     "location": "CLT",
     "decision": "REJECT"
   },
-{
-"category": "Airport Issues",
-"date": "2026-01-8",
-"event": "Storm Goretti",
-"location": "LHR",
-"decision": "REJECT"
-},
   {
     "category": "Airport Issues",
     "date": "2026-01-26",
@@ -998,6 +998,13 @@
     "date": "2026-01-08",
     "event": "Storm Goretti and heavy snowfall.",
     "location": "BHX",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-01-08",
+    "event": "Storm Goretti",
+    "location": "LHR",
     "decision": "REJECT"
   },
   {
