@@ -7,15 +7,20 @@ process.on('uncaughtException', err => {
   process.exit(1);
 });
 
+const dns = require('node:dns');
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 const AppError = require('./utils/appError');
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const app = express();
 const globalErrorHandler = require('./controllers/errorController');
+const mongoose = require('mongoose');
 
+mongoose.connect(process.env.DATABASE).then(() => console.log('DB Connection Successful!'));
 
 
 // View engine setup
@@ -25,6 +30,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
