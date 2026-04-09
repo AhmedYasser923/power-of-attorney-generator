@@ -756,6 +756,13 @@
     "decision": "REJECT"
   },
   {
+    "category": "Airport Issues",
+    "date": "2026-02-19",
+    "event": "Snow Storm",
+    "location": "AMS",
+    "decision": "REJECT"
+  },
+  {
     "category": "Country Wide Issues",
     "date": "2026-02-18",
     "event": "Snow Storm",
