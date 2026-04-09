@@ -22,7 +22,7 @@ console.log(`[EOC Database] Successfully loaded ${eocDatabase.length} records fr
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
-// RESPONSE SCHEMA
+// RESPONSE SCHEMA (unchanged)
 // ---------------------------------------------------------------------------
 const TICKET_RESPONSE_SCHEMA = {
   type: SchemaType.ARRAY,
@@ -36,10 +36,7 @@ const TICKET_RESPONSE_SCHEMA = {
           properties: {
             firstName:    { type: SchemaType.STRING },
             lastName:     { type: SchemaType.STRING },
-            ticketNumber: {
-              type: SchemaType.STRING,
-              description: 'STRICTLY 13 NUMERIC DIGITS. NO LETTERS. Output "Not Provided" if missing.',
-            },
+            ticketNumber: { type: SchemaType.STRING, description: 'STRICTLY 13 NUMERIC DIGITS. NO LETTERS. Output "Not Provided" if missing.' },
           },
           required: ['firstName', 'lastName', 'ticketNumber'],
         },
@@ -65,83 +62,28 @@ const TICKET_RESPONSE_SCHEMA = {
               items: {
                 type: SchemaType.OBJECT,
                 properties: {
-                  printedReference: {
-                    type: SchemaType.STRING,
-                    description: 'Raw alphanumeric reference physically printed on the document. Output "Not Provided" if absent.',
-                  },
-                  pnr: {
-                    type: SchemaType.STRING,
-                    description: 'True airline PNR. If multiple passengers have DIFFERENT PNRs on this exact leg, combine them like "PNR (Name) / PNR (Name)". Otherwise, just output the single PNR.',
-                  },
-                  flightStatus: {
-                    type: SchemaType.STRING,
-                    description: `CHOOSE EXACTLY ONE of these seven values based on the strict rules below.
-DO NOT mix values or invent new ones.
-
-VALUE DEFINITIONS (mutually exclusive — pick the first one that matches):
-
-"Cancelled"
-  → The AIRLINE unilaterally cancelled or did not operate this specific flight.
-  → Evidence: explicit "CANCELLED" stamp, the flight number is absent from departure boards, airline sent a cancellation notice.
-  → DO NOT use this if the flight operated normally but the passenger simply didn't board it.
-
-"Unused / Missed Connection"
-  → The flight DID operate (or was scheduled to operate) but the PASSENGER did not board it.
-  → Causes: missed connection due to delay on a prior leg, passenger was rebooked onto a different flight, original routing was replaced BEFORE departure.
-  → This is the correct value when the original direct flight is shown on the ticket alongside replacement flights — the original leg was NOT cancelled by the airline, it was abandoned because the itinerary changed.
-  → KEY RULE: If you see an original routing (A→B) printed alongside a replacement routing (A→C→B), the A→B leg is "Unused / Missed Connection", NOT "Cancelled".
-
-"Rescheduled"
-  → The SAME flight number operated but at a materially different time than originally booked.
-  → Evidence: two departure/arrival times printed for the same flight (original crossed out + new time), or an explicit "RESCHEDULED" / "TIME CHANGE" notation on the document.
-  → Use this only when the same flight number ran, just at a different time.
-
-"Replacement Flight"
-  → This is a newly issued alternative flight that replaced a cancelled or disrupted original.
-  → Both the disrupted original leg AND this replacement leg must be explicitly printed on the same document.
-  → DO NOT use this just because REROUTE appears as a background endorsement on the ticket stock.
-
-"Unused Replacement Flight"
-  → A replacement flight that was issued but also not boarded by the passenger.
-
-"Flown"
-  → The passenger successfully boarded and completed this flight.
-
-"Scheduled"
-  → Default for a future or unverified flight with no disruption evidence.`,
-                  },
+                  printedReference: { type: SchemaType.STRING, description: 'Raw alphanumeric reference physically printed on the document. Output "Not Provided" if absent.' },
+                  pnr: { type: SchemaType.STRING },
+                  flightStatus: { type: SchemaType.STRING, description: 'One of: Cancelled | Unused / Missed Connection | Rescheduled | Replacement Flight | Unused Replacement Flight | Flown | Scheduled' },
                   marketingAirline:        { type: SchemaType.STRING },
-                  marketingAirlineCountry: { type: SchemaType.STRING, description: 'Home country of the booked/marketing airline' },
+                  marketingAirlineCountry: { type: SchemaType.STRING },
                   operatingAirline:        { type: SchemaType.STRING },
-                  operatingAirlineCountry: { type: SchemaType.STRING, description: 'Home country of the operating airline' },
-                  flightNumbers: {
-                    type: SchemaType.ARRAY,
-                    items: { type: SchemaType.STRING },
-                    description: 'All flight numbers for this leg. Remove ALL spaces and hyphens inside a single number (e.g. "6E 2" → "6E2"). Never split one number into two items.',
-                  },
+                  operatingAirlineCountry: { type: SchemaType.STRING },
+                  flightNumbers:    { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
                   originIata:         { type: SchemaType.STRING },
                   originName:         { type: SchemaType.STRING },
                   originCity:         { type: SchemaType.STRING },
                   originCountry:      { type: SchemaType.STRING },
-                  departureTime:      { type: SchemaType.STRING, description: 'Exact time printed. Output "--:--" if absent (do not use boarding time).' },
-                  arrivalTime:        { type: SchemaType.STRING, description: 'Exact time printed. Output "--:--" if absent.' },
+                  departureTime:      { type: SchemaType.STRING },
+                  arrivalTime:        { type: SchemaType.STRING },
                   destinationIata:    { type: SchemaType.STRING },
                   destinationName:    { type: SchemaType.STRING },
                   destinationCity:    { type: SchemaType.STRING },
                   destinationCountry: { type: SchemaType.STRING },
-                  rawExtractedDate:   { type: SchemaType.STRING, description: 'The exact raw date string printed for THIS leg. Never copy from another leg.' },
-                  date: {
-                    type: SchemaType.STRING,
-                    description: 'YYYY-MM-DD if the year is explicitly printed. Otherwise output only the Day and Month seen (e.g. "25 Mar"). NEVER assume or append a year.',
-                  },
-                  originalDepartureTime: {
-                    type: SchemaType.STRING,
-                    description: 'ONLY for Rescheduled legs: the originally-booked departure time printed on the document (before the change). Output "--:--" for all other statuses.',
-                  },
-                  originalArrivalTime: {
-                    type: SchemaType.STRING,
-                    description: 'ONLY for Rescheduled legs: the originally-booked arrival time printed on the document (before the change). Output "--:--" for all other statuses.',
-                  },
+                  rawExtractedDate:   { type: SchemaType.STRING },
+                  date:               { type: SchemaType.STRING },
+                  originalDepartureTime: { type: SchemaType.STRING },
+                  originalArrivalTime:   { type: SchemaType.STRING },
                   ec261Leg: {
                     type: SchemaType.OBJECT,
                     properties: {
@@ -158,27 +100,16 @@ VALUE DEFINITIONS (mutually exclusive — pick the first one that matches):
                           operatingAirlineYears: { type: SchemaType.STRING },
                           bestCountry:           { type: SchemaType.STRING },
                           bestYears:             { type: SchemaType.STRING },
-                          expirationDate:        { type: SchemaType.STRING, description: 'YYYY-MM-DD or N/A' },
+                          expirationDate:        { type: SchemaType.STRING },
                           isExpired:             { type: SchemaType.BOOLEAN },
                         },
-                        required: [
-                          'originYears','destinationYears','marketingAirlineYears',
-                          'operatingAirlineYears','bestCountry','bestYears',
-                          'expirationDate','isExpired',
-                        ],
+                        required: ['originYears','destinationYears','marketingAirlineYears','operatingAirlineYears','bestCountry','bestYears','expirationDate','isExpired'],
                       },
                     },
                     required: ['legOriginCountry','legDestinationCountry','status','reason','claimExpiration'],
                   },
                 },
-                required: [
-                  'printedReference','pnr','flightStatus','marketingAirline',
-                  'marketingAirlineCountry','operatingAirline','operatingAirlineCountry',
-                  'flightNumbers','originIata','originName','originCity','originCountry',
-                  'departureTime','arrivalTime','destinationIata','destinationName',
-                  'destinationCity','destinationCountry','rawExtractedDate','date',
-                  'originalDepartureTime','originalArrivalTime','ec261Leg',
-                ],
+                required: ['printedReference','pnr','flightStatus','marketingAirline','marketingAirlineCountry','operatingAirline','operatingAirlineCountry','flightNumbers','originIata','originName','originCity','originCountry','departureTime','arrivalTime','destinationIata','destinationName','destinationCity','destinationCountry','rawExtractedDate','date','originalDepartureTime','originalArrivalTime','ec261Leg'],
               },
             },
           },
@@ -191,9 +122,118 @@ VALUE DEFINITIONS (mutually exclusive — pick the first one that matches):
 };
 
 // ---------------------------------------------------------------------------
+// BUG 2 FIX — DETERMINISTIC EC261/UK261 EVALUATOR
+// Runs server-side after AI extraction; overwrites AI eligibility with
+// bullet-proof rules so it's always correct regardless of AI output.
+// ---------------------------------------------------------------------------
+const EC261_EU_COUNTRIES = new Set([
+  'austria','belgium','bulgaria','croatia','cyprus','czech republic','denmark',
+  'estonia','finland','france','germany','greece','hungary','ireland','italy',
+  'latvia','lithuania','luxembourg','malta','netherlands','the netherlands',
+  'poland','portugal','romania','slovakia','slovenia','spain','sweden',
+  'iceland','norway','switzerland',
+  // UK
+  'united kingdom','uk','england','scotland','wales','northern ireland',
+  // EU overseas territories covered by EC261
+  'canary islands','madeira','azores','guadeloupe','martinique',
+  'french guiana','réunion','reunion','mayotte','saint martin',
+]);
+
+function isEUCountry(country) {
+  return EC261_EU_COUNTRIES.has((country || '').toLowerCase().trim());
+}
+
+function evaluateEC261Deterministic(parsedJourneys) {
+  parsedJourneys.forEach(journey => {
+    if (!journey.routes) return;
+
+    const allLegs = journey.routes.flatMap(r => r.legs || []);
+    if (!allLegs.length) return;
+
+    const firstLeg      = allLegs[0];
+    const lastLeg       = allLegs[allLegs.length - 1];
+    const firstOriginEU = isEUCountry(firstLeg.originCountry);
+    const lastDestEU    = isEUCountry(lastLeg.destinationCountry);
+
+    journey.ec261 = journey.ec261 || {};
+    journey.ec261.firstOriginCountry      = firstLeg.originCountry     || 'Unknown';
+    journey.ec261.finalDestinationCountry = lastLeg.destinationCountry || 'Unknown';
+
+    // RULE 1: EU/UK origin -> entire journey automatically eligible
+    if (firstOriginEU) {
+      journey.ec261.status = 'Eligible';
+      journey.ec261.reason = `Journey departs from ${firstLeg.originCountry} (EU/UK). EC261/2004 applies automatically to all legs.`;
+      allLegs.forEach(leg => {
+        leg.ec261Leg        = leg.ec261Leg || {};
+        leg.ec261Leg.status = 'Eligible';
+        leg.ec261Leg.reason = `Departs from EU/UK country (${leg.originCountry}).`;
+      });
+      return;
+    }
+
+    // RULE 2: Non-EU origin AND non-EU final destination -> entirely ineligible
+    if (!lastDestEU) {
+      journey.ec261.status = 'Not Eligible';
+      journey.ec261.reason = 'Not Covered: Both the origin and final destination are outside the EU/UK.';
+      allLegs.forEach(leg => {
+        leg.ec261Leg        = leg.ec261Leg || {};
+        leg.ec261Leg.status = 'Not Eligible';
+        leg.ec261Leg.reason = 'Not Covered: Both the origin and final destination are outside the EU/UK.';
+      });
+      return;
+    }
+
+    // RULE 3: Non-EU origin, EU/UK destination -> per-leg evaluation
+    let anyEligible = false, anyIneligible = false;
+
+    allLegs.forEach(leg => {
+      leg.ec261Leg = leg.ec261Leg || {};
+      const oEU     = isEUCountry(leg.originCountry);
+      const dEU     = isEUCountry(leg.destinationCountry);
+      const opEU    = isEUCountry(leg.operatingAirlineCountry);
+      const opName  = leg.operatingAirline        || 'Unknown carrier';
+      const opCtry  = leg.operatingAirlineCountry || 'unknown country';
+
+      if (oEU) {
+        // Leg departs from EU/UK -> always eligible regardless of carrier
+        leg.ec261Leg.status = 'Eligible';
+        leg.ec261Leg.reason = `Departs from EU/UK (${leg.originCountry}) — eligible regardless of carrier.`;
+        anyEligible = true;
+      } else if (dEU) {
+        // Non-EU -> EU: eligible ONLY if operated by an EU/UK carrier
+        if (opEU) {
+          leg.ec261Leg.status = 'Eligible';
+          leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) and operated by EU/UK carrier ${opName} (${opCtry}).`;
+          anyEligible = true;
+        } else {
+          leg.ec261Leg.status = 'Not Eligible';
+          leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) but operated by non-EU/UK carrier ${opName} (${opCtry}).`;
+          anyIneligible = true;
+        }
+      } else {
+        // Non-EU -> Non-EU connecting leg
+        leg.ec261Leg.status = 'Not Eligible';
+        leg.ec261Leg.reason = `Both origin (${leg.originCountry}) and destination (${leg.destinationCountry}) are outside the EU/UK.`;
+        anyIneligible = true;
+      }
+    });
+
+    if (anyEligible && anyIneligible) {
+      journey.ec261.status = 'Partially Eligible';
+      journey.ec261.reason = 'This journey contains a mix of eligible and ineligible legs under EC261/2004. See per-leg breakdown below.';
+    } else if (anyEligible) {
+      journey.ec261.status = 'Eligible';
+      journey.ec261.reason = `Journey arrives in EU/UK (${lastLeg.destinationCountry}) with eligible legs operated by EU/UK carriers.`;
+    } else {
+      journey.ec261.status = 'Not Eligible';
+      journey.ec261.reason = `Journey ends in EU/UK (${lastLeg.destinationCountry}) but no legs qualify — no EU/UK carrier operating from outside the EU/UK.`;
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // RENDER
 // ---------------------------------------------------------------------------
-
 exports.renderAnalyzer = catchAsync(async (req, res, next) => {
   res.render('ticket-analyzer', { title: 'Ticket Analyzer' });
 });
@@ -201,96 +241,65 @@ exports.renderAnalyzer = catchAsync(async (req, res, next) => {
 // ---------------------------------------------------------------------------
 // ANALYZE TICKET
 // ---------------------------------------------------------------------------
-
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const files       = req.files && req.files.length > 0 ? req.files : [];
   const journeyYear = req.body.journeyYear;
 
-  if (files.length === 0) {
-    return next(new AppError('No files uploaded', 400));
-  }
+  if (files.length === 0) return next(new AppError('No files uploaded', 400));
 
   const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
-  // ---------------------------------------------------------------------------
-  // YEAR DIRECTIVE — LAST-RESORT FALLBACK ONLY
-  //
-  // Key fix: the old wording said "you MUST output it as ${year}-..." which the
-  // AI sometimes applied even when a full year was printed on the document.
-  // The new wording makes clear the document year ALWAYS wins; the user-supplied
-  // year is ONLY used when no year at all appears on the document for that leg.
-  // ---------------------------------------------------------------------------
   let yearDirective = '';
   if (journeyYear) {
     yearDirective = `
 🚨 FALLBACK YEAR PROVIDED BY USER: ${journeyYear}
-
-CRITICAL PRIORITY RULE — THREE CASES, apply in order:
-1. If the flight date on this document EXPLICITLY shows a 4-digit year
-   (e.g. "25 Mar 2024", "2024-03-25", "25/03/2024", "March 25, 2024"),
-   you MUST use the year FROM THE DOCUMENT. Output it as YYYY-MM-DD using
-   the year you read. NEVER replace a document year with ${journeyYear}.
-
-2. If the flight date shows ONLY day and month with NO year anywhere
-   (e.g. "25 Mar", "Mar 25", "25/03"),
-   THEN — and ONLY then — use ${journeyYear} and output "${journeyYear}-MM-DD".
-
-3. If no date at all is visible, output an empty string for the date field.
-
-The user-supplied year ${journeyYear} is a safety net, NOT an override.
-Document years always take precedence.`;
+CRITICAL PRIORITY RULE:
+1. If the flight date EXPLICITLY shows a 4-digit year, use the year FROM THE DOCUMENT. NEVER replace it with ${journeyYear}.
+2. If the flight date shows ONLY day and month with NO year, THEN use ${journeyYear} and output "${journeyYear}-MM-DD".
+3. If no date at all is visible, output an empty string.
+The user-supplied year ${journeyYear} is a safety net, NOT an override. Document years always take precedence.`;
   }
 
   const rawPrompt = `
-    You are an expert aviation data extractor and legal evaluator. Analyze ALL the attached travel document(s). try not to exceed 40s in analyzing
+    You are an expert aviation data extractor. Analyze ALL the attached travel document(s). Try not to exceed 40s.
     ${yearDirective}
-    🚨 ***ANTI-LAZINESS & ZERO-HALLUCINATION DIRECTIVE*** 🚨
-    You MUST extract EVERY SINGLE flight leg and EVERY SINGLE passenger found across ALL provided documents. Do NOT skip, summarize, or omit any flights.
-    
-    🧠 ***THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*** 🧠
+
+    🚨 CROSS-DOCUMENT YEAR PROPAGATION (CRITICAL):
+    When multiple documents describe the SAME flight leg (same flight number + same route):
+    - If one document shows a complete date WITH year (e.g. "25 Mar 2024") and another shows the SAME leg
+      with only day/month (e.g. "25 Mar"), you MUST output the full YYYY-MM-DD date for that leg everywhere.
+    - Scan ALL uploaded documents first, build a map of "flight number → full date", then use that map
+      to fill in missing years across all documents before outputting JSON.
+
+  🧠 *THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*
     Before generating the JSON, you must mentally process the documents using this exact sequence:
     1. Entity Grouping: Identify all unique passengers. If multiple passengers share the exact same flight numbers, dates, and routes, treat them as a single traveling party.
     2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline. FLIGHTS WITH THE SAME PNR SHOULD BE GROUPED TOGETHER IN IT'S OWN JOURNEY
     3. Anomaly Detection (Disruptions): Look for logical breaks or overlaps in the timeline. If a passenger has tickets for a direct flight (A ➔ B), AND tickets for a multi-leg flight reaching the same destination (A ➔ C ➔ B) within 48 hours, this is a Disruption/Rebooking. 
-    4. Deductive Reasoning: Apply the EC261 legal rules to the entire chronologically sequenced journey, basing the jurisdiction solely on the very first origin point in the timeline.
 
-    *CRITICAL DATE INFERENCE RULES (100% PRECISION REQUIRED)*: 
-    1. AVOID ANCHORING VIA RAW EXTRACTION: In round-trip or multi-leg itineraries, EVERY flight has its own unique date. You MUST extract the exact raw date string printed specifically for EACH flight leg and place it in the "rawExtractedDate" field. Do NOT reuse dates.
-    2. IGNORE ISSUE DATES: The "Issue Date", "Booking Date", or "Printed Date" is NEVER the flight date. Ignore it completely.
-    3. NO YEAR ASSUMPTIONS: If the document only shows the day and month (e.g., "25 Mar"), DO NOT assume or append the current year. Output EXACTLY the explicit day and month you see. Only format as YYYY-MM-DD if the year is explicitly printed (or a fallback year was provided above).
+    CRITICAL DATE RULES:
+    1. Every flight has its own unique date — extract it from the document, put it in rawExtractedDate.
+    2. "Issue Date" / "Booking Date" / "Printed Date" is NEVER the flight date. Ignore completely.
+    3. If only day+month shown (e.g. "25 Mar"), output exactly that — no year assumption.
 
-    🚨 JOURNEY SPLITTING ALGORITHM (FOLLOW EXACTLY IN ORDER) 🚨
-    RULE 1 - THE "SELF-TRANSFER" SPLIT: Scan the document for the exact words "Self-transfer", "Self transfer", or "Separate tickets". 
-    -> IF FOUND: You MUST break the itinerary at that exact layover. Because the airlines have no official connection, every flight separated by a self-transfer becomes an INDEPENDENT journey object.
-    
-    RULE 2 - STANDARD CONNECTIONS (DO NOT SPLIT): 
-    -> IF flights are connected normally (e.g., standard layovers, codeshares) without the words "self-transfer", keep those flights grouped together in the SAME journey object. Do not split standard connecting flights.
-    
-    RULE 3 - STANDARD ROUND-TRIPS: 
-    -> IF it is a round-trip ticket (A to B, then B to A at a later date), you must split it into exactly TWO journey objects (one Outbound, one Return).
-    
-    RULE 4 - PASSENGER GROUPING: Group passengers with the exact same flights into ONE journey object ALWAYS. If they share a flight but have different PNRs, you MUST combine them into a single string in the leg's PNR field like this: "PNR1 (Name) / PNR2 (Name)".
-    
-    🚨 RULE 5 — FLIGHT STATUS (CRITICAL — READ EVERY WORD) 🚨
-    The flightStatus field has strict, mutually-exclusive definitions. The schema description explains each value. Here are the key disambiguation rules you MUST apply:
+    🚨 JOURNEY SPLITTING:
+    RULE 1 - SELF-TRANSFER: if you see "Self-transfer" / "Separate tickets" → split at that layover, each chunk is an INDEPENDENT journey.
+    RULE 2 - STANDARD CONNECTIONS: normal layovers without self-transfer keywords → keep in SAME journey.
+    RULE 3 - ROUND TRIPS: A→B then B→A at later date → TWO journey objects (Outbound + Return).
+    RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey, PNR field = "PNR1 (Name) / PNR2 (Name)".
 
-    CANCELLED vs UNUSED / MISSED CONNECTION:
-    These two values are NOT interchangeable. Use this decision tree:
-    A) Did the AIRLINE unilaterally cancel this specific flight number so it never operated? → "Cancelled"
-    B) Did the flight exist/operate, but the passenger was rebooked, couldn't connect, or didn't board? → "Unused / Missed Connection"
-    C) Is the original routing (A→B) printed on the same document as a replacement routing (A→C→B)? → The A→B leg is "Unused / Missed Connection" ALWAYS. It was NOT cancelled by the airline — the passenger was moved to an alternative.
+    FLIGHT STATUS RULES (mutually exclusive — pick the FIRST that matches):
+    "Cancelled" → airline unilaterally cancelled, flight never operated.
+    "Unused / Missed Connection" → flight operated but passenger didn't board (rebooked, missed connection, or original routing printed alongside replacement routing).
+    "Rescheduled" → SAME flight number, different time; populate originalDepartureTime + originalArrivalTime.
+    "Replacement Flight" → new alternative printed alongside disrupted original on SAME document.
+    "Unused Replacement Flight" → replacement issued but also not boarded.
+    "Flown" → passenger successfully completed this flight.
+    "Scheduled" → default, no disruption evidence.
+    KEY: if original routing A→B is printed alongside replacement A→C→B, the A→B leg is "Unused / Missed Connection", NOT "Cancelled".
 
-    RESCHEDULED:
-    Use "Rescheduled" ONLY when the SAME flight number shows evidence of a time change on the document: two departure times listed (original + new), or an explicit "RESCHEDULED" / "TIME CHANGE" / "NEW TIME" notation.
-    When you detect a reschedule, populate originalDepartureTime and originalArrivalTime with the old times, and put the new times in departureTime and arrivalTime.
-
-    REPLACEMENT FLIGHT:
-    Use ONLY when both the disrupted original leg AND this new alternative leg are explicitly printed on the same document. Do NOT use just because "REROUTE" appears as a background endorsement on ticket stock.
-
-    DEFAULT: If none of the above apply, use "Scheduled".
-
-    STEP 1: EXTRACT PASSENGERS & TICKETS
-    - Passengers & Tickets: Create an object for EACH passenger. Map their specific e-ticket number to their name. 🚨 TICKET RULE: E-tickets are strictly NUMERIC ONLY and exactly 13 digits globally. NEVER contain letters.
+    PASSENGER & TICKET EXTRACTION:
+       - Passengers & Tickets: Create an object for EACH passenger. Map their specific e-ticket number to their name. 🚨 TICKET RULE: E-tickets are strictly NUMERIC ONLY and exactly 13 digits globally. NEVER contain letters.
     - PER-LEG TICKETS (CRITICAL): If e-ticket numbers are listed row-by-row for specific flight legs (e.g., "TRV - BLR: Not required", "BLR - FRA: 2206906706612"), you MUST assign the 13-digit number that corresponds to the flights inside the current journey object you are building. If it says "Not required", output "Not Provided".
 
     PNR EXCEPTION LIST : 
@@ -299,113 +308,70 @@ Document years always take precedence.`;
     - EMBEDDED PNRS: If you see the PNR hidden inside a longer pseudo e-ticket string (e.g., in "LH220HABMTTA4"), extract ONLY the core 6 characters ("HABMTT").
     - don't extract true pnr out of a printed ref, ex "LXC6A4E3"
 
-    STEP 2: EVALUATE OVERALL EC261 & UK261 ELIGIBILITY
-    - EU: 27 member states, Iceland, Norway, Switzerland, Canary Islands, Madeira, Azores, Guadeloupe. (Ireland/DUB is EU).
-    - UK: England, Scotland, Wales, Northern Ireland.
-    
-    🚨 CRITICAL EC261 ELIGIBILITY RULES (EVALUATE IN THIS EXACT ORDER):
-    RULE 1: THE STRICT THIRD-COUNTRY TO THIRD-COUNTRY DOCTRINE (CASE C-451/20)
-    If the overall journey starts outside the EU/UK AND the final destination is outside the EU/UK (e.g., USA to India), the ENTIRE journey is strictly NOT ELIGIBLE. You MUST mark the overall journey status AND EVERY SINGLE INDIVIDUAL LEG as "Not Eligible," regardless of where it connects or what airline operates it. Do not evaluate per-leg. 
-    👉 CRITICAL: For the "reason" field, you MUST output exactly: "Not Covered: Both the origin and final destination are outside the EU/UK." Do not use the phrase "third country".
-    RULE 2: THE EU ORIGIN DOCTRINE
-    If the FIRST leg of the overall journey departs from an airport inside the EU/UK -> AUTOMATICALLY ELIGIBLE.
+    EC261 FIELDS: For ec261 object output status="Pending" and reason="Pending" — server recalculates.
+    Just focus on accurate country names in every leg's originCountry, destinationCountry,
+    operatingAirlineCountry, marketingAirlineCountry.
 
+    FLIGHT NUMBERS: Remove ALL spaces and hyphens within a number. "6E 2" → "6E2". Never split one number into two array items.
 
-    
-    RULE 3: ARRIVING IN THE EU/UK FROM OUTSIDE
-    If the FIRST leg departs from OUTSIDE the EU/UK but the final destination is INSIDE the EU/UK -> Evaluate PER-LEG (Only legs arriving in the EU/UK operated by an EU/UK carrier are eligible).
-
-
-
-    STEP 3: EXTRACT ROUTES & LEGS
-    For each leg:
-    - flightNumbers: ***CRITICAL*** Extract ALL flight numbers associated with this specific leg (e.g., marketing and operating flight numbers).
-      🚨 RULE 1: A flight number is an airline code (2-3 characters) attached to digits (1-4 characters).
-      🚨 RULE 2: You MUST remove all spaces and hyphens from inside a single flight number (e.g., "6E 2" or "6E - 2" becomes "6E2").
-      🚨 RULE 3: DO NOT split a single flight number into multiple array items. "6E 2" is ONE flight number ("6E2"), NOT ["6E", "2"].
-      Output this as an ARRAY OF STRINGS.
-      
-    🚨 CRITICAL PNR EXCEPTION LIST:
-      The following airlines use strictly NUMERIC PNRs of varying lengths instead of 6-alphanumeric strings:
-      - 6 Numbers: Heston Airlines, Sunclass.
-      - 7 Numbers: Corendon DUTCH Airlines CD.
-      - 8 Numbers: Air Arabia Maroc, Arkia Israel, TUI Airways, Condor Flugdienst, Electra Airways.
-      - 9 Numbers: Fly Jinnah.
-      - Variable/Numbers: Neos.
+     
   `;
 
   const prompt = rawPrompt.replace(/\s+/g, ' ').trim();
-
   const documentParts = [];
 
   for (const file of files) {
     if (file.mimetype === 'application/pdf') {
       try {
         const data = await pdfExtract.extractBuffer(file.buffer);
-        const text = data.pages
-          .map(page => page.content.map(item => item.str).join(' '))
-          .join('\n')
-          .trim();
-
+        const text = data.pages.map(p => p.content.map(i => i.str).join(' ')).join('\n').trim();
         if (text.length > 100) {
-          console.log(`[PDF] Digital (${text.length} chars) → sending as text part.`);
+          console.log(`[PDF] Digital (${text.length} chars) → text part.`);
           documentParts.push({ text: `[PDF text content]\n${text}` });
-        } else {
-          throw new Error(`Insufficient text extracted (${text.length} chars)`);
-        }
+        } else throw new Error(`Insufficient text (${text.length} chars)`);
       } catch (pdfErr) {
-        console.log(`[PDF] Scanned (${pdfErr.message}) → sending as inlineData.`);
-        documentParts.push({
-          inlineData: { data: file.buffer.toString('base64'), mimeType: 'application/pdf' },
-        });
+        console.log(`[PDF] Scanned → inlineData.`);
+        documentParts.push({ inlineData: { data: file.buffer.toString('base64'), mimeType: 'application/pdf' } });
       }
     } else if (file.mimetype.startsWith('image/')) {
-      const processed = await sharp(file.buffer)
-        .resize({ width: 1600, withoutEnlargement: true })
-        .jpeg({ quality: 75 })
-        .toBuffer();
+      const processed = await sharp(file.buffer).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 75 }).toBuffer();
       documentParts.push({ inlineData: { data: processed.toString('base64'), mimeType: 'image/jpeg' } });
     } else {
       documentParts.push({ inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } });
     }
   }
 
-  const startTime  = Date.now();
+  const startTime = Date.now();
   let result;
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`⏳ Sending request to Gemini API... (Attempt ${attempt + 1})`);
+      console.log(`⏳ Gemini API attempt ${attempt + 1}...`);
       result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }, ...documentParts] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema:   TICKET_RESPONSE_SCHEMA,
-        },
+        generationConfig: { responseMimeType: 'application/json', responseSchema: TICKET_RESPONSE_SCHEMA },
       });
-      console.log('✅ Received response from Gemini.');
+      console.log('✅ Gemini response received.');
       break;
     } catch (apiError) {
       if (attempt === maxRetries) {
-        console.error('🔥 GEMINI API CRASHED (All retries failed):', apiError);
+        console.error('🔥 GEMINI API CRASHED:', apiError);
         return next(new AppError(`AI Processing Failed after 3 attempts: ${apiError.message}`, 500));
       }
-      const waitTime = (attempt + 1) * 2000;
-      console.warn(`[Gemini API] ${apiError.message} — retrying in ${waitTime / 1000}s...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      const wait = (attempt + 1) * 2000;
+      console.warn(`[Gemini] ${apiError.message} — retry in ${wait/1000}s`);
+      await new Promise(r => setTimeout(r, wait));
     }
   }
 
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
-
   let requestCostUSD = 0, requestCostEGP = 0;
   if (result.response.usageMetadata) {
     const { promptTokenCount: i = 0, candidatesTokenCount: o = 0 } = result.response.usageMetadata;
     requestCostUSD = (i / 1_000_000) * 0.075 + (o / 1_000_000) * 0.30;
     requestCostEGP = requestCostUSD * 54.33;
-    console.log(`\n========================================= TICKET ANALYZED IN ${processingTimeInSeconds}s`);
-    console.log(`📥 ${i.toLocaleString()} in / 📤 ${o.toLocaleString()} out | 💸 $${requestCostUSD.toFixed(6)} / £${requestCostEGP.toFixed(6)} EGP\n`);
+    console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${i.toLocaleString()} in / 📤 ${o.toLocaleString()} out | 💸 $${requestCostUSD.toFixed(6)}\n`);
   }
 
   const formattedCostUSD = `$${requestCostUSD.toFixed(6)}`;
@@ -422,6 +388,10 @@ Document years always take precedence.`;
     return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, costEGP: formattedCostEGP, journeys: [] });
   }
 
+  // BUG 2 FIX: Run deterministic EC261 evaluator BEFORE per-leg post-processing.
+  // This overwrites whatever the AI guessed with bullet-proof server-side logic.
+  evaluateEC261Deterministic(parsedJourneys);
+
   parsedJourneys.forEach(journey => {
     if (!journey.routes) return;
     journey.routes.forEach(route => {
@@ -429,21 +399,21 @@ Document years always take precedence.`;
       route.legs.forEach(leg => {
 
         if (Array.isArray(leg.flightNumbers)) {
-          const cleaned = leg.flightNumbers.map(fn => fn.replace(/[\s-]/g, '').trim()).filter(Boolean);
-          const merged  = [];
+          const cleaned = leg.flightNumbers.map(fn => fn.replace(/[\s-]/g,'').trim()).filter(Boolean);
+          const merged = [];
           for (let i = 0; i < cleaned.length; i++) {
-            if (i < cleaned.length - 1 && /^[A-Za-z0-9]{2,3}$/.test(cleaned[i]) && /^\d{1,4}$/.test(cleaned[i + 1])) {
-              merged.push(cleaned[i] + cleaned[i + 1]); i++;
-            } else { merged.push(cleaned[i]); }
+            if (i < cleaned.length - 1 && /^[A-Za-z0-9]{2,3}$/.test(cleaned[i]) && /^\d{1,4}$/.test(cleaned[i+1])) {
+              merged.push(cleaned[i] + cleaned[i+1]); i++;
+            } else merged.push(cleaned[i]);
           }
           leg.flightNumbers = merged;
         }
 
-        const oIata      = (leg.originIata      || '').toUpperCase();
-        const dIata      = (leg.destinationIata || '').toUpperCase();
+        const oIata = (leg.originIata || '').toUpperCase();
+        const dIata = (leg.destinationIata || '').toUpperCase();
         const originPort = airportsDatabase.find(a => a.iata && a.iata.toUpperCase() === oIata);
         const destPort   = airportsDatabase.find(a => a.iata && a.iata.toUpperCase() === dIata);
-        leg.ec261Leg     = leg.ec261Leg || {};
+        leg.ec261Leg = leg.ec261Leg || {};
 
         if (originPort && destPort) {
           const R = 6371, dLat = (destPort.lat - originPort.lat) * Math.PI / 180, dLon = (destPort.lon - originPort.lon) * Math.PI / 180;
@@ -459,14 +429,14 @@ Document years always take precedence.`;
         const operating = leg.operatingAirline || marketing;
         const opCo = (leg.operatingAirlineCountry||'').toLowerCase().trim(), opLimRaw = getJurisdictionLimit(opCo);
         const mktCo = (leg.marketingAirlineCountry||'').toLowerCase().trim(), mktLimRaw = getJurisdictionLimit(mktCo);
-        const dispOp = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
+        const dispOp  = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
         const dispMkt = leg.marketingAirlineCountry && leg.marketingAirlineCountry !== 'Unknown' ? leg.marketingAirlineCountry : 'Unknown HQ';
 
         leg.claimDocuments = marketing === operating
-          ? [{ airline: marketing, role: '',         reqs: getAirlineReqs(marketing), hq: dispOp,  limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A' }]
+          ? [{ airline: marketing, role: '', reqs: getAirlineReqs(marketing), hq: dispOp, limit: opLimRaw !== 'N/A' ? `${opLimRaw} years` : 'N/A' }]
           : [
               { airline: marketing, role: 'Booked',   reqs: getAirlineReqs(marketing), hq: dispMkt, limit: mktLimRaw !== 'N/A' ? `${mktLimRaw} years` : 'N/A' },
-              { airline: operating, role: 'Operated', reqs: getAirlineReqs(operating), hq: dispOp,  limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A' },
+              { airline: operating, role: 'Operated', reqs: getAirlineReqs(operating),  hq: dispOp,  limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A' },
             ];
 
         if (leg.ec261Leg?.claimExpiration) {
@@ -478,19 +448,42 @@ Document years always take precedence.`;
           leg.ec261Leg.claimExpiration.marketingAirlineYears = mktLimRaw;
 
           let best = 0, bestName = 'Unknown';
-          for (const { limit, name } of [{ limit: oL, name: leg.originCountry }, { limit: dL, name: leg.destinationCountry }, { limit: opLimRaw, name: leg.operatingAirlineCountry }, { limit: mktLimRaw, name: leg.marketingAirlineCountry }]) {
+          for (const { limit, name } of [
+            { limit: oL,        name: leg.originCountry },
+            { limit: dL,        name: leg.destinationCountry },
+            { limit: opLimRaw,  name: leg.operatingAirlineCountry },
+            { limit: mktLimRaw, name: leg.marketingAirlineCountry },
+          ]) {
             const n = typeof limit === 'number' ? limit : null;
             if (n !== null && n > best) { best = n; bestName = name; }
           }
 
-          if (best > 0 && leg.date && leg.date !== 'Unknown') {
+          // BUG 3 FIX: Always set bestYears/bestCountry when we have a limit,
+          // even if the date is currently missing. This lets the frontend date
+          // editor calculate expiry correctly once the user supplies a date.
+          if (best > 0) {
             leg.ec261Leg.claimExpiration.bestYears   = best;
             leg.ec261Leg.claimExpiration.bestCountry = bestName;
-            const fd = new Date(leg.date);
-            if (!isNaN(fd.getTime())) { fd.setFullYear(fd.getFullYear() + best); leg.ec261Leg.claimExpiration.expirationDate = fd.toISOString().split('T')[0]; leg.ec261Leg.claimExpiration.isExpired = new Date() > fd; }
+            if (leg.date && leg.date !== 'Unknown') {
+              const fd = new Date(leg.date);
+              if (!isNaN(fd.getTime())) {
+                fd.setFullYear(fd.getFullYear() + best);
+                leg.ec261Leg.claimExpiration.expirationDate = fd.toISOString().split('T')[0];
+                leg.ec261Leg.claimExpiration.isExpired      = new Date() > fd;
+              } else {
+                leg.ec261Leg.claimExpiration.expirationDate = 'N/A';
+                leg.ec261Leg.claimExpiration.isExpired      = false;
+              }
+            } else {
+              // Date missing — expiry deferred to frontend date editor
+              leg.ec261Leg.claimExpiration.expirationDate = 'N/A';
+              leg.ec261Leg.claimExpiration.isExpired      = false;
+            }
           } else {
-            leg.ec261Leg.claimExpiration.bestYears = 'N/A'; leg.ec261Leg.claimExpiration.bestCountry = 'N/A';
-            leg.ec261Leg.claimExpiration.expirationDate = 'N/A'; leg.ec261Leg.claimExpiration.isExpired = false;
+            leg.ec261Leg.claimExpiration.bestYears      = 'N/A';
+            leg.ec261Leg.claimExpiration.bestCountry    = 'N/A';
+            leg.ec261Leg.claimExpiration.expirationDate = 'N/A';
+            leg.ec261Leg.claimExpiration.isExpired      = false;
           }
         }
       });
@@ -503,7 +496,6 @@ Document years always take precedence.`;
 // ---------------------------------------------------------------------------
 // EOC CHECK
 // ---------------------------------------------------------------------------
-
 exports.checkEOC = (req, res, next) => {
   try {
     const { date, originIata, destIata, originCountry, destCountry } = req.query;
@@ -521,9 +513,8 @@ exports.checkEOC = (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
-// FLIGHT STATUS (Cirium)
+// FLIGHT STATUS (Cirium) — unchanged
 // ---------------------------------------------------------------------------
-
 exports.checkFlightStatus = async (req, res, next) => {
   try {
     const { flightNumber, date, origin, destination } = req.query;

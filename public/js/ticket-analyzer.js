@@ -26,6 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
       animation: pulsyGlassyRed 1.5s infinite alternate ease-in-out !important;
       border-width: 2px !important; backdrop-filter: blur(8px) !important; transition: all 0.3s ease;
     }
+
+    /* BUG 4 FIX — Expired claim pulsing effect (amber, distinct from EOC red) */
+    @keyframes pulsyGlassyAmber {
+      0%   { box-shadow: 0 0 0 0 rgba(217,119,6,0.55), inset 0 0 10px rgba(217,119,6,0.1);
+              background-color: rgba(255,251,235,0.45); border-color: rgba(245,158,11,0.5); }
+      100% { box-shadow: 0 0 22px 9px rgba(217,119,6,0), inset 0 0 32px rgba(217,119,6,0.2);
+              background-color: rgba(255,251,235,0.9); border-color: rgba(217,119,6,1); }
+    }
+    .flight-card.expired-alert-active {
+      animation: pulsyGlassyAmber 1.8s infinite alternate ease-in-out !important;
+      border-width: 2px !important; backdrop-filter: blur(8px) !important; transition: all 0.3s ease;
+    }
+    /* When both EOC and expired fire simultaneously, EOC red takes precedence */
+    .flight-card.eoc-alert-active.expired-alert-active {
+      animation: pulsyGlassyRed 1.5s infinite alternate ease-in-out !important;
+    }
+
     @keyframes yearBtnPulse {
       0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.7); }
       65%  { box-shadow: 0 0 0 12px rgba(37,99,235,0); }
@@ -211,18 +228,55 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  // ---------------------------------------------------------------------------
+  // BUG 3 + BUG 4 FIX — updateExpirationBadge
+  // Now reads data-years correctly (server always sends them even when date was
+  // missing), and toggles the expired-alert-active class on the parent card.
+  // ---------------------------------------------------------------------------
   function updateExpirationBadge(container, fullDate) {
-    const rawYears = container.dataset.years, country = container.dataset.country;
-    if (!rawYears || rawYears === 'N/A' || rawYears === 'undefined') { container.innerHTML = `<div class="fc-exp-badge">⚠️ Jurisdiction limit unknown</div>`; return; }
+    const rawYears = container.dataset.years;
+    const country  = container.dataset.country;
+
+    // Tolerate 'N/A', 'undefined', or actual missing values
+    const yearsInvalid = !rawYears || rawYears === 'N/A' || rawYears === 'undefined' || rawYears === 'null';
+
+    const card = container.closest('.flight-card');
+
+    if (yearsInvalid) {
+      container.innerHTML = `<div class="fc-exp-badge">⚠️ Jurisdiction limit unknown</div>`;
+      // Nothing to expire, so remove class if it was lingering
+      if (card) card.classList.remove('expired-alert-active');
+      return;
+    }
+
     const years = parseInt(rawYears, 10);
-    if (isNaN(years)) { container.innerHTML = `<div class="fc-exp-badge" title="${country}">⏳ ${rawYears}</div>`; return; }
+    if (isNaN(years)) {
+      container.innerHTML = `<div class="fc-exp-badge" title="${country}">⏳ ${rawYears}</div>`;
+      if (card) card.classList.remove('expired-alert-active');
+      return;
+    }
+
     const fd = new Date(fullDate);
-    if (isNaN(fd.getTime())) { container.innerHTML = `<div class="fc-exp-badge">⚠️ Cannot calculate expiry</div>`; return; }
-    const exp = new Date(fd); exp.setFullYear(exp.getFullYear() + years);
-    const expStr = exp.toISOString().split('T')[0], expired = new Date() > exp;
-    container.innerHTML = expired
-      ? `<div class="fc-exp-badge expired" title="Deadline was ${expStr} (${country})">🚨 EXPIRED</div>`
-      : `<div class="fc-exp-badge" title="Valid under ${country} law (${years} years)">⏳ Valid to ${expStr}</div>`;
+    if (isNaN(fd.getTime())) {
+      container.innerHTML = `<div class="fc-exp-badge">⚠️ Cannot calculate expiry</div>`;
+      if (card) card.classList.remove('expired-alert-active');
+      return;
+    }
+
+    const exp     = new Date(fd);
+    exp.setFullYear(exp.getFullYear() + years);
+    const expStr  = exp.toISOString().split('T')[0];
+    const expired = new Date() > exp;
+
+    if (expired) {
+      container.innerHTML = `<div class="fc-exp-badge expired" title="Deadline was ${expStr} (${country})">🚨 CLAIM EXPIRED</div>`;
+      // BUG 4: Add amber pulsing class to the flight card
+      if (card) card.classList.add('expired-alert-active');
+    } else {
+      container.innerHTML = `<div class="fc-exp-badge" title="Valid under ${country} law (${years} years)">⏳ Valid to ${expStr}</div>`;
+      // Remove expired class in case a date edit fixed an apparent expiry
+      if (card) card.classList.remove('expired-alert-active');
+    }
   }
 
   async function runEOCCheck(eocWrapper, flightCard) {
@@ -272,8 +326,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const eocW = flightCard.querySelector('.fc-eoc-wrapper');
     if (eocW) { eocW.dataset.date = fullDate; await runEOCCheck(eocW, flightCard); }
+
+    // BUG 3 FIX: expiry badge now works even when server sent date-free cards,
+    // because server always sets data-years/data-country regardless of date.
     const expC = flightCard.querySelector('.exp-badge-container');
     if (expC) updateExpirationBadge(expC, fullDate);
+
     flightCard.querySelectorAll('.btn-check-status').forEach(b => b.dataset.date = fullDate);
     flightCard.dataset.confirmedDate = fullDate;
   }
@@ -344,8 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fd = new FormData();
     currentFiles.forEach(f => fd.append('ticket', f));
-    // Always send whatever year the user typed — on the server it's now a
-    // strict fallback that never overrides a year found in the document.
     const globalYear = document.getElementById('globalJourneyYear')?.value;
     if (globalYear) fd.append('journeyYear', globalYear);
 
@@ -438,15 +494,19 @@ document.addEventListener('DOMContentLoaded', () => {
               }
 
               let expBadge = '', expYears = 'N/A', expCountry = 'N/A', originSt = '', destSt = '';
+              // BUG 3 FIX: Server now always sends bestYears/bestCountry even when date is
+              // missing, so we always store them on the DOM container as data attributes.
+              // updateExpirationBadge can then compute expiry as soon as a date is set.
               if (flight.ec261Leg?.claimExpiration) {
                 const exp = flight.ec261Leg.claimExpiration;
-                expYears = exp.bestYears; expCountry = exp.bestCountry;
+                expYears   = exp.bestYears   ?? 'N/A';
+                expCountry = exp.bestCountry ?? 'N/A';
                 const fmt = v => (!v||v==='N/A'||String(v).toLowerCase().includes('not applicable'))?'N/A':(String(v).toLowerCase().includes('year')?v:`${v} years`);
                 if (exp.originYears)      originSt = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.originYears)}</div>`;
                 if (exp.destinationYears) destSt   = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;text-align:right;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.destinationYears)}</div>`;
                 if (isMissing)       expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Set date to verify expiry</div>`;
                 else if (isPartial)  expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Enter year to verify expiry</div>`;
-                else if (exp.isExpired) expBadge = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 EXPIRED</div>`;
+                else if (exp.isExpired) expBadge = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 CLAIM EXPIRED</div>`;
                 else expBadge = `<div class="fc-exp-badge" title="Valid under ${exp.bestCountry} law (${exp.bestYears} years)">⏳ Valid to ${exp.expirationDate}</div>`;
               }
 
@@ -516,8 +576,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
               const partialAttr = isMissing ? '' : (flight.date || '');
 
+              // BUG 4: Mark expired cards with a data attribute so we can add
+              // the amber pulsing class after the HTML is in the DOM.
+              const isExpiredCard = flight.ec261Leg?.claimExpiration?.isExpired === true;
+
               fcc.innerHTML += `
-                <div class="flight-card" style="opacity:${opa};" data-partial-date="${partialAttr}">
+                <div class="flight-card" style="opacity:${opa};"
+                     data-partial-date="${partialAttr}"
+                     ${isExpiredCard ? 'data-initially-expired="true"' : ''}>
                   <div style="display:block;width:100%;">${swarn}</div>
                   <div class="fc-top"><div class="fc-airline">${airText}</div><div class="fc-badge">${legIndicator}</div></div>
                   <div class="fc-path-container">
@@ -565,49 +631,34 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsCard.appendChild(jw);
       });
 
-      // -----------------------------------------------------------------------
-      // YEAR RESOLUTION — CHANGED BLOCK
-      //
-      // Previous code: always showed the Enter ✓ button when hasMissingYear.
-      // Bug: if the user had pre-filled the input, the button would appear even
-      // though the answer was already there, and—worse—nothing prevented the
-      // field from being applied manually AFTER the server had already (wrongly)
-      // overridden document years with the pre-filled year.
-      //
-      // New behaviour:
-      //   • If the input already has a valid year → apply it silently to all
-      //     partial-date cards right now. No button needed.
-      //   • If the input is empty → show the pulsing Enter ✓ button so the
-      //     user can type a year and apply it manually.
-      //   • Cards whose AI date already contains a 4-digit year are always
-      //     skipped — their date came from the document and must not change.
-      // -----------------------------------------------------------------------
+      // BUG 4: Apply amber expired pulsing class to all initially-expired cards
+      document.querySelectorAll('.flight-card[data-initially-expired="true"]').forEach(card => {
+        card.classList.add('expired-alert-active');
+      });
+
+      // Year resolution — same logic as before
       if (hasMissingYear) {
         const preFilledYear = (document.getElementById('globalJourneyYear')?.value || '').trim();
 
         if (preFilledYear && /^\d{4}$/.test(preFilledYear)) {
-          // Year was already in the input — apply silently, no button required
           const autoPromises = [];
           document.querySelectorAll('.flight-card[data-partial-date]').forEach(card => {
             const partial = card.dataset.partialDate;
-            // Skip: no partial date, or already has a 4-digit year from the doc
             if (!partial || partial === 'Unknown' || /\d{4}/.test(partial)) return;
             const full = buildFullDate(partial, preFilledYear);
             if (full) autoPromises.push(applyDateToCard(card, full));
           });
           await Promise.all(autoPromises);
 
-          // Safety net: if any cards are still unresolved, show the button
           const stillPartial = [...document.querySelectorAll('.flight-card[data-partial-date]')]
             .filter(c => { const p = c.dataset.partialDate; return p && p !== 'Unknown' && !/\d{4}/.test(p); });
           if (stillPartial.length > 0) applyYearBtn.style.display = 'inline-flex';
         } else {
-          // Input is empty — user needs to type a year manually
           applyYearBtn.style.display = 'inline-flex';
         }
       }
 
-      // Fire EOC checks in parallel for all cards (including the ones just updated above)
+      // Fire EOC checks in parallel
       document.querySelectorAll('.fc-eoc-wrapper').forEach(w => {
         runEOCCheck(w, w.closest('.flight-card'));
       });
