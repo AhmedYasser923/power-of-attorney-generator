@@ -1,6 +1,48 @@
 [
   {
     "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "FCO",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "MXP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "BGY",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "PSA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "NAP",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
+    "date": "2026-04-10",
+    "event": "Aviation Strike",
+    "location": "CTA",
+    "decision": "REJECT"
+  },
+  {
+    "category": "Airport Issues",
     "date": "2026-03-20",
     "event": "Snow Storm",
     "location": "KEF",
