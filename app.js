@@ -8,7 +8,7 @@ process.on('uncaughtException', err => {
 });
 
 const dns = require('node:dns');
-dns.setServers(['1.1.1.1', '8.8.8.8']);
+
 const AppError = require('./utils/appError');
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
