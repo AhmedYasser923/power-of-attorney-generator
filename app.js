@@ -20,7 +20,7 @@ const app = express();
 const globalErrorHandler = require('./controllers/errorController');
 const mongoose = require('mongoose');
 
-mongoose.connect(process.env.DATABASE).then(() => console.log('DB Connection Successful!'));
+
 
 
 // View engine setup
