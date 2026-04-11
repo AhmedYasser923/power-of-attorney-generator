@@ -1,10 +1,12 @@
 'use strict';
 
-const eocDatabase      = require('../eoc_data.json');
 const airportsDatabase = require('../airports_data.json');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
+
+const eocStore             = require('../utils/eocStore');
+const { syncEocFromSheet } = require('../utils/syncEoc');
 
 // --- Shared data helpers (jurisdiction + airline docs) ---
 const {
@@ -58,7 +60,7 @@ exports.checkEOC = (req, res, next) => {
     const dCountry = (destCountry   || '').toLowerCase();
     const flightDate = new Date(date);
 
-    const matchedEvents = eocDatabase.filter(eoc => {
+    const matchedEvents = eocStore.getRecords().filter(eoc => {
       const eocLoc = (eoc.location || '').toLowerCase();
       const locationMatch =
         eocLoc === oIata || eocLoc === dIata ||
@@ -408,3 +410,21 @@ Physical tickets: If you have a physical ticket, the ticket number is usually pr
 
   res.status(200).json({ success: true, email: emailText, englishTranslation: englishText });
 });
+
+// ---------------------------------------------------------------------------
+// EOC SYNC
+// ---------------------------------------------------------------------------
+
+exports.syncEOC = async (req, res) => {
+  try {
+    const previousCount = eocStore.getRecords().length;
+    console.log(`[syncEOC] Sync requested. Current count: ${previousCount}`);
+    const { newCount, delta } = await syncEocFromSheet(previousCount);
+    const deltaStr = delta > 0 ? `+${delta}` : String(delta);
+    console.log(`[syncEOC] Done. New count: ${newCount} (${deltaStr})`);
+    res.json({ success: true, newCount, delta, message: `Synced ${newCount} records, ${deltaStr} new` });
+  } catch (error) {
+    console.error('[syncEOC] Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

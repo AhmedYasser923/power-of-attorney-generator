@@ -109,7 +109,10 @@ block content
             .ts-form-group
               label.ts-label (Optional) Dest Country
               input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-          button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
+          .ts-form-row(style="gap: 12px; margin-top: 0;")
+            button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
+            button#btn-sync-eoc.ts-btn-action(style="background: #0f172a; border-color: #0f172a; font-size: 13px;") 🔄 Sync EOC Database
+          #syncEocResult
           #eocResult
 
         //- TOOL: DOCUMENT CHECKER (Half Width)

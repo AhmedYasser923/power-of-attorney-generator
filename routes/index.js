@@ -42,6 +42,7 @@ router.get('/api/tools/check-docs', toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
 
 router.post('/api/generate-email', toolsController.generateEmail);
+router.post('/api/tools/sync-eoc', toolsController.syncEOC);
 
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);
 router.post('/generate-lufthansa', upload.any(), lufthansaController.generateLufthansaPDF);

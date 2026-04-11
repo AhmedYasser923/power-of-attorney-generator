@@ -504,6 +504,37 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // EOC SYNC
+  // ---------------------------------------------------------------------------
+  document.getElementById('btn-sync-eoc').addEventListener('click', async () => {
+    const btn       = document.getElementById('btn-sync-eoc');
+    const resultDiv = document.getElementById('syncEocResult');
+    const orig      = btn.innerHTML;
+
+    btn.innerHTML = '⏳ Syncing...';
+    btn.disabled  = true;
+    resultDiv.innerHTML = '';
+
+    try {
+      const res  = await fetch('/api/tools/sync-eoc', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) {
+        const deltaColor = data.delta > 0 ? '#16a34a' : (data.delta < 0 ? '#dc2626' : '#64748b');
+        const deltaLabel = data.delta > 0 ? `+${data.delta} new` : (data.delta < 0 ? `${data.delta} removed` : 'no change');
+        resultDiv.innerHTML = `<div style="background:#f0fdf4;color:#166534;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #bbf7d0;margin-bottom:12px;font-size:13px;">✅ Synced ${data.newCount} records <span style="color:${deltaColor};margin-left:8px;">(${deltaLabel})</span></div>`;
+      } else {
+        resultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;margin-bottom:12px;font-size:13px;">❌ Sync failed: ${data.error || 'Unknown error'}</div>`;
+      }
+    } catch {
+      resultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;margin-bottom:12px;font-size:13px;">❌ Network error during sync.</div>`;
+    }
+
+    btn.innerHTML = orig;
+    btn.disabled  = false;
+  });
+
+  // ---------------------------------------------------------------------------
   // COMPENSATION CALCULATOR
   // ---------------------------------------------------------------------------
   document.getElementById('btn-ec261').addEventListener('click', () => {

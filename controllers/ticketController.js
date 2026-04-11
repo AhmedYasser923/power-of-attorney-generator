@@ -8,7 +8,7 @@ const pdfExtract = new PDFExtract();
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 
-const eocDatabase      = require('../eoc_data.json');
+const eocStore         = require('../utils/eocStore');
 const airportsDatabase = require('../airports_data.json');
 
 const {
@@ -17,7 +17,7 @@ const {
   getAirlineReqs,
 } = require('../utils/dataLoader');
 
-console.log(`[EOC Database] Successfully loaded ${eocDatabase.length} records from JSON.`);
+console.log(`[EOC Database] Successfully loaded ${eocStore.getRecords().length} records from JSON.`);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -527,7 +527,7 @@ exports.checkEOC = (req, res, next) => {
     const oI = (originIata||'').toLowerCase(), dI = (destIata||'').toLowerCase();
     const oC = (originCountry||'').toLowerCase(), dC = (destCountry||'').toLowerCase();
     const fd = new Date(date);
-    const matched = eocDatabase.filter(eoc => {
+    const matched = eocStore.getRecords().filter(eoc => {
       const loc = (eoc.location||'').toLowerCase();
       if (![oI,dI,oC,dC,'world wide'].includes(loc)) return false;
       return (eoc.category||'').toLowerCase().includes('ongoing') ? fd >= new Date(eoc.date) : eoc.date === date;
