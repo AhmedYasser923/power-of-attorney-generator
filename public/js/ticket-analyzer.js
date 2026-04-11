@@ -1,15 +1,15 @@
 /* =============================================================================
-   ticket-analyzer.js
+   ticket-analyzer.js - UPDATED WITH PER-LEG PASSENGER TICKET TRACKING
    ============================================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
   const ticketDropZone = document.getElementById('ticketDropZone');
-  const ticketInput    = document.getElementById('ticketInput');
-  const previewTicket  = document.getElementById('previewTicketContainer');
-  const ticketName     = document.getElementById('ticketNameDisplay');
-  const analyzeBtn     = document.getElementById('analyzeBtn');
-  const clearBtn       = document.getElementById('clearFilesBtn');
-  const resultsCard    = document.getElementById('resultsCard');
+  const ticketInput = document.getElementById('ticketInput');
+  const previewTicket = document.getElementById('previewTicketContainer');
+  const ticketName = document.getElementById('ticketNameDisplay');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const clearBtn = document.getElementById('clearFilesBtn');
+  const resultsCard = document.getElementById('resultsCard');
 
   // ---------------------------------------------------------------------------
   // STYLES
@@ -181,13 +181,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (s === 'unused replacement flight') {
       return {
         html: `<div style="background:#e0e7ff;color:#3730a3;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px solid #c7d2fe;">🔄 REPLACEMENT FLIGHT</div>` +
-              `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED</div>`,
+          `<div style="background:#f1f5f9;color:#475569;padding:6px 12px;border-radius:6px;font-weight:800;font-size:12px;margin-bottom:16px;margin-right:8px;display:inline-block;border:1px dashed #cbd5e1;">🚶 MISSED CONNECTION / UNUSED</div>`,
         opacity: '0.65', isRescheduled: false,
       };
     }
     if (s === 'rescheduled') {
       const origDep = flight.originalDepartureTime && flight.originalDepartureTime !== '--:--' ? flight.originalDepartureTime : null;
-      const origArr = flight.originalArrivalTime   && flight.originalArrivalTime   !== '--:--' ? flight.originalArrivalTime   : null;
+      const origArr = flight.originalArrivalTime && flight.originalArrivalTime !== '--:--' ? flight.originalArrivalTime : null;
       let timeChangeHtml = '';
       if (origDep) {
         timeChangeHtml = `
@@ -218,13 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!partial || !year) return null;
     const y = String(year).trim();
     if (!/^\d{4}$/.test(y)) return null;
-    const mo = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06', jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12', january:'01',february:'02',march:'03',april:'04',june:'06', july:'07',august:'08',september:'09',october:'10',november:'11',december:'12' };
+    const mo = { jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12', january: '01', february: '02', march: '03', april: '04', june: '06', july: '07', august: '08', september: '09', october: '10', november: '11', december: '12' };
     const m1 = partial.trim().match(/^(\d{1,2})\s+([A-Za-z]+)$/);
-    if (m1 && mo[m1[2].toLowerCase()]) return `${y}-${mo[m1[2].toLowerCase()]}-${m1[1].padStart(2,'0')}`;
+    if (m1 && mo[m1[2].toLowerCase()]) return `${y}-${mo[m1[2].toLowerCase()]}-${m1[1].padStart(2, '0')}`;
     const m2 = partial.trim().match(/^([A-Za-z]+)\s+(\d{1,2})$/);
-    if (m2 && mo[m2[1].toLowerCase()]) return `${y}-${mo[m2[1].toLowerCase()]}-${m2[2].padStart(2,'0')}`;
+    if (m2 && mo[m2[1].toLowerCase()]) return `${y}-${mo[m2[1].toLowerCase()]}-${m2[2].padStart(2, '0')}`;
     const p = new Date(`${partial} ${y}`);
-    if (!isNaN(p.getTime())) return `${y}-${String(p.getMonth()+1).padStart(2,'0')}-${String(p.getDate()).padStart(2,'0')}`;
+    if (!isNaN(p.getTime())) return `${y}-${String(p.getMonth() + 1).padStart(2, '0')}-${String(p.getDate()).padStart(2, '0')}`;
     return null;
   }
 
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   function updateExpirationBadge(container, fullDate) {
     const rawYears = container.dataset.years;
-    const country  = container.dataset.country;
+    const country = container.dataset.country;
 
     // Tolerate 'N/A', 'undefined', or actual missing values
     const yearsInvalid = !rawYears || rawYears === 'N/A' || rawYears === 'undefined' || rawYears === 'null';
@@ -263,9 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const exp     = new Date(fd);
+    const exp = new Date(fd);
     exp.setFullYear(exp.getFullYear() + years);
-    const expStr  = exp.toISOString().split('T')[0];
+    const expStr = exp.toISOString().split('T')[0];
     const expired = new Date() > exp;
 
     if (expired) {
@@ -293,11 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const d = await r.json();
       if (d.eocFound && d.events?.length) {
         flightCard.classList.add('eoc-alert-active');
-        const bt  = d.events.length > 1 ? `${d.events.length} EOCs Found` : `EOC Found`;
+        const bt = d.events.length > 1 ? `${d.events.length} EOCs Found` : `EOC Found`;
         const hdr = d.events.length > 1 ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${d.events.length})` : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
         eocWrapper.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #fecaca;" title="Claim may be invalidated by EOC">🚨 ${bt}</div>`;
-        const evHtml = d.events.map((ev,i) => `
-          <div style="${i>0?'margin-top:12px;padding-top:12px;border-top:1px dashed #fca5a5;':''}color:#450a0a;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;align-items:baseline;">
+        const evHtml = d.events.map((ev, i) => `
+          <div style="${i > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px dashed #fca5a5;' : ''}color:#450a0a;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;align-items:baseline;">
             <strong style="color:#991b1b;">Category:</strong><span>${ev.category}</span>
             <strong style="color:#991b1b;">Event:</strong><span>${ev.event}</span>
             <strong style="color:#991b1b;">Location:</strong><span>${ev.location}</span>
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startTime = Date.now();
     const liveTimer = document.getElementById('liveTimer');
-    const timerInterval = setInterval(() => { if (liveTimer) liveTimer.innerText = `${((Date.now()-startTime)/1000).toFixed(1)}s`; }, 100);
+    const timerInterval = setInterval(() => { if (liveTimer) liveTimer.innerText = `${((Date.now() - startTime) / 1000).toFixed(1)}s`; }, 100);
 
     if (fetchAbortController) fetchAbortController.abort();
     fetchAbortController = new AbortController();
@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await fetch('/api/analyze-ticket', { method: 'POST', body: fd, signal: fetchAbortController.signal });
-      if (!res.ok) { const ed = await res.json().catch(()=>({})); throw new Error(ed.message || `Server error: ${res.status}`); }
+      if (!res.ok) { const ed = await res.json().catch(() => ({})); throw new Error(ed.message || `Server error: ${res.status}`); }
 
       const raw = await res.json();
       resultsCard.innerHTML = ''; resultsCard.style.display = 'block';
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let hasMissingPnr = false, hasMissingYear = false;
-      dataArray.forEach(j => (j.routes||[]).forEach(r => (r.legs||[]).forEach(leg => {
+      dataArray.forEach(j => (j.routes || []).forEach(r => (r.legs || []).forEach(leg => {
         if (!leg.pnr || leg.pnr === 'Not Provided' || leg.pnr.toLowerCase().includes('scan') || leg.pnr === 'Unknown') hasMissingPnr = true;
         if (classifyDate(leg.date) === 'partial') hasMissingYear = true;
       })));
@@ -440,57 +440,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
       dataArray.forEach((data, ji) => {
         const jw = document.createElement('div');
-        jw.style.marginBottom  = '60px';
-        jw.style.borderBottom  = ji < dataArray.length - 1 ? '3px dashed var(--border-soft)' : 'none';
+        jw.style.marginBottom = '60px';
+        jw.style.borderBottom = ji < dataArray.length - 1 ? '3px dashed var(--border-soft)' : 'none';
         jw.style.paddingBottom = ji < dataArray.length - 1 ? '40px' : '0';
-        if (dataArray.length > 1) jw.innerHTML += `<h3 style="color:var(--primary);border-bottom:1px solid var(--border-soft);padding-bottom:10px;">🎫 Ticket / Journey ${ji+1}</h3>`;
+        if (dataArray.length > 1) jw.innerHTML += `<h3 style="color:var(--primary);border-bottom:1px solid var(--border-soft);padding-bottom:10px;">🎫 Ticket / Journey ${ji + 1}</h3>`;
 
         if (data.ec261 || data.routes?.length) {
           let el = [], il = [];
-          (data.routes||[]).forEach(r => (r.legs||[]).forEach(leg => {
+          (data.routes || []).forEach(r => (r.legs || []).forEach(leg => {
             if (leg.ec261Leg?.status) {
               const ok = !leg.ec261Leg.status.toLowerCase().includes('not');
-              const s  = `<b>${leg.originIata||'?'} ➔ ${leg.destinationIata||'?'}</b>: ${leg.ec261Leg.reason}`;
+              const s = `<b>${leg.originIata || '?'} ➔ ${leg.destinationIata || '?'}</b>: ${leg.ec261Leg.reason}`;
               (ok ? el : il).push(s);
             }
           }));
           let cc, ico, th, rh, is_ = '';
           if (el.length && il.length) {
-            cc='partially-eligible'; is_='background-color:#fffbeb;border:1px solid #fde68a;'; ico='<span style="color:#d97706;">⚠️</span>'; th='<h4 class="ec-title" style="color:#b45309;">OVERALL CLAIM: MIXED ELIGIBILITY</h4>';
-            rh=`<p class="ec-reason" style="margin-bottom:8px;color:#92400e;">This journey contains a mix of eligible and legally ineligible flight legs.</p><div style="display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.6);padding:12px;border-radius:8px;border:1px dashed #fcd34d;"><div style="color:#15803d;font-size:13px;line-height:1.4;">✅ ${el.join('<br>✅ ')}</div><div style="color:#b91c1c;font-size:13px;line-height:1.4;margin-top:4px;padding-top:8px;border-top:1px dashed #fde68a;">❌ ${il.join('<br>❌ ')}</div></div>`;
+            cc = 'partially-eligible'; is_ = 'background-color:#fffbeb;border:1px solid #fde68a;'; ico = '<span style="color:#d97706;">⚠️</span>'; th = '<h4 class="ec-title" style="color:#b45309;">OVERALL CLAIM: MIXED ELIGIBILITY</h4>';
+            rh = `<p class="ec-reason" style="margin-bottom:8px;color:#92400e;">This journey contains a mix of eligible and legally ineligible flight legs.</p><div style="display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.6);padding:12px;border-radius:8px;border:1px dashed #fcd34d;"><div style="color:#15803d;font-size:13px;line-height:1.4;">✅ ${el.join('<br>✅ ')}</div><div style="color:#b91c1c;font-size:13px;line-height:1.4;margin-top:4px;padding-top:8px;border-top:1px dashed #fde68a;">❌ ${il.join('<br>❌ ')}</div></div>`;
           } else {
-            const ok=el.length>0&&!il.length; const st=data.ec261?data.ec261.status.toUpperCase():'UNKNOWN'; const re=data.ec261?data.ec261.reason:'';
-            cc=ok?'eligible':'not-eligible'; ico=ok?'🛡️':'🚫'; th=`<h4 class="ec-title">OVERALL CLAIM: ${el.length?'ELIGIBLE':il.length?'NOT ELIGIBLE':st}</h4>`; rh=`<p class="ec-reason">${re}</p>`;
+            const ok = el.length > 0 && !il.length; const st = data.ec261 ? data.ec261.status.toUpperCase() : 'UNKNOWN'; const re = data.ec261 ? data.ec261.reason : '';
+            cc = ok ? 'eligible' : 'not-eligible'; ico = ok ? '🛡️' : '🚫'; th = `<h4 class="ec-title">OVERALL CLAIM: ${el.length ? 'ELIGIBLE' : il.length ? 'NOT ELIGIBLE' : st}</h4>`; rh = `<p class="ec-reason">${re}</p>`;
           }
           jw.innerHTML += `<div class="ec261-card ${cc}" style="${is_}"><div class="ec-icon">${ico}</div><div class="ec-content">${th}${rh}</div></div>`;
         }
-
-        let showP = true;
-        if (ji > 0) { const c=(data.passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'), pv=(dataArray[ji-1].passengers||[]).map(p=>p.firstName+p.lastName+p.ticketNumber).join('|'); if (c===pv&&c!=='') showP=false; }
-        if (showP) {
-          const ph=(data.passengers||[]).length ? (data.passengers||[]).map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:8px;"><span style="font-weight:700;color:var(--text-main);font-size:15px;">${p.firstName||''} ${p.lastName||''}</span><span style="font-family:monospace;color:var(--primary);font-weight:600;background:#e0f2fe;padding:4px 8px;border-radius:6px;font-size:13px;letter-spacing:1px;">🎟️ ${p.ticketNumber||'No Ticket #'}</span></div>`).join('') : `<div style="color:var(--text-muted);font-size:14px;">No passenger data extracted.</div>`;
-          jw.innerHTML += `<div class="passenger-card" style="display:flex;flex-direction:column;gap:16px;padding:20px;"><div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Passenger Roster & Tickets</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;">${ph}</div></div>`;
-        }
-
         const fcc = document.createElement('div');
 
         if (data.routes?.length) {
           data.routes.forEach(route => {
-            fcc.innerHTML += `<div class="route-header">${route.type||'Flight Route'}</div>`;
+            fcc.innerHTML += `<div class="route-header">${route.type || 'Flight Route'}</div>`;
 
-            (route.legs||[]).forEach((flight, idx) => {
-              const legIndicator = route.legs.length > 1 ? `Leg ${idx+1}` : 'Direct';
-              const dateCls      = classifyDate(flight.date);
-              const isMissing    = dateCls === 'missing';
-              const isPartial    = dateCls === 'partial';
+            (route.legs || []).forEach((flight, idx) => {
+              const legIndicator = route.legs.length > 1 ? `Leg ${idx + 1}` : 'Direct';
+              const dateCls = classifyDate(flight.date);
+              const isMissing = dateCls === 'missing';
+              const isPartial = dateCls === 'partial';
 
               const { html: swarn, opacity: opa, isRescheduled } = buildStatusBadges(flight.flightStatus, flight);
 
               let legBadge = '';
               if (flight.ec261Leg?.status) {
                 const ok = !flight.ec261Leg.status.toLowerCase().includes('not');
-                legBadge = `<div class="fc-ec-badge ${ok?'eligible':'not-eligible'}" title="${flight.ec261Leg.reason}">${ok?'✅':'❌'} ${flight.ec261Leg.status}</div>`;
-                if (ok && flight.ec261Leg.estimatedClaimValue && flight.ec261Leg.estimatedClaimValue!=='N/A') legBadge += `<div class="leg-claim-value">💸 ${flight.ec261Leg.estimatedClaimValue}</div>`;
+                legBadge = `<div class="fc-ec-badge ${ok ? 'eligible' : 'not-eligible'}" title="${flight.ec261Leg.reason}">${ok ? '✅' : '❌'} ${flight.ec261Leg.status}</div>`;
+                if (ok && flight.ec261Leg.estimatedClaimValue && flight.ec261Leg.estimatedClaimValue !== 'N/A') legBadge += `<div class="leg-claim-value">💸 ${flight.ec261Leg.estimatedClaimValue}</div>`;
               }
 
               let expBadge = '', expYears = 'N/A', expCountry = 'N/A', originSt = '', destSt = '';
@@ -499,40 +491,63 @@ document.addEventListener('DOMContentLoaded', () => {
               // updateExpirationBadge can then compute expiry as soon as a date is set.
               if (flight.ec261Leg?.claimExpiration) {
                 const exp = flight.ec261Leg.claimExpiration;
-                expYears   = exp.bestYears   ?? 'N/A';
+                expYears = exp.bestYears ?? 'N/A';
                 expCountry = exp.bestCountry ?? 'N/A';
-                const fmt = v => (!v||v==='N/A'||String(v).toLowerCase().includes('not applicable'))?'N/A':(String(v).toLowerCase().includes('year')?v:`${v} years`);
-                if (exp.originYears)      originSt = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.originYears)}</div>`;
-                if (exp.destinationYears) destSt   = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;text-align:right;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.destinationYears)}</div>`;
-                if (isMissing)       expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Set date to verify expiry</div>`;
-                else if (isPartial)  expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Enter year to verify expiry</div>`;
+                const fmt = v => (!v || v === 'N/A' || String(v).toLowerCase().includes('not applicable')) ? 'N/A' : (String(v).toLowerCase().includes('year') ? v : `${v} years`);
+                if (exp.originYears) originSt = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.originYears)}</div>`;
+                if (exp.destinationYears) destSt = `<div style="font-size:11px;color:#d97706;font-weight:700;margin-top:6px;text-align:right;letter-spacing:0.3px;">⚖️ Limit: ${fmt(exp.destinationYears)}</div>`;
+                if (isMissing) expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Set date to verify expiry</div>`;
+                else if (isPartial) expBadge = `<div class="fc-exp-badge" style="background:#fef08a;color:#9a3412;border:1px dashed #fde047;">⚠️ Enter year to verify expiry</div>`;
                 else if (exp.isExpired) expBadge = `<div class="fc-exp-badge expired" title="Deadline was ${exp.expirationDate} (${exp.bestCountry})">🚨 CLAIM EXPIRED</div>`;
                 else expBadge = `<div class="fc-exp-badge" title="Valid under ${exp.bestCountry} law (${exp.bestYears} years)">⏳ Valid to ${exp.expirationDate}</div>`;
               }
 
-              const mkt = flight.marketingAirline||'Unknown', op = flight.operatingAirline||mkt;
-              const airText = mkt===op ? `✈️ Operated by: ${op}` : `✈️ Booked: ${mkt} <span style="color:var(--primary);margin-left:8px;">| Operated by: ${op}</span>`;
+              const mkt = flight.marketingAirline || 'Unknown', op = flight.operatingAirline || mkt;
+              const airText = mkt === op ? `✈️ Operated by: ${op}` : `✈️ Booked: ${mkt} <span style="color:var(--primary);margin-left:8px;">| Operated by: ${op}</span>`;
               const distHtml = flight.distanceKm ? `<div style="position:absolute;top:-20px;font-size:10px;font-weight:700;color:var(--text-muted);background:var(--surface);padding:2px 8px;border-radius:10px;border:1px solid var(--border-soft);z-index:3;letter-spacing:0.5px;">${flight.distanceKm}</div>` : '';
               const depTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">See reschedule details above</span>` : (flight.departureTime || '--:--');
-              const arrTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">—</span>` : (flight.arrivalTime   || '--:--');
+              const arrTimeDisplay = isRescheduled ? `<span style="font-size:13px;color:#94a3b8;">—</span>` : (flight.arrivalTime || '--:--');
 
               let docsHtml = '';
               if (flight.claimDocuments?.length) {
-                docsHtml = `<div style="width:100%;display:flex;flex-direction:column;margin-top:8px;">${flight.claimDocuments.map(doc => {
-                  const def = doc.reqs==='No documents required';
-                  const rp  = doc.role?`[${doc.role}] `:'';
+                const ftAirlines = ['air france', 'buzz', 'corsair', 'easyjet', 'gulf air', 'klm', 'ryanair'];
+                const tpAirlines = ['nouvelair', '4airways', 'aero contractors', 'aeromexico', 'air albania', 'air cairo', 'air china', 'air corsica', 'corse mediterranee', 'air india', 'air mediterranean', 'air namibia', 'air nippon', 'air peace', 'air saint pierre', 'air senegal', 'air transat', 'air wisconsin', 'akasa air', 'american airlines', 'anima wings', 'arkia', 'atlantic airways', 'austrian', 'avianca', 'avies', 'azerbaijan', 'azul', 'bluebird', 'boliviana', 'corendon', 'egyptair', 'emerald', 'emirates', 'estelar', 'ethiopian', 'euroairlines', 'fly lili', 'flyegypt', 'flynas', 'gol', 'gp aviation', 'hainan', 'hisky', 'icelandair', 'kuwait', 'la compagnie', 'lauda', 'nesma', 'nile air', 'nouvel air', 'oman air', 'pakistan international', 'pegasus', 'plus ultra', 'royal air maroc', 'sky vision', 'skywest', 't way', 'tap', 'tarom', 'tassili', 'thai airways', 'tianjin', 'tui', 'tuifly', 'tunisair', 'turkish', 'vietnam'];
+                const ceasedAirlines = ['aeroitalia', 'air antilles', 'aerosvit', 'air berlin', 'air contractors', 'air italy', 'air lituanica', 'air mediterranee', 'air one', 'air onix', 'air sweden', 'air via', 'albawings', 'alitalia', 'amerijet', 'augsburg', 'bees ukraine', 'belle air', 'bingo airways', 'blue air', 'blue islands', 'blue panorama', 'blue1', 'bmi regional', 'cameroon airlines', 'cimber', 'continental airlines', 'donavia', 'eastern airways', 'estonian air', 'eurolot', 'expressjet', 'fly romania', 'flybe', 'german sky', 'german wings', 'germania', 'hamburg airways', 'hop brit air', 'iceland express', 'insel air', 'khors air', 'lotus airline', 'malev hungarian', 'malmo aviation', 'martin air', 'meridiana', 'monarch', 'motor sich', 'next jet', 'niki', 'nordstar', 'novair', 'onur air', 'openskies', 'orbest portugal', 'palestine airlines', 'piedmont', 'play', 'polet', 'primera air', 'skywings', 'skywork', 'small planet', 'ten airways', 'thomas cook belgium', 'thomas cook uk', 'trans states', 'transaero', 'tyrolean', 'us airways', 'vim', 'voepass', 'wizzair abu dhabi', 'xl airways france', 'braathens international', 'air togo', 'air albania', 'albanian airlines'];
+                const directAirlines = ['wizz air', 'airbaltic', 'transavia', 'jet2', 'ryanair', 'easyjet'];
+                const cleanStr = (s) => ' ' + String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ') + ' ';
+
+                docsHtml = `<div style="width:100%; border:1px solid #e2e8f0; border-radius:10px; margin-top:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div style="background:#f8fafc; padding:10px 14px; font-weight:800; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:#475569; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px;"><span>📋</span> Mandatory Claim Documents</div><div style="padding:12px 14px; background:#ffffff; display:flex; flex-direction:column; gap:10px;">` + flight.claimDocuments.map(doc => {
+                  const def = doc.reqs === 'No documents required';
+                  const rp = doc.role ? `<span style="background:#f1f5f9; color:#64748b; font-size:10px; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1; text-transform:uppercase; font-weight:800;">${doc.role}</span>` : '';
+
+                  const cName = cleanStr(doc.airline);
+                  const isFT = ftAirlines.some(a => cName.includes(' ' + a + ' '));
+                  const isTP = tpAirlines.some(a => cName.includes(' ' + a + ' '));
+                  const isCeased = ceasedAirlines.some(a => cName.includes(' ' + a + ' '));
+                  const isDirect = directAirlines.some(a => cName.includes(' ' + a + ' '));
+
+                  let tagsHtml = '';
+                  if (isCeased) tagsHtml += `<span style="background:#fef2f2; color:#b91c1c; font-size:10px; padding:2px 8px; border-radius:12px; border:1px solid #fecaca; text-transform:uppercase; font-weight:800; margin-left:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:inline-block; vertical-align:middle;">🚨 CEASED OPERATIONS</span>`;
+                  if (isFT) tagsHtml += `<span style="background:#fefce8; color:#a16207; font-size:10px; padding:2px 8px; border-radius:12px; border:1px solid #fde047; text-transform:uppercase; font-weight:800; margin-left:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:inline-block; vertical-align:middle;">⚡ FAST TRACK</span>`;
+                  if (isDirect) tagsHtml += `<span style="background:#eef2ff; color:#4338ca; font-size:10px; padding:2px 8px; border-radius:12px; border:1px solid #c7d2fe; text-transform:uppercase; font-weight:800; margin-left:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:inline-block; vertical-align:middle;">✈️ DIRECT FLIGHT OPERATOR</span>`;
+                  if (isTP) tagsHtml += `<span style="background:#f0fdf4; color:#15803d; font-size:10px; padding:2px 8px; border-radius:12px; border:1px solid #bbf7d0; text-transform:uppercase; font-weight:800; margin-left:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:inline-block; vertical-align:middle;">🎫 TICKET NO = PNR</span>`;
+
                   let jb = '';
-                  if (doc.hq&&doc.limit) { const bc=doc.limit==='N/A'?'#94a3b8':'#d97706',bb=doc.limit==='N/A'?'#f1f5f9':'#fffbeb',be=doc.limit==='N/A'?'#e2e8f0':'#fde68a'; jb=`<span style="background:${bb};color:${bc};padding:2px 6px;border-radius:4px;font-size:9px;margin-left:6px;font-weight:800;border:1px solid ${be};white-space:nowrap;vertical-align:middle;">🏛️ ${doc.hq} (${doc.limit})</span>`; }
-                  const lbl = def ? `<span style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px;"><b>${rp}${doc.airline}</b>${jb} <span style="margin-left:2px;">: No docs required</span></span>` : `<span style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px;"><b>${rp}${doc.airline}</b>${jb} <span style="margin-left:2px;">Required: ${doc.reqs}</span></span>`;
-                  return `<div style="display:flex;align-items:flex-start;gap:6px;color:${def?'var(--text-muted)':'#0369a1'};background:${def?'transparent':'#f0f9ff'};border:${def?'1px dashed #cbd5e1':'1px solid #bae6fd'};padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;width:100%;"><span style="flex-shrink:0;margin-top:2px;">${def?'📄':'📑'}</span> <span style="white-space:normal;line-height:1.6;">${lbl}</span></div>`;
-                }).join('')}</div>`;
+                  if (doc.hq && doc.limit) { const bc = doc.limit === 'N/A' ? '#94a3b8' : '#b45309', bb = doc.limit === 'N/A' ? '#f1f5f9' : '#fef3c7', be = doc.limit === 'N/A' ? '#e2e8f0' : '#fde68a'; jb = `<span style="background:${bb};color:${bc};padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;border:1px solid ${be};display:inline-block;white-space:nowrap;margin-left:6px;vertical-align:middle;">🏛️ ${doc.hq} (${doc.limit})</span>`; }
+
+                  if (def) {
+                    return `<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;"><div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">${rp}<span style="font-weight:800; color:#334155; font-size:13px; margin-top:1px;">${doc.airline}</span>${tagsHtml}${jb}</div><span style="font-weight:800; color:#059669; font-size:11px; background:#d1fae5; padding:3px 8px; border-radius:6px;">✅ No docs required</span></div>`;
+                  } else {
+                    return `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; gap:10px;"><div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px dashed #bfdbfe; padding-bottom:10px;"><div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">${rp}<span style="font-weight:800; color:#1e3a8a; font-size:13px; margin-top:1px;">${doc.airline}</span>${tagsHtml}${jb}</div></div><div style="font-size:13px; color:#1e40af; line-height:1.5;"><span style="font-weight:800; color:#2563eb; letter-spacing:0.5px; margin-right:4px;">REQUIRED:</span> ${doc.reqs}</div></div>`;
+                  }
+                }).join('') + `</div></div>`;
               }
 
               let stBtns = '', fnDisp = '';
               const fns = Array.isArray(flight.flightNumbers) ? flight.flightNumbers : [];
               if (fns.length) {
                 fnDisp = fns.join(' <span style="color:#cbd5e1;font-weight:400;margin:0 4px;">/</span> ');
-                fns.forEach(fn => { const c=fn.trim(); if (c&&c!=='N/A'&&c!=='Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date||'Unknown'}" data-origin="${flight.originIata||''}" data-dest="${flight.destinationIata||''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
+                fns.forEach(fn => { const c = fn.trim(); if (c && c !== 'N/A' && c !== 'Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
               } else { fnDisp = 'N/A'; }
 
               let datePillHtml = '';
@@ -559,20 +574,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
               const eocHtml = `
                 <div class="fc-eoc-wrapper"
-                     data-date="${flight.date||'Unknown'}"
-                     data-oiata="${flight.originIata||''}"
-                     data-diata="${flight.destinationIata||''}"
-                     data-ocountry="${flight.originCountry||''}"
-                     data-dcountry="${flight.destinationCountry||''}">
+                     data-date="${flight.date || 'Unknown'}"
+                     data-oiata="${flight.originIata || ''}"
+                     data-diata="${flight.destinationIata || ''}"
+                     data-ocountry="${flight.originCountry || ''}"
+                     data-dcountry="${flight.destinationCountry || ''}">
                   <div style="background:#f8fafc;color:#475569;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">⏳ Checking EOC...</div>
                 </div>`;
 
               const pr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
               const pn = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
               const editableSpan = `<span class="pnr-editable" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
-              const pnrBadge = (pr===pn&&pn!=='')||(pr===''&&pn!=='')
+              const pnrBadge = (pr === pn && pn !== '') || (pr === '' && pn !== '')
                 ? `<div style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
-                : `<div style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr||'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
+                : `<div style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
+
+              // 🎫 PER-LEG PASSENGER TICKETS RENDERING
+              let passengerTicketsHtml = '';
+              if (flight.passengerTickets && Array.isArray(flight.passengerTickets) && flight.passengerTickets.length > 0) {
+                const ticketBadges = flight.passengerTickets.map(pt => {
+                  const name = pt.passengerName || 'Unknown';
+                  const ticket = pt.ticketNumber || 'N/A';
+                  // Extract first name for compact display
+                  const firstName = name.split(' ')[0];
+                  return `<div style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;padding:6px 12px;border-radius:8px;font-family:'Courier New',Courier,monospace;font-size:12px;font-weight:700;color:#1e3a8a;white-space:nowrap;">
+                    <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2563eb;">👤 ${firstName}:</span>
+                    <span style="letter-spacing:0.5px;">${ticket}</span>
+                  </div>`;
+                }).join('');
+
+                passengerTicketsHtml = `
+                  <div style="width:100%;margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+                    <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                      <span>🎫</span>
+                      <span>Ticket Numbers Used on This Flight</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                      ${ticketBadges}
+                    </div>
+                  </div>
+                `;
+              }
 
               const partialAttr = isMissing ? '' : (flight.date || '');
 
@@ -585,19 +627,19 @@ document.addEventListener('DOMContentLoaded', () => {
                      data-partial-date="${partialAttr}"
                      ${isExpiredCard ? 'data-initially-expired="true"' : ''}>
                   <div style="display:block;width:100%;">${swarn}</div>
-                  <div class="fc-top"><div class="fc-airline">${airText}</div><div class="fc-badge">${legIndicator}</div></div>
+                  <div class="fc-top"><div class="fc-airline">${airText}</div></div>
                   <div class="fc-path-container">
                     <div class="fc-node left">
-                      <div class="fc-iata">${flight.originIata||'???'}</div>
-                      <div class="fc-airport">${flight.originName||''}</div>
-                      <div class="fc-city">${flight.originCity||''}, ${flight.originCountry||''}</div>
+                      <div class="fc-iata">${flight.originIata || '???'}</div>
+                      <div class="fc-airport">${flight.originName || ''}</div>
+                      <div class="fc-city">${flight.originCity || ''}, ${flight.originCountry || ''}</div>
                       ${originSt}
                     </div>
                     <div class="fc-line-wrapper">${distHtml}<div class="fc-line"></div><div class="fc-plane">✈</div></div>
                     <div class="fc-node right">
-                      <div class="fc-iata">${flight.destinationIata||'???'}</div>
-                      <div class="fc-airport">${flight.destinationName||''}</div>
-                      <div class="fc-city">${flight.destinationCity||''}, ${flight.destinationCountry||''}</div>
+                      <div class="fc-iata">${flight.destinationIata || '???'}</div>
+                      <div class="fc-airport">${flight.destinationName || ''}</div>
+                      <div class="fc-city">${flight.destinationCity || ''}, ${flight.destinationCountry || ''}</div>
                       ${destSt}
                     </div>
                   </div>
@@ -611,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="fc-flight-num" style="display:flex;align-items:center;flex-wrap:wrap;">✈ ${fnDisp} ${stBtns}</span>
                     <span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>
                     ${pnrBadge}
+                    ${passengerTicketsHtml}
                     ${docsHtml ? `<span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>${docsHtml}` : ''}
                   </div>
                   <div class="fc-footer">
@@ -668,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       clearInterval(timerInterval);
       analyzeBtn.innerHTML = 'Analyze Document';
-      analyzeBtn.disabled  = false;
+      analyzeBtn.disabled = false;
     }
   });
 
@@ -679,10 +722,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dv = btn.dataset.date;
     if (!dv || dv === 'Unknown' || !/\d{4}/.test(dv)) {
       const o = { html: btn.innerHTML, bg: btn.style.background, col: btn.style.color, bdr: btn.style.border };
-      btn.innerHTML = '⚠️ Date Incomplete'; btn.style.background='#fef2f2'; btn.style.color='#dc2626'; btn.style.border='1px solid #fecaca';
+      btn.innerHTML = '⚠️ Date Incomplete'; btn.style.background = '#fef2f2'; btn.style.color = '#dc2626'; btn.style.border = '1px solid #fecaca';
       const pill = card.querySelector('.needs-date-warning');
-      if (pill) { pill.style.boxShadow='0 0 0 3px rgba(239,68,68,0.4)'; setTimeout(()=>{ pill.style.boxShadow=''; },2000); }
-      setTimeout(()=>{ btn.innerHTML=o.html; btn.style.background=o.bg; btn.style.color=o.col; btn.style.border=o.bdr; btn.disabled=false; },2000);
+      if (pill) { pill.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.4)'; setTimeout(() => { pill.style.boxShadow = ''; }, 2000); }
+      setTimeout(() => { btn.innerHTML = o.html; btn.style.background = o.bg; btn.style.color = o.col; btn.style.border = o.bdr; btn.disabled = false; }, 2000);
       return false;
     }
     return true;
@@ -713,18 +756,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!validateDateForAPI(statusBtn, card)) return;
 
     const flightNum = statusBtn.dataset.flight, date = statusBtn.dataset.date;
-    const origin    = statusBtn.dataset.origin,  dest = statusBtn.dataset.dest;
+    const origin = statusBtn.dataset.origin, dest = statusBtn.dataset.dest;
     statusBtn.innerHTML = `⏳ ${flightNum} Thinking...`; statusBtn.disabled = true;
 
     try {
-      const r    = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
+      const r = await fetch(`/api/flight-status?flightNumber=${encodeURIComponent(flightNum)}&date=${encodeURIComponent(date)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
       const data = await r.json();
 
       if (data.aiStats) {
-        const ai = data.aiStats, ic = ai.rawStatus==='C', id = ai.rawStatus==='D';
+        const ai = data.aiStats, ic = ai.rawStatus === 'C', id = ai.rawStatus === 'D';
         const asc = ic ? `<div style="font-size:22px;font-weight:700;color:#475569;line-height:1;text-decoration:line-through;opacity:0.5;">${ai.arrSched}</div>` : `<div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.arrSched}</div>`;
         const aac = ic ? `<div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:6px;">Flight did not operate</div>` : ai.arrTimeDataPending ? `<div style="font-size:16px;font-weight:700;color:#64748b;line-height:1;">Data Pending</div><div style="font-size:10px;color:#475569;margin-top:4px;">Cirium update expected shortly</div>` : `<div style="font-size:22px;font-weight:700;color:${ai.arrDelayColor};line-height:1;">${ai.arrActual}</div>`;
-        const dvc = (id&&ai.divertedTo) ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity?` — ${ai.divertedToCity}`:''}</div>` : '';
+        const dvc = (id && ai.divertedTo) ? `<div style="margin-top:12px;background:#451a03;border:1px solid #854d0e;border-left:3px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;color:#fbbf24;text-align:right;">⚠️ Diverted to ${ai.divertedTo}${ai.divertedToCity ? ` — ${ai.divertedToCity}` : ''}</div>` : '';
 
         const sc = document.createElement('div');
         sc.style.cssText = 'margin-top:20px;border-radius:16px;overflow:hidden;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;animation:fadeIn 0.4s ease;';
@@ -748,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;gap:6px;">${ai.depActualLabel} <span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.depActualZone}</span></div><div style="font-size:22px;font-weight:700;color:#f8fafc;line-height:1;">${ai.depActual}</div></div>
               </div>
               <div style="width:1px;background:#334155;margin:0 20px;"></div>
-              <div style="flex:1;text-align:right;${ic?'opacity:0.45;':''}">
+              <div style="flex:1;text-align:right;${ic ? 'opacity:0.45;' : ''}">
                 <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;margin-bottom:16px;font-weight:800;">Arrival Gate</div>
                 <div style="margin-bottom:12px;"><div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;justify-content:flex-end;gap:6px;"><span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.arrSchedZone}</span> Scheduled</div>${asc}<div style="font-size:12px;color:#64748b;margin-top:4px;">${ai.arrDate}</div></div>
                 <div><div style="font-size:13px;color:#94a3b8;margin-bottom:4px;display:flex;align-items:center;justify-content:flex-end;gap:6px;"><span style="background:#334155;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${ai.arrActualZone}</span> ${ai.arrActualLabel}</div>${aac}</div>
@@ -763,7 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.appendChild(sc);
         statusBtn.outerHTML = `<div style="background:#e2e8f0;color:#475569;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px;display:inline-block;">✨ ${flightNum} checked</div>`;
       } else {
-        statusBtn.outerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #fecaca;margin-left:6px;display:inline-block;max-width:280px;white-space:normal;line-height:1.4;vertical-align:middle;">⚠️ <b>${flightNum}:</b> ${data.error||'Status unavailable'}</div>`;
+        statusBtn.outerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #fecaca;margin-left:6px;display:inline-block;max-width:280px;white-space:normal;line-height:1.4;vertical-align:middle;">⚠️ <b>${flightNum}:</b> ${data.error || 'Status unavailable'}</div>`;
       }
     } catch (err) {
       console.error(err);

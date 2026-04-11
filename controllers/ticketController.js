@@ -29,6 +29,10 @@ const TICKET_RESPONSE_SCHEMA = {
   items: {
     type: SchemaType.OBJECT,
     properties: {
+      _chronology_scratchpad: {
+        type: SchemaType.STRING,
+        description: "MENTAL WORKSPACE: Write out a flat chronological timeline of all flights extracted. Identical boarding passes must be completely merged into one leg. Determine Outbound vs Return structure."
+      },
       passengers: {
         type: SchemaType.ARRAY,
         items: {
@@ -84,6 +88,18 @@ const TICKET_RESPONSE_SCHEMA = {
                   date:               { type: SchemaType.STRING },
                   originalDepartureTime: { type: SchemaType.STRING },
                   originalArrivalTime:   { type: SchemaType.STRING },
+                  passengerTickets: {
+                    type: SchemaType.ARRAY,
+                    description: "List of exactly which ticket numbers were used for this specific leg, mapped to each passenger's name.",
+                    items: {
+                      type: SchemaType.OBJECT,
+                      properties: {
+                        passengerName: { type: SchemaType.STRING },
+                        ticketNumber: { type: SchemaType.STRING }
+                      },
+                      required: ['passengerName', 'ticketNumber']
+                    }
+                  },
                   ec261Leg: {
                     type: SchemaType.OBJECT,
                     properties: {
@@ -109,7 +125,7 @@ const TICKET_RESPONSE_SCHEMA = {
                     required: ['legOriginCountry','legDestinationCountry','status','reason','claimExpiration'],
                   },
                 },
-                required: ['printedReference','pnr','flightStatus','marketingAirline','marketingAirlineCountry','operatingAirline','operatingAirlineCountry','flightNumbers','originIata','originName','originCity','originCountry','departureTime','arrivalTime','destinationIata','destinationName','destinationCity','destinationCountry','rawExtractedDate','date','originalDepartureTime','originalArrivalTime','ec261Leg'],
+                required: ['passengerTickets','printedReference','pnr','flightStatus','marketingAirline','marketingAirlineCountry','operatingAirline','operatingAirlineCountry','flightNumbers','originIata','originName','originCity','originCountry','departureTime','arrivalTime','destinationIata','destinationName','destinationCity','destinationCountry','rawExtractedDate','date','originalDepartureTime','originalArrivalTime','ec261Leg'],
               },
             },
           },
@@ -117,7 +133,7 @@ const TICKET_RESPONSE_SCHEMA = {
         },
       },
     },
-    required: ['passengers', 'ec261', 'routes'],
+    required: ['_chronology_scratchpad', 'passengers', 'ec261', 'routes'],
   },
 };
 
@@ -150,83 +166,87 @@ function evaluateEC261Deterministic(parsedJourneys) {
     const allLegs = journey.routes.flatMap(r => r.legs || []);
     if (!allLegs.length) return;
 
-    const firstLeg      = allLegs[0];
-    const lastLeg       = allLegs[allLegs.length - 1];
-    const firstOriginEU = isEUCountry(firstLeg.originCountry);
-    const lastDestEU    = isEUCountry(lastLeg.destinationCountry);
-
     journey.ec261 = journey.ec261 || {};
-    journey.ec261.firstOriginCountry      = firstLeg.originCountry     || 'Unknown';
-    journey.ec261.finalDestinationCountry = lastLeg.destinationCountry || 'Unknown';
+    journey.ec261.firstOriginCountry      = allLegs[0].originCountry     || 'Unknown';
+    journey.ec261.finalDestinationCountry = allLegs[allLegs.length - 1].destinationCountry || 'Unknown';
 
-    // RULE 1: EU/UK origin -> entire journey automatically eligible
-    if (firstOriginEU) {
-      journey.ec261.status = 'Eligible';
-      journey.ec261.reason = `Journey departs from ${firstLeg.originCountry} (EU/UK). EC261/2004 applies automatically to all legs.`;
-      allLegs.forEach(leg => {
-        leg.ec261Leg        = leg.ec261Leg || {};
-        leg.ec261Leg.status = 'Eligible';
-        leg.ec261Leg.reason = `Departs from EU/UK country (${leg.originCountry}).`;
-      });
-      return;
-    }
+    let anyEligible = false;
+    let anyIneligible = false;
 
-    // RULE 2: Non-EU origin AND non-EU final destination -> entirely ineligible
-    if (!lastDestEU) {
-      journey.ec261.status = 'Not Eligible';
-      journey.ec261.reason = 'Not Covered: Both the origin and final destination are outside the EU/UK.';
-      allLegs.forEach(leg => {
-        leg.ec261Leg        = leg.ec261Leg || {};
-        leg.ec261Leg.status = 'Not Eligible';
-        leg.ec261Leg.reason = 'Not Covered: Both the origin and final destination are outside the EU/UK.';
-      });
-      return;
-    }
+    journey.routes.forEach(route => {
+      const routeLegs = route.legs || [];
+      if (!routeLegs.length) return;
 
-    // RULE 3: Non-EU origin, EU/UK destination -> per-leg evaluation
-    let anyEligible = false, anyIneligible = false;
+      const routeFirstLeg      = routeLegs[0];
+      const routeLastLeg       = routeLegs[routeLegs.length - 1];
+      const routeFirstOriginEU = isEUCountry(routeFirstLeg.originCountry);
+      const routeLastDestEU    = isEUCountry(routeLastLeg.destinationCountry);
 
-    allLegs.forEach(leg => {
-      leg.ec261Leg = leg.ec261Leg || {};
-      const oEU     = isEUCountry(leg.originCountry);
-      const dEU     = isEUCountry(leg.destinationCountry);
-      const opEU    = isEUCountry(leg.operatingAirlineCountry);
-      const opName  = leg.operatingAirline        || 'Unknown carrier';
-      const opCtry  = leg.operatingAirlineCountry || 'unknown country';
-
-      if (oEU) {
-        // Leg departs from EU/UK -> always eligible regardless of carrier
-        leg.ec261Leg.status = 'Eligible';
-        leg.ec261Leg.reason = `Departs from EU/UK (${leg.originCountry}) — eligible regardless of carrier.`;
-        anyEligible = true;
-      } else if (dEU) {
-        // Non-EU -> EU: eligible ONLY if operated by an EU/UK carrier
-        if (opEU) {
+      // RULE 1: EU/UK origin -> entire route automatically eligible
+      if (routeFirstOriginEU) {
+        routeLegs.forEach(leg => {
+          leg.ec261Leg        = leg.ec261Leg || {};
           leg.ec261Leg.status = 'Eligible';
-          leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) and operated by EU/UK carrier ${opName} (${opCtry}).`;
-          anyEligible = true;
-        } else {
+          leg.ec261Leg.reason = `Route departs from EU/UK (${routeFirstLeg.originCountry}). EC261/2004 applies automatically to all legs on this route.`;
+        });
+        anyEligible = true;
+        return; // continue to next route
+      }
+
+      // RULE 2: Non-EU origin AND non-EU final destination -> entirely ineligible
+      if (!routeLastDestEU) {
+        routeLegs.forEach(leg => {
+          leg.ec261Leg        = leg.ec261Leg || {};
           leg.ec261Leg.status = 'Not Eligible';
-          leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) but operated by non-EU/UK carrier ${opName} (${opCtry}).`;
+          leg.ec261Leg.reason = 'Not Covered: Both the route origin and final destination are outside the EU/UK.';
+        });
+        anyIneligible = true;
+        return; // continue to next route
+      }
+
+      // RULE 3: Non-EU origin, EU/UK destination -> per-leg evaluation
+      routeLegs.forEach(leg => {
+        leg.ec261Leg = leg.ec261Leg || {};
+        const oEU     = isEUCountry(leg.originCountry);
+        const dEU     = isEUCountry(leg.destinationCountry);
+        const opEU    = isEUCountry(leg.operatingAirlineCountry);
+        const opName  = leg.operatingAirline        || 'Unknown carrier';
+        const opCtry  = leg.operatingAirlineCountry || 'unknown country';
+
+        if (oEU) {
+          // Leg departs from EU/UK -> always eligible regardless of carrier
+          leg.ec261Leg.status = 'Eligible';
+          leg.ec261Leg.reason = `Departs from EU/UK (${leg.originCountry}) — eligible regardless of carrier.`;
+          anyEligible = true;
+        } else if (dEU) {
+          // Non-EU -> EU: eligible ONLY if operated by an EU/UK carrier
+          if (opEU) {
+            leg.ec261Leg.status = 'Eligible';
+            leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) and operated by EU/UK carrier ${opName} (${opCtry}).`;
+            anyEligible = true;
+          } else {
+            leg.ec261Leg.status = 'Not Eligible';
+            leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) but operated by non-EU/UK carrier ${opName} (${opCtry}).`;
+            anyIneligible = true;
+          }
+        } else {
+          // Non-EU -> Non-EU connecting leg
+          leg.ec261Leg.status = 'Not Eligible';
+          leg.ec261Leg.reason = `Both origin (${leg.originCountry}) and destination (${leg.destinationCountry}) are outside the EU/UK.`;
           anyIneligible = true;
         }
-      } else {
-        // Non-EU -> Non-EU connecting leg
-        leg.ec261Leg.status = 'Not Eligible';
-        leg.ec261Leg.reason = `Both origin (${leg.originCountry}) and destination (${leg.destinationCountry}) are outside the EU/UK.`;
-        anyIneligible = true;
-      }
+      });
     });
 
     if (anyEligible && anyIneligible) {
       journey.ec261.status = 'Partially Eligible';
-      journey.ec261.reason = 'This journey contains a mix of eligible and ineligible legs under EC261/2004. See per-leg breakdown below.';
+      journey.ec261.reason = 'This booking contains a mix of eligible and ineligible legs under EC261/2004. See per-leg breakdown below.';
     } else if (anyEligible) {
       journey.ec261.status = 'Eligible';
-      journey.ec261.reason = `Journey arrives in EU/UK (${lastLeg.destinationCountry}) with eligible legs operated by EU/UK carriers.`;
+      journey.ec261.reason = 'All routes in this booking qualify for EC261/2004 compensation.';
     } else {
       journey.ec261.status = 'Not Eligible';
-      journey.ec261.reason = `Journey ends in EU/UK (${lastLeg.destinationCountry}) but no legs qualify — no EU/UK carrier operating from outside the EU/UK.`;
+      journey.ec261.reason = 'No routes or legs in this booking qualify for EC261/2004 compensation.';
     }
   });
 }
@@ -272,10 +292,13 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
       to fill in missing years across all documents before outputting JSON.
 
   🧠 *THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*
-    Before generating the JSON, you must mentally process the documents using this exact sequence:
+    Before populating the rest of the JSON, you must mentally process the documents using this exact sequence inside the _chronology_scratchpad field:
     1. Entity Grouping: Identify all unique passengers. If multiple passengers share the exact same flight numbers, dates, and routes, treat them as a single traveling party.
-    2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline. FLIGHTS WITH THE SAME PNR SHOULD BE GROUPED TOGETHER IN IT'S OWN JOURNEY
-    3. Anomaly Detection (Disruptions): Look for logical breaks or overlaps in the timeline. If a passenger has tickets for a direct flight (A ➔ B), AND tickets for a multi-leg flight reaching the same destination (A ➔ C ➔ B) within 48 hours, this is a Disruption/Rebooking. 
+    2. Chronological Sequencing: Extract every single flight leg shown across all documents and arrange them strictly by Date and Departure Time to build a master timeline. FLIGHTS WITH THE SAME PNR SHOULD BE GROUPED TOGETHER IN IT'S OWN JOURNEY.
+    3. 🚨 STRICT DEDUPLICATION (CRITICAL): If multiple uploaded images represent the exact same flight (same passenger, date, flight number), treat them as duplicate evidence. MERGE THEM. NEVER output identical flight legs for the same passenger.
+    4. Anomaly Detection & Route Classification: 
+       - Outbound: The sequence of flights heading towards a primary destination. Even if there are 3 layovers, next-day reroutes, or missed connections trying to reach that destination, they all belong in the Outbound route.
+       - Return: Flights traveling back toward the original starting country at a noticeably later date. If the ticket is one-way, everything is Outbound.
 
     CRITICAL DATE RULES:
     1. Every flight has its own unique date — extract it from the document, put it in rawExtractedDate.
@@ -290,23 +313,24 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
     FLIGHT STATUS RULES (mutually exclusive — pick the FIRST that matches):
     "Cancelled" → airline unilaterally cancelled, flight never operated.
-    "Unused / Missed Connection" → flight operated but passenger didn't board (rebooked, missed connection, or original routing printed alongside replacement routing).
+    "Unused / Missed Connection" → flight operated but passenger didn't board. 🚨 DEDUCTIVE RULE: If a passenger has a ticket for A ➔ B, but the timeline shows them flying out of city A later on a different flight (A ➔ C), the original A ➔ B flight was obviously unused/replaced and MUST be tagged as "Unused / Missed Connection" or "Cancelled".
     "Rescheduled" → SAME flight number, different time; populate originalDepartureTime + originalArrivalTime.
-    "Replacement Flight" → new alternative printed alongside disrupted original on SAME document.
+    "Replacement Flight" → a new alternative routing (like the A ➔ C flight from the example above) that replaces the disrupted one.
     "Unused Replacement Flight" → replacement issued but also not boarded.
     "Flown" → passenger successfully completed this flight.
     "Scheduled" → default, no disruption evidence.
-    KEY: if original routing A→B is printed alongside replacement A→C→B, the A→B leg is "Unused / Missed Connection", NOT "Cancelled".
+    KEY: If the timeline proves A→B was abandoned for a reroute, tag A→B as "Unused / Missed Connection".
 
     PASSENGER & TICKET EXTRACTION:
-       - Passengers & Tickets: Create an object for EACH passenger. Map their specific e-ticket number to their name. 🚨 TICKET RULE: E-tickets are strictly NUMERIC ONLY and exactly 13 digits globally. NEVER contain letters.
-    - PER-LEG TICKETS (CRITICAL): If e-ticket numbers are listed row-by-row for specific flight legs (e.g., "TRV - BLR: Not required", "BLR - FRA: 2206906706612"), you MUST assign the 13-digit number that corresponds to the flights inside the current journey object you are building. If it says "Not required", output "Not Provided".
+       - Passengers Array: Extract each passenger and map their *primary/original* 13-digit e-ticket number in the top-level passenger array. E-tickets are universally 13 digits and purely numeric.
+       - 🚨 PER-LEG TICKETS (CRITICAL): During reroutes or disruptions, airlines reissue new ticket numbers for specific flight legs! For EVERY SINGLE leg in the 'legs' array, you MUST populate 'passengerTickets' mapping each passenger's name to the exact 13-digit ticket number physically printed on the document for THAT specific leg. This ensures we track exactly which ticket got them on which plane.
 
-    PNR EXCEPTION LIST : 
-    - MASSIVE OTA IDs: Never use massive strings labeled "Booking ID" or "Order ID" (e.g., "MN2Z5OQ0...") as the true airline PNR.
-    - 🚨 OTA "E-TICKET" TRICK: Online Travel Agencies sometimes print a string containing letters under an "E-TICKET NO" or "Ticket Number" label (e.g., "LH220HABMTTA4"). This is NOT an e-ticket. It is masking the Airline PNR. Do NOT place strings with letters into the ticketNumber field.
+    🚨 PNR EXTRACTION & JOURNEY GROUPING (CRITICAL) : 
+    - TRUE PNR: A standard airline PNR is usually 5 to 6 alphanumeric characters (or 7 for EasyJet). 
+    - AIRLINE EXCEPTIONS: Air Arabia Maroc, Arkia Israel, Condor, Electra Airways (8 Numbers). TUI Airways (up to 12 Numbers). Fly Jinnah (9 Numbers). Corendon Dutch Airlines (7 Numbers). Neos, Heston, Sunclass (pure numerical).
+    - PRINTED REF MISMATCH: Generic alphanumeric strings like "7464F99C" or "LXC6A4E3" that are 8 letters/numbers are internal IDs, NOT PNRs! Unless the airline matches an exception above, if you cannot find a standard 5-7 character PNR, you MUST output "Not Provided". DO NOT use long printed references as a fallback PNR.
     - EMBEDDED PNRS: If you see the PNR hidden inside a longer pseudo e-ticket string (e.g., in "LH220HABMTTA4"), extract ONLY the core 6 characters ("HABMTT").
-    - don't extract true pnr out of a printed ref, ex "LXC6A4E3"
+    - JOURNEY GROUPING RULE: It is absolutely crucial that you group flights by PNR. HOWEVER, if PNRs are "Not Provided", group the flights by Passenger Name and contiguous chronological routing instead of blindly splitting them.
 
     EC261 FIELDS: For ec261 object output status="Pending" and reason="Pending" — server recalculates.
     Just focus on accurate country names in every leg's originCountry, destinationCountry,
