@@ -23,26 +23,113 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // SMART DATE PASTE HANDLER
+  // DATE FORMATTING UTILITIES
   // ---------------------------------------------------------------------------
-  function handleSmartDatePaste(e) {
-    e.preventDefault();
-    const pastedText  = (e.clipboardData || window.clipboardData).getData('text');
-    const parsedDate  = new Date(pastedText);
-    if (!isNaN(parsedDate.getTime())) {
-      const yyyy = parsedDate.getFullYear();
-      const mm   = String(parsedDate.getMonth() + 1).padStart(2, '0');
-      const dd   = String(parsedDate.getDate()).padStart(2, '0');
-      e.target.value = `${yyyy}-${mm}-${dd}`;
-    } else {
-      alert('Could not automatically read that date. Please use the calendar or type YYYY-MM-DD.');
-    }
+  function formatDateForDisplay(dateStr) {
+    if (!dateStr) return '';
+    // Parse YYYY-MM-DD format and format as "4 April, 2026"
+    const date = new Date(dateStr + 'T00:00:00Z'); // Add time to avoid timezone issues
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   }
 
-  const cDate = document.getElementById('c-date');
+  function parseDateFromDisplay(userInput) {
+    if (!userInput) return null;
+    const input = userInput.trim();
+
+    // Try YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+      const date = new Date(input + 'T00:00:00Z');
+      if (!isNaN(date.getTime())) return input;
+    }
+
+    // Try DD/MM/YYYY or D/M/YYYY format
+    const slashMatch = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slashMatch) {
+      const [_, day, month, year] = slashMatch;
+      const date = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00Z`);
+      if (!isNaN(date.getTime())) {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+
+    // Try "4 April, 2026" or "04 April 2026" format
+    const dateWithMonthMatch = input.match(/^(\d{1,2})\s+(\w+),?\s+(\d{4})$/);
+    if (dateWithMonthMatch) {
+      const [_, day, monthName, year] = dateWithMonthMatch;
+      const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
+      if (monthIndex !== -1) {
+        return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+
+    // Try parsing as Date and format if valid
+    const parsed = new Date(input);
+    if (!isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // SMART DATE HANDLERS FOR E-DATE (EOC Flight Date)
+  // ---------------------------------------------------------------------------
+  const eDatePicker = document.getElementById('e-date-picker');
   const eDate = document.getElementById('e-date');
-  if (cDate) cDate.addEventListener('paste', handleSmartDatePaste);
-  if (eDate) eDate.addEventListener('paste', handleSmartDatePaste);
+
+  // When user selects a date from the date picker
+  if (eDatePicker) {
+    eDatePicker.addEventListener('change', () => {
+      if (eDatePicker.value) {
+        eDate.value = formatDateForDisplay(eDatePicker.value);
+      }
+    });
+  }
+
+  // When user types or pastes in the display input
+  if (eDate) {
+    eDate.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const parsed = parseDateFromDisplay(pastedText);
+      if (parsed) {
+        eDatePicker.value = parsed;
+        eDate.value = formatDateForDisplay(parsed);
+      } else {
+        alert('Could not automatically read that date. Please use the calendar or type a date format like "4 April 2026" or "04/04/2026".');
+      }
+    });
+
+    eDate.addEventListener('input', () => {
+      const parsed = parseDateFromDisplay(eDate.value);
+      if (parsed) {
+        eDatePicker.value = parsed;
+      }
+    });
+  }
+
+  // Handle c-date (FlightStats tab) paste if it exists
+  const cDate = document.getElementById('c-date');
+  if (cDate) {
+    cDate.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const parsed = parseDateFromDisplay(pastedText);
+      if (parsed) {
+        cDate.value = parsed;
+      } else {
+        alert('Could not automatically read that date. Please use the calendar or type YYYY-MM-DD.');
+      }
+    });
+  }
 
   // ---------------------------------------------------------------------------
   // AIRPORT AUTOCOMPLETE
@@ -280,7 +367,15 @@ document.addEventListener('DOMContentLoaded', () => {
           list.innerHTML = '';
 
           if (data.length > 0) {
-            list.style.display = 'block';
+            // Check for exact match and display results immediately
+            const exactMatch = data.find(airline => airline.name.toLowerCase() === val.toLowerCase());
+            if (exactMatch) {
+              fetchAndDisplayDocs(exactMatch.name);
+              list.style.display = 'none';
+            } else {
+              list.style.display = 'block';
+            }
+
             data.forEach(airline => {
               const item = document.createElement('div');
               item.className = 'autocomplete-item';
@@ -455,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   document.getElementById('btn-eoc').addEventListener('click', async (e) => {
     const btn       = e.target;
-    const date      = document.getElementById('e-date').value;
+    const date      = document.getElementById('e-date-picker').value;
     const oInput    = document.getElementById('e-o-iata');
     const dInput    = document.getElementById('e-d-iata');
     const oIata     = oInput.dataset.iata || oInput.value.trim();

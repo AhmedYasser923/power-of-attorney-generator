@@ -16,6 +16,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   const styleEl = document.createElement('style');
   styleEl.innerHTML = `
+    /* PHASE 1: FONT SMOOTHING & TYPOGRAPHY UPGRADE */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body, input, button, select, textarea {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                   'SF Pro Display', Roboto, 'Helvetica Neue',
+                   Arial, sans-serif;
+      font-feature-settings: 'kern' 1, 'liga' 1;
+      letter-spacing: -0.01em;
+    }
+
+    .fc-airline, .fc-iata, .route-header {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .fc-airport, .fc-city {
+      font-weight: 400;
+      letter-spacing: -0.005em;
+    }
+
     @keyframes pulsyGlassyRed {
       0%   { box-shadow: 0 0 0 0 rgba(220,38,38,0.5), inset 0 0 10px rgba(220,38,38,0.1);
               background-color: rgba(254,242,242,0.4); border-color: rgba(239,68,68,0.5); }
@@ -97,6 +122,145 @@ document.addEventListener('DOMContentLoaded', () => {
 
     .pnr-editable { outline:none; color:var(--primary); font-weight:800; min-width:85px; display:inline-block; word-break:break-word; max-width:100%; text-transform:uppercase; cursor:text; }
     .pnr-editable:empty:before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+
+    /* PHASE 3: MULTI-PNR COLOR CODING SYSTEM */
+    :root {
+      --pnr-color-1: #2563eb;
+      --pnr-bg-1: #eff6ff;
+      --pnr-border-1: #bfdbfe;
+
+      --pnr-color-2: #7c3aed;
+      --pnr-bg-2: #f5f3ff;
+      --pnr-border-2: #ddd6fe;
+
+      --pnr-color-3: #059669;
+      --pnr-bg-3: #d1fae5;
+      --pnr-border-3: #a7f3d0;
+
+      --pnr-color-4: #dc2626;
+      --pnr-bg-4: #fee2e2;
+      --pnr-border-4: #fecaca;
+
+      --pnr-color-5: #ea580c;
+      --pnr-bg-5: #ffedd5;
+      --pnr-border-5: #fed7aa;
+
+      --pnr-color-6: #0891b2;
+      --pnr-bg-6: #cffafe;
+      --pnr-border-6: #a5f3fc;
+    }
+
+    .pnr-badge-1 {
+      color: var(--pnr-color-1) !important;
+      background: var(--pnr-bg-1) !important;
+      border-color: var(--pnr-border-1) !important;
+    }
+    .pnr-badge-2 {
+      color: var(--pnr-color-2) !important;
+      background: var(--pnr-bg-2) !important;
+      border-color: var(--pnr-border-2) !important;
+    }
+    .pnr-badge-3 {
+      color: var(--pnr-color-3) !important;
+      background: var(--pnr-bg-3) !important;
+      border-color: var(--pnr-border-3) !important;
+    }
+    .pnr-badge-4 {
+      color: var(--pnr-color-4) !important;
+      background: var(--pnr-bg-4) !important;
+      border-color: var(--pnr-border-4) !important;
+    }
+    .pnr-badge-5 {
+      color: var(--pnr-color-5) !important;
+      background: var(--pnr-bg-5) !important;
+      border-color: var(--pnr-border-5) !important;
+    }
+    .pnr-badge-6 {
+      color: var(--pnr-color-6) !important;
+      background: var(--pnr-bg-6) !important;
+      border-color: var(--pnr-border-6) !important;
+    }
+
+    .pnr-editable {
+      transition: all 0.2s ease;
+      border-bottom: 2px dashed transparent;
+    }
+
+    .pnr-editable:hover {
+      border-bottom-color: currentColor;
+      opacity: 0.8;
+    }
+
+    /* PHASE 2: COLLAPSIBLE SECTIONS IMPLEMENTATION */
+    .fc-collapsible-section {
+      width: 100%;
+      margin-top: 12px;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fc-collapse-trigger {
+      width: 100%;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      text-align: left;
+    }
+
+    .fc-collapse-trigger:hover {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+      border-color: #bfdbfe;
+      color: #1e40af;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .fc-collapse-icon {
+      font-size: 10px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    .fc-collapse-trigger.expanded .fc-collapse-icon {
+      transform: rotate(90deg);
+      color: #2563eb;
+    }
+
+    .fc-collapse-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.3s ease,
+                  padding 0.3s ease;
+      opacity: 0;
+      padding: 0 14px;
+    }
+
+    .fc-collapse-content.expanded {
+      max-height: 2000px;
+      opacity: 1;
+      padding: 12px 14px;
+    }
+
+    .fc-collapsible-section:not(.expanded) .fc-collapse-trigger {
+      animation: subtlePulse 3s infinite ease-in-out;
+    }
+
+    @keyframes subtlePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+      50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+    }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   `;
@@ -380,6 +544,40 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // PNR COLOR ASSIGNMENT LOGIC
+  // ---------------------------------------------------------------------------
+  function assignPNRColors(journeys) {
+    // Collect all unique PNRs across all journeys
+    const allPNRs = new Set();
+
+    journeys.forEach(journey => {
+      if (journey.routes) {
+        journey.routes.forEach(route => {
+          if (route.legs) {
+            route.legs.forEach(leg => {
+              const pnr = leg.pnr;
+              if (pnr && pnr !== 'Not Provided' && pnr !== 'Unknown') {
+                allPNRs.add(pnr.trim().toUpperCase());
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Create PNR to color mapping
+    const pnrColorMap = {};
+    const uniquePNRArray = Array.from(allPNRs).sort(); // Sort for consistency
+
+    uniquePNRArray.forEach((pnr, i) => {
+      const colorIndex = (i % 6) + 1; // Cycle through 6 colors
+      pnrColorMap[pnr] = colorIndex;
+    });
+
+    return pnrColorMap;
+  }
+
+  // ---------------------------------------------------------------------------
   // MAIN ANALYSIS
   // ---------------------------------------------------------------------------
   analyzeBtn.addEventListener('click', async (e) => {
@@ -420,6 +618,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let dataArray = raw.journeys || raw;
       if (!Array.isArray(dataArray)) dataArray = [dataArray];
 
+      // Assign PNR colors before rendering
+      const pnrColorMap = assignPNRColors(dataArray);
+
       if (raw.processingTime) {
         resultsCard.innerHTML += `
           <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;">
@@ -428,14 +629,32 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>`;
       }
 
-      let hasMissingPnr = false, hasMissingYear = false;
+      let hasMissingPnr = false, hasMissingYear = false, hasPnrMismatch = false, hasDifferentPnrs = false;
+      const uniquePnrValues = new Set();
+
       dataArray.forEach(j => (j.routes || []).forEach(r => (r.legs || []).forEach(leg => {
-        if (!leg.pnr || leg.pnr === 'Not Provided' || leg.pnr.toLowerCase().includes('scan') || leg.pnr === 'Unknown') hasMissingPnr = true;
+        if (!leg.pnr || leg.pnr === 'Not Provided' || leg.pnr.toLowerCase().includes('scan') || leg.pnr === 'Unknown') {
+          hasMissingPnr = true;
+        } else {
+          uniquePnrValues.add(leg.pnr.trim().toUpperCase());
+        }
         if (classifyDate(leg.date) === 'partial') hasMissingYear = true;
+        if (leg._warnings && leg._warnings.includes('MULTI_CARRIER_SINGLE_PNR_DETECTED')) hasPnrMismatch = true;
       })));
+
+      // Show success banner only if multiple different PNRs and no missing PNRs
+      hasDifferentPnrs = uniquePnrValues.size > 1 && !hasMissingPnr;
 
       if (hasMissingPnr) {
         resultsCard.innerHTML += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#1e3a8a;margin-bottom:6px;font-size:14px;"><span>📱</span> Missing PNRs Detected</div><div style="color:#1e40af;font-size:13px;line-height:1.5;">One or more True PNRs could not be clearly extracted. <b>Please use your scanner to read the barcode and edit the PNR field below.</b></div></div>`;
+      }
+
+      if (hasPnrMismatch) {
+        resultsCard.innerHTML += `<div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#b45309;margin-bottom:6px;font-size:14px;"><span>⚠️</span> PNR Verification Needed</div><div style="color:#92400e;font-size:13px;line-height:1.5;">This booking has <b>multiple operating carriers</b> but all legs share the same PNR. This may indicate that carrier-specific PNRs were not extracted correctly. <b>Please verify each leg's PNR from your original documents.</b></div></div>`;
+      }
+
+      if (hasDifferentPnrs) {
+        resultsCard.innerHTML += `<div style="background:#cffafe;border:1px solid #67e8f9;border-left:4px solid #0891b2;padding:12px 16px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#0c4a6e;font-size:13px;"><span>📋</span> ${uniquePnrValues.size} Different PNRs Detected</div></div>`;
       }
 
       dataArray.forEach((data, ji) => {
@@ -516,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const directAirlines = ['wizz air', 'airbaltic', 'transavia', 'jet2', 'ryanair', 'easyjet'];
                 const cleanStr = (s) => ' ' + String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ') + ' ';
 
-                docsHtml = `<div style="width:100%; border:1px solid #e2e8f0; border-radius:10px; margin-top:8px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div style="background:#f8fafc; padding:10px 14px; font-weight:800; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; color:#475569; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px;"><span>📋</span> Mandatory Claim Documents</div><div style="padding:12px 14px; background:#ffffff; display:flex; flex-direction:column; gap:10px;">` + flight.claimDocuments.map(doc => {
+                const docsContent = flight.claimDocuments.map(doc => {
                   const def = doc.reqs === 'No documents required';
                   const rp = doc.role ? `<span style="background:#f1f5f9; color:#64748b; font-size:10px; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1; text-transform:uppercase; font-weight:800;">${doc.role}</span>` : '';
 
@@ -540,7 +759,21 @@ document.addEventListener('DOMContentLoaded', () => {
                   } else {
                     return `<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; gap:10px;"><div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px dashed #bfdbfe; padding-bottom:10px;"><div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">${rp}<span style="font-weight:800; color:#1e3a8a; font-size:13px; margin-top:1px;">${doc.airline}</span>${tagsHtml}${jb}</div></div><div style="font-size:13px; color:#1e40af; line-height:1.5;"><span style="font-weight:800; color:#2563eb; letter-spacing:0.5px; margin-right:4px;">REQUIRED:</span> ${doc.reqs}</div></div>`;
                   }
-                }).join('') + `</div></div>`;
+                }).join('');
+
+                docsHtml = `
+                  <div class="fc-collapsible-section" data-section="docs">
+                    <button class="fc-collapse-trigger" type="button" data-toggle-section="docs">
+                      <span class="fc-collapse-icon">▶</span>
+                      <span class="fc-collapse-label">📋 Mandatory Claim Documents</span>
+                    </button>
+                    <div class="fc-collapse-content">
+                      <div style="padding-top:8px;display:flex;flex-direction:column;gap:10px;">
+                        ${docsContent}
+                      </div>
+                    </div>
+                  </div>
+                `;
               }
 
               let stBtns = '', fnDisp = '';
@@ -584,10 +817,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
               const pr = flight.printedReference && flight.printedReference !== 'Not Provided' ? flight.printedReference : '';
               const pn = flight.pnr && flight.pnr !== 'Not Provided' && !flight.pnr.toLowerCase().includes('scan') ? flight.pnr : '';
-              const editableSpan = `<span class="pnr-editable" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
+
+              // Apply PNR color coding
+              let colorClass = '';
+              if (pn && pn !== 'Not Provided' && pn !== 'Unknown') {
+                const pnrKey = pn.trim().toUpperCase();
+                if (pnrColorMap[pnrKey]) {
+                  colorClass = `pnr-badge-${pnrColorMap[pnrKey]}`;
+                }
+              }
+
+              const editableSpan = `<span class="pnr-editable ${colorClass}" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
               const pnrBadge = (pr === pn && pn !== '') || (pr === '' && pn !== '')
-                ? `<div style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
-                : `<div style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
+                ? `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
+                : `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
+
+              // Display warning if server flagged multi-carrier PNR anomaly
+              let pnrWarningHtml = '';
+              console.log(`[PNR WARNING CHECK] Flight: ${flight.flightNumbers?.[0]}, _warnings:`, flight._warnings);
+              if (flight._warnings && flight._warnings.includes('MULTI_CARRIER_SINGLE_PNR_DETECTED')) {
+                console.warn(`[PNR WARNING] Showing warning for flight ${flight.flightNumbers?.[0]}`);
+                pnrWarningHtml = `
+                  <div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #f59e0b;
+                              padding:10px 14px;border-radius:8px;font-size:12px;color:#92400e;
+                              margin-top:12px;line-height:1.5;">
+                    <div style="font-weight:800;color:#b45309;margin-bottom:4px;display:flex;
+                                align-items:center;gap:6px;">
+                      ⚠️ PNR Verification Needed
+                    </div>
+                    <div>
+                      This booking has multiple operating carriers but all legs share the same PNR.
+                      This may indicate that carrier-specific PNRs were not extracted correctly.
+                      <strong>Please verify each leg's PNR from your original documents.</strong>
+                    </div>
+                  </div>
+                `;
+              }
 
               // 🎫 PER-LEG PASSENGER TICKETS RENDERING
               let passengerTicketsHtml = '';
@@ -603,14 +868,17 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>`;
                 }).join('');
 
+                const ticketCount = flight.passengerTickets.length;
                 passengerTicketsHtml = `
-                  <div style="width:100%;margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,0.02);">
-                    <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                      <span>🎫</span>
-                      <span>Ticket Numbers Used on This Flight</span>
-                    </div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                      ${ticketBadges}
+                  <div class="fc-collapsible-section" data-section="tickets">
+                    <button class="fc-collapse-trigger" type="button" data-toggle-section="tickets">
+                      <span class="fc-collapse-icon">▶</span>
+                      <span class="fc-collapse-label">🎫 Ticket Numbers Used (${ticketCount})</span>
+                    </button>
+                    <div class="fc-collapse-content">
+                      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                        ${ticketBadges}
+                      </div>
                     </div>
                   </div>
                 `;
@@ -653,6 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="fc-flight-num" style="display:flex;align-items:center;flex-wrap:wrap;">✈ ${fnDisp} ${stBtns}</span>
                     <span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>
                     ${pnrBadge}
+                    ${pnrWarningHtml}
                     ${passengerTicketsHtml}
                     ${docsHtml ? `<span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>${docsHtml}` : ''}
                   </div>
@@ -735,6 +1004,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // EVENT DELEGATION
   // ---------------------------------------------------------------------------
   resultsCard.addEventListener('click', async (e) => {
+
+    // Handle collapse/expand toggle
+    const collapseBtn = e.target.closest('.fc-collapse-trigger');
+    if (collapseBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const section = collapseBtn.closest('.fc-collapsible-section');
+      const content = section.querySelector('.fc-collapse-content');
+
+      if (collapseBtn.classList.contains('expanded')) {
+        // Collapse
+        collapseBtn.classList.remove('expanded');
+        content.classList.remove('expanded');
+        setTimeout(() => { content.style.display = 'none'; }, 400);
+      } else {
+        // Expand
+        content.style.display = 'block';
+        void content.offsetWidth; // Force reflow for animation
+        collapseBtn.classList.add('expanded');
+        content.classList.add('expanded');
+      }
+      return;
+    }
 
     const editBtn = e.target.closest('.fc-date-edit-btn');
     if (editBtn) { const card = editBtn.closest('.flight-card'); showDateEditor(card, card.dataset.confirmedDate || ''); return; }

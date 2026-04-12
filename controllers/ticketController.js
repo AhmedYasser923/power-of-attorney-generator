@@ -67,7 +67,7 @@ const TICKET_RESPONSE_SCHEMA = {
                 type: SchemaType.OBJECT,
                 properties: {
                   printedReference: { type: SchemaType.STRING, description: 'Raw alphanumeric reference physically printed on the document. Output "Not Provided" if absent.' },
-                  pnr: { type: SchemaType.STRING },
+                  pnr: { type: SchemaType.STRING, description: 'Per-carrier booking reference. If this leg is operated by a different airline than others in the booking, extract the PNR specific to THIS operating carrier from the "Airline Booking Reference" field. Example: if document shows "AA/SNMAUJ, BA/7IQHOL" and this leg is operated by American Airlines, output "SNMAUJ". If operated by British Airways, output "7IQHOL". NEVER copy PNRs across different operating carriers.' },
                   flightStatus: { type: SchemaType.STRING, description: 'One of: Cancelled | Unused / Missed Connection | Rescheduled | Replacement Flight | Unused Replacement Flight | Flown | Scheduled' },
                   marketingAirline:        { type: SchemaType.STRING },
                   marketingAirlineCountry: { type: SchemaType.STRING },
@@ -78,16 +78,16 @@ const TICKET_RESPONSE_SCHEMA = {
                   originName:         { type: SchemaType.STRING },
                   originCity:         { type: SchemaType.STRING },
                   originCountry:      { type: SchemaType.STRING },
-                  departureTime:      { type: SchemaType.STRING },
-                  arrivalTime:        { type: SchemaType.STRING },
+                  departureTime:      { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T11:59:00', output '11:59'." },
+                  arrivalTime:        { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T14:44:00', output '14:44'." },
                   destinationIata:    { type: SchemaType.STRING },
                   destinationName:    { type: SchemaType.STRING },
                   destinationCity:    { type: SchemaType.STRING },
                   destinationCountry: { type: SchemaType.STRING },
                   rawExtractedDate:   { type: SchemaType.STRING },
                   date:               { type: SchemaType.STRING },
-                  originalDepartureTime: { type: SchemaType.STRING },
-                  originalArrivalTime:   { type: SchemaType.STRING },
+                  originalDepartureTime: { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T11:59:00', output '11:59'." },
+                  originalArrivalTime:   { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T11:59:00', output '11:59'." },
                   passengerTickets: {
                     type: SchemaType.ARRAY,
                     description: "List of exactly which ticket numbers were used for this specific leg, mapped to each passenger's name.",
@@ -252,6 +252,60 @@ function evaluateEC261Deterministic(parsedJourneys) {
 }
 
 // ---------------------------------------------------------------------------
+// BUG FIX: PNR Cross-Carrier Validator
+// Detects when different operating carriers incorrectly share the same PNR
+// ---------------------------------------------------------------------------
+function validateAndCorrectPNRs(parsedJourneys) {
+  parsedJourneys.forEach(journey => {
+    if (!journey.routes) return;
+
+    journey.routes.forEach(route => {
+      if (!route.legs || route.legs.length === 0) return;
+
+      // Collect unique operating carriers
+      const operatorSet = new Set();
+      route.legs.forEach(leg => {
+        if (leg.operatingAirline && leg.operatingAirline !== 'Unknown') {
+          operatorSet.add(leg.operatingAirline);
+        }
+      });
+
+      console.log(`[PNR VALIDATOR] Route with ${route.legs.length} legs, ${operatorSet.size} unique operators: ${Array.from(operatorSet).join(', ')}`);
+
+      // If multiple carriers, check for PNR diversity
+      if (operatorSet.size > 1) {
+        const pnrSet = new Set();
+        const pnrMap = {};
+        route.legs.forEach(leg => {
+          if (leg.pnr && leg.pnr !== 'Not Provided' && leg.pnr !== 'Unknown') {
+            pnrSet.add(leg.pnr);
+            pnrMap[leg.pnr] = (pnrMap[leg.pnr] || 0) + 1;
+          }
+        });
+
+        console.log(`[PNR VALIDATOR] Found ${pnrSet.size} unique PNRs: ${Array.from(pnrSet).join(', ')}`);
+        console.log(`[PNR VALIDATOR] PNR map:`, pnrMap);
+
+        // WARNING: Multiple carriers but only one PNR detected
+        if (pnrSet.size === 1) {
+          console.warn(`⚠️  [PNR VALIDATOR] Multi-carrier booking detected but only ONE PNR found across all legs!`);
+          console.warn(`    Carriers: ${Array.from(operatorSet).join(', ')}`);
+          console.warn(`    Shared PNR: ${Array.from(pnrSet)[0]}`);
+          console.warn(`    → This may indicate PNR cross-contamination. Manual review recommended.`);
+
+          // Flag it in the data for frontend display
+          route.legs.forEach(leg => {
+            if (!leg._warnings) leg._warnings = [];
+            leg._warnings.push('MULTI_CARRIER_SINGLE_PNR_DETECTED');
+            console.log(`[PNR VALIDATOR] Flagged leg: ${leg.flightNumbers?.[0]} operated by ${leg.operatingAirline} with PNR ${leg.pnr}`);
+          });
+        }
+      }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // RENDER
 // ---------------------------------------------------------------------------
 exports.renderAnalyzer = catchAsync(async (req, res, next) => {
@@ -320,6 +374,124 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     "Flown" → passenger successfully completed this flight.
     "Scheduled" → default, no disruption evidence.
     KEY: If the timeline proves A→B was abandoned for a reroute, tag A→B as "Unused / Missed Connection".
+
+    🕐 CRITICAL TIME EXTRACTION RULES (MANDATORY):
+
+    TIME vs DATE SEPARATION:
+      - departureTime / arrivalTime → TIME ONLY (HH:MM)
+      - date / rawExtractedDate → DATE ONLY (YYYY-MM-DD or partial)
+
+    NEVER MIX THEM. They are separate fields for a reason.
+
+    COMMON EXTRACTION ERRORS TO AVOID:
+
+    ❌ WRONG:
+      {
+        "date": "29 March",
+        "departureTime": "2026-03-29T11:59:00",  // ISO datetime
+        "arrivalTime": "2026-03-29T14:44:00"
+      }
+
+    ❌ WRONG:
+      {
+        "departureTime": "March 29 11:59",  // Date + time mixed
+        "arrivalTime": "14:44 on 29 March"
+      }
+
+    ✅ CORRECT:
+      {
+        "date": "29 March",           // Date field ONLY
+        "departureTime": "11:59",     // Time field ONLY (HH:MM)
+        "arrivalTime": "14:44"        // Time field ONLY (HH:MM)
+      }
+
+    EXTRACTION PROTOCOL:
+    1. When you see "Departure: 29 March 11:59"
+       → date = "29 March"
+       → departureTime = "11:59"
+
+    2. When you see "2026-03-29T11:59:00"
+       → date = "2026-03-29"
+       → departureTime = "11:59"
+
+    3. When you see "11:59 AM"
+       → departureTime = "11:59" (convert AM/PM to 24h)
+
+    4. When you see "Arrival Day+1"
+       → Include "+1" in the notes/metadata, NOT in the time field
+       → arrivalTime = "06:50" (time only)
+
+    FORMAT ENFORCEMENT:
+      - Output format: Always "HH:MM" (two digits : two digits)
+      - Use 24-hour format: "14:44" not "2:44 PM"
+      - Pad with zeros: "08:00" not "8:00"
+      - If time is missing: output "--:--"
+
+    🚨 MULTI-CARRIER PNR REALITY (CRITICAL):
+
+    FUNDAMENTAL RULE: Each airline in a booking can issue its own PNR.
+
+    SCENARIO 1 - Same Operating Carrier Throughout:
+      Example: All flights operated by British Airways
+      → ONE PNR applies to all legs (e.g., "7IQHOL")
+
+    SCENARIO 2 - Multiple Operating Carriers (CODE-SHARE / INTERLINE):
+      Example:
+        - Leg 1: Booked BA, Operated AA → AA PNR (e.g., "SNMAUJ")
+        - Leg 2: Booked BA, Operated BA → BA PNR (e.g., "7IQHOL")
+        - Leg 3: Booked BA, Operated BA → BA PNR (same "7IQHOL")
+
+      → EACH operating carrier has its own PNR!
+
+    EXTRACTION PROTOCOL:
+    1. SCAN for "Airline Booking Reference" field on the document
+    2. FORMAT is usually: "CARRIER_CODE/PNR, CARRIER_CODE/PNR"
+       Example: "AA/SNMAUJ, BA/7IQHOL"
+    3. PARSE this into a mapping:
+       {
+         "AA": "SNMAUJ",
+         "BA": "7IQHOL"
+       }
+    4. For EACH leg, assign the PNR based on the OPERATING carrier code:
+       - If operatingAirline is "American Airlines" (AA) → pnr = "SNMAUJ"
+       - If operatingAirline is "British Airways" (BA) → pnr = "7IQHOL"
+
+    5. If document shows ONLY one PNR string (no carrier prefixes), and all
+       flights are operated by the SAME carrier → use that single PNR for all
+
+    6. If you cannot determine which PNR belongs to which carrier → output
+       the FULL string as found (e.g., "AA/SNMAUJ, BA/7IQHOL") and let the
+       server handle it
+
+    VERIFICATION CHECKPOINT:
+    Before finalizing JSON, ask yourself:
+    - "Do I have flights operated by DIFFERENT airlines?"
+    - "If yes, did I check for SEPARATE PNRs for each carrier?"
+    - "Am I assigning the CORRECT carrier-specific PNR to each leg?"
+
+    If the answer to any question is NO → re-scan the document.
+
+    🔍 PNR ASSIGNMENT VERIFICATION (MANDATORY FINAL CHECK):
+
+    Before outputting the final JSON, perform this validation:
+
+    FOR EACH journey:
+      unique_operators = list of distinct operatingAirline values in all legs
+
+      IF unique_operators.length > 1:
+        // Multi-carrier booking detected
+        FOR EACH leg:
+          CHECK: Does this leg's PNR match its operatingAirline?
+
+          Example Check:
+            If leg.operatingAirline = "American Airlines"
+            AND leg.pnr = "7IQHOL" (which is a British Airways PNR)
+            → ERROR: Cross-contamination detected!
+            → ACTION: Re-scan document for AA-specific PNR
+
+      ELSE:
+        // Single carrier - one PNR is correct
+        All legs can share the same PNR
 
     PASSENGER & TICKET EXTRACTION:
        - Passengers Array: Extract each passenger and map their *primary/original* 13-digit e-ticket number in the top-level passenger array. E-tickets are universally 13 digits and purely numeric.
@@ -416,11 +588,60 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   // This overwrites whatever the AI guessed with bullet-proof server-side logic.
   evaluateEC261Deterministic(parsedJourneys);
 
+  // BUG 1 FIX: Validate PNR assignments across multi-carrier bookings
+  validateAndCorrectPNRs(parsedJourneys);
+
   parsedJourneys.forEach(journey => {
     if (!journey.routes) return;
     journey.routes.forEach(route => {
       if (!route.legs) return;
       route.legs.forEach(leg => {
+
+        // BUG FIX: Strip dates from time fields if AI contaminated them
+        const timeFields = ['departureTime', 'arrivalTime', 'originalDepartureTime', 'originalArrivalTime'];
+        timeFields.forEach(field => {
+          if (!leg[field]) return;
+
+          const val = String(leg[field]).trim();
+
+          // Detect ISO datetime format (e.g., "2026-03-29T11:59:00")
+          const isoMatch = val.match(/T(\d{2}:\d{2})/);
+          if (isoMatch) {
+            console.warn(`⚠️  [TIME SANITIZER] Detected ISO datetime in ${field}: "${val}"`);
+            leg[field] = isoMatch[1];  // Extract time portion
+            console.warn(`    → Cleaned to: "${leg[field]}"`);
+            return;
+          }
+
+          // Detect "HH:MM:SS" format (strip seconds)
+          const secondsMatch = val.match(/^(\d{2}:\d{2}):\d{2}$/);
+          if (secondsMatch) {
+            leg[field] = secondsMatch[1];
+            return;
+          }
+
+          // Detect date contamination patterns
+          // e.g., "29 March 11:59", "March 29 at 11:59"
+          const dateTimeMatch = val.match(/(\d{1,2}:\d{2})\s*(AM|PM)?$/i);
+          if (dateTimeMatch && val.length > 10) {
+            // If string is long and contains time at the end, extract just the time
+            console.warn(`⚠️  [TIME SANITIZER] Detected date+time mix in ${field}: "${val}"`);
+            let cleanTime = dateTimeMatch[1];
+
+            // Handle AM/PM conversion if needed
+            if (dateTimeMatch[2]) {
+              const [hours, mins] = cleanTime.split(':').map(Number);
+              if (dateTimeMatch[2].toUpperCase() === 'PM' && hours < 12) {
+                cleanTime = `${hours + 12}:${mins.toString().padStart(2, '0')}`;
+              } else if (dateTimeMatch[2].toUpperCase() === 'AM' && hours === 12) {
+                cleanTime = `00:${mins.toString().padStart(2, '0')}`;
+              }
+            }
+
+            leg[field] = cleanTime;
+            console.warn(`    → Cleaned to: "${leg[field]}"`);
+          }
+        });
 
         if (Array.isArray(leg.flightNumbers)) {
           const cleaned = leg.flightNumbers.map(fn => fn.replace(/[\s-]/g,'').trim()).filter(Boolean);
