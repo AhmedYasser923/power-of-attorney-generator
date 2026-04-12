@@ -4,6 +4,9 @@ const airportsDatabase = require('../airports_data.json');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
+const emailTemplates = require('../data/emailTemplates.json');
+const DOCUMENT_TEMPLATES = emailTemplates.documentTemplates;
+const REJECTION_TEMPLATES = emailTemplates.rejectionTemplates;
 
 const EocRecord            = require('../models/EocRecord');
 const { syncEocFromSheet } = require('../utils/syncEoc');
@@ -341,82 +344,131 @@ exports.searchAirlines = catchAsync(async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// HELPER FUNCTIONS FOR EMAIL GENERATION
+// ---------------------------------------------------------------------------
+
+function assembleDocRequestTemplate(bulletPointsContent) {
+  return `In order to proceed with your claim and process your compensation, we require the following information and documents:\n\n${bulletPointsContent}\n\nPlease reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+}
+
+function buildEnglishBody(isRejection, checkboxContent, customRequest) {
+  let body = '';
+  if (checkboxContent) {
+    if (isRejection) {
+      body = checkboxContent;
+    } else {
+      body = assembleDocRequestTemplate(checkboxContent);
+    }
+  }
+  if (customRequest) {
+    body += (body ? '\n\n' : '') + `[CUSTOM REQUEST — REFINE THIS PART]: ${customRequest}`;
+  }
+  return body;
+}
+
+function buildTranslationPrompt(language, englishBody, customRequest, isEnglish) {
+  let prompt = `You are a professional multilingual translator and legal assistant.\n\n`;
+  prompt += `Your tasks:\n`;
+  prompt += `1. Translate the following email content into ${language}.\n`;
+  if (customRequest) {
+    prompt += `2. The section marked [CUSTOM REQUEST — REFINE THIS PART] must be professionally rewritten before translation. Make it clear, formal, and suitable for a compensation claim correspondence. Remove the marker tag after refining.\n`;
+  }
+  if (!isEnglish) {
+    prompt += `3. After the translated version, append the exact separator "|||ENGLISH|||" on its own line, then provide the full English version of the final email.\n`;
+  }
+  prompt += `\nIMPORTANT: Output ONLY the email body. No subject line, no explanatory text, no metadata.\n\n`;
+  prompt += `---\n${englishBody}\n---`;
+  return prompt;
+}
+
+function buildFreestylePrompt(language, customRequest, isEnglish) {
+  let prompt = `You are a professional multilingual email writer.\n\n`;
+  prompt += `Rewrite and refine the following message to be professional, clear, and appropriate for a compensation claim correspondence. Do not add any template structure, greetings, or closings — output only the refined body content.\n`;
+  if (!isEnglish) {
+    prompt += `Then translate the refined content into ${language}.\n`;
+    prompt += `After the translated version, append the exact separator "|||ENGLISH|||" on its own line, then provide the English version.\n`;
+  }
+  prompt += `\nCustom message to refine:\n"${customRequest}"`;
+  return prompt;
+}
+
+// ---------------------------------------------------------------------------
 // SMART EMAIL BUILDER
 // ---------------------------------------------------------------------------
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
-  const { language, missingDocs, customRequest } = req.body;
+  const { language, missingDocs, customRequest, freestyleMode } = req.body;
 
   if ((!missingDocs || missingDocs.length === 0) && !customRequest) {
-    return next(new AppError('Please select at least one document, template, or enter a custom request', 400));
+    return next(new AppError('Please select at least one document or enter a custom request', 400));
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const isRejection = missingDocs && missingDocs.some(item => item.includes('Rejection'));
+  const isEnglish = language === 'English';
 
-  const baseTemplate = isRejection
-    ? `BASE TEMPLATE:\n[Insert the exact text for the chosen rejection reason(s) here, translated and formatted professionally. DO NOT add any bullet points. DO NOT add the header "In order to proceed...". DO NOT add the footer "Please reply directly..."]`
-    : `BASE TEMPLATE:\nIn order to proceed with your claim and process your compensation, we require the following information and documents:\n\n[Insert Bullet Points Here]\n\nPlease reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+  // --- STEP A: Build programmatic English content from checkboxes ---
+  let checkboxContent = '';
 
-  const prompt = `
-    You are an expert multilingual legal claims assistant for 'ReFly Management Limited'.
-    Your task is to generate an email body based STRICTLY on the template below, filled with the requested items or templates.
-
-    DETAILS:
-    - Target Language: ${language}
-    - Requested Items: ${missingDocs && missingDocs.length > 0 ? missingDocs.join(', ') : 'None'}
-    ${customRequest ? `- Custom Request: ${customRequest}` : ''}
-
-    INSTRUCTIONS FOR REQUESTED ITEMS:
-    ${isRejection
-      ? 'CRITICAL RULE: This is a REJECTION email. Do NOT ask the user for documents. Output ONLY the provided rejection text appropriately translated.'
-      : 'Expand the requested items into clear, professional bullet points. CRITICAL RULE: For EVERY requested item, you MUST explicitly instruct the passenger on exactly HOW and WHERE to find that information.'}
-    
-    Use the following definitions/instructions for these specific items if requested and refine it more and make it professional and simple:
-    - Boarding pass: Please provide a copy of the physical or digital boarding pass you received after checking in for your flight.
-    - Ticket number: This is typically a 13-digit number that can be found on your booking confirmation email or e-ticket receipt. To find your ticket number, you can try the following methods:
-Email confirmation: Check your email inbox for a confirmation message from the ticket provider. The ticket number is usually included in this email.
-Account login: If you purchased the ticket through an online platform, log into your account on that website. Your ticket information, including the ticket number, should be available in your order history.
-Mobile app: If you used a mobile app to purchase your ticket, check the app for a section like "My Tickets" or "Purchases".
-Customer service: Contact the ticket provider's customer service. Give them all the information you have (like your name, purchase date, etc.) and they should be able to help you find your ticket number.
-Physical tickets: If you have a physical ticket, the ticket number is usually printed on it.
-
-    - PNR / Booking Reference: A booking reference is a unique code the airline uses to identify your reservation. It typically consists of 6 characters, a combination of letters and numbers (e.g., DF87G#, REDYYD, or L5W4NW). You can find it on your booking confirmation email or e-ticket, where it may be labeled as 'booking reference', 'reservation reference', 'booking code', or 'PNR' (Passenger Name Record).
-    - ID / Passport: Please provide a clear, color copy of your valid ID or Passport.
-    - Signed Power of Attorney: Please sign and return the attached Power of Attorney document.
-    - Booking confirmation: Please provide the original booking confirmation email or PDF from the airline or travel agency.
-    - Proof of delay: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed delayed, we kindly ask you to provide official proof to support your claim. This could be: An email or SMS from the airline confirming the delay, a screenshot of the flight status showing the delay, the actual arrival time at your final destination, or an elaborate description of the situation.
-    - Proof of cancellation: According to public flight records, this flight shows no reported disruption or delay. If your flight was indeed canceled, we kindly ask you to provide official proof. This could be: An email or SMS from the airline confirming the cancellation, a screenshot of the flight status showing it was canceled, a cancellation certificate from the airline, or any other official document serving proof of the cancellation.
-    - Visa/Documentation Rejection: We understand how distressing it must have been for you  to be unable to board due to documentation issues. After reviewing your case, we must clarify that EC261/2004 applies only to delays, cancellations, or denied boarding resulting from factors such as overbooking or operational issues. Please note that ensuring all visa and entry requirements are met is the passenger's responsibility. Any impact on boarding or travel caused by visa or documentation issues falls outside the airline's responsibility and does not qualify for compensation under EC261. Consequently, we are unable to pursue compensation under EC261 for this incident. We recommend contacting the airline directly regarding any additional costs incurred, as they may be able to provide further assistance.
-    - Short Delay / No Missed Connection Rejection: After carefully reviewing your case, we are unfortunately unable to proceed with your compensation claim. Although your initial flight experienced a delay, it did not result in a missed connection. As your final arrival was either on time or delayed by less than three hours, the airline is not legally liable for compensation under current aviation regulations.
-    - No Disruption Found Rejection: After carefully reviewing your claim and verifying the flight data, we are currently unable to proceed with your compensation request. Based on our records, this specific flight does not show a qualifying disruption (such as a delay or cancellation) on that date. However, we want to ensure we have all the correct information. If you believe this assessment is inaccurate, or if you have any supporting documentation or evidence of a disruption (such as communication from the airline at the airport), we kindly request that you share it with us by replying to this email. We will be more than happy to review your documents and reassess your case accordingly.
-    - jurisdiction expired Rejection : After a thorough review of your case, we regret to inform you that we are unable to move forward with your claim. Although your flight details were verified, the legal window to file for compensation—known as the statute of limitations—has officially closed under the applicable jurisdiction for this route.
-    - disrupted and affected flights not under same booking Rejection : After carefully reviewing your claim, we regret to inform you that we are unable to proceed with your compensation request. Our records indicate that the initial disrupted flight and the subsequent missed connecting flight were booked under separate booking references. For a missed connection claim to be eligible under relevant aviation regulations, both flights must typically be part of a single booking or itinerary. Therefore, we cannot pursue compensation for the missed connection in this instance.
-    (Include the Custom Request as a bullet point if one is provided, and explicitly instruct them how to fulfill it).
-    - in the custom request always refine it and make it professional and easy to understand
-
-    ${baseTemplate}
-
-    OUTPUT REQUIREMENTS:
-    1. Translate the above template and the filled bullet points/rejection texts perfectly into ${language}.
-    2. Do not include introductory conversational text.
-    3. Keep the spacing and line breaks identical to the template.
-    ${language !== 'English' ? `4. CRITICAL: After the ${language} translation, add EXACTLY the string "|||ENGLISH|||" on a new line, and then print the exact English version below it so the backend can parse it.` : ''}
-  `;
-
-  const result = await model.generateContent(prompt);
-  let resultText = result.response.text().trim();
-
-  let emailText   = resultText;
-  let englishText = null;
-
-  if (language !== 'English' && resultText.includes('|||ENGLISH|||')) {
-    const parts = resultText.split('|||ENGLISH|||');
-    emailText   = parts[0].trim();
-    englishText = parts[1] ? parts[1].trim() : null;
+  if (missingDocs && missingDocs.length > 0) {
+    if (isRejection) {
+      // Rejection: look up each checked rejection in REJECTION_TEMPLATES
+      const rejectionParagraphs = missingDocs.map(item => REJECTION_TEMPLATES[item] || item);
+      checkboxContent = rejectionParagraphs.join('\n\n');
+    } else {
+      // Document request: look up each checked doc in DOCUMENT_TEMPLATES
+      const bulletPoints = missingDocs.map(item => {
+        const template = DOCUMENT_TEMPLATES[item];
+        return template ? `• ${template}` : `• ${item}`;
+      });
+      checkboxContent = bulletPoints.join('\n\n');
+    }
   }
 
-  res.status(200).json({ success: true, email: emailText, englishTranslation: englishText });
+  // --- STEP B: Determine if AI is needed at all ---
+  const needsAI = customRequest || !isEnglish;
+
+  if (!needsAI) {
+    // Pure programmatic: English + no custom request
+    // Assemble final email directly without any AI call
+    let finalEmail;
+    if (freestyleMode) {
+      finalEmail = checkboxContent; // freestyle: no template wrapper (but no custom input here either — edge case)
+    } else if (isRejection) {
+      finalEmail = checkboxContent;
+    } else {
+      finalEmail = assembleDocRequestTemplate(checkboxContent);
+    }
+    return res.status(200).json({ success: true, email: finalEmail, englishTranslation: null });
+  }
+
+  // --- STEP C: Build AI prompt (only for translation and/or custom request refinement) ---
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  let prompt = '';
+
+  if (freestyleMode && customRequest) {
+    // FREESTYLE MODE: AI refines and translates the custom request ONLY, no template wrapper
+    prompt = buildFreestylePrompt(language, customRequest, isEnglish);
+  } else {
+    // NORMAL MODE: AI translates assembled email + refines custom request if present
+    const englishBody = buildEnglishBody(isRejection, checkboxContent, customRequest);
+    prompt = buildTranslationPrompt(language, englishBody, customRequest, isEnglish);
+  }
+
+  // --- STEP D: Call Gemini ---
+  const result = await model.generateContent(prompt);
+  const rawText = result.response.text();
+
+  // --- STEP E: Parse response ---
+  let email, englishTranslation = null;
+  if (!isEnglish) {
+    const parts = rawText.split('|||ENGLISH|||');
+    email = parts[0].trim();
+    englishTranslation = parts[1] ? parts[1].trim() : null;
+  } else {
+    email = rawText.trim();
+  }
+
+  res.status(200).json({ success: true, email, englishTranslation });
 });
 
 // ---------------------------------------------------------------------------

@@ -61,6 +61,249 @@ block content
         }
     }
 
+    /* Email Builder */
+    .em-section {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .em-section-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 12px 0;
+    }
+    .em-checklist {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        transition: opacity 0.2s ease;
+    }
+    .em-checklist-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 7px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        font-size: 13.5px;
+        color: #334155;
+        line-height: 1.3;
+        user-select: none;
+    }
+    .em-checklist-item:hover {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+    }
+    .em-checklist-item input[type="checkbox"] {
+        margin-top: 2px;
+        flex-shrink: 0;
+        accent-color: #6366f1;
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+    }
+    .em-rejection-divider {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0 4px;
+    }
+    .em-rejection-divider span {
+        font-size: 11px;
+        font-weight: 800;
+        color: #991b1b;
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .em-rejection-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #fecaca;
+    }
+    .em-checklist-item.rejection {
+        grid-column: 1 / -1;
+        color: #7f1d1d;
+    }
+    .em-checklist-item.rejection:hover {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+    .em-checklist-item.rejection input[type="checkbox"] {
+        accent-color: #dc2626;
+    }
+    .em-custom-area {
+        margin-top: 12px;
+    }
+    .em-freestyle-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .em-freestyle-toggle:has(input:checked) {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+    .em-freestyle-toggle input[type="checkbox"] {
+        accent-color: #3b82f6;
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .em-freestyle-toggle label {
+        font-size: 13px;
+        color: #475569;
+        cursor: pointer;
+        line-height: 1.3;
+    }
+    .em-freestyle-toggle:has(input:checked) label {
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+    .em-bottom-row {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .em-language-group {
+        flex: 1;
+    }
+    .em-language-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .em-generate-btn {
+        flex-shrink: 0;
+        align-self: flex-end;
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        white-space: nowrap;
+    }
+    .em-generate-btn:hover:not(:disabled) {
+        background: #4f46e5;
+    }
+    .em-generate-btn:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+    .em-generate-btn:disabled {
+        background: #a5b4fc;
+        cursor: not-allowed;
+    }
+    .em-result-box {
+        margin-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 20px;
+    }
+    .em-result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .em-result-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #10b981;
+    }
+    .em-copy-btn {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #334155;
+        transition: background 0.15s;
+    }
+    .em-copy-btn:hover {
+        background: #e2e8f0;
+    }
+    .em-output-textarea {
+        width: 100%;
+        height: 260px;
+        padding: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        resize: vertical;
+        background: #fff;
+        color: #1e293b;
+        box-sizing: border-box;
+        outline: none;
+    }
+    .em-char-count {
+        margin-top: 5px;
+        font-size: 11.5px;
+        color: #94a3b8;
+        text-align: right;
+    }
+    .em-english-box {
+        margin-top: 14px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .em-english-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 14px;
+        background: #f8fafc;
+        border-bottom: 1px dashed #cbd5e1;
+    }
+    .em-english-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .em-english-content {
+        padding: 14px;
+        font-family: monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        background: #f8fafc;
+        color: #475569;
+        white-space: pre-wrap;
+    }
+    @media (max-width: 768px) {
+        .em-checklist { grid-template-columns: 1fr; }
+        .em-bottom-row { flex-direction: column; }
+    }
+
   //- Inject server-side jurisdiction data for the frontend JS to consume
   script.
     window.JURISDICTION_LIMITS = !{JSON.stringify(jurisdictionLimits)};
@@ -137,61 +380,69 @@ block content
         //- TOOL: SMART EMAIL BUILDER (Full Width)
         .ts-card.ts-grid-full
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Request Builder
-          
+
           form#emailBuilderForm
-            div(style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;")
-              label(style="display: block; font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 10px;") Select Required Information:
-              #emChecklist(style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;")
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+
+            //- CHECKBOX SECTION (only this gets dimmed in freestyle mode)
+            .em-section#emChecklistSection
+              p.em-section-title Documents &amp; Information Requested
+              .em-checklist#emChecklist
+                label.em-checklist-item
                   input(type="checkbox" value="Boarding pass")
                   | Boarding Pass
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
-                  input(type="checkbox" value="Ticket number")
+                label.em-checklist-item
+                  input(type="checkbox" value="Ticket number (13-digit)")
                   | Ticket Number (13-digit)
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="PNR / Booking Reference")
                   | PNR / Booking Reference
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="ID / Passport")
                   | ID / Passport
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="Signed Power of Attorney")
                   | Signed Power of Attorney
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="Booking confirmation")
                   | Booking Confirmation
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="Proof of delay")
                   | Proof of Delay
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer;")
+                label.em-checklist-item
                   input(type="checkbox" value="Proof of cancellation")
                   | Proof of Cancellation
 
-                //- Rejection Templates
-                div(style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;")
-                  label(style="display: block; font-size: 12px; font-weight: 800; color: #991b1b; margin-bottom: 6px;") ❌ Rejection Templates (Overrides Doc Requests)
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                //- Rejection templates
+                .em-rejection-divider
+                  span ❌ Rejection Templates
+                label.em-checklist-item.rejection
                   input(type="checkbox" value="Visa/Documentation Rejection")
-                  | Visa or Documentation Issue
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                  | Visa / Documentation Issue
+                label.em-checklist-item.rejection
                   input(type="checkbox" value="Short Delay / No Missed Connection Rejection")
-                  | Short Delay / Didn't Miss Connection
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                  | Short Delay — No Missed Connection
+                label.em-checklist-item.rejection
                   input(type="checkbox" value="No Disruption Found Rejection")
                   | No Disruption Found
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
+                label.em-checklist-item.rejection
                   input(type="checkbox" value="Jurisdiction expired Rejection")
                   | Jurisdiction Expired
-                label(style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px; cursor: pointer; grid-column: 1 / -1;")
-                  input(type="checkbox" value="disrupted and affected flights not under same booking Rejection")
-                  | Disrupted & Affected Flights Not Under Same Booking
+                label.em-checklist-item.rejection
+                  input(type="checkbox" value="Disrupted & Affected Flights Not Under Same Booking Rejection")
+                  | Disrupted &amp; Affected Flights Not Under Same Booking
 
-              div(style="margin-top: 10px;")
-                input#emCustom.ts-input(type="text" placeholder="Custom request... (e.g. Provide new bank details)" style="border: 1px dashed #cbd5e1;")
+            //- CUSTOM REQUEST + FREESTYLE (outside checkbox-section — never dimmed)
+            .em-section
+              p.em-section-title Custom Request
+              input#emCustom.ts-input(type="text" placeholder="e.g. Provide updated bank account details" style="border: 1px solid #e2e8f0;")
+              .em-freestyle-toggle
+                input#emFreestyle(type="checkbox")
+                label(for="emFreestyle") Freestyle Mode — send custom input directly to AI, no template wrapper
 
-            .ts-form-grid(style="align-items: flex-end;")
-              .ts-form-group(style="margin-bottom: 0;")
-                label.ts-label Output Language
+            //- LANGUAGE + GENERATE
+            .em-bottom-row
+              .em-language-group
+                label(for="emLanguage") Output Language
                 select#emLanguage.ts-input
                   option(value="English") English
                   option(value="Spanish") Spanish
@@ -211,16 +462,21 @@ block content
                   option(value="Greek") Greek
                   option(value="Turkish") Turkish
                   option(value="Arabic") Arabic
-              button#emGenerateBtn.ts-btn-action(type="submit" style="margin-top: 0;") Generate Content
+              button#emGenerateBtn.em-generate-btn(type="submit") ✨ Generate
 
-          #emResultBox(style="display: none; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px;")
-            div(style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;")
-              span(style="font-size: 13px; font-weight: 700; color: #10b981;") ✅ Content Generated
-              button#emCopyBtn(type="button" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; color: #334155;") 📋 Copy to Clipboard
-            textarea#emOutputText(readonly style="width: 100%; height: 250px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical; background: #f8fafc; color: #1e293b; box-sizing: border-box;")
-            #emEnglishBox(style="display: none; margin-top: 15px;")
-              label(style="display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;") English Translation (For Verification)
-              #emEnglishText(style="width: 100%; padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; background: #f1f5f9; color: #475569; box-sizing: border-box; white-space: pre-wrap;")
+          //- RESULT BOX
+          #emResultBox.em-result-box(style="display: none;")
+            .em-result-header
+              span.em-result-label ✅ Content Generated
+              button#emCopyBtn.em-copy-btn(type="button") 📋 Copy
+            textarea#emOutputText.em-output-textarea(readonly)
+            div#emCharCount.em-char-count
+            #emEnglishBox(style="display: none;")
+              .em-english-box
+                .em-english-header
+                  span.em-english-label English (Verification)
+                  button#emCopyEnglishBtn.em-copy-btn(type="button") 📋 Copy English
+                div#emEnglishText.em-english-content
 
         //- TOOL: COMPENSATION CALCULATOR (Full Width)
         .ts-card.ts-grid-full

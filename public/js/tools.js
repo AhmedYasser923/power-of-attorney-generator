@@ -700,6 +700,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   // SMART EMAIL BUILDER
   // ---------------------------------------------------------------------------
+  // Freestyle Mode toggle interaction
+  const freestyleCheckbox = document.getElementById('emFreestyle');
+  const checklistSection  = document.getElementById('emChecklistSection');
+
+  if (freestyleCheckbox && checklistSection) {
+    freestyleCheckbox.addEventListener('change', () => {
+      if (freestyleCheckbox.checked) {
+        checklistSection.style.opacity = '0.4';
+        checklistSection.style.pointerEvents = 'none';
+      } else {
+        checklistSection.style.opacity = '1';
+        checklistSection.style.pointerEvents = 'auto';
+      }
+    });
+  }
+
+  // Language persistence
+  const emLanguageSelect = document.getElementById('emLanguage');
+  if (localStorage.getItem('emLastLanguage')) {
+    emLanguageSelect.value = localStorage.getItem('emLastLanguage');
+  }
+  emLanguageSelect.addEventListener('change', () => {
+    localStorage.setItem('emLastLanguage', emLanguageSelect.value);
+  });
+
   document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn             = document.getElementById('emGenerateBtn');
@@ -707,14 +732,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputText      = document.getElementById('emOutputText');
     const englishBox      = document.getElementById('emEnglishBox');
     const englishTextDiv  = document.getElementById('emEnglishText');
+    const charCountDiv    = document.getElementById('emCharCount');
 
-    const checkboxes  = document.querySelectorAll('#emailBuilderForm input[type="checkbox"]:checked');
-    const missingDocs = Array.from(checkboxes).map(cb => cb.value);
+    const checkboxes      = document.querySelectorAll('#emChecklistSection input[type="checkbox"]:checked');
+    const customInput     = document.getElementById('emCustom');
+    const isFreestyle     = freestyleCheckbox && freestyleCheckbox.checked;
+    const missingDocs     = isFreestyle ? [] : Array.from(checkboxes).map(cb => cb.value);
+
+    // Client-side validation
+    if (!isFreestyle && missingDocs.length === 0 && !customInput.value.trim()) {
+      alert('Select at least one item or enter a custom request');
+      return;
+    }
+    if (isFreestyle && !customInput.value.trim()) {
+      alert('Enter a custom request to use Freestyle Mode');
+      return;
+    }
 
     const payload = {
-      language:      document.getElementById('emLanguage').value,
+      language:      emLanguageSelect.value,
       missingDocs,
-      customRequest: document.getElementById('emCustom').value,
+      customRequest: customInput.value.trim(),
+      freestyleMode: isFreestyle,
     };
 
     btn.disabled      = true;
@@ -731,6 +770,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         outputText.value = data.email;
+
+        // Update character count
+        const wordCount = data.email.trim().split(/\s+/).length;
+        const charCount = data.email.length;
+        charCountDiv.textContent = `${wordCount} words · ${charCount} characters`;
+
         if (data.englishTranslation) {
           englishTextDiv.textContent  = data.englishTranslation;
           englishBox.style.display    = 'block';
@@ -746,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Network error while generating content.');
     } finally {
       btn.disabled  = false;
-      btn.innerHTML = 'Generate Content';
+      btn.innerHTML = '✨ Generate';
     }
   });
 
@@ -756,6 +801,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.execCommand('copy');
     const btn     = document.getElementById('emCopyBtn');
     btn.innerHTML = '✅ Copied!';
-    setTimeout(() => { btn.innerHTML = '📋 Copy to Clipboard'; }, 2000);
+    setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 2000);
   });
+
+  // Copy English button
+  const copyEnglishBtn = document.getElementById('emCopyEnglishBtn');
+  if (copyEnglishBtn) {
+    copyEnglishBtn.addEventListener('click', () => {
+      const englishText = document.getElementById('emEnglishText').textContent;
+      navigator.clipboard.writeText(englishText).then(() => {
+        copyEnglishBtn.innerHTML = '✅ Copied!';
+        setTimeout(() => { copyEnglishBtn.innerHTML = '📋 Copy English'; }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+      });
+    });
+  }
 });
