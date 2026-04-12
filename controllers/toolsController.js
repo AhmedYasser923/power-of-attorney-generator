@@ -5,7 +5,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 
-const eocStore             = require('../utils/eocStore');
+const EocRecord            = require('../models/EocRecord');
 const { syncEocFromSheet } = require('../utils/syncEoc');
 
 // --- Shared data helpers (jurisdiction + airline docs) ---
@@ -49,7 +49,7 @@ exports.renderTools = catchAsync(async (req, res, next) => {
 // EOC CHECKER
 // ---------------------------------------------------------------------------
 
-exports.checkEOC = (req, res, next) => {
+exports.checkEOC = async (req, res, next) => {
   try {
     const { date, originIata, destIata, originCountry, destCountry } = req.query;
     if (!date || date === 'Unknown') return res.json({ eocFound: false });
@@ -58,22 +58,30 @@ exports.checkEOC = (req, res, next) => {
     const dIata    = (destIata      || '').toLowerCase();
     const oCountry = (originCountry || '').toLowerCase();
     const dCountry = (destCountry   || '').toLowerCase();
-    const flightDate = new Date(date);
 
-    const matchedEvents = eocStore.getRecords().filter(eoc => {
-      const eocLoc = (eoc.location || '').toLowerCase();
-      const locationMatch =
-        eocLoc === oIata || eocLoc === dIata ||
-        eocLoc === oCountry || eocLoc === dCountry ||
-        eocLoc === 'world wide';
-      if (!locationMatch) return false;
+    // Collect non-empty location values to match against
+    const locs = [oIata, dIata, oCountry, dCountry, 'world wide']
+      .filter(v => v && v.trim());
 
-      if ((eoc.category || '').toLowerCase().includes('ongoing')) {
-        return flightDate >= new Date(eoc.date);
-      }
-      return eoc.date === date;
-    });
+    // Case-insensitive exact-match regex for any of those values
+    const escaped = locs.map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const locRegex = new RegExp('^(' + escaped.join('|') + ')$', 'i');
 
+    // Run both queries in parallel
+    const [exactMatches, ongoingMatches] = await Promise.all([
+      EocRecord.find({
+        category: { $not: /ongoing/i },
+        location: locRegex,
+        date: date                        // exact date match
+      }).lean(),
+      EocRecord.find({
+        category: /ongoing/i,
+        location: locRegex,
+        date: { $lte: date }              // event date <= flight date  (YYYY-MM-DD string compare works)
+      }).lean()
+    ]);
+
+    const matchedEvents = [...exactMatches, ...ongoingMatches];
     res.json({ eocFound: matchedEvents.length > 0, events: matchedEvents });
   } catch (error) {
     next(error);
@@ -417,7 +425,7 @@ Physical tickets: If you have a physical ticket, the ticket number is usually pr
 
 exports.syncEOC = async (req, res) => {
   try {
-    const previousCount = eocStore.getRecords().length;
+    const previousCount = await EocRecord.countDocuments();
     console.log(`[syncEOC] Sync requested. Current count: ${previousCount}`);
     const { newCount, delta } = await syncEocFromSheet(previousCount);
     const deltaStr = delta > 0 ? `+${delta}` : String(delta);

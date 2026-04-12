@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
     "@google/genai": "^1.44.0",
     "@google/generative-ai": "^0.24.1",
     "@mediapipe/tasks-vision": "^0.10.32",

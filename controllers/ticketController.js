@@ -8,7 +8,7 @@ const pdfExtract = new PDFExtract();
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 
-const eocStore         = require('../utils/eocStore');
+const EocRecord        = require('../models/EocRecord');
 const airportsDatabase = require('../airports_data.json');
 
 const {
@@ -16,8 +16,6 @@ const {
   getJurisdictionYears,
   getAirlineReqs,
 } = require('../utils/dataLoader');
-
-console.log(`[EOC Database] Successfully loaded ${eocStore.getRecords().length} records from JSON.`);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -741,20 +739,43 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 // ---------------------------------------------------------------------------
 // EOC CHECK
 // ---------------------------------------------------------------------------
-exports.checkEOC = (req, res, next) => {
+exports.checkEOC = async (req, res, next) => {
   try {
     const { date, originIata, destIata, originCountry, destCountry } = req.query;
     if (!date || date === 'Unknown') return res.json({ eocFound: false });
-    const oI = (originIata||'').toLowerCase(), dI = (destIata||'').toLowerCase();
-    const oC = (originCountry||'').toLowerCase(), dC = (destCountry||'').toLowerCase();
-    const fd = new Date(date);
-    const matched = eocStore.getRecords().filter(eoc => {
-      const loc = (eoc.location||'').toLowerCase();
-      if (![oI,dI,oC,dC,'world wide'].includes(loc)) return false;
-      return (eoc.category||'').toLowerCase().includes('ongoing') ? fd >= new Date(eoc.date) : eoc.date === date;
-    });
-    matched.length > 0 ? res.json({ eocFound: true, events: matched }) : res.json({ eocFound: false });
-  } catch (e) { next(e); }
+
+    const oIata    = (originIata    || '').toLowerCase();
+    const dIata    = (destIata      || '').toLowerCase();
+    const oCountry = (originCountry || '').toLowerCase();
+    const dCountry = (destCountry   || '').toLowerCase();
+
+    // Collect non-empty location values to match against
+    const locs = [oIata, dIata, oCountry, dCountry, 'world wide']
+      .filter(v => v && v.trim());
+
+    // Case-insensitive exact-match regex for any of those values
+    const escaped = locs.map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const locRegex = new RegExp('^(' + escaped.join('|') + ')$', 'i');
+
+    // Run both queries in parallel
+    const [exactMatches, ongoingMatches] = await Promise.all([
+      EocRecord.find({
+        category: { $not: /ongoing/i },
+        location: locRegex,
+        date: date                        // exact date match
+      }).lean(),
+      EocRecord.find({
+        category: /ongoing/i,
+        location: locRegex,
+        date: { $lte: date }              // event date <= flight date  (YYYY-MM-DD string compare works)
+      }).lean()
+    ]);
+
+    const matchedEvents = [...exactMatches, ...ongoingMatches];
+    res.json({ eocFound: matchedEvents.length > 0, events: matchedEvents });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // ---------------------------------------------------------------------------

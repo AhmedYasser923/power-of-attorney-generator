@@ -8,7 +8,7 @@ process.on('uncaughtException', err => {
 });
 
 const dns = require('node:dns');
-
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 const AppError = require('./utils/appError');
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
@@ -32,6 +32,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// MongoDB Connection
+mongoose.connect(process.env.DATABASE)
+  .then(() => console.log('[DB] MongoDB connected'))
+  .catch(err => console.error('[DB] MongoDB connection failed:', err));
 
 // Routes
 app.use('/', require('./routes/index'));

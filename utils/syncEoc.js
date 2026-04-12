@@ -1,12 +1,9 @@
 'use strict';
 
 const xlsx = require('xlsx');
-const fs   = require('fs');
-const path = require('path');
-const { setRecords } = require('./eocStore');
+const EocRecord = require('../models/EocRecord');
 
-const EXPORT_URL    = 'https://docs.google.com/spreadsheets/d/1v24u0ycDMAN6KyPmcvGCkhszdC0i8StNaYU-fRzJxvM/export?format=xlsx';
-const EOC_JSON_PATH = path.join(__dirname, '../eoc_data.json');
+const EXPORT_URL = 'https://docs.google.com/spreadsheets/d/1v24u0ycDMAN6KyPmcvGCkhszdC0i8StNaYU-fRzJxvM/export?format=xlsx';
 
 function formatExcelDate(val) {
   if (!val) return '';
@@ -51,13 +48,11 @@ async function syncEocFromSheet(previousCount) {
   const buffer   = Buffer.from(await response.arrayBuffer());
   const workbook = xlsx.read(buffer, { type: 'buffer' });
   const records  = parseSheet(workbook);
-  const newCount = setRecords(records);
 
-  try {
-    fs.writeFileSync(EOC_JSON_PATH, JSON.stringify(records, null, 2));
-  } catch (err) {
-    console.warn('[syncEoc] Disk write failed (in-memory update still applied):', err.message);
-  }
+  // Write to MongoDB: delete old records and insert new ones
+  await EocRecord.deleteMany({});
+  await EocRecord.insertMany(records, { ordered: false });
+  const newCount = records.length;
 
   return { newCount, delta: newCount - previousCount };
 }
