@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>`;
       }
 
-      let hasMissingPnr = false, hasMissingYear = false, hasPnrMismatch = false, hasDifferentPnrs = false;
+      let hasMissingPnr = false, hasMissingYear = false, hasDifferentPnrs = false;
       const uniquePnrValues = new Set();
 
       dataArray.forEach(j => (j.routes || []).forEach(r => (r.legs || []).forEach(leg => {
@@ -639,7 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
           uniquePnrValues.add(leg.pnr.trim().toUpperCase());
         }
         if (classifyDate(leg.date) === 'partial') hasMissingYear = true;
-        if (leg._warnings && leg._warnings.includes('MULTI_CARRIER_SINGLE_PNR_DETECTED')) hasPnrMismatch = true;
       })));
 
       // Show success banner only if multiple different PNRs and no missing PNRs
@@ -647,10 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (hasMissingPnr) {
         resultsCard.innerHTML += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #3b82f6;padding:14px 18px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#1e3a8a;margin-bottom:6px;font-size:14px;"><span>📱</span> Missing PNRs Detected</div><div style="color:#1e40af;font-size:13px;line-height:1.5;">One or more True PNRs could not be clearly extracted. <b>Please use your scanner to read the barcode and edit the PNR field below.</b></div></div>`;
-      }
-
-      if (hasPnrMismatch) {
-        resultsCard.innerHTML += `<div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:8px;margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#b45309;margin-bottom:6px;font-size:14px;"><span>⚠️</span> PNR Verification Needed</div><div style="color:#92400e;font-size:13px;line-height:1.5;">This booking has <b>multiple operating carriers</b> but all legs share the same PNR. This may indicate that carrier-specific PNRs were not extracted correctly. <b>Please verify each leg's PNR from your original documents.</b></div></div>`;
       }
 
       if (hasDifferentPnrs) {
@@ -832,28 +827,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
                 : `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
 
-              // Display warning if server flagged multi-carrier PNR anomaly
-              let pnrWarningHtml = '';
-              console.log(`[PNR WARNING CHECK] Flight: ${flight.flightNumbers?.[0]}, _warnings:`, flight._warnings);
-              if (flight._warnings && flight._warnings.includes('MULTI_CARRIER_SINGLE_PNR_DETECTED')) {
-                console.warn(`[PNR WARNING] Showing warning for flight ${flight.flightNumbers?.[0]}`);
-                pnrWarningHtml = `
-                  <div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #f59e0b;
-                              padding:10px 14px;border-radius:8px;font-size:12px;color:#92400e;
-                              margin-top:12px;line-height:1.5;">
-                    <div style="font-weight:800;color:#b45309;margin-bottom:4px;display:flex;
-                                align-items:center;gap:6px;">
-                      ⚠️ PNR Verification Needed
-                    </div>
-                    <div>
-                      This booking has multiple operating carriers but all legs share the same PNR.
-                      This may indicate that carrier-specific PNRs were not extracted correctly.
-                      <strong>Please verify each leg's PNR from your original documents.</strong>
-                    </div>
-                  </div>
-                `;
-              }
-
               // 🎫 PER-LEG PASSENGER TICKETS RENDERING
               let passengerTicketsHtml = '';
               if (flight.passengerTickets && Array.isArray(flight.passengerTickets) && flight.passengerTickets.length > 0) {
@@ -921,7 +894,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="fc-flight-num" style="display:flex;align-items:center;flex-wrap:wrap;">✈ ${fnDisp} ${stBtns}</span>
                     <span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>
                     ${pnrBadge}
-                    ${pnrWarningHtml}
                     ${passengerTicketsHtml}
                     ${docsHtml ? `<span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>${docsHtml}` : ''}
                   </div>
