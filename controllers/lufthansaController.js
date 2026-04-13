@@ -106,11 +106,8 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
   const passengers = [];
+  const sigUsageRecords = []; // per-signature usage tracking
   let sigIndex = 0;
-  let totalSigIn = 0, totalSigOut = 0;
-  let totalSigCostUSD = 0;
-  let usedGemini = false;
-  let lastGeminiModel = null;
 
   for (let i = 1; i <= 4; i++) {
     const rawName = req.body[`fullName${i}`] || '';
@@ -134,13 +131,10 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
       const sigProcessing = req.body[`sigProcessing${i}`];
       const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = await processSignature(signatureFile, sigProcessing);
-      totalSigIn += sigIn;
-      totalSigOut += sigOut;
       if (modelUsed) {
         const rates = MODEL_PRICING[modelUsed];
-        if (rates) totalSigCostUSD += (sigIn / 1_000_000) * rates.input + (sigOut / 1_000_000) * rates.output;
-        usedGemini = true;
-        lastGeminiModel = modelUsed;
+        const costUSD = rates ? (sigIn / 1_000_000) * rates.input + (sigOut / 1_000_000) * rates.output : 0;
+        sigUsageRecords.push({ sigNum: i, model: modelUsed, inputTokens: sigIn, outputTokens: sigOut, costUSD });
       }
 
       passengers.push({
@@ -165,23 +159,24 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
 
-  if (usedGemini) {
-    console.log(`\n[SIG_PROCESSING] Lufthansa POA`);
-    console.log(`  Model: ${lastGeminiModel}`);
-    console.log(`  Input Tokens: ${totalSigIn.toLocaleString()}`);
-    console.log(`  Output Tokens: ${totalSigOut.toLocaleString()}`);
-    console.log(`  Cost (USD): $${totalSigCostUSD.toFixed(6)}`);
-    console.log(`  Passengers: ${passengers.length}`);
-    console.log(`  PNR: ${pnr}\n`);
+  if (sigUsageRecords.length > 0) {
+    for (const rec of sigUsageRecords) {
+      console.log(`\n[SIG_PROCESSING] Lufthansa POA — Signature #${rec.sigNum}`);
+      console.log(`  Model: ${rec.model}`);
+      console.log(`  Input Tokens: ${rec.inputTokens.toLocaleString()}`);
+      console.log(`  Output Tokens: ${rec.outputTokens.toLocaleString()}`);
+      console.log(`  Cost (USD): $${rec.costUSD.toFixed(6)}`);
+      console.log(`  PNR: ${pnr}\n`);
 
-    await logUsage(req, {
-      operationType: 'sig_processing',
-      model: lastGeminiModel,
-      inputTokens: totalSigIn,
-      outputTokens: totalSigOut,
-      costUSD: totalSigCostUSD,
-      metadata: { pnr, passengerCount: passengers.length }
-    });
+      await logUsage(req, {
+        operationType: 'sig_processing',
+        model: rec.model,
+        inputTokens: rec.inputTokens,
+        outputTokens: rec.outputTokens,
+        costUSD: rec.costUSD,
+        metadata: { pnr, passengerCount: passengers.length, signatureNum: rec.sigNum }
+      });
+    }
   } else {
     // Free POA generation (no Gemini signature processing)
     await logUsage(req, {
