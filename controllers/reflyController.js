@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const logUsage = require('../utils/logUsage');
 
 // Initialize APIs
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -15,26 +16,28 @@ cloudinary.config({
 
 /**
  * Unified Signature Processing Engine
+ * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
 async function processSignature(file, processingMethod) {
-  if (!file) return null;
+  if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0 };
 
   if (processingMethod === 'gemini') {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });  const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
-    
-
+      const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
+      const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
+      const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
 
       if (outputPart && outputPart.inlineData) {
         const aiImageBuffer = Buffer.from(outputPart.inlineData.data, 'base64');
         const finalBuffer = await sharp(aiImageBuffer).grayscale().threshold(220).png().toBuffer();
-        return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+        return { dataUrl: `data:image/png;base64,${finalBuffer.toString('base64')}`, inputTokens, outputTokens };
       }
+      return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens, outputTokens };
     } catch (error) {
       console.error('Gemini Signature Error:', error.message);
     }
@@ -47,14 +50,14 @@ async function processSignature(file, processingMethod) {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Cloudinary fetch failed');
       const arrayBuffer = await response.arrayBuffer();
-      return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
+      return { dataUrl: `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`, inputTokens: 0, outputTokens: 0 };
     } catch (error) {
       console.error('Cloudinary Error:', error.message);
     }
   }
 
   // Fallback or "none"
-  return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
+  return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens: 0, outputTokens: 0 };
 }
 
 exports.showForm = catchAsync(async (req, res, next) => {
@@ -71,7 +74,8 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
     return res.render('index', { error: 'All fields are required', formData: req.body });
   }
 
-  const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+  const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut } = await processSignature(signatureFile, sigProcessing);
+  const sigCostUSD = (sigIn / 1_000_000) * 0.075 + (sigOut / 1_000_000) * 0.30;
 
   const pdfData = { firstName, lastName, address, pnr, date: new Date(date), signature: signatureDataUrl };
 
@@ -85,6 +89,16 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
   const fileName = `Assignment-${langCode}_${passengerName}.pdf`;
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, templateName);
+
+  await logUsage(req, {
+    operationType: 'poa_standard',
+    model: sigProcessing === 'gemini' ? 'gemini-3-pro-image-preview' : null,
+    inputTokens: sigIn,
+    outputTokens: sigOut,
+    costUSD: sigCostUSD,
+    costEGP: sigCostUSD * 54.33,
+    metadata: { pnr, lang: langCode }
+  });
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);

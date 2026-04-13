@@ -4,6 +4,7 @@ const airportsDatabase = require('../airports_data.json');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
+const logUsage   = require('../utils/logUsage');
 const emailTemplates = require('../data/emailTemplates.json');
 const DOCUMENT_TEMPLATES = emailTemplates.documentTemplates;
 const REJECTION_TEMPLATES = emailTemplates.rejectionTemplates;
@@ -438,6 +439,10 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     } else {
       finalEmail = assembleDocRequestTemplate(checkboxContent);
     }
+    await logUsage(req, {
+      operationType: 'email_translation',
+      metadata: { language, programmatic: true }
+    });
     return res.status(200).json({ success: true, email: finalEmail, englishTranslation: null });
   }
 
@@ -467,6 +472,15 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   } else {
     email = rawText.trim();
   }
+
+  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0 } = result.response.usageMetadata || {};
+  await logUsage(req, {
+    operationType: 'email_translation',
+    model: 'gemini-2.5-flash',
+    inputTokens: iTok,
+    outputTokens: oTok,
+    metadata: { language, freestyleMode: !!freestyleMode }
+  });
 
   res.status(200).json({ success: true, email, englishTranslation });
 });

@@ -1,0 +1,186 @@
+extends layout-app
+
+block sidebar-nav
+  .sidebar__section
+    p.sidebar__label Workspace
+    a.sidebar__link(href="/") Dashboard
+    a.sidebar__link(href="/me") My Usage
+  .sidebar__section
+    p.sidebar__label Administration
+    a.sidebar__link.sidebar__link--active(href="/admin") Admin Panel
+
+block app-content
+  - function cc(v) { return (!v || v <= 0) ? '0.00' : (Math.ceil(v * 100) / 100).toFixed(2); }
+  - function fmtCost(v) { return (+(v) || 0).toFixed(4); }
+  .app-main__header
+    h1.app-main__title Admin Panel
+    p.app-main__subtitle Real-time insights, user management, and cost tracking
+
+  //- Stat Bar
+  .stat-grid
+    .stat-card
+      p.stat-card__label Users Online Now
+      p.stat-card__value.stat-card__value--live
+        span.live-dot
+        span#online-count= onlineCount
+    .stat-card
+      p.stat-card__label Ops This Month
+      p.stat-card__value#total-ops-stat= totalOpsThisMonth
+    .stat-card
+      p.stat-card__label Cost This Month (USD)
+      p.stat-card__value.stat-card__value--blue
+        | $
+        span#total-cost-stat(data-raw=totalCostThisMonth)= cc(totalCostThisMonth)
+    .stat-card
+      p.stat-card__label Pending Signups
+      p.stat-card__value(style="color: #d97706;")#pending-stat-count= pendingCount
+
+  //- Tab Navigation
+  nav.ad-tabs(role="tablist")
+    button.ad-tab.ad-tab--active(role="tab" data-tab="overview") Overview
+    button.ad-tab(role="tab" data-tab="notifications")
+      | Notifications
+      if pendingCount > 0
+        span.ad-tab__badge#notif-badge= pendingCount
+    button.ad-tab(role="tab" data-tab="insights") Cost Insights
+    button.ad-tab(role="tab" data-tab="users") Users
+
+  //- ── TAB 1: OVERVIEW ──────────────────────────────────────────────────────
+  .ad-tab-panel.ad-tab-panel--active(data-panel="overview")
+    .ad-grid
+      //- Live Operations Feed
+      .ad-panel
+        h2.ad-panel__title
+          span(style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; margin-right:6px; animation: pulse-dot 1.5s infinite;")
+          | Live Operations Feed
+        .ad-feed
+          table.ad-feed-table
+            thead
+              tr
+                th Time
+                th User
+                th Operation
+                th Cost
+            tbody#operations-feed-table
+              each op in recentOps
+                tr
+                  td(style="white-space:nowrap; color:var(--text-muted);")= new Date(op.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  td= op.userName
+                  td
+                    span.op-pill= op.label
+                  td= op.costUSD > 0 ? `$${cc(op.costUSD)}` : '—'
+
+
+  //- ── TAB 2: NOTIFICATIONS ─────────────────────────────────────────────────
+  .ad-tab-panel(data-panel="notifications")
+    .ad-panel
+      h2.ad-panel__title Pending Signup Requests
+      #pending-list.ad-notif-list
+        if pendingUsers.length === 0
+          .ad-empty
+            p.ad-empty__icon ✓
+            p No pending signup requests.
+        else
+          each u in pendingUsers
+            .ad-notif-item(data-user-id=u._id.toString())
+              .ad-notif-avatar= u.name.charAt(0).toUpperCase()
+              .ad-notif-info
+                p.ad-notif-name= u.name
+                p.ad-notif-email= u.email
+              p.ad-notif-time= new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+              .ad-notif-actions
+                button.ad-action-btn.ad-action-btn--approve(data-action="approve" data-id=u._id.toString()) Approve
+                button.ad-action-btn.ad-action-btn--suspend(data-action="reject" data-id=u._id.toString()) Reject
+
+  //- ── TAB 3: COST INSIGHTS ─────────────────────────────────────────────────
+  .ad-tab-panel(data-panel="insights")
+    .ad-month-picker
+      label(for="insightsMonth") Period:
+      select#insightsMonth
+        - const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        - for (let y = currentYear; y >= currentYear - 1; y--)
+          - for (let m = 12; m >= 1; m--)
+            - const isCurrent = y === currentYear && m === currentMonth
+            option(value=`${y}-${m}`, selected=isCurrent) #{months[m-1]} #{y}
+
+
+    .ad-panel(style="margin-top: 1.5rem;")
+      h2.ad-panel__title Per-User Breakdown
+      table.ad-users-table#insights-user-table
+        thead
+          tr
+            th User
+            th Operations
+            th Cost (USD)
+            th Cost (EGP)
+        tbody#insights-user-tbody
+          each u in users.filter(function(u){ return u.operationCount > 0; }).sort(function(a,b){ return (b.totalCostUSD||0) - (a.totalCostUSD||0); })
+            tr
+              td= u.name
+              td= u.operationCount
+              td= '$' + cc(u.totalCostUSD)
+              td= '£' + cc(u.totalCostEGP)
+
+  //- ── TAB 4: USER MANAGEMENT ───────────────────────────────────────────────
+  .ad-tab-panel(data-panel="users")
+    .ad-users-section
+      .ad-users-header
+        h2.ad-panel__title(style="margin:0;") All Users
+        .ad-filter-btns
+          button.ad-filter-btn.ad-filter-btn--active(data-filter="all") All
+          button.ad-filter-btn(data-filter="active") Active
+          button.ad-filter-btn(data-filter="pending") Pending
+          button.ad-filter-btn(data-filter="suspended") Suspended
+
+      table.ad-users-table
+        thead
+          tr
+            th Name
+            th Email
+            th Status
+            th Joined
+            th Ops
+            th Cost (USD)
+            th Actions
+        tbody#users-tbody
+          each u in users
+            tr.ad-user-row(data-status=u.status)
+              td
+                strong= u.name
+                if u.role === 'admin'
+                  |
+                  span.ad-badge.ad-badge--admin admin
+              td(style="color:var(--text-muted); font-size:0.875rem;")= u.email
+              td
+                span.ad-badge(class=`ad-badge--${u.status}`)= u.status.charAt(0).toUpperCase() + u.status.slice(1)
+              td(style="color:var(--text-muted); font-size:0.8125rem;")= new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+              td= u.operationCount || 0
+              td= '$' + cc(u.totalCostUSD)
+              td
+                .ad-notif-actions
+                  if u.role !== 'admin'
+                    if u.status === 'pending'
+                      button.ad-action-btn.ad-action-btn--approve(data-action="approve" data-id=u._id.toString()) Approve
+                    if u.status === 'active'
+                      button.ad-action-btn.ad-action-btn--suspend(data-action="suspend" data-id=u._id.toString()) Suspend
+                    if u.status === 'suspended'
+                      button.ad-action-btn.ad-action-btn--resume(data-action="resume" data-id=u._id.toString()) Resume
+                    button.ad-action-btn.ad-action-btn--password(data-action="password" data-id=u._id.toString() data-name=u.name) Password
+
+  //- Password Change Modal
+  .ad-modal-overlay#passwordModal
+    .ad-modal
+      h3.ad-modal__title Change Password
+      p.ad-modal__sub#passwordModalSub Set a new password for this user
+      input.ad-modal__input(type="password" id="newPasswordInput" placeholder="New password (min. 8 chars)" minlength="8")
+      .ad-modal__actions
+        button.ad-modal__cancel#modalCancel Cancel
+        button.ad-modal__confirm#modalConfirm Save Password
+
+block scripts
+  script.
+    var MONTHLY_TOTALS = !{JSON.stringify(monthlyTotals)};
+    var OP_BREAKDOWN = !{JSON.stringify(opBreakdown)};
+    var CURRENT_YEAR = !{currentYear};
+    var CURRENT_MONTH = !{currentMonth};
+  script(src="/js/admin-dashboard.js")

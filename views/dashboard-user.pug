@@ -1,0 +1,76 @@
+extends layout-app
+
+block sidebar-nav
+  .sidebar__section
+    p.sidebar__label Navigation
+    a.sidebar__link(href="/") Workspace
+    a.sidebar__link.sidebar__link--active(href="/me") My Usage
+    if user && user.role === 'admin'
+      a.sidebar__link(href="/admin") Admin Panel
+
+block app-content
+  - function cc(v) { return (!v || v <= 0) ? '0.00' : (Math.ceil(v * 100) / 100).toFixed(2); }
+  - function fmtCost(v) { return (+(v) || 0).toFixed(4); }
+  .app-main__header
+    h1.app-main__title My Usage
+    p.app-main__subtitle Track your operations and API costs
+
+  .ud-month-picker
+    label(for="monthSelect") Period:
+    select#monthSelect
+      each opt in monthOptions
+        option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+
+  .stat-grid
+    .stat-card
+      p.stat-card__label Operations
+      p.stat-card__value#ud-total-ops= totalOps
+    .stat-card
+      p.stat-card__label Total Cost (USD)
+      p.stat-card__value.stat-card__value--blue
+        | $
+        span#ud-total-usd(data-raw=totalCostUSD)= cc(totalCostUSD)
+    .stat-card
+      p.stat-card__label Total Cost (EGP)
+      p.stat-card__value.stat-card__value--green
+        | £
+        span#ud-total-egp(data-raw=totalCostEGP)= cc(totalCostEGP)
+
+  .ud-section
+    h2.ud-section__title Operation Log
+    if recentLogs.length === 0
+      p(style="color: var(--text-muted); font-size: 0.875rem;") No operations recorded this period.
+    else
+      table.ud-table
+        thead
+          tr
+            th Date & Time
+            th Operation
+            th Model
+            th Cost (USD)
+            th Cost (EGP)
+            th Details
+        tbody
+          each log in recentLogs
+            tr
+              td= new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+              td
+                span.op-pill= log.label
+              td(style="color: var(--text-muted); font-size: 0.8125rem;")= log.model || '—'
+              td= log.costUSD > 0 ? `$${cc(log.costUSD)}` : '—'
+              td= log.costEGP > 0 ? `£${cc(log.costEGP)}` : '—'
+              td(style="font-size: 0.8125rem; color: var(--text-muted);")
+                if log.metadata && log.metadata.pnr
+                  | PNR: #{log.metadata.pnr}
+                else if log.metadata && log.metadata.language
+                  | #{log.metadata.language}
+                else if log.metadata && log.metadata.fileCount
+                  | #{log.metadata.fileCount} file(s)
+                else
+                  | —
+
+block scripts
+  script.
+    var breakdown = !{JSON.stringify(breakdown)};
+    var monthOptions = !{JSON.stringify(monthOptions)};
+  script(src="/js/user-dashboard.js")

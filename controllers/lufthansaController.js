@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const logUsage = require('../utils/logUsage');
 
 // Initialize APIs
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -28,10 +29,11 @@ function getLufthansaLogoBase64() {
 
 /**
  * Unified Signature Processing Engine
+ * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
 async function processSignature(file, processingMethod) {
-  if (!file) return null;
+  if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0 };
 
   if (processingMethod === 'gemini') {
     try {
@@ -40,13 +42,15 @@ async function processSignature(file, processingMethod) {
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
+      const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
 
       if (outputPart && outputPart.inlineData) {
         const aiImageBuffer = Buffer.from(outputPart.inlineData.data, 'base64');
         const finalBuffer = await sharp(aiImageBuffer).grayscale().threshold(220).png().toBuffer();
-        return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+        return { dataUrl: `data:image/png;base64,${finalBuffer.toString('base64')}`, inputTokens, outputTokens };
       }
+      return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens, outputTokens };
     } catch (error) {
       console.error('Gemini Signature Error:', error.message);
     }
@@ -59,13 +63,13 @@ async function processSignature(file, processingMethod) {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Cloudinary fetch failed');
       const arrayBuffer = await response.arrayBuffer();
-      return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
+      return { dataUrl: `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`, inputTokens: 0, outputTokens: 0 };
     } catch (error) {
       console.error('Cloudinary Error:', error.message);
     }
   }
 
-  return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
+  return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens: 0, outputTokens: 0 };
 }
 
 function capitalizeWords(str) {
@@ -94,6 +98,8 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
   const passengers = [];
   let sigIndex = 0;
+  let totalSigIn = 0, totalSigOut = 0;
+  let usedGemini = false;
 
   for (let i = 1; i <= 4; i++) {
     const rawName = req.body[`fullName${i}`] || '';
@@ -116,7 +122,10 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
       if (signatureFile) sigIndex++;
 
       const sigProcessing = req.body[`sigProcessing${i}`];
-      const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+      const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut } = await processSignature(signatureFile, sigProcessing);
+      totalSigIn += sigIn;
+      totalSigOut += sigOut;
+      if (sigProcessing === 'gemini') usedGemini = true;
 
       passengers.push({
         firstName,
@@ -139,6 +148,17 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   };
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
+
+  const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
+  await logUsage(req, {
+    operationType: 'poa_lufthansa',
+    model: usedGemini ? 'gemini-3-pro-image-preview' : null,
+    inputTokens: totalSigIn,
+    outputTokens: totalSigOut,
+    costUSD: sigCostUSD,
+    costEGP: sigCostUSD * 54.33,
+    metadata: { pnr, passengerCount: passengers.length }
+  });
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=lufthansa-poa-${pnr}.pdf`);

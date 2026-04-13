@@ -1,0 +1,69 @@
+extends layout
+
+block content
+  .auth-page
+    .auth-card
+      a(href="/")
+        img.auth-card__logo(src="/images/Screenshot_1.png", alt="Refly Logo")
+      h1.auth-card__title Request Access
+      p.auth-card__subtitle Your account will be reviewed by an admin before you can sign in
+
+      if error
+        .auth-alert.auth-alert--error
+          span= error
+
+      if success
+        .auth-alert.auth-alert--success
+          strong Your request has been submitted.
+          br
+          | An admin will review your account and approve it shortly. You'll be able to sign in once approved.
+        p.auth-card__footer
+          a.auth-card__link(href="/login") ← Back to Sign In
+      else
+        form.auth-form(action="/signup" method="POST")
+          .auth-form__group
+            label.auth-form__label(for="name") Full Name
+            input.auth-form__input(
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Ahmed Yasser"
+              required
+              autocomplete="name"
+            )
+          .auth-form__group
+            label.auth-form__label(for="email") Email Address
+            input.auth-form__input(
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            )
+          .auth-form__group
+            label.auth-form__label(for="password") Password
+            input.auth-form__input(
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Min. 8 characters"
+              required
+              minlength="8"
+              autocomplete="new-password"
+            )
+          .auth-form__group
+            label.auth-form__label(for="passwordConfirm") Confirm Password
+            input.auth-form__input(
+              type="password"
+              id="passwordConfirm"
+              name="passwordConfirm"
+              placeholder="••••••••"
+              required
+              autocomplete="new-password"
+            )
+          button.auth-btn(type="submit") Request Access
+
+        p.auth-card__footer
+          | Already have an account?&nbsp;
+          a.auth-card__link(href="/login") Sign In

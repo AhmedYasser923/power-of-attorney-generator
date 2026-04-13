@@ -7,6 +7,7 @@ const pdfExtract = new PDFExtract();
 
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
+const logUsage   = require('../utils/logUsage');
 
 const EocRecord        = require('../models/EocRecord');
 const airportsDatabase = require('../airports_data.json');
@@ -731,6 +732,17 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
         }
       });
     });
+  });
+
+  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0 } = result.response.usageMetadata || {};
+  await logUsage(req, {
+    operationType: 'ticket_analysis',
+    model: 'gemini-3-flash-preview',
+    inputTokens: iTok,
+    outputTokens: oTok,
+    costUSD: requestCostUSD,
+    costEGP: requestCostEGP,
+    metadata: { fileCount: (req.files || []).length }
   });
 
   res.json({ processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, costEGP: formattedCostEGP, journeys: parsedJourneys });

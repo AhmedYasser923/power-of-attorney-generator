@@ -2,3 +2,5 @@ node_modules/
 config.env
 .DS_Store
 plans/
+.claude/
+CLAUDE.md

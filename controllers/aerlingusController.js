@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const logUsage = require('../utils/logUsage');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 cloudinary.config({
@@ -14,10 +15,11 @@ cloudinary.config({
 
 /**
  * Unified Signature Processing Engine
+ * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
 async function processSignature(file, processingMethod) {
-  if (!file) return null;
+  if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0 };
 
   if (processingMethod === 'gemini') {
     try {
@@ -26,13 +28,16 @@ async function processSignature(file, processingMethod) {
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
+      const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
 
       if (outputPart && outputPart.inlineData) {
         const aiImageBuffer = Buffer.from(outputPart.inlineData.data, 'base64');
         const finalBuffer = await sharp(aiImageBuffer).grayscale().threshold(220).png().toBuffer();
-        return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+        return { dataUrl: `data:image/png;base64,${finalBuffer.toString('base64')}`, inputTokens, outputTokens };
       }
+      // API succeeded but returned no image part — still charge the tokens
+      return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens, outputTokens };
     } catch (error) {
       console.error('Gemini Signature Error:', error.message);
     }
@@ -45,13 +50,13 @@ async function processSignature(file, processingMethod) {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Cloudinary fetch failed');
       const arrayBuffer = await response.arrayBuffer();
-      return `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
+      return { dataUrl: `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`, inputTokens: 0, outputTokens: 0 };
     } catch (error) {
       console.error('Cloudinary Error:', error.message);
     }
   }
 
-  return `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`;
+  return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens: 0, outputTokens: 0 };
 }
 
 exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
@@ -63,7 +68,8 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     return next(new AppError('First Name, Last Name, and PNR are required.', 400));
   }
 
-  const signatureDataUrl = await processSignature(signatureFile, sigProcessing);
+  const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut } = await processSignature(signatureFile, sigProcessing);
+  const sigCostUSD = (sigIn / 1_000_000) * 0.075 + (sigOut / 1_000_000) * 0.30;
 
   const pdfData = {
     firstName, lastName, address, pnr, caseNumber, claimType,
@@ -75,6 +81,16 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
   const fileName = `AerLingus_POA_${passengerName}.pdf`;
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'aerlingus-poa');
+
+  await logUsage(req, {
+    operationType: 'poa_aerlingus',
+    model: sigProcessing === 'gemini' ? 'gemini-3-pro-image-preview' : null,
+    inputTokens: sigIn,
+    outputTokens: sigOut,
+    costUSD: sigCostUSD,
+    costEGP: sigCostUSD * 54.33,
+    metadata: { pnr, flightNumber }
+  });
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
