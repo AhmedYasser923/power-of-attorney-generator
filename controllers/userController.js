@@ -17,7 +17,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
   const year = parseInt(req.query.year) || now.getFullYear();
   const month = parseInt(req.query.month) || (now.getMonth() + 1);
 
-  const [breakdown, recentLogs] = await Promise.all([
+  const [breakdown, recentLogs, totalLogs] = await Promise.all([
     UsageLog.aggregate([
       { $match: { userId: req.user._id, year, month } },
       { $group: {
@@ -29,8 +29,9 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     ]),
     UsageLog.find({ userId: req.user._id, year, month })
       .sort({ createdAt: -1 })
-      .limit(50)
-      .lean()
+      .limit(25)
+      .lean(),
+    UsageLog.countDocuments({ userId: req.user._id, year, month })
   ]);
 
   const totalOps = breakdown.reduce((s, b) => s + b.count, 0);
@@ -56,7 +57,10 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     totalCostUSD,
     monthOptions,
     currentYear: year,
-    currentMonth: month
+    currentMonth: month,
+    totalLogs,
+    totalPages: Math.ceil(totalLogs / 25) || 1,
+    currentPage: 1
   });
 });
 
@@ -76,4 +80,32 @@ exports.getMyUsage = catchAsync(async (req, res) => {
   ]);
 
   res.json({ status: 'success', data: breakdown });
+});
+
+exports.getUserLogs = catchAsync(async (req, res) => {
+  const now = new Date();
+  const year = parseInt(req.query.year) || now.getFullYear();
+  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
+  const skip = (page - 1) * limit;
+
+  const [total, logs] = await Promise.all([
+    UsageLog.countDocuments({ userId: req.user._id, year, month }),
+    UsageLog.find({ userId: req.user._id, year, month })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+  ]);
+
+  res.json({
+    status: 'success',
+    data: {
+      logs: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1
+    }
+  });
 });

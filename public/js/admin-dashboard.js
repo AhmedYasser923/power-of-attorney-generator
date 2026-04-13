@@ -1,5 +1,11 @@
 'use strict';
 
+// ─── Ops Pagination State ─────────────────────────────────────────────────────
+var opsPage = 1;
+var opsTotalPages = (typeof OPS_TOTAL_PAGES !== 'undefined') ? OPS_TOTAL_PAGES : 1;
+var adminYear  = (typeof CURRENT_YEAR  !== 'undefined') ? CURRENT_YEAR  : new Date().getFullYear();
+var adminMonth = (typeof CURRENT_MONTH !== 'undefined') ? CURRENT_MONTH : (new Date().getMonth() + 1);
+
 // ─── Tab System ───────────────────────────────────────────────────────────────
 // Track which charts have been lazily initialized (charts in hidden tabs must
 // wait until the tab is visible, otherwise Chart.js measures 0 dimensions).
@@ -37,6 +43,53 @@ function prependFeedRow(op) {
 
   // Keep feed capped at 100 rows
   while (tbody.children.length > 100) tbody.removeChild(tbody.lastChild);
+}
+
+// ─── Ops Pagination ───────────────────────────────────────────────────────────
+function renderOpRows(logs) {
+  var tbody = document.getElementById('operations-feed-table');
+  if (!tbody) return;
+  if (!logs || logs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem;">No operations this period.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = logs.map(function(op) {
+    var time = new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    var cost = op.costUSD > 0 ? '$' + ceilNum(op.costUSD) : '—';
+    return '<tr>' +
+      '<td style="white-space:nowrap;color:var(--text-muted);">' + time + '</td>' +
+      '<td>' + escHtml(op.userName || '—') + '</td>' +
+      '<td><span class="op-pill">' + escHtml(op.label || op.operationType) + '</span></td>' +
+      '<td>' + cost + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function updateOpsPaginationControls() {
+  var prev = document.getElementById('ops-prev-page');
+  var next = document.getElementById('ops-next-page');
+  var info = document.getElementById('ops-page-info');
+  if (prev) prev.disabled = opsPage <= 1;
+  if (next) next.disabled = opsPage >= opsTotalPages;
+  if (info) info.textContent = 'Page ' + opsPage + ' of ' + opsTotalPages;
+}
+
+async function fetchOpsPage(page) {
+  try {
+    var url = '/admin/logs?year=' + adminYear + '&month=' + adminMonth + '&page=' + page + '&limit=25';
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('Request failed: ' + res.status);
+    var json = await res.json();
+    if (json.status !== 'success') throw new Error(json.message || 'Error');
+
+    opsPage       = json.data.page;
+    opsTotalPages = json.data.totalPages;
+
+    renderOpRows(json.data.logs);
+    updateOpsPaginationControls();
+  } catch (err) {
+    console.error('[AdminDashboard] Ops pagination error:', err.message);
+  }
 }
 
 // ─── Notifications ───────────────────────────────────────────────────────────
@@ -271,6 +324,15 @@ document.querySelectorAll('.ad-filter-btn').forEach(btn => {
   });
 });
 
+// ─── Ops Pagination Button Handlers ──────────────────────────────────────────
+document.getElementById('ops-prev-page')?.addEventListener('click', function() {
+  if (opsPage > 1) fetchOpsPage(opsPage - 1);
+});
+
+document.getElementById('ops-next-page')?.addEventListener('click', function() {
+  if (opsPage < opsTotalPages) fetchOpsPage(opsPage + 1);
+});
+
 // ─── Insights tab: month picker (table data only)
 document.getElementById('insightsMonth')?.addEventListener('change', async function() {
   const [year, month] = this.value.split('-').map(Number);
@@ -286,9 +348,8 @@ document.getElementById('insightsMonth')?.addEventListener('change', async funct
           <td>${escHtml(u._id.userName)}</td>
           <td>${u.operationCount}</td>
           <td>$${(+(u.totalCostUSD)||0).toFixed(2)}</td>
-          <td>£${(+(u.totalCostEGP)||0).toFixed(2)}</td>
         </tr>
-      `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem;">No data</td></tr>';
+      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">No data</td></tr>';
     }
   } catch (err) {
     console.error('[Admin] Usage fetch failed:', err.message);
@@ -308,3 +369,6 @@ function escHtml(str) {
 function capitalize(str) {
   return String(str || '').charAt(0).toUpperCase() + String(str || '').slice(1);
 }
+
+// ─── Init Pagination Controls on First Load ───────────────────────────────────
+updateOpsPaginationControls();

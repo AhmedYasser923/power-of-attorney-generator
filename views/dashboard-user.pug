@@ -62,8 +62,18 @@ block app-content
                 else
                   | —
 
+  if recentLogs.length > 0 || totalLogs > 0
+    .ud-pagination#ud-pagination
+      button.ud-page-btn#ud-prev-page(disabled) ← Prev
+      span.ud-page-info#ud-page-info Page 1 of #{totalPages}
+      button.ud-page-btn#ud-next-page(disabled=totalPages <= 1) Next →
+
 block scripts
   script.
     var breakdown = !{JSON.stringify(breakdown)};
     var monthOptions = !{JSON.stringify(monthOptions)};
+    var UD_TOTAL_PAGES = !{totalPages};
+    var UD_TOTAL_LOGS = !{totalLogs};
+    var UD_CURRENT_YEAR = !{currentYear};
+    var UD_CURRENT_MONTH = !{currentMonth};
   script(src="/js/user-dashboard.js")

@@ -25,7 +25,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     monthlyTotals,
     opBreakdown,
     recentOps,
-    onlineCount
+    onlineCount,
+    totalRecentOps
   ] = await Promise.all([
     User.find({ status: 'pending' }).sort({ createdAt: -1 }).lean(),
     User.find().sort({ createdAt: -1 }).lean(),
@@ -51,8 +52,9 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       },
       { $sort: { totalCostUSD: -1 } }
     ]),
-    UsageLog.find({ year, month }).sort({ createdAt: -1 }).limit(50).lean(),
-    Promise.resolve(0)
+    UsageLog.find({ year, month }).sort({ createdAt: -1 }).limit(25).lean(),
+    Promise.resolve(0),
+    UsageLog.countDocuments({ year, month })
   ]);
 
   // Per-user totals for this month
@@ -102,7 +104,10 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     totalOpsThisMonth,
     pendingCount: pendingUsers.length,
     currentYear: year,
-    currentMonth: month
+    currentMonth: month,
+    opsTotalLogs: totalRecentOps,
+    opsTotalPages: Math.ceil(totalRecentOps / 25) || 1,
+    opsCurrentPage: 1
   });
 });
 
@@ -220,5 +225,33 @@ exports.getMonthDetail = catchAsync(async (req, res) => {
   res.json({
     status: 'success',
     data: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType }))
+  });
+});
+
+exports.getAdminLogs = catchAsync(async (req, res) => {
+  const now = new Date();
+  const year = parseInt(req.query.year) || now.getFullYear();
+  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
+  const skip = (page - 1) * limit;
+
+  const [total, logs] = await Promise.all([
+    UsageLog.countDocuments({ year, month }),
+    UsageLog.find({ year, month })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+  ]);
+
+  res.json({
+    status: 'success',
+    data: {
+      logs: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1
+    }
   });
 });

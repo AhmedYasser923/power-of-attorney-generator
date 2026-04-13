@@ -64,6 +64,10 @@ block app-content
                   td
                     span.op-pill= op.label
                   td= op.costUSD > 0 ? `$${cc(op.costUSD)}` : '—'
+        .ad-pagination#ops-pagination
+          button.ud-page-btn#ops-prev-page(disabled) ← Prev
+          span.ud-page-info#ops-page-info Page 1 of #{opsTotalPages}
+          button.ud-page-btn#ops-next-page(disabled=opsTotalPages <= 1) Next →
 
 
   //- ── TAB 2: NOTIFICATIONS ─────────────────────────────────────────────────
@@ -176,4 +180,6 @@ block scripts
     var OP_BREAKDOWN = !{JSON.stringify(opBreakdown)};
     var CURRENT_YEAR = !{currentYear};
     var CURRENT_MONTH = !{currentMonth};
+    var OPS_TOTAL_PAGES = !{opsTotalPages};
+    var OPS_TOTAL_LOGS = !{opsTotalLogs};
   script(src="/js/admin-dashboard.js")

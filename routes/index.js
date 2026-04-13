@@ -30,6 +30,7 @@ router.use(protect);
 // --- User profile & usage dashboard ---
 router.get('/me', require('../controllers/userController.js').renderDashboard);
 router.get('/api/me/usage', require('../controllers/userController.js').getMyUsage);
+router.get('/api/me/logs', require('../controllers/userController.js').getUserLogs);
 
 // --- Admin routes ---
 router.use('/admin', restrictTo('admin'));
@@ -41,6 +42,7 @@ router.patch('/admin/users/:id/resume', require('../controllers/adminController.
 router.patch('/admin/users/:id/password', require('../controllers/adminController.js').changeUserPassword);
 router.get('/admin/usage', require('../controllers/adminController.js').getUsageInsights);
 router.get('/admin/usage/:year/:month', require('../controllers/adminController.js').getMonthDetail);
+router.get('/admin/logs', require('../controllers/adminController.js').getAdminLogs);
 
 // --- Central Dashboard ---
 router.get('/', (req, res, next) => {
