@@ -30,11 +30,6 @@ block app-content
       p.stat-card__value.stat-card__value--blue
         | $
         span#ud-total-usd(data-raw=totalCostUSD)= cc(totalCostUSD)
-    .stat-card
-      p.stat-card__label Total Cost (EGP)
-      p.stat-card__value.stat-card__value--green
-        | £
-        span#ud-total-egp(data-raw=totalCostEGP)= cc(totalCostEGP)
 
   .ud-section
     h2.ud-section__title Operation Log
@@ -48,7 +43,6 @@ block app-content
             th Operation
             th Model
             th Cost (USD)
-            th Cost (EGP)
             th Details
         tbody
           each log in recentLogs
@@ -58,7 +52,6 @@ block app-content
                 span.op-pill= log.label
               td(style="color: var(--text-muted); font-size: 0.8125rem;")= log.model || '—'
               td= log.costUSD > 0 ? `$${cc(log.costUSD)}` : '—'
-              td= log.costEGP > 0 ? `£${cc(log.costEGP)}` : '—'
               td(style="font-size: 0.8125rem; color: var(--text-muted);")
                 if log.metadata && log.metadata.pnr
                   | PNR: #{log.metadata.pnr}

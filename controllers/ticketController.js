@@ -561,16 +561,14 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   }
 
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
-  let requestCostUSD = 0, requestCostEGP = 0;
+  let requestCostUSD = 0;
   if (result.response.usageMetadata) {
     const { promptTokenCount: i = 0, candidatesTokenCount: o = 0 } = result.response.usageMetadata;
     requestCostUSD = (i / 1_000_000) * 0.075 + (o / 1_000_000) * 0.30;
-    requestCostEGP = requestCostUSD * 54.33;
     console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${i.toLocaleString()} in / 📤 ${o.toLocaleString()} out | 💸 $${requestCostUSD.toFixed(6)}\n`);
   }
 
   const formattedCostUSD = `$${requestCostUSD.toFixed(6)}`;
-  const formattedCostEGP = `£${requestCostEGP.toFixed(6)}`;
 
   let parsedJourneys;
   try {
@@ -580,7 +578,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   }
 
   if (!Array.isArray(parsedJourneys) || parsedJourneys.length === 0) {
-    return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, costEGP: formattedCostEGP, journeys: [] });
+    return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, journeys: [] });
   }
 
   // BUG 2 FIX: Run deterministic EC261 evaluator BEFORE per-leg post-processing.
@@ -741,11 +739,10 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     inputTokens: iTok,
     outputTokens: oTok,
     costUSD: requestCostUSD,
-    costEGP: requestCostEGP,
     metadata: { fileCount: (req.files || []).length }
   });
 
-  res.json({ processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, costEGP: formattedCostEGP, journeys: parsedJourneys });
+  res.json({ processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, journeys: parsedJourneys });
 });
 
 // ---------------------------------------------------------------------------

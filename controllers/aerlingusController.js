@@ -82,15 +82,17 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'aerlingus-poa');
 
-  await logUsage(req, {
-    operationType: 'poa_aerlingus',
-    model: sigProcessing === 'gemini' ? 'gemini-3-pro-image-preview' : null,
-    inputTokens: sigIn,
-    outputTokens: sigOut,
-    costUSD: sigCostUSD,
-    costEGP: sigCostUSD * 54.33,
-    metadata: { pnr, flightNumber }
-  });
+  // Log signature processing cost only if Gemini was used (free otherwise)
+  if (sigProcessing === 'gemini') {
+    await logUsage(req, {
+      operationType: 'sig_processing',
+      model: 'gemini-3-pro-image-preview',
+      inputTokens: sigIn,
+      outputTokens: sigOut,
+      costUSD: sigCostUSD,
+      metadata: { pnr, flightNumber }
+    });
+  }
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);

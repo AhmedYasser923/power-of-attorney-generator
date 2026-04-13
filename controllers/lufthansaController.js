@@ -149,16 +149,18 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
 
-  const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
-  await logUsage(req, {
-    operationType: usedGemini ? 'sig_processing' : 'poa_lufthansa',
-    model: usedGemini ? 'gemini-3-pro-image-preview' : null,
-    inputTokens: totalSigIn,
-    outputTokens: totalSigOut,
-    costUSD: sigCostUSD,
-    costEGP: sigCostUSD * 54.33,
-    metadata: { pnr, passengerCount: passengers.length }
-  });
+  // Log signature processing cost only if Gemini was used (free otherwise)
+  if (usedGemini) {
+    const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
+    await logUsage(req, {
+      operationType: 'sig_processing',
+      model: 'gemini-3-pro-image-preview',
+      inputTokens: totalSigIn,
+      outputTokens: totalSigOut,
+      costUSD: sigCostUSD,
+      metadata: { pnr, passengerCount: passengers.length }
+    });
+  }
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=lufthansa-poa-${pnr}.pdf`);

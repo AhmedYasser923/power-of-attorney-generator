@@ -62,7 +62,6 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       $group: {
         _id: { userId: '$userId', userName: '$userName' },
         totalCostUSD: { $sum: '$costUSD' },
-        totalCostEGP: { $sum: '$costEGP' },
         operationCount: { $sum: 1 }
       }
     },
@@ -73,23 +72,28 @@ exports.renderDashboard = catchAsync(async (req, res) => {
   userTotals.forEach(t => {
     userTotalsMap[t._id.userId.toString()] = {
       totalCostUSD: t.totalCostUSD,
-      totalCostEGP: t.totalCostEGP,
       operationCount: t.operationCount
     };
   });
 
   const usersWithStats = allUsers.map(u => ({
     ...u,
-    ...(userTotalsMap[u._id.toString()] || { totalCostUSD: 0, totalCostEGP: 0, operationCount: 0 })
+    ...(userTotalsMap[u._id.toString()] || { totalCostUSD: 0, operationCount: 0 })
   }));
 
   const totalCostThisMonth = opBreakdown.reduce((s, b) => s + b.totalCostUSD, 0);
   const totalOpsThisMonth = opBreakdown.reduce((s, b) => s + b.count, 0);
 
+  // Add totalCostUSD to users for the dashboard
+  const usersWithTotals = usersWithStats.map(u => ({
+    ...u,
+    totalCostUSD: u.totalCostUSD || 0
+  }));
+
   res.render('dashboard-admin', {
     title: 'Admin Panel',
     pendingUsers,
-    users: usersWithStats,
+    users: usersWithTotals,
     monthlyTotals,
     opBreakdown: opBreakdown.map(b => ({ ...b, label: OP_LABELS[b._id] || b._id })),
     recentOps: recentOps.map(o => ({ ...o, label: OP_LABELS[o.operationType] || o.operationType })),
@@ -163,7 +167,6 @@ exports.getUsageInsights = catchAsync(async (req, res) => {
         $group: {
           _id: { userId: '$userId', userName: '$userName' },
           totalCostUSD: { $sum: '$costUSD' },
-          totalCostEGP: { $sum: '$costEGP' },
           operationCount: { $sum: 1 }
         }
       },

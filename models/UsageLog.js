@@ -40,10 +40,6 @@ const usageLogSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  costEGP: {
-    type: Number,
-    default: 0
-  },
   metadata: {
     type: mongoose.Schema.Types.Mixed,
     default: {}

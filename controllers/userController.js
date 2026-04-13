@@ -23,8 +23,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       { $group: {
         _id: '$operationType',
         count: { $sum: 1 },
-        totalCostUSD: { $sum: '$costUSD' },
-        totalCostEGP: { $sum: '$costEGP' }
+        totalCostUSD: { $sum: '$costUSD' }
       }},
       { $sort: { totalCostUSD: -1 } }
     ]),
@@ -36,7 +35,6 @@ exports.renderDashboard = catchAsync(async (req, res) => {
 
   const totalOps = breakdown.reduce((s, b) => s + b.count, 0);
   const totalCostUSD = breakdown.reduce((s, b) => s + b.totalCostUSD, 0);
-  const totalCostEGP = breakdown.reduce((s, b) => s + b.totalCostEGP, 0);
 
   // Build month options for the last 12 months
   const monthOptions = [];
@@ -56,7 +54,6 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     recentLogs: recentLogs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
     totalOps,
     totalCostUSD,
-    totalCostEGP,
     monthOptions,
     currentYear: year,
     currentMonth: month
@@ -73,8 +70,7 @@ exports.getMyUsage = catchAsync(async (req, res) => {
     { $group: {
       _id: '$operationType',
       count: { $sum: 1 },
-      totalCostUSD: { $sum: '$costUSD' },
-      totalCostEGP: { $sum: '$costEGP' }
+      totalCostUSD: { $sum: '$costUSD' }
     }},
     { $sort: { totalCostUSD: -1 } }
   ]);

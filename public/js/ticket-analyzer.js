@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsCard.innerHTML += `
           <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;">
             <span style="background:#e2e8f0;color:#475569;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;">⏱️ Processed in ${raw.processingTime}s</span>
-            ${raw.costUSD ? `<span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1px solid #bbf7d0;">💸 ${raw.costUSD}</span><span style="background:#fef3c7;color:#b45309;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1px solid #fde68a;">🌍 ${raw.costEGP} EGP</span>` : ''}
+            ${raw.costUSD ? `<span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1px solid #bbf7d0;">💸 ${raw.costUSD}</span>` : ''}
           </div>`;
       }
 

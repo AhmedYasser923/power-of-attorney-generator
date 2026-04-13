@@ -107,14 +107,12 @@ block app-content
             th User
             th Operations
             th Cost (USD)
-            th Cost (EGP)
         tbody#insights-user-tbody
           each u in users.filter(function(u){ return u.operationCount > 0; }).sort(function(a,b){ return (b.totalCostUSD||0) - (a.totalCostUSD||0); })
             tr
               td= u.name
               td= u.operationCount
               td= '$' + cc(u.totalCostUSD)
-              td= '£' + cc(u.totalCostEGP)
 
   //- ── TAB 4: USER MANAGEMENT ───────────────────────────────────────────────
   .ad-tab-panel(data-panel="users")
