@@ -59,16 +59,17 @@ app.use((req, res, next) => {
 // 2. Global Error Handler
 app.use(globalErrorHandler);
 
-// MongoDB Connection + Server Start
+// Start server immediately so Cloud Run health checks pass
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
+// Connect to MongoDB after server is up
 mongoose.connect(process.env.DATABASE)
   .then(async () => {
     console.log('[DB] MongoDB connected');
     await bootstrapAdmin();
-    app.listen(PORT, () => {
-      console.log(`Server running on http://127.0.0.1:${PORT}`);
-    });
   })
   .catch(err => {
     console.error('[DB] MongoDB connection failed:', err);
