@@ -86,9 +86,9 @@ block content
       .poa-sig-processing-box
         label.poa-label Signature Processing Option
         select.poa-select(name="sigProcessing")
-          option(value="none") None (Use Raw Image)
+          option(value="none", selected) None (Use Raw Image)
           option(value="cloudinary") Cloudinary AI (Background Removal)
-          option(value="gemini-easy", selected) Nano Banana — Easy
+          option(value="gemini-easy") Nano Banana — Easy
           option(value="gemini-medium") Nano Banana — Medium
           option(value="gemini-hard") Nano Banana — Hard
 
@@ -144,9 +144,9 @@ block content
                   .poa-sig-processing-item
                     label.poa-sig-processing-item__label Sig #{i}:
                     select.poa-select.poa-select--small(name=`sigProcessing${i}`)
-                      option(value="none") None (Raw)
+                      option(value="none", selected) None (Raw)
                       option(value="cloudinary") Cloudinary AI
-                      option(value="gemini-easy", selected) Easy
+                      option(value="gemini-easy") Easy
                       option(value="gemini-medium") Medium
                       option(value="gemini-hard") Hard
 
@@ -207,9 +207,9 @@ block content
       .poa-sig-processing-box
         label.poa-label Signature Processing Option
         select.poa-select(name="sigProcessing")
-          option(value="none") None (Use Raw Image)
+          option(value="none", selected) None (Use Raw Image)
           option(value="cloudinary") Cloudinary AI (Background Removal)
-          option(value="gemini-easy", selected) Nano Banana — Easy
+          option(value="gemini-easy") Nano Banana — Easy
           option(value="gemini-medium") Nano Banana — Medium
           option(value="gemini-hard") Nano Banana — Hard
 
