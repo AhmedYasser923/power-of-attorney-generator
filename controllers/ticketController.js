@@ -5,9 +5,10 @@ const sharp    = require('sharp');
 const { PDFExtract } = require('pdf.js-extract');
 const pdfExtract = new PDFExtract();
 
-const catchAsync = require('../utils/catchAsync');
-const AppError   = require('../utils/appError');
-const logUsage   = require('../utils/logUsage');
+const catchAsync      = require('../utils/catchAsync');
+const AppError        = require('../utils/appError');
+const logUsage        = require('../utils/logUsage');
+const { calculateCost } = require('../utils/pricing');
 
 const EocRecord        = require('../models/EocRecord');
 const airportsDatabase = require('../airports_data.json');
@@ -158,6 +159,91 @@ function isEUCountry(country) {
   return EC261_EU_COUNTRIES.has((country || '').toLowerCase().trim());
 }
 
+// ---------------------------------------------------------------------------
+// PNR-Aware EC261 Helpers
+// ---------------------------------------------------------------------------
+function isValidPnr(pnr) {
+  if (!pnr) return false;
+  const normalized = pnr.trim().toLowerCase();
+  return normalized !== '' && normalized !== 'not provided' && normalized !== 'unknown';
+}
+
+const DISRUPTION_STATUSES = [
+  'cancelled', 'replacement flight', 'unused replacement flight',
+  'unused / missed connection', 'rescheduled',
+];
+
+function hasDisruptionStatus(leg) {
+  const status = (leg.flightStatus || '').toLowerCase().trim();
+  return DISRUPTION_STATUSES.some(ds => status.includes(ds));
+}
+
+// Evaluate an array of legs as a single booking group using RULE 1/2/3
+function evaluateLegsEC261(legs) {
+  let anyEligible = false;
+  let anyIneligible = false;
+
+  const firstLeg = legs[0];
+  const lastLeg  = legs[legs.length - 1];
+  const firstOriginEU = isEUCountry(firstLeg.originCountry);
+  const lastDestEU    = isEUCountry(lastLeg.destinationCountry);
+
+  // RULE 1: EU/UK origin -> entire group automatically eligible
+  if (firstOriginEU) {
+    legs.forEach(leg => {
+      leg.ec261Leg        = leg.ec261Leg || {};
+      leg.ec261Leg.status = 'Eligible';
+      leg.ec261Leg.reason = `Booking departs from EU/UK (${firstLeg.originCountry}). EC261/2004 applies automatically to all legs in this booking.`;
+    });
+    return { anyEligible: true, anyIneligible: false };
+  }
+
+  // RULE 2: Non-EU origin AND non-EU final destination -> entirely ineligible
+  if (!lastDestEU) {
+    legs.forEach(leg => {
+      leg.ec261Leg        = leg.ec261Leg || {};
+      leg.ec261Leg.status = 'Not Eligible';
+      leg.ec261Leg.reason = 'Not Covered: Both the booking origin and final destination are outside the EU/UK.';
+    });
+    return { anyEligible: false, anyIneligible: true };
+  }
+
+  // RULE 3: Non-EU origin, EU/UK destination -> per-leg evaluation
+  legs.forEach(leg => {
+    leg.ec261Leg = leg.ec261Leg || {};
+    const oEU    = isEUCountry(leg.originCountry);
+    const dEU    = isEUCountry(leg.destinationCountry);
+    const opEU   = isEUCountry(leg.operatingAirlineCountry);
+    const opName = leg.operatingAirline        || 'Unknown carrier';
+    const opCtry = leg.operatingAirlineCountry || 'unknown country';
+
+    if (oEU) {
+      leg.ec261Leg.status = 'Eligible';
+      leg.ec261Leg.reason = `Departs from EU/UK (${leg.originCountry}) — eligible regardless of carrier.`;
+      anyEligible = true;
+    } else if (dEU) {
+      if (opEU) {
+        leg.ec261Leg.status = 'Eligible';
+        leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) and operated by EU/UK carrier ${opName} (${opCtry}).`;
+        anyEligible = true;
+      } else {
+        leg.ec261Leg.status = 'Not Eligible';
+        leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) but operated by non-EU/UK carrier ${opName} (${opCtry}).`;
+        anyIneligible = true;
+      }
+    } else {
+      leg.ec261Leg.status = 'Not Eligible';
+      leg.ec261Leg.reason = `Both origin (${leg.originCountry}) and destination (${leg.destinationCountry}) are outside the EU/UK.`;
+      anyIneligible = true;
+    }
+  });
+
+  return { anyEligible, anyIneligible };
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic EC261 Evaluator (PNR-aware)
+// ---------------------------------------------------------------------------
 function evaluateEC261Deterministic(parsedJourneys) {
   parsedJourneys.forEach(journey => {
     if (!journey.routes) return;
@@ -176,65 +262,58 @@ function evaluateEC261Deterministic(parsedJourneys) {
       const routeLegs = route.legs || [];
       if (!routeLegs.length) return;
 
-      const routeFirstLeg      = routeLegs[0];
-      const routeLastLeg       = routeLegs[routeLegs.length - 1];
-      const routeFirstOriginEU = isEUCountry(routeFirstLeg.originCountry);
-      const routeLastDestEU    = isEUCountry(routeLastLeg.destinationCountry);
-
-      // RULE 1: EU/UK origin -> entire route automatically eligible
-      if (routeFirstOriginEU) {
-        routeLegs.forEach(leg => {
-          leg.ec261Leg        = leg.ec261Leg || {};
-          leg.ec261Leg.status = 'Eligible';
-          leg.ec261Leg.reason = `Route departs from EU/UK (${routeFirstLeg.originCountry}). EC261/2004 applies automatically to all legs on this route.`;
-        });
-        anyEligible = true;
-        return; // continue to next route
-      }
-
-      // RULE 2: Non-EU origin AND non-EU final destination -> entirely ineligible
-      if (!routeLastDestEU) {
-        routeLegs.forEach(leg => {
-          leg.ec261Leg        = leg.ec261Leg || {};
-          leg.ec261Leg.status = 'Not Eligible';
-          leg.ec261Leg.reason = 'Not Covered: Both the route origin and final destination are outside the EU/UK.';
-        });
-        anyIneligible = true;
-        return; // continue to next route
-      }
-
-      // RULE 3: Non-EU origin, EU/UK destination -> per-leg evaluation
+      // --- PNR-aware grouping: detect separate bookings within the same route ---
+      const validPnrs = new Set();
       routeLegs.forEach(leg => {
-        leg.ec261Leg = leg.ec261Leg || {};
-        const oEU     = isEUCountry(leg.originCountry);
-        const dEU     = isEUCountry(leg.destinationCountry);
-        const opEU    = isEUCountry(leg.operatingAirlineCountry);
-        const opName  = leg.operatingAirline        || 'Unknown carrier';
-        const opCtry  = leg.operatingAirlineCountry || 'unknown country';
-
-        if (oEU) {
-          // Leg departs from EU/UK -> always eligible regardless of carrier
-          leg.ec261Leg.status = 'Eligible';
-          leg.ec261Leg.reason = `Departs from EU/UK (${leg.originCountry}) — eligible regardless of carrier.`;
-          anyEligible = true;
-        } else if (dEU) {
-          // Non-EU -> EU: eligible ONLY if operated by an EU/UK carrier
-          if (opEU) {
-            leg.ec261Leg.status = 'Eligible';
-            leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) and operated by EU/UK carrier ${opName} (${opCtry}).`;
-            anyEligible = true;
-          } else {
-            leg.ec261Leg.status = 'Not Eligible';
-            leg.ec261Leg.reason = `Arrives in EU/UK (${leg.destinationCountry}) but operated by non-EU/UK carrier ${opName} (${opCtry}).`;
-            anyIneligible = true;
-          }
-        } else {
-          // Non-EU -> Non-EU connecting leg
-          leg.ec261Leg.status = 'Not Eligible';
-          leg.ec261Leg.reason = `Both origin (${leg.originCountry}) and destination (${leg.destinationCountry}) are outside the EU/UK.`;
-          anyIneligible = true;
-        }
+        if (isValidPnr(leg.pnr)) validPnrs.add(leg.pnr.trim());
       });
+
+      // Decide whether to split by PNR
+      let shouldSplit = false;
+      if (validPnrs.size > 1) {
+        const hasDisruption = routeLegs.some(hasDisruptionStatus);
+        if (hasDisruption) {
+          console.log(`[EC261] Route has ${validPnrs.size} PNRs but disruption detected — keeping route-level evaluation.`);
+        } else {
+          console.log(`[EC261] Route has ${validPnrs.size} distinct PNRs (${Array.from(validPnrs).join(', ')}) with no disruptions — splitting by PNR.`);
+          shouldSplit = true;
+        }
+      }
+
+      if (!shouldSplit) {
+        // Evaluate entire route as one group (original behavior)
+        const result = evaluateLegsEC261(routeLegs);
+        if (result.anyEligible) anyEligible = true;
+        if (result.anyIneligible) anyIneligible = true;
+      } else {
+        // Group legs by PNR and evaluate each group independently
+        const pnrGroups = {};
+        const unknownPnrLegs = [];
+
+        routeLegs.forEach(leg => {
+          if (isValidPnr(leg.pnr)) {
+            const key = leg.pnr.trim();
+            if (!pnrGroups[key]) pnrGroups[key] = [];
+            pnrGroups[key].push(leg);
+          } else {
+            unknownPnrLegs.push(leg);
+          }
+        });
+
+        Object.entries(pnrGroups).forEach(([pnr, legs]) => {
+          console.log(`[EC261] Evaluating PNR group "${pnr}": ${legs.map(l => `${l.originIata || '?'}->${l.destinationIata || '?'}`).join(', ')}`);
+          const result = evaluateLegsEC261(legs);
+          if (result.anyEligible) anyEligible = true;
+          if (result.anyIneligible) anyIneligible = true;
+        });
+
+        // Unknown-PNR legs evaluated individually
+        unknownPnrLegs.forEach(leg => {
+          const result = evaluateLegsEC261([leg]);
+          if (result.anyEligible) anyEligible = true;
+          if (result.anyIneligible) anyIneligible = true;
+        });
+      }
     });
 
     if (anyEligible && anyIneligible) {
@@ -562,10 +641,11 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
   let requestCostUSD = 0;
+  let costData = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, costUSD: 0 };
   if (result.response.usageMetadata) {
-    const { promptTokenCount: i = 0, candidatesTokenCount: o = 0 } = result.response.usageMetadata;
-    requestCostUSD = (i / 1_000_000) * 0.075 + (o / 1_000_000) * 0.30;
-    console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${i.toLocaleString()} in / 📤 ${o.toLocaleString()} out | 💸 $${requestCostUSD.toFixed(6)}\n`);
+    costData = calculateCost('gemini-3-flash-preview', result.response.usageMetadata);
+    requestCostUSD = costData.costUSD;
+    console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${costData.inputTokens.toLocaleString()} in / 📤 ${costData.outputTokens.toLocaleString()} out / 💭 ${costData.thinkingTokens.toLocaleString()} think | 💸 $${requestCostUSD.toFixed(6)}\n`);
   }
 
   const formattedCostUSD = `$${requestCostUSD.toFixed(6)}`;
@@ -732,13 +812,12 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     });
   });
 
-  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0 } = result.response.usageMetadata || {};
   await logUsage(req, {
     operationType: 'ticket_analysis',
     model: 'gemini-3-flash-preview',
-    inputTokens: iTok,
-    outputTokens: oTok,
-    costUSD: requestCostUSD,
+    inputTokens: costData.inputTokens,
+    outputTokens: costData.outputTokens + costData.thinkingTokens,
+    costUSD: costData.costUSD,
     metadata: { fileCount: (req.files || []).length }
   });
 

@@ -473,12 +473,16 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     email = rawText.trim();
   }
 
-  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0 } = result.response.usageMetadata || {};
+  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0, thoughtsTokenCount: tTok = 0 } = result.response.usageMetadata || {};
+  const { MODEL_PRICING } = require('../utils/pricing');
+  const emailRates = MODEL_PRICING['gemini-2.5-flash'];
+  const emailCostUSD = (iTok / 1_000_000) * emailRates.input + ((oTok + tTok) / 1_000_000) * emailRates.output;
   await logUsage(req, {
     operationType: 'email_translation',
     model: 'gemini-2.5-flash',
     inputTokens: iTok,
-    outputTokens: oTok,
+    outputTokens: oTok + tTok,
+    costUSD: emailCostUSD,
     metadata: { language, freestyleMode: !!freestyleMode }
   });
 

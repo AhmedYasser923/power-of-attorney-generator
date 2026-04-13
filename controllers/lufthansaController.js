@@ -27,17 +27,26 @@ function getLufthansaLogoBase64() {
   }
 }
 
+const { MODEL_PRICING } = require('../utils/pricing');
+
+const SIG_MODELS = {
+  'gemini-easy':   'gemini-2.5-flash-image',
+  'gemini-medium': 'gemini-3.1-flash-image-preview',
+  'gemini-hard':   'gemini-3-pro-image-preview',
+};
+
 /**
  * Unified Signature Processing Engine
  * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
 async function processSignature(file, processingMethod) {
-  if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0 };
+  if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0, modelUsed: null };
 
-  if (processingMethod === 'gemini') {
+  const geminiModel = SIG_MODELS[processingMethod];
+  if (geminiModel) {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
+      const model = genAI.getGenerativeModel({ model: geminiModel });
       const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
       const result = await model.generateContent([prompt, imagePart]);
@@ -48,9 +57,9 @@ async function processSignature(file, processingMethod) {
       if (outputPart && outputPart.inlineData) {
         const aiImageBuffer = Buffer.from(outputPart.inlineData.data, 'base64');
         const finalBuffer = await sharp(aiImageBuffer).grayscale().threshold(220).png().toBuffer();
-        return { dataUrl: `data:image/png;base64,${finalBuffer.toString('base64')}`, inputTokens, outputTokens };
+        return { dataUrl: `data:image/png;base64,${finalBuffer.toString('base64')}`, inputTokens, outputTokens, modelUsed: geminiModel };
       }
-      return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens, outputTokens };
+      return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens, outputTokens, modelUsed: geminiModel };
     } catch (error) {
       console.error('Gemini Signature Error:', error.message);
     }
@@ -63,13 +72,13 @@ async function processSignature(file, processingMethod) {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Cloudinary fetch failed');
       const arrayBuffer = await response.arrayBuffer();
-      return { dataUrl: `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`, inputTokens: 0, outputTokens: 0 };
+      return { dataUrl: `data:image/png;base64,${Buffer.from(arrayBuffer).toString('base64')}`, inputTokens: 0, outputTokens: 0, modelUsed: null };
     } catch (error) {
       console.error('Cloudinary Error:', error.message);
     }
   }
 
-  return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens: 0, outputTokens: 0 };
+  return { dataUrl: `data:${file.mimetype || 'image/png'};base64,${file.buffer.toString('base64')}`, inputTokens: 0, outputTokens: 0, modelUsed: null };
 }
 
 function capitalizeWords(str) {
@@ -99,7 +108,9 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   const passengers = [];
   let sigIndex = 0;
   let totalSigIn = 0, totalSigOut = 0;
+  let totalSigCostUSD = 0;
   let usedGemini = false;
+  let lastGeminiModel = null;
 
   for (let i = 1; i <= 4; i++) {
     const rawName = req.body[`fullName${i}`] || '';
@@ -122,10 +133,15 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
       if (signatureFile) sigIndex++;
 
       const sigProcessing = req.body[`sigProcessing${i}`];
-      const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut } = await processSignature(signatureFile, sigProcessing);
+      const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = await processSignature(signatureFile, sigProcessing);
       totalSigIn += sigIn;
       totalSigOut += sigOut;
-      if (sigProcessing === 'gemini') usedGemini = true;
+      if (modelUsed) {
+        const rates = MODEL_PRICING[modelUsed];
+        if (rates) totalSigCostUSD += (sigIn / 1_000_000) * rates.input + (sigOut / 1_000_000) * rates.output;
+        usedGemini = true;
+        lastGeminiModel = modelUsed;
+      }
 
       passengers.push({
         firstName,
@@ -150,21 +166,20 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
 
   if (usedGemini) {
-    const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
-    const storedCostUSD = sigCostUSD > 0 ? (sigCostUSD < 0.01 ? Math.max(0.01, Math.ceil(sigCostUSD * 1000) / 100) : Math.ceil(sigCostUSD * 100) / 100) : 0;
     console.log(`\n[SIG_PROCESSING] Lufthansa POA`);
+    console.log(`  Model: ${lastGeminiModel}`);
     console.log(`  Input Tokens: ${totalSigIn.toLocaleString()}`);
     console.log(`  Output Tokens: ${totalSigOut.toLocaleString()}`);
-    console.log(`  Cost (USD): $${sigCostUSD.toFixed(6)} → $${storedCostUSD.toFixed(2)} (rounded)`);
+    console.log(`  Cost (USD): $${totalSigCostUSD.toFixed(6)}`);
     console.log(`  Passengers: ${passengers.length}`);
     console.log(`  PNR: ${pnr}\n`);
 
     await logUsage(req, {
       operationType: 'sig_processing',
-      model: 'gemini-3-pro-image-preview',
+      model: lastGeminiModel,
       inputTokens: totalSigIn,
       outputTokens: totalSigOut,
-      costUSD: sigCostUSD,
+      costUSD: totalSigCostUSD,
       metadata: { pnr, passengerCount: passengers.length }
     });
   } else {

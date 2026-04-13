@@ -1,6 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const logUsage = require('../utils/logUsage');
+const { calculateCost } = require('../utils/pricing');
 
 // Initialize the Gemini API with your secret key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -52,6 +54,15 @@ exports.extractData = catchAsync(async (req, res, next) => {
     return next(new AppError('The AI returned an unparseable response. Please try again.', 502));
   }
 
+
+  const aiCost = calculateCost('gemini-3.1-flash-lite-preview', result.response.usageMetadata);
+  await logUsage(req, {
+    operationType: 'text_autofill',
+    model: 'gemini-3.1-flash-lite-preview',
+    inputTokens: aiCost.inputTokens,
+    outputTokens: aiCost.outputTokens,
+    costUSD: aiCost.costUSD,
+  });
 
   // Send the clean JSON back to the frontend
   res.json(extractedData);

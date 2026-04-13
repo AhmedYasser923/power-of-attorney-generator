@@ -87,9 +87,11 @@ block content
         label.poa-label Signature Processing Option
         select.poa-select(name="sigProcessing")
           option(value="none") None (Use Raw Image)
-          option(value="cloudinary") Cloudinary AI (Standard Background Removal)
-          option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
-      
+          option(value="cloudinary") Cloudinary AI (Background Removal)
+          option(value="gemini-easy", selected) Nano Banana — Easy
+          option(value="gemini-medium") Nano Banana — Medium
+          option(value="gemini-hard") Nano Banana — Hard
+
       button.poa-btn.poa-btn--primary.poa-mt-20(type="submit") Generate Standard PDF
 
     //- FORM 2: LUFTHANSA TEMPLATE
@@ -144,7 +146,9 @@ block content
                     select.poa-select.poa-select--small(name=`sigProcessing${i}`)
                       option(value="none") None (Raw)
                       option(value="cloudinary") Cloudinary AI
-                      option(value="gemini", selected) Nano Banana
+                      option(value="gemini-easy", selected) Easy
+                      option(value="gemini-medium") Medium
+                      option(value="gemini-hard") Hard
 
       button.poa-btn.poa-btn--primary.poa-btn--full.poa-mt-25(type="submit") Generate Lufthansa PDF
 
@@ -204,8 +208,10 @@ block content
         label.poa-label Signature Processing Option
         select.poa-select(name="sigProcessing")
           option(value="none") None (Use Raw Image)
-          option(value="cloudinary") Cloudinary AI (Standard Background Removal)
-          option(value="gemini", selected) Nano Banana (Deep Clean & Thicken)
+          option(value="cloudinary") Cloudinary AI (Background Removal)
+          option(value="gemini-easy", selected) Nano Banana — Easy
+          option(value="gemini-medium") Nano Banana — Medium
+          option(value="gemini-hard") Nano Banana — Hard
 
       button.poa-btn.poa-btn--aerlingus.poa-btn--full.poa-mt-25(type="submit") Generate Aer Lingus PDF
 

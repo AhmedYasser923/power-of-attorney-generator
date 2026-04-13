@@ -47,6 +47,7 @@ router.get('/admin/usage', require('../controllers/adminController.js').getUsage
 router.get('/admin/usage/:year/:month', require('../controllers/adminController.js').getMonthDetail);
 router.get('/admin/logs', require('../controllers/adminController.js').getAdminLogs);
 router.post('/admin/reload-clients', require('../controllers/adminController.js').reloadClients);
+router.post('/admin/recalculate-costs', require('../controllers/adminController.js').recalculateCosts);
 
 // --- Central Dashboard ---
 router.get('/', (req, res, next) => {

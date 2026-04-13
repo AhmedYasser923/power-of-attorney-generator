@@ -3,6 +3,7 @@ const User = require('../models/User');
 const UsageLog = require('../models/UsageLog');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { MODEL_PRICING } = require('../utils/pricing');
 
 const OP_LABELS = {
   ticket_analysis: 'Ticket Analysis',
@@ -288,6 +289,51 @@ exports.reloadClients = (req, res) => {
   });
   res.json({ status: 'success', clientsNotified: count });
 };
+
+exports.recalculateCosts = catchAsync(async (req, res) => {
+  const logs = await UsageLog.find({ model: { $ne: null } }).lean();
+
+  let updated = 0;
+  let totalOldCost = 0;
+  let totalNewCost = 0;
+
+  const bulkOps = [];
+
+  for (const log of logs) {
+    const rates = MODEL_PRICING[log.model];
+    if (!rates) continue;
+
+    const newCost =
+      (log.inputTokens / 1_000_000) * rates.input +
+      (log.outputTokens / 1_000_000) * rates.output;
+
+    if (newCost !== log.costUSD) {
+      totalOldCost += log.costUSD || 0;
+      totalNewCost += newCost;
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: log._id },
+          update: { $set: { costUSD: newCost } }
+        }
+      });
+      updated++;
+    }
+  }
+
+  if (bulkOps.length > 0) {
+    await UsageLog.bulkWrite(bulkOps);
+  }
+
+  res.json({
+    status: 'success',
+    data: {
+      recordsScanned: logs.length,
+      recordsUpdated: updated,
+      totalOldCost: +totalOldCost.toFixed(6),
+      totalNewCost: +totalNewCost.toFixed(6)
+    }
+  });
+});
 
 exports.getAdminLogs = catchAsync(async (req, res) => {
   const now = new Date();
