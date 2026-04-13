@@ -51,7 +51,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       { $sort: { totalCostUSD: -1 } }
     ]),
     UsageLog.find({ year, month }).sort({ createdAt: -1 }).limit(50).lean(),
-    Promise.resolve(require('../utils/socketManager').getOnlineCount())
+    Promise.resolve(0)
   ]);
 
   // Per-user totals for this month

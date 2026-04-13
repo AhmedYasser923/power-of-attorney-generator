@@ -6,7 +6,6 @@ html(lang="en")
     title= title || 'Workspace Dashboard'
     link(rel="stylesheet", href="/css/style.css")
     link(rel="icon", type="image/png", href="/images/image-removebg-preview.png")
-    script(src="/socket.io/socket.io.js")
   body
     //- A11Y [CRITICAL]: Skip to content link for keyboard-only navigation
     a.skip-link(href="#main-content") Skip to main content
@@ -26,6 +25,4 @@ html(lang="en")
     //- A11Y [CRITICAL]: Main landmark so screen readers know where the app logic begins
     main#main-content
       block content
-    script.
-      if (typeof io !== 'undefined') { window._presenceSocket = io(); }
     block scripts

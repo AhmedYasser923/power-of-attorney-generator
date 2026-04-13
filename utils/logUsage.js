@@ -1,5 +1,4 @@
 const UsageLog = require('../models/UsageLog');
-const { broadcastOperation } = require('./socketManager');
 
 /**
  * Log a cost-generating operation to MongoDB and broadcast to admin dashboard.
@@ -38,16 +37,6 @@ module.exports = async function logUsage(req, {
       month: now.getMonth() + 1,
       createdAt: now
     });
-
-    const io = req.app.get('io');
-    if (io) {
-      broadcastOperation(io, entry);
-      // Notify the user who performed the operation (for live stat card updates)
-      io.to(entry.userId.toString()).emit('my_operation', {
-        costUSD: entry.costUSD,
-        costEGP: entry.costEGP
-      });
-    }
   } catch (err) {
     console.error('[UsageLog] Failed to write log:', err.message);
   }

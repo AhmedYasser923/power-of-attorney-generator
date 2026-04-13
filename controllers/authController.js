@@ -98,13 +98,6 @@ exports.signup = catchAsync(async (req, res, next) => {
     status: 'pending'
   });
 
-  // Broadcast new signup to admin dashboard via Socket.io
-  const io = req.app.get('io');
-  if (io) {
-    const { broadcastNewSignup } = require('../utils/socketManager');
-    broadcastNewSignup(io, newUser);
-  }
-
   res.render('signup', { title: 'Request Access', success: true });
 });
 

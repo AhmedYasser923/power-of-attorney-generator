@@ -7,7 +7,6 @@ html(lang="en")
     link(rel="stylesheet", href="/css/style.css")
     link(rel="icon", type="image/png", href="/images/image-removebg-preview.png")
     script(src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js")
-    script(src="/socket.io/socket.io.js")
     block head
   body
     a.skip-link(href="#app-main-content") Skip to main content
@@ -22,9 +21,4 @@ html(lang="en")
           a.sidebar__link.sidebar__link--danger(href="/logout") Sign Out
       main#app-main-content.app-main
         block app-content
-  //- Presence connection: establishes a Socket.io connection for every
-  //- authenticated user so the admin panel's online count is accurate.
-  //- admin-dashboard.js reuses this same connection (Socket.io client multiplexes).
-  script.
-    if (typeof io !== 'undefined') { window._presenceSocket = io(); }
   block scripts

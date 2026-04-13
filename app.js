@@ -12,10 +12,6 @@ const AppError = require('./utils/appError');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
-const http = require('http');
-const { Server } = require('socket.io');
-const { createClient } = require('redis');
-const { createAdapter } = require('@socket.io/redis-adapter');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -23,37 +19,12 @@ const path = require('path');
 const mongoose = require('mongoose');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: false } });
 
 const rateLimit = require('express-rate-limit');
 const globalErrorHandler = require('./controllers/errorController');
 const { isLoggedIn } = require('./middleware/auth');
 const { bootstrapAdmin } = require('./controllers/authController');
-const { initSocketManager } = require('./utils/socketManager');
 
-// Make io accessible in controllers via req.app.get('io')
-app.set('io', io);
-
-// Initialize Redis adapter for Socket.io (enables multi-instance support on Cloud Run)
-const redisUrl = process.env.REDIS_URL ||
-  (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : null);
-
-if (redisUrl) {
-  const pubClient = createClient({ url: redisUrl });
-  const subClient = pubClient.duplicate();
-
-  Promise.all([pubClient.connect(), subClient.connect()])
-    .then(() => {
-      io.adapter(createAdapter(pubClient, subClient));
-      console.log('[Socket.io] Redis adapter connected');
-    })
-    .catch((err) => {
-      console.warn('[Socket.io] Redis connection failed, falling back to in-memory:', err.message);
-    });
-} else {
-  console.warn('[Socket.io] REDIS_URL not configured, using in-memory adapter (single instance only)');
-}
 
 // View engine setup
 app.set('view engine', 'pug');
@@ -95,8 +66,7 @@ mongoose.connect(process.env.DATABASE)
   .then(async () => {
     console.log('[DB] MongoDB connected');
     await bootstrapAdmin();
-    initSocketManager(io);
-    server.listen(PORT, () => {
+    app.listen(PORT, () => {
       console.log(`Server running on http://127.0.0.1:${PORT}`);
     });
   })
@@ -109,7 +79,5 @@ mongoose.connect(process.env.DATABASE)
 process.on('unhandledRejection', err => {
   console.error('UNHANDLED REJECTION! Shutting down...');
   console.error(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
+  process.exit(1);
 });

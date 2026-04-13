@@ -1,32 +1,5 @@
 'use strict';
 
-// ─── Socket.io ───────────────────────────────────────────────────────────────
-const socket = io();
-let _adminCostRaw = null; // accumulated cost this month (initialised lazily from DOM)
-
-socket.on('online_count', (count) => {
-  const el = document.getElementById('online-count');
-  if (el) el.textContent = count;
-});
-
-socket.on('new_operation', (op) => {
-  prependFeedRow(op);
-  // Update live stat cards
-  const opsEl = document.getElementById('total-ops-stat');
-  if (opsEl) opsEl.textContent = parseInt(opsEl.textContent || '0') + 1;
-  const costEl = document.getElementById('total-cost-stat');
-  if (costEl) {
-    if (_adminCostRaw === null) _adminCostRaw = parseFloat(costEl.dataset.raw || '0');
-    _adminCostRaw += op.costUSD || 0;
-    costEl.textContent = (_adminCostRaw || 0).toFixed(2);
-  }
-});
-
-socket.on('new_signup', (user) => {
-  prependNotifItem(user);
-  incrementNotifBadge();
-});
-
 // ─── Tab System ───────────────────────────────────────────────────────────────
 // Track which charts have been lazily initialized (charts in hidden tabs must
 // wait until the tab is visible, otherwise Chart.js measures 0 dimensions).
