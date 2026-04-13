@@ -152,6 +152,14 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   // Log signature processing cost only if Gemini was used (free otherwise)
   if (usedGemini) {
     const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
+    const storedCostUSD = sigCostUSD > 0 ? Math.ceil(sigCostUSD * 100) / 100 : 0;
+    console.log(`\n[SIG_PROCESSING] Lufthansa POA`);
+    console.log(`  Input Tokens: ${totalSigIn.toLocaleString()}`);
+    console.log(`  Output Tokens: ${totalSigOut.toLocaleString()}`);
+    console.log(`  Cost (USD): $${sigCostUSD.toFixed(6)} → $${storedCostUSD.toFixed(2)} (rounded)`);
+    console.log(`  Passengers: ${passengers.length}`);
+    console.log(`  PNR: ${pnr}\n`);
+
     await logUsage(req, {
       operationType: 'sig_processing',
       model: 'gemini-3-pro-image-preview',

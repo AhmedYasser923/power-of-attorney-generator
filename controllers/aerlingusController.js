@@ -84,6 +84,14 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
 
   // Log signature processing cost only if Gemini was used (free otherwise)
   if (sigProcessing === 'gemini') {
+    const storedCostUSD = sigCostUSD > 0 ? Math.ceil(sigCostUSD * 100) / 100 : 0;
+    console.log(`\n[SIG_PROCESSING] Aer Lingus POA`);
+    console.log(`  Input Tokens: ${sigIn.toLocaleString()}`);
+    console.log(`  Output Tokens: ${sigOut.toLocaleString()}`);
+    console.log(`  Cost (USD): $${sigCostUSD.toFixed(6)} → $${storedCostUSD.toFixed(2)} (rounded)`);
+    console.log(`  Flight: ${flightNumber}`);
+    console.log(`  PNR: ${pnr}\n`);
+
     await logUsage(req, {
       operationType: 'sig_processing',
       model: 'gemini-3-pro-image-preview',
