@@ -20,7 +20,8 @@ const usageLogSchema = new mongoose.Schema({
       'poa_standard',
       'poa_lufthansa',
       'poa_aerlingus',
-      'text_autofill'
+      'text_autofill',
+      'sig_processing'
     ]
   },
   model: {

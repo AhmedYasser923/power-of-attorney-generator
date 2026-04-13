@@ -8,7 +8,8 @@ const OP_LABELS = {
   poa_standard: 'POA (Standard)',
   poa_lufthansa: 'POA (Lufthansa)',
   poa_aerlingus: 'POA (Aer Lingus)',
-  text_autofill: 'Text Autofill'
+  text_autofill: 'Text Autofill',
+  sig_processing: 'Signature Processing'
 };
 
 exports.renderDashboard = catchAsync(async (req, res) => {

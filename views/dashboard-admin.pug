@@ -52,14 +52,14 @@ block app-content
           table.ad-feed-table
             thead
               tr
-                th Time
+                th Date & Time
                 th User
                 th Operation
                 th Cost
             tbody#operations-feed-table
               each op in recentOps
                 tr
-                  td(style="white-space:nowrap; color:var(--text-muted);")= new Date(op.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  td(style="white-space:nowrap; color:var(--text-muted);")= new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                   td= op.userName
                   td
                     span.op-pill= op.label

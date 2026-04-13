@@ -22,7 +22,7 @@ function prependFeedRow(op) {
   if (!tbody) return;
 
   const now = new Date(op.timestamp || Date.now());
-  const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const time = now.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const cost = op.costUSD > 0 ? `$${ceilNum(op.costUSD)}` : '—';
 
   const tr = document.createElement('tr');

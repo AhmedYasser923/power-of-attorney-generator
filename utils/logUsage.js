@@ -4,7 +4,7 @@ const UsageLog = require('../models/UsageLog');
  * Log a cost-generating operation to MongoDB and broadcast to admin dashboard.
  * Fire-and-forget: a failure here never propagates to the main request flow.
  */
-const USD_TO_EGP = 53; // 0.01 USD = 0.53 EGP
+const USD_TO_EGP = 54.33;
 
 module.exports = async function logUsage(req, {
   operationType,
@@ -12,6 +12,7 @@ module.exports = async function logUsage(req, {
   inputTokens = 0,
   outputTokens = 0,
   costUSD = 0,
+  costEGP = null,
   metadata = {}
 } = {}) {
   try {
@@ -20,7 +21,10 @@ module.exports = async function logUsage(req, {
 
     // Round up to the nearest cent before storing so totals always equal sum of rows
     const storedCostUSD = costUSD > 0 ? Math.ceil(costUSD * 100) / 100 : 0;
-    const storedCostEGP = storedCostUSD * USD_TO_EGP;
+    // Use caller-supplied EGP if provided; otherwise derive from stored USD
+    const storedCostEGP = (costEGP != null && costEGP > 0)
+      ? Math.ceil(costEGP * 100) / 100
+      : storedCostUSD * USD_TO_EGP;
 
     const now = new Date();
     const entry = await UsageLog.create({

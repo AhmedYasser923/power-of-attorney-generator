@@ -151,7 +151,7 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
   await logUsage(req, {
-    operationType: 'poa_lufthansa',
+    operationType: usedGemini ? 'sig_processing' : 'poa_lufthansa',
     model: usedGemini ? 'gemini-3-pro-image-preview' : null,
     inputTokens: totalSigIn,
     outputTokens: totalSigOut,
