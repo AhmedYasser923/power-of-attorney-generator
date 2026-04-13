@@ -32,6 +32,9 @@ router.get('/me', require('../controllers/userController.js').renderDashboard);
 router.get('/api/me/usage', require('../controllers/userController.js').getMyUsage);
 router.get('/api/me/logs', require('../controllers/userController.js').getUserLogs);
 
+// SSE: real-time event stream (all logged-in users)
+router.get('/api/sse/events', require('../controllers/adminController.js').sseStream);
+
 // --- Admin routes ---
 router.use('/admin', restrictTo('admin'));
 router.get('/admin', require('../controllers/adminController.js').renderDashboard);
@@ -43,6 +46,7 @@ router.patch('/admin/users/:id/password', require('../controllers/adminControlle
 router.get('/admin/usage', require('../controllers/adminController.js').getUsageInsights);
 router.get('/admin/usage/:year/:month', require('../controllers/adminController.js').getMonthDetail);
 router.get('/admin/logs', require('../controllers/adminController.js').getAdminLogs);
+router.post('/admin/reload-clients', require('../controllers/adminController.js').reloadClients);
 
 // --- Central Dashboard ---
 router.get('/', (req, res, next) => {

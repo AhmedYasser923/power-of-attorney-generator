@@ -92,6 +92,36 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     totalCostUSD: u.totalCostUSD || 0
   }));
 
+  // Build dynamic month options from all months that have data
+  const monthsWithData = await UsageLog.aggregate([
+    { $group: { _id: { year: '$year', month: '$month' } } },
+    { $sort: { '_id.year': -1, '_id.month': -1 } }
+  ]);
+
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  const seen = new Set();
+  const monthOptions = [];
+
+  seen.add(`${year}-${month}`);
+  monthOptions.push({
+    year, month,
+    label: `${monthNames[month - 1]} ${year}`,
+    selected: true
+  });
+
+  monthsWithData.forEach(m => {
+    const key = `${m._id.year}-${m._id.month}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      monthOptions.push({
+        year: m._id.year, month: m._id.month,
+        label: `${monthNames[m._id.month - 1]} ${m._id.year}`,
+        selected: false
+      });
+    }
+  });
+
   res.render('dashboard-admin', {
     title: 'Admin Panel',
     pendingUsers,
@@ -107,7 +137,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     currentMonth: month,
     opsTotalLogs: totalRecentOps,
     opsTotalPages: Math.ceil(totalRecentOps / 25) || 1,
-    opsCurrentPage: 1
+    opsCurrentPage: 1,
+    monthOptions
   });
 });
 
@@ -228,6 +259,36 @@ exports.getMonthDetail = catchAsync(async (req, res) => {
   });
 });
 
+// ── SSE: per-client stream ────────────────────────────────────────────────────
+exports.sseStream = (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const clients = req.app.get('sseClients');
+  clients.add(res);
+
+  // Send a keepalive comment every 25 s so Cloud Run / proxies don't time out
+  const keepalive = setInterval(() => res.write(': keepalive\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(keepalive);
+    clients.delete(res);
+  });
+};
+
+// ── SSE: admin broadcast reload ───────────────────────────────────────────────
+exports.reloadClients = (req, res) => {
+  const clients = req.app.get('sseClients');
+  let count = 0;
+  clients.forEach(client => {
+    client.write('data: reload\n\n');
+    count++;
+  });
+  res.json({ status: 'success', clientsNotified: count });
+};
+
 exports.getAdminLogs = catchAsync(async (req, res) => {
   const now = new Date();
   const year = parseInt(req.query.year) || now.getFullYear();
@@ -236,20 +297,27 @@ exports.getAdminLogs = catchAsync(async (req, res) => {
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
   const skip = (page - 1) * limit;
 
-  const [total, logs] = await Promise.all([
+  const [total, logs, costAgg] = await Promise.all([
     UsageLog.countDocuments({ year, month }),
     UsageLog.find({ year, month })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .lean()
+      .lean(),
+    UsageLog.aggregate([
+      { $match: { year, month } },
+      { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' } } }
+    ])
   ]);
+
+  const totalCostUSD = costAgg.length > 0 ? costAgg[0].totalCostUSD : 0;
 
   res.json({
     status: 'success',
     data: {
       logs: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
       total,
+      totalCostUSD,
       page,
       totalPages: Math.ceil(total / limit) || 1
     }

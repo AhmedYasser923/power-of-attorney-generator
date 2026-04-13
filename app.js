@@ -48,6 +48,9 @@ app.use('/login', rateLimit({
 // Set res.locals.user on every request for template rendering
 app.use(isLoggedIn);
 
+// SSE clients registry (used by admin reload-clients endpoint)
+app.set('sseClients', new Set());
+
 // Routes
 app.use('/', require('./routes/index'));
 

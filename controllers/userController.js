@@ -37,17 +37,42 @@ exports.renderDashboard = catchAsync(async (req, res) => {
   const totalOps = breakdown.reduce((s, b) => s + b.count, 0);
   const totalCostUSD = breakdown.reduce((s, b) => s + b.totalCostUSD, 0);
 
-  // Build month options for the last 12 months
+  // Build month options from all months that have data for this user
+  const monthsWithData = await UsageLog.aggregate([
+    { $match: { userId: req.user._id } },
+    { $group: { _id: { year: '$year', month: '$month' } } },
+    { $sort: { '_id.year': -1, '_id.month': -1 } }
+  ]);
+
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  const currentNow = new Date();
+  const curY = currentNow.getFullYear();
+  const curM = currentNow.getMonth() + 1;
+
+  // Always include current month even if no data yet
+  const seen = new Set();
   const monthOptions = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    monthOptions.push({
-      year: d.getFullYear(),
-      month: d.getMonth() + 1,
-      label: d.toLocaleString('default', { month: 'long', year: 'numeric' }),
-      selected: d.getFullYear() === year && (d.getMonth() + 1) === month
-    });
-  }
+
+  seen.add(`${curY}-${curM}`);
+  monthOptions.push({
+    year: curY, month: curM,
+    label: `${monthNames[curM - 1]} ${curY}`,
+    selected: curY === year && curM === month
+  });
+
+  // Add all months with data (skip current if already added)
+  monthsWithData.forEach(m => {
+    const key = `${m._id.year}-${m._id.month}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      monthOptions.push({
+        year: m._id.year, month: m._id.month,
+        label: `${monthNames[m._id.month - 1]} ${m._id.year}`,
+        selected: m._id.year === year && m._id.month === month
+      });
+    }
+  });
 
   res.render('dashboard-user', {
     title: 'My Usage',

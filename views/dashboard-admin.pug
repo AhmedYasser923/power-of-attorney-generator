@@ -15,6 +15,11 @@ block app-content
   .app-main__header
     h1.app-main__title Admin Panel
     p.app-main__subtitle Real-time insights, user management, and cost tracking
+    button#reload-clients-btn(
+      type="button"
+      style="margin-top:10px; padding:7px 16px; font-size:13px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; color:#b45309; cursor:pointer;"
+      title="Force all connected users to reload their browser"
+    ) Reload All Clients
 
   //- Stat Bar
   .stat-grid
@@ -48,6 +53,12 @@ block app-content
         h2.ad-panel__title
           span(style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; margin-right:6px; animation: pulse-dot 1.5s infinite;")
           | Live Operations Feed
+        .ad-overview-controls
+          .ad-month-picker
+            label(for="overviewMonth") Period:
+            select#overviewMonth
+              each opt in monthOptions
+                option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
         .ad-feed
           table.ad-feed-table
             thead
@@ -62,8 +73,8 @@ block app-content
                   td(style="white-space:nowrap; color:var(--text-muted);")= new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                   td= op.userName
                   td
-                    span.op-pill= op.label
-                  td= op.costUSD > 0 ? `$${cc(op.costUSD)}` : '—'
+                    span.op-pill(data-type=op.operationType)= op.label
+                  td= `$${cc(op.costUSD)}`
         .ad-pagination#ops-pagination
           button.ud-page-btn#ops-prev-page(disabled) ← Prev
           span.ud-page-info#ops-page-info Page 1 of #{opsTotalPages}
@@ -96,27 +107,48 @@ block app-content
     .ad-month-picker
       label(for="insightsMonth") Period:
       select#insightsMonth
-        - const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-        - for (let y = currentYear; y >= currentYear - 1; y--)
-          - for (let m = 12; m >= 1; m--)
-            - const isCurrent = y === currentYear && m === currentMonth
-            option(value=`${y}-${m}`, selected=isCurrent) #{months[m-1]} #{y}
+        each opt in monthOptions
+          option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
 
-
-    .ad-panel(style="margin-top: 1.5rem;")
-      h2.ad-panel__title Per-User Breakdown
-      table.ad-users-table#insights-user-table
-        thead
-          tr
-            th User
-            th Operations
-            th Cost (USD)
-        tbody#insights-user-tbody
-          each u in users.filter(function(u){ return u.operationCount > 0; }).sort(function(a,b){ return (b.totalCostUSD||0) - (a.totalCostUSD||0); })
+    .ad-insights-grid
+      .ad-panel
+        h2.ad-panel__title Operation Breakdown
+        table.ad-users-table#insights-op-table
+          thead
             tr
-              td= u.name
-              td= u.operationCount
-              td= '$' + cc(u.totalCostUSD)
+              th Operation
+              th Count
+              th Total Cost (USD)
+          tbody#insights-op-tbody
+            each b in opBreakdown
+              tr
+                td
+                  span.op-pill(data-type=b._id)= b.label
+                td= b.count
+                td $#{cc(b.totalCostUSD)}
+            if opBreakdown.length > 0
+              tr.ad-totals-row
+                td
+                  strong Total
+                td
+                  strong= opBreakdown.reduce(function(s,b){ return s + b.count; }, 0)
+                td
+                  strong $#{cc(opBreakdown.reduce(function(s,b){ return s + b.totalCostUSD; }, 0))}
+
+      .ad-panel
+        h2.ad-panel__title Per-User Breakdown
+        table.ad-users-table#insights-user-table
+          thead
+            tr
+              th User
+              th Operations
+              th Cost (USD)
+          tbody#insights-user-tbody
+            each u in users.filter(function(u){ return u.operationCount > 0; }).sort(function(a,b){ return (b.totalCostUSD||0) - (a.totalCostUSD||0); })
+              tr
+                td= u.name
+                td= u.operationCount
+                td $#{cc(u.totalCostUSD)}
 
   //- ── TAB 4: USER MANAGEMENT ───────────────────────────────────────────────
   .ad-tab-panel(data-panel="users")
@@ -182,4 +214,5 @@ block scripts
     var CURRENT_MONTH = !{currentMonth};
     var OPS_TOTAL_PAGES = !{opsTotalPages};
     var OPS_TOTAL_LOGS = !{opsTotalLogs};
+    var MONTH_OPTIONS = !{JSON.stringify(monthOptions)};
   script(src="/js/admin-dashboard.js")

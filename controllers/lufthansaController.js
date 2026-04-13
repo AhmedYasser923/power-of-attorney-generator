@@ -149,10 +149,9 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'lufthansa-poa');
 
-  // Log signature processing cost only if Gemini was used (free otherwise)
   if (usedGemini) {
     const sigCostUSD = (totalSigIn / 1_000_000) * 0.075 + (totalSigOut / 1_000_000) * 0.30;
-    const storedCostUSD = sigCostUSD > 0 ? Math.ceil(sigCostUSD * 100) / 100 : 0;
+    const storedCostUSD = sigCostUSD > 0 ? (sigCostUSD < 0.01 ? Math.max(0.01, Math.ceil(sigCostUSD * 1000) / 100) : Math.ceil(sigCostUSD * 100) / 100) : 0;
     console.log(`\n[SIG_PROCESSING] Lufthansa POA`);
     console.log(`  Input Tokens: ${totalSigIn.toLocaleString()}`);
     console.log(`  Output Tokens: ${totalSigOut.toLocaleString()}`);
@@ -166,6 +165,12 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
       inputTokens: totalSigIn,
       outputTokens: totalSigOut,
       costUSD: sigCostUSD,
+      metadata: { pnr, passengerCount: passengers.length }
+    });
+  } else {
+    // Free POA generation (no Gemini signature processing)
+    await logUsage(req, {
+      operationType: 'poa_lufthansa',
       metadata: { pnr, passengerCount: passengers.length }
     });
   }

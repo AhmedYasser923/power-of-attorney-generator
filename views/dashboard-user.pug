@@ -49,12 +49,14 @@ block app-content
             tr
               td= new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               td
-                span.op-pill= log.label
+                span.op-pill(data-type=log.operationType)= log.label
               td(style="color: var(--text-muted); font-size: 0.8125rem;")= log.model || '—'
-              td= log.costUSD > 0 ? `$${cc(log.costUSD)}` : '—'
+              td= `$${cc(log.costUSD)}`
               td(style="font-size: 0.8125rem; color: var(--text-muted);")
                 if log.metadata && log.metadata.pnr
                   | PNR: #{log.metadata.pnr}
+                  if log.metadata.passengerCount
+                    |  (#{log.metadata.passengerCount} pax)
                 else if log.metadata && log.metadata.language
                   | #{log.metadata.language}
                 else if log.metadata && log.metadata.fileCount

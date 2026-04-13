@@ -21,4 +21,9 @@ html(lang="en")
           a.sidebar__link.sidebar__link--danger(href="/logout") Sign Out
       main#app-main-content.app-main
         block app-content
+  script.
+    (function () {
+      var es = new EventSource('/api/sse/events');
+      es.onmessage = function (e) { if (e.data === 'reload') location.reload(); };
+    })();
   block scripts

@@ -16,8 +16,18 @@ module.exports = async function logUsage(req, {
     const user = req.user;
     if (!user) return;
 
-    // Round up to the nearest cent before storing so totals always equal sum of rows
-    const storedCostUSD = costUSD > 0 ? Math.ceil(costUSD * 100) / 100 : 0;
+    // Round up before storing:
+    // - Sub-cent costs (<$0.01): round up to nearest $0.001 unit, expressed as cents ($0.01 min)
+    //   e.g. $0.001183 → ceil(1.183)/100 = $0.02; $0.000500 → $0.01 (minimum)
+    // - At or above $0.01: round up to nearest cent
+    let storedCostUSD = 0;
+    if (costUSD > 0) {
+      if (costUSD < 0.01) {
+        storedCostUSD = Math.max(0.01, Math.ceil(costUSD * 1000) / 100);
+      } else {
+        storedCostUSD = Math.ceil(costUSD * 100) / 100;
+      }
+    }
 
     const now = new Date();
     const entry = await UsageLog.create({

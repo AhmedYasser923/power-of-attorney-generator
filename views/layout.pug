@@ -25,4 +25,10 @@ html(lang="en")
     //- A11Y [CRITICAL]: Main landmark so screen readers know where the app logic begins
     main#main-content
       block content
+    if user
+      script.
+        (function () {
+          var es = new EventSource('/api/sse/events');
+          es.onmessage = function (e) { if (e.data === 'reload') location.reload(); };
+        })();
     block scripts

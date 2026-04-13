@@ -35,10 +35,12 @@ function fmtDate(iso) {
 }
 
 function getMetaDetail(log) {
-  if (log.metadata && log.metadata.pnr)       return 'PNR: ' + escHtml(log.metadata.pnr);
-  if (log.metadata && log.metadata.language)  return escHtml(log.metadata.language);
-  if (log.metadata && log.metadata.fileCount) return log.metadata.fileCount + ' file(s)';
-  return '—';
+  var parts = [];
+  if (log.metadata && log.metadata.pnr) parts.push('PNR: ' + escHtml(log.metadata.pnr));
+  if (log.metadata && log.metadata.passengerCount) parts.push(log.metadata.passengerCount + ' pax');
+  if (log.metadata && log.metadata.language) parts.push(escHtml(log.metadata.language));
+  if (log.metadata && log.metadata.fileCount) parts.push(log.metadata.fileCount + ' file(s)');
+  return parts.length > 0 ? parts.join(' \u00b7 ') : '\u2014';
 }
 
 // ─── Render log rows into tbody ───────────────────────────────────────────────
@@ -54,9 +56,9 @@ function renderLogRows(logs) {
   tbody.innerHTML = logs.map(function(log) {
     return '<tr>' +
       '<td>' + fmtDate(log.createdAt) + '</td>' +
-      '<td><span class="op-pill">' + escHtml(log.label || log.operationType) + '</span></td>' +
+      '<td><span class="op-pill" data-type="' + escHtml(log.operationType || '') + '">' + escHtml(log.label || log.operationType) + '</span></td>' +
       '<td style="color:var(--text-muted);font-size:0.8125rem;">' + escHtml(log.model || '—') + '</td>' +
-      '<td>' + (log.costUSD > 0 ? '$' + ceilNum(log.costUSD) : '—') + '</td>' +
+      '<td>$' + ceilNum(log.costUSD) + '</td>' +
       '<td style="font-size:0.8125rem;color:var(--text-muted);">' + getMetaDetail(log) + '</td>' +
       '</tr>';
   }).join('');

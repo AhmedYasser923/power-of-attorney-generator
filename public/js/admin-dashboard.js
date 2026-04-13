@@ -29,14 +29,14 @@ function prependFeedRow(op) {
 
   const now = new Date(op.timestamp || Date.now());
   const time = now.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const cost = op.costUSD > 0 ? `$${ceilNum(op.costUSD)}` : '—';
+  const cost = `$${ceilNum(op.costUSD)}`;
 
   const tr = document.createElement('tr');
   tr.className = 'ad-feed-row--new';
   tr.innerHTML = `
     <td style="white-space:nowrap; color:var(--text-muted);">${time}</td>
     <td>${escHtml(op.user)}</td>
-    <td><span class="op-pill">${escHtml(op.type)}</span></td>
+    <td><span class="op-pill" data-type="${escHtml(op.operationType || '')}">${escHtml(op.type)}</span></td>
     <td>${cost}</td>
   `;
   tbody.insertBefore(tr, tbody.firstChild);
@@ -55,11 +55,11 @@ function renderOpRows(logs) {
   }
   tbody.innerHTML = logs.map(function(op) {
     var time = new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    var cost = op.costUSD > 0 ? '$' + ceilNum(op.costUSD) : '—';
+    var cost = '$' + ceilNum(op.costUSD);
     return '<tr>' +
       '<td style="white-space:nowrap;color:var(--text-muted);">' + time + '</td>' +
       '<td>' + escHtml(op.userName || '—') + '</td>' +
-      '<td><span class="op-pill">' + escHtml(op.label || op.operationType) + '</span></td>' +
+      '<td><span class="op-pill" data-type="' + escHtml(op.operationType || '') + '">' + escHtml(op.label || op.operationType) + '</span></td>' +
       '<td>' + cost + '</td>' +
       '</tr>';
   }).join('');
@@ -333,23 +333,80 @@ document.getElementById('ops-next-page')?.addEventListener('click', function() {
   if (opsPage < opsTotalPages) fetchOpsPage(opsPage + 1);
 });
 
-// ─── Insights tab: month picker (table data only)
+// ─── Overview Month Picker ────────────────────────────────────────────────────
+document.getElementById('overviewMonth')?.addEventListener('change', async function() {
+  const [y, m] = this.value.split('-').map(Number);
+  adminYear = y;
+  adminMonth = m;
+  opsPage = 1;
+
+  try {
+    const res = await fetch('/admin/logs?year=' + y + '&month=' + m + '&page=1&limit=25');
+    const json = await res.json();
+    if (json.status !== 'success') throw new Error(json.message || 'Error');
+
+    opsPage = json.data.page;
+    opsTotalPages = json.data.totalPages;
+
+    renderOpRows(json.data.logs);
+    updateOpsPaginationControls();
+
+    // Update stat cards with the selected month's data
+    var totalOpsEl = document.getElementById('total-ops-stat');
+    var totalCostEl = document.getElementById('total-cost-stat');
+    if (totalOpsEl) totalOpsEl.textContent = json.data.total;
+    if (totalCostEl) totalCostEl.textContent = ceilNum(json.data.totalCostUSD || 0);
+  } catch (err) {
+    console.error('[AdminDashboard] Overview month change error:', err.message);
+  }
+});
+
+// ─── Insights tab: month picker ───────────────────────────────────────────────
 document.getElementById('insightsMonth')?.addEventListener('change', async function() {
   const [year, month] = this.value.split('-').map(Number);
   try {
-    const res = await fetch(`/admin/usage?year=${year}&month=${month}`);
+    const res = await fetch('/admin/usage?year=' + year + '&month=' + month);
     const data = (await res.json()).data;
 
     // Update per-user table
-    const tbody = document.getElementById('insights-user-tbody');
-    if (tbody) {
-      tbody.innerHTML = data.userTotals.map(u => `
-        <tr>
-          <td>${escHtml(u._id.userName)}</td>
-          <td>${u.operationCount}</td>
-          <td>$${(+(u.totalCostUSD)||0).toFixed(2)}</td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">No data</td></tr>';
+    const userTbody = document.getElementById('insights-user-tbody');
+    if (userTbody) {
+      if (!data.userTotals || data.userTotals.length === 0) {
+        userTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">No data for this period.</td></tr>';
+      } else {
+        userTbody.innerHTML = data.userTotals.map(function(u) {
+          return '<tr>' +
+            '<td>' + escHtml(u._id.userName) + '</td>' +
+            '<td>' + u.operationCount + '</td>' +
+            '<td>$' + ceilNum(u.totalCostUSD) + '</td>' +
+            '</tr>';
+        }).join('');
+      }
+    }
+
+    // Update operation breakdown table
+    const opTbody = document.getElementById('insights-op-tbody');
+    if (opTbody) {
+      if (!data.opBreakdown || data.opBreakdown.length === 0) {
+        opTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">No data for this period.</td></tr>';
+      } else {
+        var totalCount = 0, totalCost = 0;
+        var rows = data.opBreakdown.map(function(b) {
+          totalCount += b.count;
+          totalCost += b.totalCostUSD;
+          return '<tr>' +
+            '<td><span class="op-pill" data-type="' + escHtml(b._id || '') + '">' + escHtml(b.label || b._id) + '</span></td>' +
+            '<td>' + b.count + '</td>' +
+            '<td>$' + ceilNum(b.totalCostUSD) + '</td>' +
+            '</tr>';
+        }).join('');
+        rows += '<tr class="ad-totals-row">' +
+          '<td><strong>Total</strong></td>' +
+          '<td><strong>' + totalCount + '</strong></td>' +
+          '<td><strong>$' + ceilNum(totalCost) + '</strong></td>' +
+          '</tr>';
+        opTbody.innerHTML = rows;
+      }
     }
   } catch (err) {
     console.error('[Admin] Usage fetch failed:', err.message);
@@ -372,3 +429,27 @@ function capitalize(str) {
 
 // ─── Init Pagination Controls on First Load ───────────────────────────────────
 updateOpsPaginationControls();
+
+// ─── Reload All Clients ───────────────────────────────────────────────────────
+(function () {
+  var btn = document.getElementById('reload-clients-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    fetch('/admin/reload-clients', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        btn.textContent = 'Reloaded ' + data.clientsNotified + ' client(s)';
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.textContent = 'Reload All Clients';
+        }, 3000);
+      })
+      .catch(function () {
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+      });
+  });
+})();
+

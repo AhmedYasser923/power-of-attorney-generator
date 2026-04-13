@@ -90,9 +90,8 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, templateName);
 
-  // Log signature processing cost only if Gemini was used (free otherwise)
   if (sigProcessing === 'gemini') {
-    const storedCostUSD = sigCostUSD > 0 ? Math.ceil(sigCostUSD * 100) / 100 : 0;
+    const storedCostUSD = sigCostUSD > 0 ? (sigCostUSD < 0.01 ? Math.max(0.01, Math.ceil(sigCostUSD * 1000) / 100) : Math.ceil(sigCostUSD * 100) / 100) : 0;
     console.log(`\n[SIG_PROCESSING] Standard POA`);
     console.log(`  Input Tokens: ${sigIn.toLocaleString()}`);
     console.log(`  Output Tokens: ${sigOut.toLocaleString()}`);
@@ -106,6 +105,12 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
       inputTokens: sigIn,
       outputTokens: sigOut,
       costUSD: sigCostUSD,
+      metadata: { pnr, lang: langCode }
+    });
+  } else {
+    // Free POA generation (no Gemini signature processing)
+    await logUsage(req, {
+      operationType: 'poa_standard',
       metadata: { pnr, lang: langCode }
     });
   }
