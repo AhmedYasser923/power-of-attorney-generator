@@ -698,6 +698,70 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // IATA LOOKUP
+  // ---------------------------------------------------------------------------
+  const iataInput     = document.getElementById('iata-lookup-input');
+  const iataBtn       = document.getElementById('btn-iata-lookup');
+  const iataResultDiv = document.getElementById('iata-lookup-result');
+
+  async function runIataLookup() {
+    const val = (iataInput.value || '').trim();
+    if (val.length < 2) {
+      iataResultDiv.innerHTML = `<div style="color:#64748b;font-size:14px;padding:8px 0;">Enter at least 2 characters.</div>`;
+      return;
+    }
+    iataBtn.innerHTML = '⏳ Searching...';
+    iataBtn.disabled  = true;
+    try {
+      const res  = await fetch(`/api/tools/lookup-iata?q=${encodeURIComponent(val)}`);
+      const data = await res.json();
+
+      if (!data.length) {
+        iataResultDiv.innerHTML = `
+          <div style="background:#f1f5f9;border:1px solid #e2e8f0;padding:16px;border-radius:8px;color:#64748b;font-weight:600;">
+            No airlines found for "${val}".
+          </div>`;
+        return;
+      }
+
+      const rows = data.map(a => `
+        <tr>
+          <td style="padding:10px 12px;font-weight:700;color:#0f172a;">${a.name}</td>
+          <td style="padding:10px 12px;text-align:center;">
+            <span style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-weight:800;font-size:13px;color:#1e293b;">${a.iata || '—'}</span>
+          </td>
+          <td style="padding:10px 12px;text-align:center;">
+            <span style="background:#eff6ff;padding:3px 8px;border-radius:5px;font-weight:700;font-size:13px;color:#1d4ed8;">${a.icao || '—'}</span>
+          </td>
+          <td style="padding:10px 12px;color:#475569;font-size:13px;">${a.country || '—'}</td>
+        </tr>`).join('');
+
+      iataResultDiv.innerHTML = `
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="background:#e2e8f0;">
+                <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Airline</th>
+                <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">IATA</th>
+                <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">ICAO</th>
+                <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Country</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    } catch (err) {
+      iataResultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;">❌ Error fetching IATA data.</div>`;
+    } finally {
+      iataBtn.innerHTML = '🔍 Search';
+      iataBtn.disabled  = false;
+    }
+  }
+
+  if (iataBtn)   iataBtn.addEventListener('click', runIataLookup);
+  if (iataInput) iataInput.addEventListener('keydown', e => { if (e.key === 'Enter') runIataLookup(); });
+
+  // ---------------------------------------------------------------------------
   // SMART EMAIL BUILDER
   // ---------------------------------------------------------------------------
   // Freestyle Mode toggle interaction

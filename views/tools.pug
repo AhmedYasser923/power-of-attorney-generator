@@ -377,6 +377,15 @@ block content
             input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
           #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
 
+        //- TOOL: IATA LOOKUP (Half Width)
+        .ts-card
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✈️ IATA Lookup
+          .ts-form-group
+            label.ts-label Airline Name or IATA Code
+            input#iata-lookup-input.ts-input(type="text" placeholder="e.g. AA or American Airlines" autocomplete="off")
+          button#btn-iata-lookup.ts-btn-action(type="button" style="margin-top: 12px;") 🔍 Search
+          #iata-lookup-result(style="margin-top: 16px;")
+
         //- TOOL: SMART EMAIL BUILDER (Full Width)
         .ts-card.ts-grid-full
           h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Request Builder

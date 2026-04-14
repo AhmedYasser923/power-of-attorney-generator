@@ -36,6 +36,8 @@ try {
   console.warn("⚠️ airlines_data.json not found. Please run 'node build_airlines.js' first.");
 }
 
+const airlineCodesDatabase = require('../airlines_codes.json');
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
@@ -343,6 +345,43 @@ exports.searchAirlines = catchAsync(async (req, res, next) => {
   }
   res.status(200).json(results);
 });
+
+// ---------------------------------------------------------------------------
+// IATA LOOKUP
+// ---------------------------------------------------------------------------
+
+exports.lookupIATA = (req, res, next) => {
+  try {
+    const q = (req.query.q || '').trim().toLowerCase();
+    if (!q || q.length < 2) return res.json([]);
+
+    const activeExact = [], activeStartsWith = [], activeIncludes = [];
+    const inactiveExact = [], inactiveStartsWith = [], inactiveIncludes = [];
+
+    airlineCodesDatabase.forEach(a => {
+      const iata = (a.iata || '').toLowerCase();
+      const icao = (a.icao || '').toLowerCase();
+      const name = (a.name || '').toLowerCase();
+      const isActive = a.active === 'Y';
+      const bucket = isActive
+        ? { exact: activeExact, sw: activeStartsWith, inc: activeIncludes }
+        : { exact: inactiveExact, sw: inactiveStartsWith, inc: inactiveIncludes };
+
+      if (iata === q || icao === q || name === q)                       bucket.exact.push(a);
+      else if (iata.startsWith(q) || icao.startsWith(q) || name.startsWith(q)) bucket.sw.push(a);
+      else if (iata.includes(q) || icao.includes(q) || name.includes(q))     bucket.inc.push(a);
+    });
+
+    const results = [
+      ...activeExact, ...activeStartsWith, ...activeIncludes,
+      ...inactiveExact, ...inactiveStartsWith, ...inactiveIncludes,
+    ].slice(0, 8);
+
+    res.json(results);
+  } catch (error) {
+    next(error);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // HELPER FUNCTIONS FOR EMAIL GENERATION

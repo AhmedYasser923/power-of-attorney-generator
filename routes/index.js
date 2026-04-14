@@ -70,6 +70,7 @@ router.get('/api/tools/check-eoc', toolsController.checkEOC);
 router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs', toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
+router.get('/api/tools/lookup-iata', toolsController.lookupIATA);
 router.post('/api/generate-email', toolsController.generateEmail);
 router.post('/api/tools/sync-eoc', toolsController.syncEOC);
 
