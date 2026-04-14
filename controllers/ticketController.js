@@ -443,6 +443,17 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     RULE 3 - ROUND TRIPS: A→B then B→A at later date → TWO journey objects (Outbound + Return).
     RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey, PNR field = "PNR1 (Name) / PNR2 (Name)".
 
+    🚨 UNKNOWN STOPOVER RULE (CRITICAL — NEVER GUESS):
+    If a document shows a route like "A → B" with "1 stop" (or "2 stops") and multiple flight numbers
+    (e.g. IB3862, IB3671) but does NOT explicitly name the connecting/intermediate airport(s):
+    → Output ONE single leg from A to B with ALL flight numbers in the flightNumbers array.
+    → Do NOT split into separate legs with a guessed connecting airport.
+    → Do NOT infer the stopover based on airline hubs, common routes, or aviation knowledge.
+    → Only create separate legs when each segment's origin AND destination are EXPLICITLY shown in the document.
+    Example: "Ibiza (IBZ) to Oslo (OSL), 1 stop, IB3862/IB3671" with no intermediate city named
+    → ONE leg: originIata="IBZ", destinationIata="OSL", flightNumbers=["IB3862","IB3671"]
+    → NOT two legs IBZ→MAD→OSL (Madrid was never mentioned!)
+
     FLIGHT STATUS RULES (mutually exclusive — pick the FIRST that matches):
     "Cancelled" → airline unilaterally cancelled, flight never operated.
     "Unused / Missed Connection" → flight operated but passenger didn't board. 🚨 DEDUCTIVE RULE: If a passenger has a ticket for A ➔ B, but the timeline shows them flying out of city A later on a different flight (A ➔ C), the original A ➔ B flight was obviously unused/replaced and MUST be tagged as "Unused / Missed Connection" or "Cancelled".

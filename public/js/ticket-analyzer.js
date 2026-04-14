@@ -773,10 +773,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
               let stBtns = '', fnDisp = '';
               const fns = Array.isArray(flight.flightNumbers) ? flight.flightNumbers : [];
+              const isStopover = fns.length > 1;
               if (fns.length) {
                 fnDisp = fns.join(' <span style="color:#cbd5e1;font-weight:400;margin:0 4px;">/</span> ');
+                if (isStopover) fnDisp += ` <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:800;border:1px solid #fde68a;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;white-space:nowrap;">Stopover</span>`;
                 fns.forEach(fn => { const c = fn.trim(); if (c && c !== 'N/A' && c !== 'Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
               } else { fnDisp = 'N/A'; }
+
+              const stopoverBanner = isStopover ? `<div style="background:#fefce8;border:1px dashed #fde047;border-radius:8px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#92400e;"><span style="font-size:16px;">&#9888;&#65039;</span> This flight has a stopover — the connecting airport was not shown on the ticket.</div>` : '';
 
               let datePillHtml = '';
               if (isMissing) {
@@ -868,6 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      data-partial-date="${partialAttr}"
                      ${isExpiredCard ? 'data-initially-expired="true"' : ''}>
                   <div style="display:block;width:100%;">${swarn}</div>
+                  ${stopoverBanner}
                   <div class="fc-top"><div class="fc-airline">${airText}</div></div>
                   <div class="fc-path-container">
                     <div class="fc-node left">
