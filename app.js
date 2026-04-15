@@ -1,4 +1,4 @@
-// MUST be first: catch synchronous exceptions before anything else loads
+// MUST be first catch synchronous exceptions before anything else loads
 process.on('uncaughtException', err => {
   console.error('UNCAUGHT EXCEPTION! Shutting down...');
   console.error(err.name, err.message, err.stack);
