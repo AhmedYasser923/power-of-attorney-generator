@@ -40,6 +40,8 @@ const SIG_MODELS = {
  * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
+const SIG_TIMEOUT_MS = 45_000; // 45s — leaves headroom under Cloud Run's 60s default
+
 async function processSignature(file, processingMethod) {
   if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0, modelUsed: null };
 
@@ -49,7 +51,8 @@ async function processSignature(file, processingMethod) {
       const model = genAI.getGenerativeModel({ model: geminiModel });
       const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
-      const result = await model.generateContent([prompt, imagePart]);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), SIG_TIMEOUT_MS));
+      const result = await Promise.race([model.generateContent([prompt, imagePart]), timeoutPromise]);
       const response = await result.response;
       const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
@@ -105,10 +108,11 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   const files = req.files || [];
 
   const signatureFiles = files.filter(f => f.fieldname && f.fieldname.toLowerCase().includes('signature'));
-  const passengers = [];
-  const sigUsageRecords = []; // per-signature usage tracking
+  const sigUsageRecords = [];
   let sigIndex = 0;
 
+  // Collect passenger data and kick off all signature processing in parallel
+  const passengerTasks = [];
   for (let i = 1; i <= 4; i++) {
     const rawName = req.body[`fullName${i}`] || '';
     const signatureFile = signatureFiles[sigIndex];
@@ -130,22 +134,34 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
       if (signatureFile) sigIndex++;
 
       const sigProcessing = req.body[`sigProcessing${i}`];
-      const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = await processSignature(signatureFile, sigProcessing);
-      if (modelUsed) {
-        const rates = MODEL_PRICING[modelUsed];
-        const costUSD = rates ? (sigIn / 1_000_000) * rates.input + (sigOut / 1_000_000) * rates.output : 0;
-        sigUsageRecords.push({ sigNum: i, model: modelUsed, inputTokens: sigIn, outputTokens: sigOut, costUSD });
-      }
-
-      passengers.push({
+      passengerTasks.push({
+        i,
         firstName,
         lastName,
-        fullName: lastName ? `${lastName}, ${firstName}` : (firstName || ' '),
         address: req.body[`address${i}`] || '',
-        signature: signatureDataUrl
+        sigPromise: processSignature(signatureFile, sigProcessing)
       });
     }
   }
+
+  // Wait for all signatures in parallel instead of sequentially
+  const sigResults = await Promise.all(passengerTasks.map(t => t.sigPromise));
+
+  const passengers = passengerTasks.map((task, idx) => {
+    const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = sigResults[idx];
+    if (modelUsed) {
+      const rates = MODEL_PRICING[modelUsed];
+      const costUSD = rates ? (sigIn / 1_000_000) * rates.input + (sigOut / 1_000_000) * rates.output : 0;
+      sigUsageRecords.push({ sigNum: task.i, model: modelUsed, inputTokens: sigIn, outputTokens: sigOut, costUSD });
+    }
+    return {
+      firstName: task.firstName,
+      lastName: task.lastName,
+      fullName: task.lastName ? `${task.lastName}, ${task.firstName}` : (task.firstName || ' '),
+      address: task.address,
+      signature: signatureDataUrl
+    };
+  });
 
   if (passengers.length === 0) {
     return next(new AppError('At least one passenger or signature is required.', 400));
