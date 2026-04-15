@@ -55,8 +55,10 @@ app.use(isLoggedIn);
 // SSE clients registry (used by admin reload-clients endpoint)
 app.set('sseClients', new Set());
 
-// Unique version ID — changes every time the server starts (i.e. every deploy)
-app.set('appVersion', Date.now().toString());
+// Unique version ID — K_REVISION is set by Cloud Run and is identical across all
+// instances of the same revision, so version polling works with multiple instances.
+// Falls back to Date.now() for local dev (single instance, so no conflict).
+app.set('appVersion', process.env.K_REVISION || Date.now().toString());
 
 // Routes
 app.use('/', require('./routes/index'));
