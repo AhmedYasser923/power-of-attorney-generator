@@ -26,8 +26,6 @@ const SIG_MODELS = {
  * Returns { dataUrl, inputTokens, outputTokens }.
  * Errors are caught internally and fall back to the raw image — this is intentional.
  */
-const SIG_TIMEOUT_MS = 45_000; // 45s — leaves headroom under Cloud Run's 60s default
-
 async function processSignature(file, processingMethod) {
   if (!file) return { dataUrl: null, inputTokens: 0, outputTokens: 0, modelUsed: null };
 
@@ -37,8 +35,7 @@ async function processSignature(file, processingMethod) {
       const model = genAI.getGenerativeModel({ model: geminiModel });
       const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), SIG_TIMEOUT_MS));
-      const result = await Promise.race([model.generateContent([prompt, imagePart]), timeoutPromise]);
+      const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
       const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);
@@ -80,6 +77,14 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     return next(new AppError('First Name, Last Name, and PNR are required.', 400));
   }
 
+  const fileName = `AerLingus_POA_${firstName}_${lastName}.pdf`;
+
+  // Flush headers immediately — keeps Cloud Run's load balancer connection alive
+  // while Gemini processes the signature (which can take a long time)
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.flushHeaders();
+
   const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = await processSignature(signatureFile, sigProcessing);
   const sigRates = MODEL_PRICING[modelUsed];
   const sigCostUSD = sigRates ? (sigIn / 1_000_000) * sigRates.input + (sigOut / 1_000_000) * sigRates.output : 0;
@@ -89,9 +94,6 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     flightDate: new Date(flightDate), flightNumber, route,
     signature: signatureDataUrl
   };
-
-  const passengerName = `${firstName}_${lastName}`;
-  const fileName = `AerLingus_POA_${passengerName}.pdf`;
 
   const pdfBuffer = await PDFGenerator.generatePOA(req.app, pdfData, 'aerlingus-poa');
 
@@ -120,8 +122,5 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     });
   }
 
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-  res.setHeader('Content-Length', pdfBuffer.length);
-  res.send(pdfBuffer);
+  res.end(pdfBuffer);
 });
