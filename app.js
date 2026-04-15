@@ -64,9 +64,15 @@ app.use(globalErrorHandler);
 
 // Start server immediately so Cloud Run health checks pass
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Allow long-running requests (Gemini signature processing) without Node.js killing the connection
+server.timeout = 0;
+server.requestTimeout = 0;
+server.headersTimeout = 0;
+server.keepAliveTimeout = 620_000; // slightly above Cloud Run's 600s LB idle timeout
 
 // Connect to MongoDB after server is up
 mongoose.connect(process.env.DATABASE)
@@ -79,9 +85,9 @@ mongoose.connect(process.env.DATABASE)
     process.exit(1);
   });
 
-// Catch unhandled promise rejections
+// Catch unhandled promise rejections — log but don't exit,
+// because process.exit() kills ALL in-flight requests (causes "truncated response" on Cloud Run)
 process.on('unhandledRejection', err => {
-  console.error('UNHANDLED REJECTION! Shutting down...');
+  console.error('UNHANDLED REJECTION!');
   console.error(err.name, err.message);
-  process.exit(1);
 });
