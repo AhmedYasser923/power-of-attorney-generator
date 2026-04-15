@@ -22,6 +22,11 @@ router.get('/signup', authController.renderSignup);
 router.post('/signup', authController.signup);
 router.get('/logout', authController.logout);
 
+// Lightweight version check — clients poll this to detect deploys
+router.get('/api/version', (req, res) => {
+  res.json({ version: req.app.get('appVersion') });
+});
+
 // ==========================================
 // PROTECTED — All routes below require login
 // ==========================================

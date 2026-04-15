@@ -51,6 +51,9 @@ app.use(isLoggedIn);
 // SSE clients registry (used by admin reload-clients endpoint)
 app.set('sseClients', new Set());
 
+// Unique version ID — changes every time the server starts (i.e. every deploy)
+app.set('appVersion', Date.now().toString());
+
 // Routes
 app.use('/', require('./routes/index'));
 

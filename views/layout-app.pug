@@ -23,30 +23,33 @@ html(lang="en")
         block app-content
   script.
     (function () {
-      var es = new EventSource('/api/sse/events');
-      var connected = false;
-
-      es.onopen = function () {
-        if (connected) {
-          showUpdateBanner('A new version has been deployed. Reloading...');
-        }
-        connected = true;
-      };
-
-      es.onmessage = function (e) {
-        if (e.data === 'reload') {
-          showUpdateBanner('An update has occurred. Reloading...');
-        }
-      };
+      var knownVersion = null;
+      var reloading = false;
 
       function showUpdateBanner(msg) {
-        if (document.getElementById('sse-update-banner')) return;
+        if (reloading) return;
+        reloading = true;
         var b = document.createElement('div');
-        b.id = 'sse-update-banner';
-        b.textContent = msg;
         b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;padding:14px;text-align:center;font-weight:600;color:#fff;background:#2563eb;font-size:15px;';
+        b.textContent = msg;
         document.body.appendChild(b);
         setTimeout(function () { location.reload(); }, 2500);
       }
+
+      // Poll /api/version to detect deploys — works even if SSE is broken
+      function checkVersion() {
+        fetch('/api/version').then(function (r) { return r.json(); }).then(function (d) {
+          if (!knownVersion) { knownVersion = d.version; return; }
+          if (d.version !== knownVersion) showUpdateBanner('A new version has been deployed. Reloading...');
+        }).catch(function () {});
+      }
+      checkVersion();
+      setInterval(checkVersion, 15000);
+
+      // SSE for instant admin-triggered reloads
+      var es = new EventSource('/api/sse/events');
+      es.onmessage = function (e) {
+        if (e.data === 'reload') showUpdateBanner('An update has occurred. Reloading...');
+      };
     })();
   block scripts
