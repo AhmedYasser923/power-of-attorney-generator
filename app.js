@@ -36,13 +36,17 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Cloud Run (and other reverse proxies) set Forwarded / X-Forwarded-For headers
+app.set('trust proxy', true);
+
 // Rate limit login attempts: 10 per 15 minutes per IP
 app.use('/login', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: 'Too many login attempts. Please try again in 15 minutes.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  validate: { trustProxy: false }
 }));
 
 // Set res.locals.user on every request for template rendering

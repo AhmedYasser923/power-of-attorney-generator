@@ -18,6 +18,10 @@ const sendTokenCookie = (user, res) => {
 // Bootstrap admin from env on server start (idempotent)
 exports.bootstrapAdmin = async () => {
   try {
+    if (!process.env.ADMIN_NAME || !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+      console.log('[Auth] Admin bootstrap skipped — ADMIN_NAME, ADMIN_EMAIL, or ADMIN_PASSWORD not set.');
+      return;
+    }
     const existing = await User.findOne({ email: process.env.ADMIN_EMAIL });
     if (existing) {
       console.log('[Auth] Admin account already exists.');
