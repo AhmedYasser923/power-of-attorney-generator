@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
+const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 
 // Initialize the Gemini API with your secret key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -42,7 +43,13 @@ exports.extractData = catchAsync(async (req, res, next) => {
     IMPORTANT: The "passengers" array must contain an object for EVERY passenger mentioned in the text, up to a maximum of 4 passengers.
   `;
 
-  const result = await model.generateContent(prompt);
+  let result;
+  try {
+    result = await geminiQueue.run(() => model.generateContent(prompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`AI request failed: ${err.message}`, 502));
+  }
 
   // Clean up the response just in case the AI adds markdown ticks
   const responseText = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();

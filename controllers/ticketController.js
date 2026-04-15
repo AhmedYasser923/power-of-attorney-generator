@@ -9,6 +9,7 @@ const catchAsync      = require('../utils/catchAsync');
 const AppError        = require('../utils/appError');
 const logUsage        = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
+const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 
 const EocRecord        = require('../models/EocRecord');
 const airportsDatabase = require('../airports_data.json');
@@ -633,15 +634,16 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       console.log(`⏳ Gemini API attempt ${attempt + 1}...`);
-      result = await model.generateContent({
+      result = await geminiQueue.run(() => model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }, ...documentParts] }],
         generationConfig: { responseMimeType: 'application/json', responseSchema: TICKET_RESPONSE_SCHEMA },
-      });
+      }));
       console.log('✅ Gemini response received.');
       break;
     } catch (apiError) {
       if (attempt === maxRetries) {
         console.error('🔥 GEMINI API CRASHED:', apiError);
+        if (isQuotaError(apiError)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
         return next(new AppError(`AI Processing Failed after 3 attempts: ${apiError.message}`, 500));
       }
       const wait = (attempt + 1) * 2000;

@@ -38,6 +38,8 @@ try {
 
 const airlineCodesDatabase = require('../airlines_codes.json');
 
+const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
@@ -499,7 +501,13 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   }
 
   // --- STEP D: Call Gemini ---
-  const result = await model.generateContent(prompt);
+  let result;
+  try {
+    result = await geminiQueue.run(() => model.generateContent(prompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Email generation failed: ${err.message}`, 502));
+  }
   const rawText = result.response.text();
 
   // --- STEP E: Parse response ---

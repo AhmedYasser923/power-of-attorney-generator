@@ -28,6 +28,7 @@ function getLufthansaLogoBase64() {
 }
 
 const { MODEL_PRICING } = require('../utils/pricing');
+const { geminiQueue } = require('../utils/geminiQueue');
 
 const SIG_MODELS = {
   'gemini-easy':   'gemini-2.5-flash-image',
@@ -49,7 +50,7 @@ async function processSignature(file, processingMethod) {
       const model = genAI.getGenerativeModel({ model: geminiModel });
       const prompt = "Extract the handwritten signature from the image exactly as it appears. Convert the signature to solid black ink on a pure white (#FFFFFF) background. CRITICAL INSTRUCTION: Do NOT redraw, synthesize, or alter the shape of any letters, loops, or strokes. Perform a strict background removal and contrast adjustment and thicken the ink only. You must preserve every original pen stroke exactly as drawn, paying special attention to keep very faint, thin, or light continuous lines from being erased. Do not 'fix' or change the handwriting. DO NOT use a checkerboard transparency pattern. Output ONLY the final image.";
       const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } };
-      const result = await model.generateContent([prompt, imagePart]);
+      const result = await geminiQueue.run(() => model.generateContent([prompt, imagePart]));
       const response = await result.response;
       const { promptTokenCount: inputTokens = 0, candidatesTokenCount: outputTokens = 0 } = response.usageMetadata || {};
       const outputPart = response.candidates[0].content.parts.find(part => part.inlineData);

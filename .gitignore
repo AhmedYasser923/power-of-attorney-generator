@@ -4,3 +4,7 @@ config.env
 plans/
 .claude/
 CLAUDE.md
+.specify/
+.opencode/
+.agent/
+overview.md
