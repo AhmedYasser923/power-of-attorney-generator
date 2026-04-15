@@ -24,6 +24,8 @@ html(lang="en")
   script.
     (function () {
       var knownVersion = null;
+      var pendingVersion = null;
+      var confirmCount = 0;
       var reloading = false;
 
       function showUpdateBanner(msg) {
@@ -36,15 +38,23 @@ html(lang="en")
         setTimeout(function () { location.reload(); }, 2500);
       }
 
-      // Poll /api/version to detect deploys — works even if SSE is broken
+      // Poll /api/version — require 3 consecutive hits of the new version
+      // before reloading, so the rollout is fully stable across all instances
       function checkVersion() {
         fetch('/api/version').then(function (r) { return r.json(); }).then(function (d) {
           if (!knownVersion) { knownVersion = d.version; return; }
-          if (d.version !== knownVersion) showUpdateBanner('A new version has been deployed. Reloading...');
+          if (d.version === knownVersion) { pendingVersion = null; confirmCount = 0; return; }
+          if (d.version === pendingVersion) {
+            confirmCount++;
+            if (confirmCount >= 3) showUpdateBanner('A new version has been deployed. Reloading...');
+          } else {
+            pendingVersion = d.version;
+            confirmCount = 1;
+          }
         }).catch(function () {});
       }
       checkVersion();
-      setInterval(checkVersion, 15000);
+      setInterval(checkVersion, 5000);
 
       // SSE for instant admin-triggered reloads
       var es = new EventSource('/api/sse/events');
