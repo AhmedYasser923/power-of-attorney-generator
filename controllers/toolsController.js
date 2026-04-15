@@ -480,7 +480,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     } else {
       finalEmail = assembleDocRequestTemplate(checkboxContent);
     }
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'email_translation',
       metadata: { language, programmatic: true }
     });
@@ -524,7 +524,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const { MODEL_PRICING } = require('../utils/pricing');
   const emailRates = MODEL_PRICING['gemini-2.5-flash'];
   const emailCostUSD = (iTok / 1_000_000) * emailRates.input + ((oTok + tTok) / 1_000_000) * emailRates.output;
-  await logUsage(req, {
+  logUsage(req, {
     operationType: 'email_translation',
     model: 'gemini-2.5-flash',
     inputTokens: iTok,

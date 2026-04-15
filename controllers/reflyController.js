@@ -114,7 +114,7 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
     console.log(`  Language: ${langCode}`);
     console.log(`  PNR: ${pnr}\n`);
 
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'sig_processing',
       model: modelUsed,
       inputTokens: sigIn,
@@ -124,7 +124,7 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
     });
   } else {
     // Free POA generation (no Gemini signature processing)
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'poa_standard',
       metadata: { pnr, lang: langCode }
     });

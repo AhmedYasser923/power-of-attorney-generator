@@ -63,7 +63,7 @@ exports.extractData = catchAsync(async (req, res, next) => {
 
 
   const aiCost = calculateCost('gemini-3.1-flash-lite-preview', result.response.usageMetadata);
-  await logUsage(req, {
+  logUsage(req, {
     operationType: 'text_autofill',
     model: 'gemini-3.1-flash-lite-preview',
     inputTokens: aiCost.inputTokens,

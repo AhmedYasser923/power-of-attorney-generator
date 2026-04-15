@@ -107,7 +107,7 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     console.log(`  Flight: ${flightNumber}`);
     console.log(`  PNR: ${pnr}\n`);
 
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'sig_processing',
       model: modelUsed,
       inputTokens: sigIn,
@@ -117,7 +117,7 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     });
   } else {
     // Free POA generation (no Gemini signature processing)
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'poa_aerlingus',
       metadata: { pnr, flightNumber }
     });

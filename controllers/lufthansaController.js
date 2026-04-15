@@ -189,7 +189,7 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
       console.log(`  Cost (USD): $${rec.costUSD.toFixed(6)}`);
       console.log(`  PNR: ${pnr}\n`);
 
-      await logUsage(req, {
+      logUsage(req, {
         operationType: 'sig_processing',
         model: rec.model,
         inputTokens: rec.inputTokens,
@@ -200,7 +200,7 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
     }
   } else {
     // Free POA generation (no Gemini signature processing)
-    await logUsage(req, {
+    logUsage(req, {
       operationType: 'poa_lufthansa',
       metadata: { pnr, passengerCount: passengers.length }
     });

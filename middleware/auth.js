@@ -14,6 +14,10 @@ exports.protect = catchAsync(async (req, res, next) => {
     return res.redirect('/login');
   }
 
+  // isLoggedIn (global middleware) already verified this token, checked status,
+  // and loaded the user — reuse it to avoid a second DB round-trip.
+  if (req.user) return next();
+
   let decoded;
   try {
     decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);

@@ -825,7 +825,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     });
   });
 
-  await logUsage(req, {
+  logUsage(req, {
     operationType: 'ticket_analysis',
     model: 'gemini-3-flash-preview',
     inputTokens: costData.inputTokens,
