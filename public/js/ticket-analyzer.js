@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
               let stBtns = '', fnDisp = '';
               const fns = Array.isArray(flight.flightNumbers) ? flight.flightNumbers : [];
-              const isStopover = fns.length > 1;
+              const isStopover = fns.length > 1 && !flight.isCodeshare;
               if (fns.length) {
                 fnDisp = fns.join(' <span style="color:#cbd5e1;font-weight:400;margin:0 4px;">/</span> ');
                 if (isStopover) fnDisp += ` <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:800;border:1px solid #fde68a;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;white-space:nowrap;">Stopover</span>`;

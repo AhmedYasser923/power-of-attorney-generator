@@ -75,6 +75,7 @@ const TICKET_RESPONSE_SCHEMA = {
                   operatingAirline:        { type: SchemaType.STRING },
                   operatingAirlineCountry: { type: SchemaType.STRING },
                   flightNumbers:    { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                  isCodeshare:      { type: SchemaType.BOOLEAN, description: 'true if the multiple flight numbers in flightNumbers represent the SAME physical flight marketed under different airline codes (e.g. BA494 / AA7041, "Sold as AA7041"). false (or omit) for a genuine unknown-stopover where multiple numbers represent different physical flights connecting at an unspecified airport.' },
                   originIata:         { type: SchemaType.STRING },
                   originName:         { type: SchemaType.STRING },
                   originCity:         { type: SchemaType.STRING },
@@ -443,6 +444,14 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     RULE 2 - STANDARD CONNECTIONS: normal layovers without self-transfer keywords → keep in SAME journey.
     RULE 3 - ROUND TRIPS: A→B then B→A at later date → TWO journey objects (Outbound + Return).
     RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey, PNR field = "PNR1 (Name) / PNR2 (Name)".
+
+    🚨 CODESHARE RULE:
+    When a document shows multiple flight numbers for the SAME physical flight (e.g. "BA494 / AA7041",
+    "Sold as AA7041", "Also marketed as XX123", or similar language indicating a codeshare partner):
+    → Set flightNumbers to all codes (e.g. ["BA494", "AA7041"])
+    → Set isCodeshare = true
+    → This is ONE flight — do NOT treat it as a stopover.
+    Example: Boarding pass for BA494 with text "Sold as AA7041" → flightNumbers=["BA494","AA7041"], isCodeshare=true
 
     🚨 UNKNOWN STOPOVER RULE (CRITICAL — NEVER GUESS):
     If a document shows a route like "A → B" with "1 stop" (or "2 stops") and multiple flight numbers
