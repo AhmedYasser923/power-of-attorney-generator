@@ -84,10 +84,7 @@ server.headersTimeout = 0;
 server.keepAliveTimeout = 620_000; // slightly above Cloud Run's 600s LB idle timeout
 
 // Connect to MongoDB after server is up
-mongoose.connect(process.env.DATABASE, {
-  serverSelectionTimeoutMS: 5000,  // fail fast if Atlas is unreachable
-  socketTimeoutMS: 45000,          // drop idle sockets after 45s
-})
+mongoose.connect(process.env.DATABASE)
   .then(async () => {
     console.log('[DB] MongoDB connected');
     await bootstrapAdmin();
