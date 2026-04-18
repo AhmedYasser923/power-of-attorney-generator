@@ -17,6 +17,8 @@ module.exports = async function logUsage(req, {
     if (!user) return;
 
     const now = new Date();
+    // Egypt is permanently UTC+2 (no DST since 2011)
+    const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const entry = await UsageLog.create({
       userId: user._id,
       userName: user.name,
@@ -26,8 +28,8 @@ module.exports = async function logUsage(req, {
       outputTokens,
       costUSD,
       metadata,
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
+      year: egyptNow.getUTCFullYear(),
+      month: egyptNow.getUTCMonth() + 1,
       createdAt: now
     });
   } catch (err) {

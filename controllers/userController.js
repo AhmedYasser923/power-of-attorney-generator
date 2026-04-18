@@ -14,10 +14,16 @@ const OP_LABELS = {
 
 exports.renderDashboard = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = parseInt(req.query.year) || now.getFullYear();
-  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  // Egypt is permanently UTC+2 (no DST since 2011)
+  const EGYPT_MS = 2 * 60 * 60 * 1000;
+  const egyptNow = new Date(now.getTime() + EGYPT_MS);
+  const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
+  const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
 
-  const [breakdown, recentLogs, totalLogs] = await Promise.all([
+  const startOfToday = new Date(Date.UTC(egyptNow.getUTCFullYear(), egyptNow.getUTCMonth(), egyptNow.getUTCDate()) - EGYPT_MS);
+  const startOfTomorrow = new Date(startOfToday.getTime() + 86400000);
+
+  const [breakdown, recentLogs, totalLogs, dailyAgg] = await Promise.all([
     UsageLog.aggregate([
       { $match: { userId: req.user._id, year, month } },
       { $group: {
@@ -31,11 +37,21 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(25)
       .lean(),
-    UsageLog.countDocuments({ userId: req.user._id, year, month })
+    UsageLog.countDocuments({ userId: req.user._id, year, month }),
+    UsageLog.aggregate([
+      { $match: {
+        userId: req.user._id,
+        createdAt: { $gte: startOfToday, $lt: startOfTomorrow }
+      }},
+      { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' }, count: { $sum: 1 } } }
+    ])
   ]);
 
   const totalOps = breakdown.reduce((s, b) => s + b.count, 0);
   const totalCostUSD = breakdown.reduce((s, b) => s + b.totalCostUSD, 0);
+
+  const dailyOps = dailyAgg.length > 0 ? dailyAgg[0].count : 0;
+  const dailyCost = dailyAgg.length > 0 ? dailyAgg[0].totalCostUSD : 0;
 
   // Build month options from all months that have data for this user
   const monthsWithData = await UsageLog.aggregate([
@@ -80,6 +96,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     recentLogs: recentLogs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
     totalOps,
     totalCostUSD,
+    dailyOps,
+    dailyCost,
     monthOptions,
     currentYear: year,
     currentMonth: month,
@@ -91,8 +109,9 @@ exports.renderDashboard = catchAsync(async (req, res) => {
 
 exports.getMyUsage = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = parseInt(req.query.year) || now.getFullYear();
-  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
+  const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
 
   const breakdown = await UsageLog.aggregate([
     { $match: { userId: req.user._id, year, month } },
@@ -109,8 +128,9 @@ exports.getMyUsage = catchAsync(async (req, res) => {
 
 exports.getUserLogs = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = parseInt(req.query.year) || now.getFullYear();
-  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
+  const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
   const skip = (page - 1) * limit;

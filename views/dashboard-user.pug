@@ -20,16 +20,20 @@ block app-content
     select#monthSelect
       each opt in monthOptions
         option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+    .ud-month-summary
+      span.ud-month-stat= totalOps + ' ops'
+      span.ud-month-stat-sep ·
+      span.ud-month-stat= '$' + cc(totalCostUSD)
 
   .stat-grid
     .stat-card
-      p.stat-card__label Operations
-      p.stat-card__value#ud-total-ops= totalOps
+      p.stat-card__label Ops Today
+      p.stat-card__value#ud-daily-ops= dailyOps
     .stat-card
-      p.stat-card__label Total Cost (USD)
+      p.stat-card__label Cost Today (USD)
       p.stat-card__value.stat-card__value--blue
         | $
-        span#ud-total-usd(data-raw=totalCostUSD)= cc(totalCostUSD)
+        span#ud-daily-cost(data-raw=dailyCost)= cc(dailyCost)
 
   .ud-section
     h2.ud-section__title Operation Log

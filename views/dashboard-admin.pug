@@ -24,13 +24,13 @@ block app-content
   //- Stat Bar
   .stat-grid
     .stat-card
-      p.stat-card__label Ops This Month
-      p.stat-card__value#total-ops-stat= totalOpsThisMonth
+      p.stat-card__label Ops Today
+      p.stat-card__value#daily-ops-stat= dailyOps
     .stat-card
-      p.stat-card__label Cost This Month (USD)
+      p.stat-card__label Cost Today (USD)
       p.stat-card__value.stat-card__value--blue
         | $
-        span#total-cost-stat(data-raw=totalCostThisMonth)= cc(totalCostThisMonth)
+        span#daily-cost-stat(data-raw=dailyCost)= cc(dailyCost)
     .stat-card
       p.stat-card__label Pending Signups
       p.stat-card__value(style="color: #d97706;")#pending-stat-count= pendingCount
@@ -59,6 +59,10 @@ block app-content
             select#overviewMonth
               each opt in monthOptions
                 option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+          .ad-overview-summary
+            span.ad-overview-stat#overview-month-ops= totalOpsThisMonth + ' ops'
+            span.ad-overview-stat-sep ·
+            span.ad-overview-stat#overview-month-cost= '$' + cc(totalCostThisMonth)
         .ad-feed
           table.ad-feed-table
             thead

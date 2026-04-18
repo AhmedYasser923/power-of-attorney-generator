@@ -17,8 +17,14 @@ const OP_LABELS = {
 
 exports.renderDashboard = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  // Egypt is permanently UTC+2 (no DST since 2011)
+  const EGYPT_MS = 2 * 60 * 60 * 1000;
+  const egyptNow = new Date(now.getTime() + EGYPT_MS);
+  const year = egyptNow.getUTCFullYear();
+  const month = egyptNow.getUTCMonth() + 1;
+
+  const startOfToday = new Date(Date.UTC(year, month - 1, egyptNow.getUTCDate()) - EGYPT_MS);
+  const startOfTomorrow = new Date(startOfToday.getTime() + 86400000);
 
   const [
     pendingUsers,
@@ -27,7 +33,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     opBreakdown,
     recentOps,
     onlineCount,
-    totalRecentOps
+    totalRecentOps,
+    dailyAgg
   ] = await Promise.all([
     User.find({ status: 'pending' }).sort({ createdAt: -1 }).lean(),
     User.find().sort({ createdAt: -1 }).lean(),
@@ -55,7 +62,11 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     ]),
     UsageLog.find({ year, month }).sort({ createdAt: -1 }).limit(25).lean(),
     Promise.resolve(0),
-    UsageLog.countDocuments({ year, month })
+    UsageLog.countDocuments({ year, month }),
+    UsageLog.aggregate([
+      { $match: { createdAt: { $gte: startOfToday, $lt: startOfTomorrow } } },
+      { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' }, count: { $sum: 1 } } }
+    ])
   ]);
 
   // Per-user totals for this month
@@ -86,6 +97,9 @@ exports.renderDashboard = catchAsync(async (req, res) => {
 
   const totalCostThisMonth = opBreakdown.reduce((s, b) => s + b.totalCostUSD, 0);
   const totalOpsThisMonth = opBreakdown.reduce((s, b) => s + b.count, 0);
+
+  const dailyOps = dailyAgg.length > 0 ? dailyAgg[0].count : 0;
+  const dailyCost = dailyAgg.length > 0 ? dailyAgg[0].totalCostUSD : 0;
 
   // Add totalCostUSD to users for the dashboard
   const usersWithTotals = usersWithStats.map(u => ({
@@ -133,6 +147,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     onlineCount,
     totalCostThisMonth,
     totalOpsThisMonth,
+    dailyOps,
+    dailyCost,
     pendingCount: pendingUsers.length,
     currentYear: year,
     currentMonth: month,
@@ -194,8 +210,9 @@ exports.changeUserPassword = catchAsync(async (req, res, next) => {
 
 exports.getUsageInsights = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = parseInt(req.query.year) || now.getFullYear();
-  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
+  const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
 
   const [userTotals, opBreakdown, monthlyTotals] = await Promise.all([
     UsageLog.aggregate([
@@ -337,8 +354,9 @@ exports.recalculateCosts = catchAsync(async (req, res) => {
 
 exports.getAdminLogs = catchAsync(async (req, res) => {
   const now = new Date();
-  const year = parseInt(req.query.year) || now.getFullYear();
-  const month = parseInt(req.query.month) || (now.getMonth() + 1);
+  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
+  const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
   const skip = (page - 1) * limit;

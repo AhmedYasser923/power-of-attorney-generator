@@ -351,11 +351,11 @@ document.getElementById('overviewMonth')?.addEventListener('change', async funct
     renderOpRows(json.data.logs);
     updateOpsPaginationControls();
 
-    // Update stat cards with the selected month's data
-    var totalOpsEl = document.getElementById('total-ops-stat');
-    var totalCostEl = document.getElementById('total-cost-stat');
-    if (totalOpsEl) totalOpsEl.textContent = json.data.total;
-    if (totalCostEl) totalCostEl.textContent = ceilNum(json.data.totalCostUSD || 0);
+    // Update overview monthly summary with the selected month's data
+    var monthOpsEl = document.getElementById('overview-month-ops');
+    var monthCostEl = document.getElementById('overview-month-cost');
+    if (monthOpsEl) monthOpsEl.textContent = json.data.total + ' ops';
+    if (monthCostEl) monthCostEl.textContent = '$' + ceilNum(json.data.totalCostUSD || 0);
   } catch (err) {
     console.error('[AdminDashboard] Overview month change error:', err.message);
   }
