@@ -54,7 +54,7 @@
   { "names": ["virgin atlantic", "vs"],                   "reqs": "DOB" },
   { "names": ["vistara"],                                 "reqs": "Merged with Air India. Send claim to Air India." },
   { "names": ["volotea"],                                 "reqs": "Boarding pass, ID" },
-  { "names": ["vueling", "vy"],                           "reqs": "ID" },
+  { "names": ["vueling", "vy"],                           "reqs": "ID , The email address used for booking" },
   { "names": ["wizz", "wizzair"],                         "reqs": "Wizz Air Denied Boarding Compensation Form" },
   { "names": ["world2fly"],                               "reqs": "ID / Passport number mandatory" }
 ]
