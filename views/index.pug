@@ -68,10 +68,10 @@ block content
         input.poa-input(type="text", name="lastName", required)
       .poa-form-group
         label.poa-label Address *
-        textarea.poa-textarea(name="address", rows="3")
+        textarea.poa-textarea(name="address", rows="3", required)
       .poa-form-group
         label.poa-label PNR Number *
-        input.poa-input(type="text", name="pnr", minlength="5", pattern="[A-Za-z0-9]{5,}")
+        input.poa-input(type="text", name="pnr", required, minlength="5", pattern="[A-Za-z0-9]{5,}")
       .poa-form-group
         label.poa-label Date *
         input.poa-input(type="date", name="date", required)
