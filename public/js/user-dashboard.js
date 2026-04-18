@@ -1,6 +1,36 @@
 'use strict';
 
-// ─── Month picker (unchanged — triggers full page reload) ─────────────────────
+// ─── Pagination state ─────────────────────────────────────────────────────────
+var currentPage  = 1;
+var totalPages   = (typeof UD_TOTAL_PAGES   !== 'undefined') ? UD_TOTAL_PAGES   : 1;
+var currentYear  = (typeof UD_CURRENT_YEAR  !== 'undefined') ? UD_CURRENT_YEAR  : new Date().getFullYear();
+var currentMonth = (typeof UD_CURRENT_MONTH !== 'undefined') ? UD_CURRENT_MONTH : (new Date().getMonth() + 1);
+var currentDay   = (typeof UD_CURRENT_DAY   !== 'undefined') ? UD_CURRENT_DAY   : 0;
+
+// ─── Day Picker Helpers ───────────────────────────────────────────────────────
+function egyptTodayInfo() {
+  var now = new Date();
+  var e = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  return { year: e.getUTCFullYear(), month: e.getUTCMonth() + 1, day: e.getUTCDate() };
+}
+
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+function rebuildDayOptions(year, month, selectedDay) {
+  var sel = document.getElementById('daySelect');
+  if (!sel) return;
+  var today = egyptTodayInfo();
+  var maxDay = (year === today.year && month === today.month) ? today.day : daysInMonth(year, month);
+  var html = '<option value="">All</option>';
+  for (var d = 1; d <= maxDay; d++) {
+    html += '<option value="' + d + '"' + (d === selectedDay ? ' selected' : '') + '>' + d + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+// ─── Month picker — triggers full page reload (resets day filter) ─────────────
 (function () {
   var sel = document.getElementById('monthSelect');
   if (sel) {
@@ -11,11 +41,18 @@
   }
 })();
 
-// ─── Pagination state ─────────────────────────────────────────────────────────
-var currentPage = 1;
-var totalPages  = (typeof UD_TOTAL_PAGES !== 'undefined') ? UD_TOTAL_PAGES : 1;
-var currentYear  = (typeof UD_CURRENT_YEAR !== 'undefined')  ? UD_CURRENT_YEAR  : new Date().getFullYear();
-var currentMonth = (typeof UD_CURRENT_MONTH !== 'undefined') ? UD_CURRENT_MONTH : (new Date().getMonth() + 1);
+// ─── Day picker — triggers full page reload ───────────────────────────────────
+(function () {
+  var sel = document.getElementById('daySelect');
+  if (sel) {
+    sel.addEventListener('change', function () {
+      var day = parseInt(this.value) || 0;
+      var url = '/me?year=' + currentYear + '&month=' + currentMonth;
+      if (day > 0) url += '&day=' + day;
+      window.location.href = url;
+    });
+  }
+})();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function ceilNum(v) {
@@ -30,7 +67,8 @@ function escHtml(str) {
 function fmtDate(iso) {
   return new Date(iso).toLocaleString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'Africa/Cairo'
   });
 }
 
@@ -77,7 +115,7 @@ function updatePaginationControls() {
 // ─── Fetch a page of logs via AJAX ────────────────────────────────────────────
 async function fetchLogsPage(page) {
   try {
-    var url = '/api/me/logs?year=' + currentYear + '&month=' + currentMonth + '&page=' + page + '&limit=25';
+    var url = '/api/me/logs?year=' + currentYear + '&month=' + currentMonth + '&page=' + page + '&limit=5' + (currentDay > 0 ? '&day=' + currentDay : '');
     var res = await fetch(url);
     if (!res.ok) throw new Error('Request failed: ' + res.status);
     var json = await res.json();
@@ -102,5 +140,6 @@ document.getElementById('ud-next-page')?.addEventListener('click', function() {
   if (currentPage < totalPages) fetchLogsPage(currentPage + 1);
 });
 
-// ─── Init pagination controls on first load ───────────────────────────────────
+// ─── Init pagination controls and day picker on first load ───────────────────
+rebuildDayOptions(currentYear, currentMonth, currentDay);
 updatePaginationControls();

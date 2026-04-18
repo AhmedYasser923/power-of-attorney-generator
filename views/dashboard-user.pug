@@ -20,6 +20,9 @@ block app-content
     select#monthSelect
       each opt in monthOptions
         option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+    label(for="daySelect" style="margin-left:0.25rem;") Day:
+    select#daySelect
+      option(value="") All
     .ud-month-summary
       span.ud-month-stat= totalOps + ' ops'
       span.ud-month-stat-sep ·
@@ -51,7 +54,7 @@ block app-content
         tbody
           each log in recentLogs
             tr
-              td= new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              td= new Date(log.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })
               td
                 span.op-pill(data-type=log.operationType)= log.label
               td(style="color: var(--text-muted); font-size: 0.8125rem;")= log.model || '—'
@@ -82,4 +85,5 @@ block scripts
     var UD_TOTAL_LOGS = !{totalLogs};
     var UD_CURRENT_YEAR = !{currentYear};
     var UD_CURRENT_MONTH = !{currentMonth};
+    var UD_CURRENT_DAY = !{currentDay};
   script(src="/js/user-dashboard.js")

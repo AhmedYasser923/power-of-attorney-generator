@@ -10,21 +10,28 @@ html(lang="en")
     //- A11Y [CRITICAL]: Skip to content link for keyboard-only navigation
     a.skip-link(href="#main-content") Skip to main content
 
-    //- A11Y [CRITICAL]: Semantic header and navigation landmark
-    header.global-header
-      .nav-container(style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;")
-        a(href="/", aria-label="Go to Dashboard")
-          img(src="/images/Screenshot_1.png", alt="Refly Logo", style="height: 60px;")
-        if user
-          nav.global-nav
-            if user.role === 'admin'
-              a.global-nav__link(href="/admin") Admin Panel
-            a.global-nav__link(href="/me") My Usage
-            a.global-nav__link.global-nav__link--logout(href="/logout") Sign Out
-  
-    //- A11Y [CRITICAL]: Main landmark so screen readers know where the app logic begins
-    main#main-content
-      block content
+    if user
+      .app-layout
+        aside.sidebar
+          .sidebar__logo
+            a(href="/")
+              img(src="/images/image-removebg-preview.png", alt="Refly Logo")
+          .sidebar__section
+            p.sidebar__label Workspace
+            a.sidebar__link(href="/") Dashboard
+            a.sidebar__link(href="/me") My Usage
+          if user.role === 'admin'
+            .sidebar__section
+              p.sidebar__label Administration
+              a.sidebar__link(href="/admin") Admin Panel
+          .sidebar__spacer
+          .sidebar__section
+            a.sidebar__link.sidebar__link--danger(href="/logout") Sign Out
+        main#main-content.app-main
+          block content
+    else
+      main#main-content
+        block content
     script.
       (function () {
         var knownVersion = null;

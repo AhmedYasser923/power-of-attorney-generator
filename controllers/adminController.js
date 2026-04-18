@@ -31,9 +31,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     allUsers,
     monthlyTotals,
     opBreakdown,
-    recentOps,
     onlineCount,
-    totalRecentOps,
     dailyAgg
   ] = await Promise.all([
     User.find({ status: 'pending' }).sort({ createdAt: -1 }).lean(),
@@ -60,9 +58,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       },
       { $sort: { totalCostUSD: -1 } }
     ]),
-    UsageLog.find({ year, month }).sort({ createdAt: -1 }).limit(25).lean(),
     Promise.resolve(0),
-    UsageLog.countDocuments({ year, month }),
     UsageLog.aggregate([
       { $match: { createdAt: { $gte: startOfToday, $lt: startOfTomorrow } } },
       { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' }, count: { $sum: 1 } } }
@@ -143,7 +139,7 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     users: usersWithTotals,
     monthlyTotals,
     opBreakdown: opBreakdown.map(b => ({ ...b, label: OP_LABELS[b._id] || b._id })),
-    recentOps: recentOps.map(o => ({ ...o, label: OP_LABELS[o.operationType] || o.operationType })),
+    recentOps: [],
     onlineCount,
     totalCostThisMonth,
     totalOpsThisMonth,
@@ -152,8 +148,8 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     pendingCount: pendingUsers.length,
     currentYear: year,
     currentMonth: month,
-    opsTotalLogs: totalRecentOps,
-    opsTotalPages: Math.ceil(totalRecentOps / 25) || 1,
+    opsTotalLogs: 0,
+    opsTotalPages: 1,
     opsCurrentPage: 1,
     monthOptions
   });
@@ -354,22 +350,30 @@ exports.recalculateCosts = catchAsync(async (req, res) => {
 
 exports.getAdminLogs = catchAsync(async (req, res) => {
   const now = new Date();
-  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const EGYPT_MS = 2 * 60 * 60 * 1000;
+  const egyptNow = new Date(now.getTime() + EGYPT_MS);
   const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
   const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
+  const day = parseInt(req.query.day) || 0;
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
   const skip = (page - 1) * limit;
 
+  let matchQuery = { year, month };
+  if (day > 0) {
+    const startOfDay = new Date(Date.UTC(year, month - 1, day) - EGYPT_MS);
+    matchQuery.createdAt = { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 86400000) };
+  }
+
   const [total, logs, costAgg] = await Promise.all([
-    UsageLog.countDocuments({ year, month }),
-    UsageLog.find({ year, month })
+    UsageLog.countDocuments(matchQuery),
+    UsageLog.find(matchQuery)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
     UsageLog.aggregate([
-      { $match: { year, month } },
+      { $match: matchQuery },
       { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' } } }
     ])
   ]);

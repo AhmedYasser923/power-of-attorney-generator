@@ -59,6 +59,10 @@ block app-content
             select#overviewMonth
               each opt in monthOptions
                 option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+          .ad-month-picker
+            label(for="overviewDay") Day:
+            select#overviewDay
+              option(value="") All
           .ad-overview-summary
             span.ad-overview-stat#overview-month-ops= totalOpsThisMonth + ' ops'
             span.ad-overview-stat-sep ·
@@ -72,13 +76,8 @@ block app-content
                 th Operation
                 th Cost
             tbody#operations-feed-table
-              each op in recentOps
-                tr
-                  td(style="white-space:nowrap; color:var(--text-muted);")= new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                  td= op.userName
-                  td
-                    span.op-pill(data-type=op.operationType)= op.label
-                  td= `$${cc(op.costUSD)}`
+              tr#ops-loading-row
+                td(colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;font-size:0.875rem;") Loading operations…
         .ad-pagination#ops-pagination
           button.ud-page-btn#ops-prev-page(disabled) ← Prev
           span.ud-page-info#ops-page-info Page 1 of #{opsTotalPages}

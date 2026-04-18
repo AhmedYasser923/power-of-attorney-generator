@@ -5,6 +5,7 @@ var opsPage = 1;
 var opsTotalPages = (typeof OPS_TOTAL_PAGES !== 'undefined') ? OPS_TOTAL_PAGES : 1;
 var adminYear  = (typeof CURRENT_YEAR  !== 'undefined') ? CURRENT_YEAR  : new Date().getFullYear();
 var adminMonth = (typeof CURRENT_MONTH !== 'undefined') ? CURRENT_MONTH : (new Date().getMonth() + 1);
+var adminDay   = 0;
 
 // ─── Tab System ───────────────────────────────────────────────────────────────
 // Track which charts have been lazily initialized (charts in hidden tabs must
@@ -28,7 +29,7 @@ function prependFeedRow(op) {
   if (!tbody) return;
 
   const now = new Date(op.timestamp || Date.now());
-  const time = now.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const time = now.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' });
   const cost = `$${ceilNum(op.costUSD)}`;
 
   const tr = document.createElement('tr');
@@ -49,12 +50,14 @@ function prependFeedRow(op) {
 function renderOpRows(logs) {
   var tbody = document.getElementById('operations-feed-table');
   if (!tbody) return;
+  var loadingRow = document.getElementById('ops-loading-row');
+  if (loadingRow) loadingRow.remove();
   if (!logs || logs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem;">No operations this period.</td></tr>';
     return;
   }
   tbody.innerHTML = logs.map(function(op) {
-    var time = new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    var time = new Date(op.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' });
     var cost = '$' + ceilNum(op.costUSD);
     return '<tr>' +
       '<td style="white-space:nowrap;color:var(--text-muted);">' + time + '</td>' +
@@ -76,7 +79,7 @@ function updateOpsPaginationControls() {
 
 async function fetchOpsPage(page) {
   try {
-    var url = '/admin/logs?year=' + adminYear + '&month=' + adminMonth + '&page=' + page + '&limit=25';
+    var url = '/admin/logs?year=' + adminYear + '&month=' + adminMonth + '&page=' + page + '&limit=5' + (adminDay > 0 ? '&day=' + adminDay : '');
     var res = await fetch(url);
     if (!res.ok) throw new Error('Request failed: ' + res.status);
     var json = await res.json();
@@ -334,14 +337,22 @@ document.getElementById('ops-next-page')?.addEventListener('click', function() {
 });
 
 // ─── Overview Month Picker ────────────────────────────────────────────────────
+document.getElementById('overviewDay')?.addEventListener('change', function() {
+  adminDay = parseInt(this.value) || 0;
+  opsPage = 1;
+  fetchOpsPage(1);
+});
+
 document.getElementById('overviewMonth')?.addEventListener('change', async function() {
   const [y, m] = this.value.split('-').map(Number);
   adminYear = y;
   adminMonth = m;
+  adminDay = 0;
   opsPage = 1;
+  rebuildDayOptions(y, m, 0);
 
   try {
-    const res = await fetch('/admin/logs?year=' + y + '&month=' + m + '&page=1&limit=25');
+    const res = await fetch('/admin/logs?year=' + y + '&month=' + m + '&page=1&limit=5');
     const json = await res.json();
     if (json.status !== 'success') throw new Error(json.message || 'Error');
 
@@ -427,8 +438,33 @@ function capitalize(str) {
   return String(str || '').charAt(0).toUpperCase() + String(str || '').slice(1);
 }
 
+// ─── Day Picker Helpers ───────────────────────────────────────────────────────
+function egyptTodayInfo() {
+  var now = new Date();
+  var e = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  return { year: e.getUTCFullYear(), month: e.getUTCMonth() + 1, day: e.getUTCDate() };
+}
+
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+function rebuildDayOptions(year, month, selectedDay) {
+  var sel = document.getElementById('overviewDay');
+  if (!sel) return;
+  var today = egyptTodayInfo();
+  var maxDay = (year === today.year && month === today.month) ? today.day : daysInMonth(year, month);
+  var html = '<option value="">All</option>';
+  for (var d = 1; d <= maxDay; d++) {
+    html += '<option value="' + d + '"' + (d === selectedDay ? ' selected' : '') + '>' + d + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
 // ─── Init Pagination Controls on First Load ───────────────────────────────────
+rebuildDayOptions(adminYear, adminMonth, 0);
 updateOpsPaginationControls();
+fetchOpsPage(1);
 
 // ─── Reload All Clients ───────────────────────────────────────────────────────
 (function () {

@@ -19,9 +19,16 @@ exports.renderDashboard = catchAsync(async (req, res) => {
   const egyptNow = new Date(now.getTime() + EGYPT_MS);
   const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
   const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
+  const day = parseInt(req.query.day) || 0;
 
   const startOfToday = new Date(Date.UTC(egyptNow.getUTCFullYear(), egyptNow.getUTCMonth(), egyptNow.getUTCDate()) - EGYPT_MS);
   const startOfTomorrow = new Date(startOfToday.getTime() + 86400000);
+
+  let logQuery = { userId: req.user._id, year, month };
+  if (day > 0) {
+    const startOfDay = new Date(Date.UTC(year, month - 1, day) - EGYPT_MS);
+    logQuery.createdAt = { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 86400000) };
+  }
 
   const [breakdown, recentLogs, totalLogs, dailyAgg] = await Promise.all([
     UsageLog.aggregate([
@@ -33,11 +40,11 @@ exports.renderDashboard = catchAsync(async (req, res) => {
       }},
       { $sort: { totalCostUSD: -1 } }
     ]),
-    UsageLog.find({ userId: req.user._id, year, month })
+    UsageLog.find(logQuery)
       .sort({ createdAt: -1 })
-      .limit(25)
+      .limit(5)
       .lean(),
-    UsageLog.countDocuments({ userId: req.user._id, year, month }),
+    UsageLog.countDocuments(logQuery),
     UsageLog.aggregate([
       { $match: {
         userId: req.user._id,
@@ -101,8 +108,9 @@ exports.renderDashboard = catchAsync(async (req, res) => {
     monthOptions,
     currentYear: year,
     currentMonth: month,
+    currentDay: day,
     totalLogs,
-    totalPages: Math.ceil(totalLogs / 25) || 1,
+    totalPages: Math.ceil(totalLogs / 5) || 1,
     currentPage: 1
   });
 });
@@ -128,16 +136,24 @@ exports.getMyUsage = catchAsync(async (req, res) => {
 
 exports.getUserLogs = catchAsync(async (req, res) => {
   const now = new Date();
-  const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  const EGYPT_MS = 2 * 60 * 60 * 1000;
+  const egyptNow = new Date(now.getTime() + EGYPT_MS);
   const year = parseInt(req.query.year) || egyptNow.getUTCFullYear();
   const month = parseInt(req.query.month) || (egyptNow.getUTCMonth() + 1);
+  const day = parseInt(req.query.day) || 0;
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 25));
   const skip = (page - 1) * limit;
 
+  let matchQuery = { userId: req.user._id, year, month };
+  if (day > 0) {
+    const startOfDay = new Date(Date.UTC(year, month - 1, day) - EGYPT_MS);
+    matchQuery.createdAt = { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 86400000) };
+  }
+
   const [total, logs] = await Promise.all([
-    UsageLog.countDocuments({ userId: req.user._id, year, month }),
-    UsageLog.find({ userId: req.user._id, year, month })
+    UsageLog.countDocuments(matchQuery),
+    UsageLog.find(matchQuery)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
