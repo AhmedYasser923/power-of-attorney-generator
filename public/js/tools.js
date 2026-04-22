@@ -764,23 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   // SMART EMAIL BUILDER
   // ---------------------------------------------------------------------------
-  // Freestyle Mode toggle interaction
-  const freestyleCheckbox = document.getElementById('emFreestyle');
-  const checklistSection  = document.getElementById('emChecklistSection');
-
-  if (freestyleCheckbox && checklistSection) {
-    freestyleCheckbox.addEventListener('change', () => {
-      if (freestyleCheckbox.checked) {
-        checklistSection.style.opacity = '0.4';
-        checklistSection.style.pointerEvents = 'none';
-      } else {
-        checklistSection.style.opacity = '1';
-        checklistSection.style.pointerEvents = 'auto';
-      }
-    });
-  }
-
-  // Language persistence
+// Language persistence
   const emLanguageSelect = document.getElementById('emLanguage');
   if (localStorage.getItem('emLastLanguage')) {
     emLanguageSelect.value = localStorage.getItem('emLastLanguage');
@@ -798,26 +782,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const englishTextDiv  = document.getElementById('emEnglishText');
     const charCountDiv    = document.getElementById('emCharCount');
 
-    const checkboxes      = document.querySelectorAll('#emChecklistSection input[type="checkbox"]:checked');
-    const customInput     = document.getElementById('emCustom');
-    const isFreestyle     = freestyleCheckbox && freestyleCheckbox.checked;
-    const missingDocs     = isFreestyle ? [] : Array.from(checkboxes).map(cb => cb.value);
+    const requestText     = document.getElementById('emRequestText').value.trim();
 
     // Client-side validation
-    if (!isFreestyle && missingDocs.length === 0 && !customInput.value.trim()) {
-      alert('Select at least one item or enter a custom request');
-      return;
-    }
-    if (isFreestyle && !customInput.value.trim()) {
-      alert('Enter a custom request to use Freestyle Mode');
+    if (!requestText) {
+      alert('Please enter the requested information');
       return;
     }
 
     const payload = {
-      language:      emLanguageSelect.value,
-      missingDocs,
-      customRequest: customInput.value.trim(),
-      freestyleMode: isFreestyle,
+      language:    emLanguageSelect.value,
+      requestText,
     };
 
     btn.disabled      = true;
