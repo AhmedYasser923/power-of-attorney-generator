@@ -70,37 +70,48 @@ block content
     }
 
     /* Email Builder */
+    .em-builder-layout {
+        display: grid;
+        grid-template-columns: 1fr 250px;
+        gap: 20px;
+        align-items: start;
+    }
+    .em-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
     .em-section {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 16px;
+        padding: 12px;
+        margin-bottom: 10px;
     }
     .em-section-title {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 800;
         color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin: 0 0 12px 0;
+        margin: 0 0 8px 0;
     }
     .em-checklist {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        gap: 5px;
         transition: opacity 0.2s ease;
     }
     .em-checklist-item {
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 7px;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 6px;
         border: 1px solid transparent;
         cursor: pointer;
         transition: background 0.15s, border-color 0.15s;
-        font-size: 13.5px;
+        font-size: 12.5px;
         color: #334155;
         line-height: 1.3;
         user-select: none;
@@ -113,16 +124,15 @@ block content
         margin-top: 2px;
         flex-shrink: 0;
         accent-color: #6366f1;
-        width: 15px;
-        height: 15px;
+        width: 13px;
+        height: 13px;
         cursor: pointer;
     }
     .em-rejection-divider {
-        grid-column: 1 / -1;
         display: flex;
         align-items: center;
         gap: 10px;
-        margin: 8px 0 4px;
+        margin: 8px 0 6px;
     }
     .em-rejection-divider span {
         font-size: 11px;
@@ -139,7 +149,6 @@ block content
         background: #fecaca;
     }
     .em-checklist-item.rejection {
-        grid-column: 1 / -1;
         color: #7f1d1d;
     }
     .em-checklist-item.rejection:hover {
@@ -307,8 +316,78 @@ block content
         color: #475569;
         white-space: pre-wrap;
     }
-    @media (max-width: 768px) {
-        .em-checklist { grid-template-columns: 1fr; }
+    /* Email Builder Inner Tabs */
+    .em-inner-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 20px;
+    }
+    .em-inner-tab-btn {
+        padding: 8px 18px;
+        border: none;
+        background: none;
+        font-size: 13px;
+        font-weight: 600;
+        color: #94a3b8;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: color 0.15s, border-color 0.15s;
+        white-space: nowrap;
+    }
+    .em-inner-tab-btn:hover { color: #475569; }
+    .em-inner-tab-btn.active {
+        color: #6366f1;
+        border-bottom-color: #6366f1;
+    }
+    .em-inner-tab-content { display: none; }
+    .em-inner-tab-content.active { display: block; }
+    /* Tone selector */
+    .em-tone-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+    }
+    .em-tone-pill {
+        display: flex;
+        align-items: center;
+        padding: 7px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        transition: all 0.15s;
+        user-select: none;
+    }
+    .em-tone-pill input[type="radio"] { display: none; }
+    .em-tone-pill:has(input:checked) {
+        background: #eff6ff;
+        border-color: #6366f1;
+        color: #4338ca;
+    }
+    .em-tone-pill:hover { border-color: #a5b4fc; }
+    @media (max-width: 900px) {
+        /* Stack builder layout */
+        .em-builder-layout { grid-template-columns: 1fr; }
+        /* Tighter section padding */
+        .em-section { padding: 10px; margin-bottom: 8px; }
+        .em-section-title { margin-bottom: 6px; }
+        .em-checklist-item { padding: 4px 7px; font-size: 12px; }
+        .em-checklist { gap: 4px; }
+        /* Sidebar becomes a compact row below the checklist */
+        .em-sidebar { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+        #emSidebarRequest { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+        #emSidebarRequest .em-section { margin-bottom: 0; }
+        #emSidebarRequest > label.em-freestyle-toggle { grid-column: 1 / -1; margin-top: 0; }
+        #emSidebarDraft { flex: 1 1 100%; }
+        .em-sidebar > .em-language-group { flex: 1 1 auto; margin-top: 0 !important; }
+        .em-sidebar > button { flex: 0 0 auto; margin-top: 0 !important; width: auto; align-self: flex-end; }
+        /* Shorter result textarea */
+        .em-output-textarea { height: 180px; }
         .em-bottom-row { flex-direction: column; }
     }
 
@@ -396,42 +475,150 @@ block content
 
         //- TOOL: SMART EMAIL BUILDER (Full Width)
         .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Request Builder
-          p(style="font-size: 14px; color: #334155; margin-bottom: 16px;") email address /  Boarding pass  / fill dashboard / Service Fees / Ticket number (13-digit) PNR / Booking Reference /  ID / Passport  /  Signed Power of Attorney /  Booking confirmation  /  Proof of delay / Proof of cancellation /  passengers documents not complete
-          p(style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 16px;") Visa/Documentation /  {Short Delay / No Missed Connection} / No Disruption Found / Jurisdiction expired  / Disrupted & Affected Flights Not Under Same Booking  / double submission
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Email Builder
 
           form#emailBuilderForm
 
-            //- TEXT INPUT FOR REQUEST
-            .em-section
-              p.em-section-title Draft a Template
-              textarea#emRequestText.ts-input(type="text" placeholder="e.g., use template ticket number, boarding pass, passengers documents with link: https://example.com/upload, reject visa issue" style="border: 1px solid #e2e8f0; min-height: 80px; resize: vertical;")
-              p(style="font-size: 12px; color: #64748b; margin-top: 8px;") Describe the documents or information needed. Use keywords like 'use template', 'ticket number', 'boarding pass', 'reject visa'. Include links where needed.
+            //- INNER TABS
+            .em-inner-tabs
+              button.em-inner-tab-btn.active(type="button" data-em-tab="request") 📋 Request Info
+              button.em-inner-tab-btn(type="button" data-em-tab="draft") ✏️ Draft / Polish
 
-            //- LANGUAGE + GENERATE
-            .em-bottom-row
-              .em-language-group
-                label(for="emLanguage") Output Language
-                select#emLanguage.ts-input
-                  option(value="English") English
-                  option(value="Spanish") Spanish
-                  option(value="French") French
-                  option(value="German") German
-                  option(value="Italian") Italian
-                  option(value="Dutch") Dutch
-                  option(value="Swedish") Swedish
-                  option(value="Polish") Polish
-                  option(value="Portuguese") Portuguese
-                  option(value="Danish") Danish
-                  option(value="Norwegian") Norwegian
-                  option(value="Finnish") Finnish
-                  option(value="Romanian") Romanian
-                  option(value="Czech") Czech
-                  option(value="Hungarian") Hungarian
-                  option(value="Greek") Greek
-                  option(value="Turkish") Turkish
-                  option(value="Arabic") Arabic
-              button#emGenerateBtn.em-generate-btn(type="submit") ✨ Generate
+            .em-builder-layout
+
+              //- MAIN COLUMN (tab content)
+              .em-main
+
+                //- TAB: REQUEST INFO
+                #emTabRequest.em-inner-tab-content.active
+                  .em-section
+                    p.em-section-title Documents
+                    .em-checklist
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Boarding pass")
+                        span Boarding Pass
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Ticket number (13-digit)")
+                        span Ticket Number (13-digit)
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="PNR / Booking Reference")
+                        span PNR / Booking Reference
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="ID / Passport")
+                        span ID / Passport
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Signed Power of Attorney")
+                        span Signed Power of Attorney
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Booking confirmation")
+                        span Booking Confirmation
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Proof of delay")
+                        span Proof of Delay
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Proof of cancellation")
+                        span Proof of Cancellation
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="passengers documents not complete")
+                        span Passengers Docs (Link)
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="email address")
+                        span Email Address
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="fill dashboard")
+                        span Fill Dashboard (Link)
+                      label.em-checklist-item
+                        input(type="checkbox" name="emTemplates" value="Service Fees")
+                        span Service Fees
+
+                    .em-rejection-divider
+                      span Rejections
+
+                    .em-checklist
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="Visa/Documentation Rejection")
+                        span Visa / Documentation
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="Short Delay / No Missed Connection Rejection")
+                        span Short Delay / No Missed Connection
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="No Disruption Found Rejection")
+                        span No Disruption Found
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="Jurisdiction expired Rejection")
+                        span Jurisdiction Expired
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="Disrupted & Affected Flights Not Under Same Booking Rejection")
+                        span Not Same Booking
+                      label.em-checklist-item.rejection
+                        input(type="checkbox" name="emTemplates" value="double submission")
+                        span Double Submission
+
+                //- TAB: DRAFT / POLISH
+                #emTabDraft.em-inner-tab-content
+                  .em-section
+                    p.em-section-title Your Message
+                    textarea#emDraftText.ts-input(placeholder="Paste your rough draft or describe what you want to say..." style="min-height: 140px; resize: vertical; width: 100%; box-sizing: border-box;")
+
+              //- SIDEBAR (always visible)
+              .em-sidebar
+
+                //- Request Info controls
+                #emSidebarRequest
+                  .em-section
+                    p.em-section-title Upload Link
+                    p(style="font-size: 11px; color: #94a3b8; margin: 0 0 5px;") For Passengers Docs &amp; Signed POA
+                    input#emLink.ts-input(type="text" placeholder="https://..." style="width: 100%; box-sizing: border-box; font-size: 12px;")
+
+                  .em-section
+                    label.em-freestyle-toggle(style="margin-top: 0;")
+                      input#emUseNote(type="checkbox")
+                      | Custom Request
+                    #emNoteArea(style="display: none;")
+                      textarea#emCustomNote.ts-input(placeholder="Additional message to include..." style="min-height: 60px; margin-top: 8px; resize: vertical; width: 100%; box-sizing: border-box; font-size: 12px;")
+
+                  label.em-freestyle-toggle
+                    input#emUseWrapper(type="checkbox" checked)
+                    | Wrap in formal intro &amp; outro
+
+                //- Draft / Polish controls
+                #emSidebarDraft(style="display: none;")
+                  .em-section
+                    p.em-section-title Tone
+                    .em-tone-pills
+                      label.em-tone-pill
+                        input(type="radio" name="emTone" value="neutral" checked)
+                        | Neutral
+                      label.em-tone-pill
+                        input(type="radio" name="emTone" value="empathetic")
+                        | Empathetic
+                      label.em-tone-pill
+                        input(type="radio" name="emTone" value="firm")
+                        | Firm
+
+                //- Language + Generate (always visible)
+                .em-language-group(style="margin-top: 4px;")
+                  label(for="emLanguage") Output Language
+                  select#emLanguage.ts-input
+                    option(value="English") English
+                    option(value="Spanish") Spanish
+                    option(value="French") French
+                    option(value="German") German
+                    option(value="Italian") Italian
+                    option(value="Dutch") Dutch
+                    option(value="Swedish") Swedish
+                    option(value="Polish") Polish
+                    option(value="Portuguese") Portuguese
+                    option(value="Danish") Danish
+                    option(value="Norwegian") Norwegian
+                    option(value="Finnish") Finnish
+                    option(value="Romanian") Romanian
+                    option(value="Czech") Czech
+                    option(value="Hungarian") Hungarian
+                    option(value="Greek") Greek
+                    option(value="Turkish") Turkish
+                    option(value="Arabic") Arabic
+                button#emGenerateBtn.em-generate-btn(type="submit" style="width: 100%; margin-top: 10px;") ✨ Generate
 
           //- RESULT BOX
           #emResultBox.em-result-box(style="display: none;")

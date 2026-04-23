@@ -9,54 +9,42 @@ const emailTemplates = require('../data/emailTemplates.json');
 const DOCUMENT_TEMPLATES = emailTemplates.documentTemplates;
 const REJECTION_TEMPLATES = emailTemplates.rejectionTemplates;
 
-const TEMPLATE_KEYWORDS = [
-  { template: 'Boarding pass', aliases: ['boarding pass'] },
-  { template: 'Ticket number (13-digit)', aliases: ['ticket number', 'ticket num', 'ticket no', 'e-ticket number', '13-digit ticket'] },
-  { template: 'PNR / Booking Reference', aliases: ['pnr', 'booking reference', 'booking ref', 'record locator'] },
-  { template: 'ID / Passport', aliases: ['id', 'passport', 'identity document', 'national id'] },
-  { template: 'Signed Power of Attorney', aliases: ['power of attorney', 'signed poa', 'poa'] },
-  { template: 'Booking confirmation', aliases: ['booking confirmation', 'reservation confirmation', 'ticket confirmation'] },
-  { template: 'Proof of delay', aliases: ['proof of delay', 'delay proof', 'flight delay'] },
-  { template: 'Proof of cancellation', aliases: ['proof of cancellation', 'cancellation proof', 'flight cancellation'] },
-  { template: 'passengers documents not complete', aliases: ['passengers documents', 'passenger documents', 'passenger information', 'missing passengers', 'passengers information', 'passenger upload', 'passenger docs'] },
-  { template: 'Visa/Documentation Rejection', aliases: ['visa issue', 'documentation issue', 'visa rejection', 'documentation rejection', 'visa/documentation'] },
-  { template: 'Short Delay / No Missed Connection Rejection', aliases: ['short delay', 'no missed connection', 'missed connection'] },
-  { template: 'No Disruption Found Rejection', aliases: ['no disruption found', 'no disruption', 'disruption not found'] },
-  { template: 'Jurisdiction expired Rejection', aliases: ['jurisdiction expired', 'limitation period', 'time-barred', 'statute of limitations'] },
-  { template: 'Disrupted & Affected Flights Not Under Same Booking Rejection', aliases: ['not under same booking', 'separate booking', 'different reservation', 'same booking'] },
-];
 
-function extractUrls(text) {
-  const urls = [];
-  const regex = /https?:\/\/[\w\-./?=&%#]+/gi;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    urls.push(match[0]);
+// Templates whose text contains a [link] placeholder (passenger uploads)
+const LINK_TEMPLATE_KEYS = new Set(['fill dashboard', 'passengers documents not complete', 'Signed Power of Attorney']);
+
+// Templates that are pure information (not physical documents)
+const INFO_ONLY_TEMPLATE_KEYS = new Set(['email address', 'Ticket number (13-digit)', 'PNR / Booking Reference', 'Service Fees']);
+
+function buildOutro(selectedDocKeys, link, hasCustomNote) {
+  const hasLinkTemplates = !!link && selectedDocKeys.some(k => LINK_TEMPLATE_KEYS.has(k));
+  const nonLinkKeys      = selectedDocKeys.filter(k => !LINK_TEMPLATE_KEYS.has(k));
+  const hasNonLink       = nonLinkKeys.length > 0 || hasCustomNote;
+
+  const labelFor = (keys, includesCustom) => {
+    const hasDocs = keys.some(k => !INFO_ONLY_TEMPLATE_KEYS.has(k));
+    const hasInfo = keys.some(k =>  INFO_ONLY_TEMPLATE_KEYS.has(k)) || includesCustom;
+    if (hasDocs && hasInfo) return 'documents and information';
+    if (hasDocs) return 'documents';
+    return 'information';
+  };
+
+  if (hasLinkTemplates && hasNonLink) {
+    const label = labelFor(nonLinkKeys, hasCustomNote);
+    return `Please upload the relevant documents through the link above and reply directly to this email with the remaining ${label} at your earliest convenience. Once we receive everything, our legal team will continue processing your compensation claim.`;
   }
-  return urls;
+
+  if (hasLinkTemplates && !hasNonLink) {
+    return `Please upload all required documents through the link above at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+  }
+
+  // All via email reply
+  const label = labelFor(selectedDocKeys, hasCustomNote);
+  return `Please reply directly to this email with the requested ${label} at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
 }
 
-function findTemplateMatches(requestText) {
-  const normalized = requestText.toLowerCase();
-  const matches = new Set();
-  TEMPLATE_KEYWORDS.forEach(({ template, aliases }) => {
-    if (aliases.some(alias => normalized.includes(alias))) {
-      matches.add(template);
-    }
-  });
-  return Array.from(matches);
-}
-
-function isUseTemplateRequest(requestText) {
-  return /\buse templates?\b/i.test(requestText);
-}
-
-function wrapWithTemplate(content) {
-  return `In order to proceed with your claim and process your compensation, we require the following information and documents:
-
-${content}
-
-Please reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+function wrapWithTemplate(content, outro) {
+  return `In order to proceed with your claim and process your compensation, we require the following information and documents:\n\n${content}\n\n${outro}`;
 }
 
 const EocRecord            = require('../models/EocRecord');
@@ -439,54 +427,26 @@ exports.lookupIATA = (req, res, next) => {
 // HELPER FUNCTIONS FOR EMAIL GENERATION
 // ---------------------------------------------------------------------------
 
-function assembleDocRequestTemplate(bulletPointsContent) {
-  return `In order to proceed with your claim and process your compensation, we require the following information and documents:\n\n${bulletPointsContent}\n\nPlease reply directly to this email with the requested information and documents at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
-}
+function buildFreestylePrompt(draftText, tone) {
+  const toneDescriptions = {
+    neutral:    'clear, professional, and straightforward',
+    empathetic: 'warm and understanding while still professional — passengers are often in a stressful situation regarding their claims',
+    firm:       'direct and assertive while remaining courteous',
+  };
+  const toneDesc = toneDescriptions[tone] || toneDescriptions.neutral;
 
-function buildEnglishBody(isRejection, checkboxContent, customRequest, passengersContent = '') {
-  let body = '';
-  if (passengersContent) {
-    body = passengersContent;
-    if (checkboxContent) {
-      body += '\n\n' + assembleDocRequestTemplate(checkboxContent);
-    }
-  } else if (checkboxContent) {
-    if (isRejection) {
-      body = checkboxContent;
-    } else {
-      body = assembleDocRequestTemplate(checkboxContent);
-    }
-  }
-  if (customRequest) {
-    body += (body ? '\n\n' : '') + `[CUSTOM REQUEST — REFINE THIS PART]: ${customRequest}`;
-  }
-  return body;
-}
+  return `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.
 
-function buildTranslationPrompt(language, englishBody, customRequest, isEnglish) {
-  let prompt = `You are a professional multilingual translator and a flight compensation specialist.\n\n`;
-  prompt += `Your tasks:\n`;
-  prompt += `1. Translate the following email content into ${language}.\n`;
-  if (customRequest) {
-    prompt += `2. The section marked [CUSTOM REQUEST — REFINE THIS PART] must be professionally rewritten before translation. Make it clear, formal, and suitable for a compensation claim correspondence. Remove the marker tag after refining.\n`;
-  }
-  if (!isEnglish) {
-    prompt += `3. After the translated version, append the exact separator "|||ENGLISH|||" on its own line, then provide the full English version of the final email.\n`;
-  }
-  prompt += `\nIMPORTANT: Output ONLY the email body. No subject line, no explanatory text, no metadata.\n\n`;
-  prompt += `---\n${englishBody}\n---`;
-  return prompt;
-}
+Tone: ${toneDesc}
 
-function buildFreestylePrompt(language, customRequest, isEnglish) {
-  let prompt = `You are a professional multilingual email writer and a flight compensation specialist.\n\n`;
-  prompt += `Rewrite and refine the following message to be professional, clear, and appropriate for a compensation claim correspondence. Do not add any template structure, greetings, or closings — output only the refined body content.\n`;
-  if (!isEnglish) {
-    prompt += `Then translate the refined content into ${language}.\n`;
-    prompt += `After the translated version, append the exact separator "|||ENGLISH|||" on its own line, then provide the English version.\n`;
-  }
-  prompt += `\nCustom message to refine:\n"${customRequest}"`;
-  return prompt;
+Rewrite the following message following these rules:
+- Preserve the user's intent exactly — do not add or remove meaning
+- No filler phrases (e.g. "I hope this email finds you well", "Please do not hesitate to contact us", "I would like to take this opportunity")
+- Concise — say what needs to be said, nothing more
+- Output only the email body — no subject line, no greeting, no sign-off
+
+Message to refine:
+"${draftText}"`;
 }
 
 // ---------------------------------------------------------------------------
@@ -494,78 +454,87 @@ function buildFreestylePrompt(language, customRequest, isEnglish) {
 // ---------------------------------------------------------------------------
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
-  const { language, requestText } = req.body;
+  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, draftText, tone } = req.body;
 
-  if (!requestText || !requestText.trim()) {
-    return next(new AppError('Please provide the requested information', 400));
-  }
+  if (!mode) return next(new AppError('Please provide the email mode', 400));
 
   const isEnglish = language === 'English';
-  const urls = extractUrls(requestText);
-  const matchedTemplates = findTemplateMatches(requestText);
-  const passengerLink = urls.length ? urls[0] : null;
-  const useTemplateMode = isUseTemplateRequest(requestText);
-
-  // --- Build AI prompt ---
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const templatesJson = JSON.stringify(emailTemplates, null, 2);
-  let prompt = `You are a professional flight compensation specialist and email writer.
+  let englishBody = '';
+  let generationResult = null;
 
-Available templates:
-${templatesJson}
+  if (mode === 'request') {
+    if (!selectedTemplates.length && !customNote?.trim()) {
+      return next(new AppError('Please select at least one template or add a custom note', 400));
+    }
 
-User request: "${requestText}"
+    const docKeys = Object.keys(DOCUMENT_TEMPLATES);
+    const rejKeys = Object.keys(REJECTION_TEMPLATES);
 
-Detected template matches: ${matchedTemplates.length ? matchedTemplates.join(', ') : 'none'}.
-`;
-  if (passengerLink) {
-    prompt += `Use this passenger upload link when applying the passenger template: ${passengerLink}
-`;
+    const sortedSelected = [...selectedTemplates].sort((a, b) => {
+      if (a === 'Signed Power of Attorney') return -1;
+      if (b === 'Signed Power of Attorney') return 1;
+      return 0;
+    });
+
+    const templateBullets = sortedSelected
+      .filter(name => docKeys.includes(name))
+      .map(name => {
+        const text = link
+          ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
+          : DOCUMENT_TEMPLATES[name];
+        return `• ${text}`;
+      });
+
+    if (customNote?.trim()) {
+      const notePolishPrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
+      try {
+        generationResult = await geminiQueue.run(() => model.generateContent(notePolishPrompt));
+      } catch (err) {
+        if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+        return next(new AppError(`Email generation failed: ${err.message}`, 502));
+      }
+      templateBullets.push(`• ${generationResult.response.text().trim()}`);
+    }
+
+    const allDocBullets = templateBullets.join('\n\n');
+
+    const rejectionText = selectedTemplates
+      .filter(name => rejKeys.includes(name))
+      .map(name => REJECTION_TEMPLATES[name])
+      .join('\n\n');
+
+    if (rejectionText) englishBody = rejectionText;
+
+    if (allDocBullets) {
+      const selectedDocKeys = selectedTemplates.filter(name => docKeys.includes(name));
+      const outro = buildOutro(selectedDocKeys, link, !!customNote?.trim());
+      const docSection = useWrapper ? wrapWithTemplate(allDocBullets, outro) : allDocBullets;
+      englishBody = englishBody ? `${englishBody}\n\n${docSection}` : docSection;
+    }
+
+  } else if (mode === 'draft') {
+    if (!draftText?.trim()) {
+      return next(new AppError('Please provide the message to draft or polish', 400));
+    }
+    const prompt = buildFreestylePrompt(draftText.trim(), tone || 'neutral');
+    try {
+      generationResult = await geminiQueue.run(() => model.generateContent(prompt));
+    } catch (err) {
+      if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+      return next(new AppError(`Email generation failed: ${err.message}`, 502));
+    }
+    englishBody = generationResult.response.text().trim();
+
+  } else {
+    return next(new AppError('Invalid mode', 400));
   }
-  if (useTemplateMode) {
-    prompt += 'The user requested "use template". Assemble the content and the server will wrap it in the required claim request template block.\n';
-  }
-  prompt += `
-Your task:
-- For each detected template, use the EXACT template text from the JSON.
-- Match using keywords and synonyms; treat "use template" as an instruction to apply templates directly.
-- If the request contains any remaining items that do not match a known template, draft a short professional request for those items in the same style.
-- Output document requests as bullet points and rejection templates as plain text.
-- Do not add greetings, closings, or extra commentary.
-- Output ONLY the final email body.
 
-Example: If user says "ticket number, boarding pass", output:
-• Please provide your 13-digit ticket number.You can find this number on your booking confirmation email (usually labelled Ticket Number or e-Ticket Number), in the airline's app under My Trips, or by contacting the airline's customer service directly.
-• Please provide a copy of your boarding pass for the disrupted flight(s). You can find your boarding pass in the confirmation email from the airline, in the airline's mobile app, or at the airport check-in counter. A photo or scan of the physical boarding pass is also acceptable.
-`;
-
-  // --- Call Gemini ---
-  let result;
-  try {
-    result = await geminiQueue.run(() => model.generateContent(prompt));
-  } catch (err) {
-    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
-    return next(new AppError(`Email generation failed: ${err.message}`, 502));
-  }
-  const rawText = result.response.text();
-  const trimmedRawText = rawText.trim();
-  const wrappedEnglish = useTemplateMode ? wrapWithTemplate(trimmedRawText) : trimmedRawText;
-
-  // --- Parse response ---
+  // --- Translate if needed ---
   let email, englishTranslation = null;
   if (!isEnglish) {
-    // Translate
-    const translationPrompt = `You are a professional multilingual translator and a flight compensation specialist.
-
-Translate the following email content into ${language}.
-
-IMPORTANT: Output ONLY the translated content. No subject line, no explanatory text, no metadata.
-
----
-${wrappedEnglish}
----`;
-
+    const translationPrompt = `You are a professional multilingual translator and flight compensation specialist.\n\nTranslate the following email content into ${language}.\n\nIMPORTANT: Output ONLY the translated content. No subject line, no explanatory text, no metadata.\n\n---\n${englishBody}\n---`;
     let translationResult;
     try {
       translationResult = await geminiQueue.run(() => model.generateContent(translationPrompt));
@@ -573,14 +542,15 @@ ${wrappedEnglish}
       if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
       return next(new AppError(`Translation failed: ${err.message}`, 502));
     }
-    const translatedText = translationResult.response.text().trim();
-    email = translatedText;
-    englishTranslation = wrappedEnglish;
+    email = translationResult.response.text().trim();
+    englishTranslation = englishBody;
   } else {
-    email = wrappedEnglish;
+    email = englishBody;
   }
 
-  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0, thoughtsTokenCount: tTok = 0 } = result.response.usageMetadata || {};
+  // --- Log usage ---
+  const usageMeta = generationResult?.response?.usageMetadata || {};
+  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0, thoughtsTokenCount: tTok = 0 } = usageMeta;
   const { MODEL_PRICING } = require('../utils/pricing');
   const emailRates = MODEL_PRICING['gemini-2.5-flash'];
   const emailCostUSD = (iTok / 1_000_000) * emailRates.input + ((oTok + tTok) / 1_000_000) * emailRates.output;
@@ -590,7 +560,7 @@ ${wrappedEnglish}
     inputTokens: iTok,
     outputTokens: oTok + tTok,
     costUSD: emailCostUSD,
-    metadata: { language }
+    metadata: { language, mode }
   });
 
   res.status(200).json({ success: true, email, englishTranslation });

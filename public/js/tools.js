@@ -764,7 +764,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   // SMART EMAIL BUILDER
   // ---------------------------------------------------------------------------
-// Language persistence
+
+  // Language persistence
   const emLanguageSelect = document.getElementById('emLanguage');
   if (localStorage.getItem('emLastLanguage')) {
     emLanguageSelect.value = localStorage.getItem('emLastLanguage');
@@ -773,30 +774,71 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('emLastLanguage', emLanguageSelect.value);
   });
 
+  // Inner tab switching
+  document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.em-inner-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.em-inner-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = 'emTab' + btn.dataset.emTab.charAt(0).toUpperCase() + btn.dataset.emTab.slice(1);
+      document.getElementById(tabId).classList.add('active');
+      const isRequest = btn.dataset.emTab === 'request';
+      document.getElementById('emSidebarRequest').style.display = isRequest ? '' : 'none';
+      document.getElementById('emSidebarDraft').style.display   = isRequest ? 'none' : '';
+    });
+  });
+
+  // Toggle custom note area
+  const emUseNote = document.getElementById('emUseNote');
+  const emNoteArea = document.getElementById('emNoteArea');
+  if (emUseNote) {
+    emUseNote.addEventListener('change', () => {
+      emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
+    });
+  }
+
+  // Form submission
   document.getElementById('emailBuilderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn             = document.getElementById('emGenerateBtn');
-    const resultBox       = document.getElementById('emResultBox');
-    const outputText      = document.getElementById('emOutputText');
-    const englishBox      = document.getElementById('emEnglishBox');
-    const englishTextDiv  = document.getElementById('emEnglishText');
-    const charCountDiv    = document.getElementById('emCharCount');
+    const btn            = document.getElementById('emGenerateBtn');
+    const resultBox      = document.getElementById('emResultBox');
+    const outputText     = document.getElementById('emOutputText');
+    const englishBox     = document.getElementById('emEnglishBox');
+    const englishTextDiv = document.getElementById('emEnglishText');
+    const charCountDiv   = document.getElementById('emCharCount');
 
-    const requestText     = document.getElementById('emRequestText').value.trim();
+    const activeTabBtn = document.querySelector('.em-inner-tab-btn.active');
+    const mode = activeTabBtn ? activeTabBtn.dataset.emTab : 'request';
 
-    // Client-side validation
-    if (!requestText) {
-      alert('Please enter the requested information');
-      return;
+    let payload = { language: emLanguageSelect.value, mode };
+
+    if (mode === 'request') {
+      const selectedTemplates = Array.from(
+        document.querySelectorAll('input[name="emTemplates"]:checked')
+      ).map(cb => cb.value);
+      const link       = document.getElementById('emLink').value.trim();
+      const customNote = emUseNote?.checked ? document.getElementById('emCustomNote').value.trim() : '';
+      const useWrapper = document.getElementById('emUseWrapper').checked;
+
+      if (!selectedTemplates.length && !customNote) {
+        alert('Please select at least one template or add a custom note.');
+        return;
+      }
+      payload = { ...payload, selectedTemplates, link, customNote, useWrapper };
+
+    } else {
+      const draftText = document.getElementById('emDraftText').value.trim();
+      const tone      = document.querySelector('input[name="emTone"]:checked')?.value || 'neutral';
+
+      if (!draftText) {
+        alert('Please enter your message to draft or polish.');
+        return;
+      }
+      payload = { ...payload, draftText, tone };
     }
 
-    const payload = {
-      language:    emLanguageSelect.value,
-      requestText,
-    };
-
-    btn.disabled      = true;
-    btn.innerHTML     = '⏳ Generating...';
+    btn.disabled            = true;
+    btn.innerHTML           = '⏳ Generating...';
     resultBox.style.display = 'none';
 
     try {
@@ -809,17 +851,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         outputText.value = data.email;
-
-        // Update character count
-        const wordCount = data.email.trim().split(/\s+/).length;
-        const charCount = data.email.length;
+        const wordCount  = data.email.trim().split(/\s+/).length;
+        const charCount  = data.email.length;
         charCountDiv.textContent = `${wordCount} words · ${charCount} characters`;
 
         if (data.englishTranslation) {
-          englishTextDiv.textContent  = data.englishTranslation;
-          englishBox.style.display    = 'block';
+          englishTextDiv.textContent = data.englishTranslation;
+          englishBox.style.display   = 'block';
         } else {
-          englishBox.style.display    = 'none';
+          englishBox.style.display = 'none';
         }
         resultBox.style.display = 'block';
       } else {
@@ -835,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('emCopyBtn').addEventListener('click', () => {
-    const text = document.getElementById('emOutputText');
+    const text    = document.getElementById('emOutputText');
     text.select();
     document.execCommand('copy');
     const btn     = document.getElementById('emCopyBtn');
@@ -843,7 +883,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 2000);
   });
 
-  // Copy English button
   const copyEnglishBtn = document.getElementById('emCopyEnglishBtn');
   if (copyEnglishBtn) {
     copyEnglishBtn.addEventListener('click', () => {
