@@ -1,6 +1,7 @@
 extends layout
 
 block content
+  link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap")
   style.
     @keyframes pulsyGlassyRed {
         0% {
@@ -60,6 +61,43 @@ block content
     }
     .ts-grid-full {
         grid-column: 1 / -1;
+    }
+
+    /* Collapsible toolkit cards */
+    .tk-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+    }
+    .tk-title {
+        color: #1e293b;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    .tk-chevron {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 11px;
+        flex-shrink: 0;
+        transition: transform 0.25s ease, background 0.15s;
+    }
+    .tk-header:hover .tk-chevron {
+        background: #e2e8f0;
+    }
+    .ts-card.tk-collapsed .tk-chevron {
+        transform: rotate(-90deg);
+    }
+    .ts-card.tk-collapsed > *:not(.tk-header) {
+        display: none;
     }
 
     /* Mobile Responsiveness */
@@ -391,6 +429,258 @@ block content
         .em-bottom-row { flex-direction: column; }
     }
 
+    /* Announcements Tab */
+    #announcements {
+        font-family: 'Nunito', sans-serif;
+    }
+    .ann-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    @media (max-width: 768px) {
+        .ann-form-row { grid-template-columns: 1fr; }
+    }
+    .ann-textarea {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-family: inherit;
+        color: #1e293b;
+        background: #fff;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .ann-textarea:focus { border-color: #6366f1; }
+    .ann-filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 12px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    .ann-chip {
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: 'Nunito', sans-serif;
+        cursor: pointer;
+        color: #475569;
+        letter-spacing: 0.01em;
+        line-height: 1;
+        transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+        white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .ann-chip:hover {
+        border-color: #a5b4fc;
+        color: #4f46e5;
+        background: #eef2ff;
+    }
+    .ann-chip.active {
+        background: #6366f1;
+        border-color: #6366f1;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(99,102,241,0.3);
+    }
+    .ann-date-group { margin-bottom: 20px; }
+    .ann-date-header {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .ann-card {
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .ann-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ann-channel-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .ann-announcer {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .ann-date-pill {
+        font-size: 11.5px;
+        color: #94a3b8;
+        margin-left: auto;
+    }
+    .ann-content {
+        font-size: 13.5px;
+        color: #334155;
+        line-height: 1.8;
+        word-break: break-word;
+    }
+    .ann-content br {
+        display: block;
+        margin-top: 8px;
+        content: "";
+    }
+    .ann-content ul {
+        margin: 8px 0 4px 20px;
+        padding: 0;
+    }
+    .ann-content li {
+        margin-bottom: 7px;
+        line-height: 1.75;
+    }
+    .ann-content strong {
+        font-weight: 700;
+    }
+    .ann-ask-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    .ann-ask-row .ts-form-group {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    .ann-ask-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+        width: auto !important;
+        margin-top: 0 !important;
+        padding: 12px 22px !important;
+        align-self: flex-end;
+    }
+    .ann-answer-box {
+        margin-top: 14px;
+        padding: 14px 16px;
+        background: #eef2ff;
+        border: 1.5px solid #c7d2fe;
+        border-radius: 10px;
+        display: none;
+    }
+    .ann-answer-box.visible { display: block; }
+    .ann-answer-label {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6366f1;
+        margin-bottom: 8px;
+    }
+    .ann-answer-question {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #c7d2fe;
+    }
+    .ann-answer-text {
+        font-size: 14px;
+        color: #1e293b;
+        line-height: 1.8;
+        word-break: break-word;
+    }
+    .ann-answer-text strong {
+        font-weight: 700;
+    }
+    .ann-answer-text ul {
+        margin: 8px 0 4px 20px;
+        padding: 0;
+    }
+    .ann-answer-text li {
+        margin-bottom: 7px;
+        line-height: 1.75;
+    }
+    .ann-answer-text br {
+        display: block;
+        margin-top: 8px;
+        content: "";
+    }
+    .ann-answer-loading {
+        font-size: 13.5px;
+        color: #6366f1;
+        font-style: italic;
+    }
+    .ann-file-input {
+        display: block;
+        width: 100%;
+        font-size: 13px;
+        font-family: 'Nunito', sans-serif;
+        color: #475569;
+        background: #f8fafc;
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    .ann-file-input:hover { border-color: #6366f1; }
+    .ann-images {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 6px;
+    }
+    .ann-image {
+        width: 100%;
+        max-height: 560px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        display: block;
+    }
+    .ann-delete-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #cbd5e1;
+        font-size: 16px;
+        padding: 2px 4px;
+        border-radius: 4px;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+    .ann-delete-btn:hover { color: #ef4444; }
+    .ann-empty {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+        padding: 32px 0;
+    }
+
   //- Inject server-side jurisdiction data for the frontend JS to consume
   script.
     window.JURISDICTION_LIMITS = !{JSON.stringify(jurisdictionLimits)};
@@ -402,6 +692,7 @@ block content
     .ts-tabs
       button.ts-tab-btn.active(data-tab="cirium") 📡 FlightStats
       button.ts-tab-btn(data-tab="toolkit") 🧰 Claim Toolkit
+      button.ts-tab-btn(data-tab="announcements") 📢 Announcements
 
     //- TAB 1: FLIGHTSTATS
     #cirium.ts-tab-content.active
@@ -421,8 +712,10 @@ block content
       .ts-toolkit-grid
         
         //- TOOL: EOC RADAR (Full Width)
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ⚠️ EOC Radar
+        .ts-card.ts-grid-full.tk-collapsed
+          .tk-header
+            h2.tk-title ⚠️ EOC Radar
+            span.tk-chevron ▼
           .ts-form-grid
             .ts-form-group
               label.ts-label Flight Date
@@ -449,24 +742,30 @@ block content
           #eocResult
 
         //- TOOL: DOCUMENT CHECKER (Half Width)
-        .ts-card
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 📄 Document Check
+        .ts-card.tk-collapsed
+          .tk-header
+            h2.tk-title 📄 Document Check
+            span.tk-chevron ▼
           .ts-form-group
             label.ts-label Search Airline
             input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
           #docsResult.ts-results-row(style="margin-top: 24px;")
 
         //- TOOL: JURISDICTION CHECKER (Half Width)
-        .ts-card
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 🏛️ Jurisdiction Checker
+        .ts-card.tk-collapsed
+          .tk-header
+            h2.tk-title 🏛️ Jurisdiction Checker
+            span.tk-chevron ▼
           .ts-form-group
             label.ts-label Search Country
             input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
           #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
 
         //- TOOL: IATA LOOKUP (Half Width)
-        .ts-card
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✈️ IATA Lookup
+        .ts-card.tk-collapsed
+          .tk-header
+            h2.tk-title ✈️ IATA Lookup
+            span.tk-chevron ▼
           .ts-form-group
             label.ts-label Airline Name or IATA Code
             input#iata-lookup-input.ts-input(type="text" placeholder="e.g. AA or American Airlines" autocomplete="off")
@@ -474,8 +773,10 @@ block content
           #iata-lookup-result(style="margin-top: 16px;")
 
         //- TOOL: SMART EMAIL BUILDER (Full Width)
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") ✉️ Multilingual Email Builder
+        .ts-card.ts-grid-full.tk-collapsed
+          .tk-header
+            h2.tk-title ✉️ Multilingual Email Builder
+            span.tk-chevron ▼
 
           form#emailBuilderForm
 
@@ -635,8 +936,10 @@ block content
                 div#emEnglishText.em-english-content
 
         //- TOOL: COMPENSATION CALCULATOR (Full Width)
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;") 💸 EC261 Comp Calculator
+        .ts-card.ts-grid-full.tk-collapsed
+          .tk-header
+            h2.tk-title 💸 EC261 Comp Calculator
+            span.tk-chevron ▼
           .ts-route
             .ts-route__node
               .ts-form-grid(style="margin-bottom: 0;")
@@ -656,5 +959,43 @@ block content
                   input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
           button#btn-ec261.ts-btn-action 💸 Calculate Compensation
           #ec261Result
+
+    //- TAB 3: ANNOUNCEMENTS
+    #announcements.ts-tab-content
+      .ts-toolkit-grid
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 📢 Log Announcement
+          .ann-form-row
+            .ts-form-group
+              label.ts-label Announcer Name
+              input#ann-announcer.ts-input(type="text" placeholder="e.g. Ahmed")
+            .ts-form-group
+              label.ts-label Date
+              input#ann-date.ts-input(type="date")
+            .ts-form-group
+              label.ts-label Subject
+              input#ann-subject.ts-input(type="text" placeholder="e.g. Policy Update, System Change")
+          .ts-form-group(style="margin-bottom: 12px;")
+            label.ts-label Announcement
+            textarea#ann-content.ann-textarea(placeholder="Paste or type the announcement here...")
+          .ts-form-group(style="margin-bottom: 12px;")
+            label.ts-label Images (optional)
+            input#ann-images.ann-file-input(type="file" accept="image/*" multiple)
+          button#ann-submit-btn.ts-btn-action(type="button") ➕ Add Announcement
+
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 🤖 Ask About Announcements
+          .ann-ask-row
+            .ts-form-group
+              label.ts-label Your Question
+              input#ann-question.ts-input(type="text" placeholder="e.g. What is the new leave policy?")
+            button#ann-ask-btn.ts-btn-action.ann-ask-btn(type="button") Ask AI
+          #ann-answer-box.ann-answer-box
+
+        .ts-card.ts-grid-full
+          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 🗂️ All Announcements
+          .ann-filter-row
+            #ann-subject-chips
+          #ann-list
 
   script(src="/js/tools.js")

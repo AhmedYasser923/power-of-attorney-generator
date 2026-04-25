@@ -70,7 +70,7 @@ router.get('/ticket-analyzer', ticketController.renderAnalyzer);
 
 // --- Tools Suite ---
 router.get('/tools', toolsController.renderTools);
-router.get('/api/tools/flight-status', toolsController.checkFlightStatus);
+router.get('/api/tools/flight-status',     toolsController.checkFlightStatus);
 router.get('/api/tools/check-eoc', toolsController.checkEOC);
 router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs', toolsController.checkDocs);
@@ -78,6 +78,10 @@ router.get('/api/tools/search-airlines', toolsController.searchAirlines);
 router.get('/api/tools/lookup-iata', toolsController.lookupIATA);
 router.post('/api/generate-email', toolsController.generateEmail);
 router.post('/api/tools/sync-eoc', toolsController.syncEOC);
+router.get('/api/tools/announcements',        toolsController.getAnnouncements);
+router.post('/api/tools/announcements',       upload.array('images', 10), toolsController.addAnnouncement);
+router.post('/api/tools/announcements/ask',   toolsController.askAnnouncements);
+router.delete('/api/tools/announcements/:id', toolsController.deleteAnnouncement);
 
 // --- POA Generation ---
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);

@@ -546,59 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // EOC SCANNER
-  // ---------------------------------------------------------------------------
-  document.getElementById('btn-eoc').addEventListener('click', async (e) => {
-    const btn       = e.target;
-    const date      = document.getElementById('e-date-picker').value;
-    const oInput    = document.getElementById('e-o-iata');
-    const dInput    = document.getElementById('e-d-iata');
-    const oIata     = oInput.dataset.iata || oInput.value.trim();
-    const dIata     = dInput.dataset.iata || dInput.value.trim();
-    const oCount    = document.getElementById('e-o-country').value.trim();
-    const dCount    = document.getElementById('e-d-country').value.trim();
-    const resultDiv = document.getElementById('eocResult');
-
-    if (!date) return alert('Date is required to scan EOCs!');
-
-    btn.innerHTML = '⏳ Scanning...';
-    btn.disabled  = true;
-
-    try {
-      const query = `date=${date}&originIata=${encodeURIComponent(oIata)}&destIata=${encodeURIComponent(dIata)}&originCountry=${encodeURIComponent(oCount)}&destCountry=${encodeURIComponent(dCount)}`;
-      const res   = await fetch(`/api/tools/check-eoc?${query}`);
-      const data  = await res.json();
-
-      if (data.eocFound && data.events && data.events.length > 0) {
-        const headerText = data.events.length > 1
-          ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${data.events.length})`
-          : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
-
-        const eventsHtml = data.events.map((ev, index) => `
-          <div style="${index > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px dashed #fca5a5;' : ''}color:#450a0a;display:grid;grid-template-columns:max-content 1fr;gap:8px 12px;align-items:baseline;">
-            <strong style="color:#991b1b;">Category:</strong> <span>${ev.category}</span>
-            <strong style="color:#991b1b;">Event:</strong>    <span>${ev.event}</span>
-            <strong style="color:#991b1b;">Location:</strong> <span>${ev.location}</span>
-            <strong style="color:#991b1b;">Decision:</strong> <span style="font-weight:800;color:#dc2626;">${ev.decision}</span>
-          </div>`).join('');
-
-        resultDiv.innerHTML = `
-          <div class="eoc-alert-active" style="background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444;padding:20px;border-radius:8px;color:#7f1d1d;">
-            <div style="font-weight:800;color:#dc2626;margin-bottom:12px;text-transform:uppercase;font-size:13px;">${headerText}</div>
-            ${eventsHtml}
-          </div>`;
-      } else {
-        resultDiv.innerHTML = `<div style="background:#dcfce7;color:#166534;padding:16px;border-radius:8px;font-weight:700;border:1px solid #bbf7d0;">✅ No EOCs found for this route on this date.</div>`;
-      }
-    } catch (err) {
-      resultDiv.innerHTML = '❌ Error scanning EOC database.';
-    }
-
-    btn.innerHTML = '⚠️ Scan EOC Database';
-    btn.disabled  = false;
-  });
-
-  // ---------------------------------------------------------------------------
   // EOC SYNC
   // ---------------------------------------------------------------------------
   document.getElementById('btn-sync-eoc').addEventListener('click', async () => {
@@ -896,4 +843,226 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // COLLAPSIBLE TOOLKIT CARDS
+  // ---------------------------------------------------------------------------
+  document.querySelectorAll('#toolkit .tk-header').forEach(header => {
+    header.addEventListener('click', () => {
+      header.closest('.ts-card').classList.toggle('tk-collapsed');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // ANNOUNCEMENTS
+  // ---------------------------------------------------------------------------
+
+  const ANN_COLORS = [
+    '#4f8ef7','#e67e22','#2ecc71','#9b59b6','#e74c3c',
+    '#1abc9c','#f39c12','#3498db','#e91e63','#607d8b',
+  ];
+
+  function annSubjectColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return ANN_COLORS[hash % ANN_COLORS.length];
+  }
+
+  function annDateLabel(dateStr) {
+    const today = new Date();
+    const d     = new Date(dateStr + 'T00:00:00');
+    const diff  = Math.floor((new Date(today.toDateString()) - new Date(d.toDateString())) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff <= 7)  return 'This Week';
+    return 'Earlier';
+  }
+
+  function annFormatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  let annAllData      = [];
+  let annActiveSubject = 'All';
+
+  function annRefresh() {
+    const subjects = [...new Set(annAllData.map(a => a.subject))].sort();
+    annRenderChips(subjects);
+    annRenderTimeline(annAllData, annActiveSubject);
+  }
+
+  function annRenderChips(subjects) {
+    const container = document.getElementById('ann-subject-chips');
+    const all       = ['All', ...subjects];
+    container.innerHTML = all.map(s => {
+      const active = s === annActiveSubject ? ' active' : '';
+      return `<button class="ann-chip${active}" data-subject="${s}">${s}</button>`;
+    }).join('');
+  }
+
+  function annRenderTimeline(data, subjectFilter) {
+    const listEl = document.getElementById('ann-list');
+    let filtered = subjectFilter && subjectFilter !== 'All'
+      ? data.filter(a => a.subject === subjectFilter)
+      : data;
+
+    if (!filtered.length) {
+      listEl.innerHTML = '<div class="ann-empty">No announcements found.</div>';
+      return;
+    }
+
+    const groups = {};
+    const ORDER  = ['Today', 'Yesterday', 'This Week', 'Earlier'];
+    filtered.forEach(a => {
+      const label = annDateLabel(a.date);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(a);
+    });
+
+    listEl.innerHTML = ORDER.filter(g => groups[g]).map(groupLabel => {
+      const cards = groups[groupLabel].map(a => {
+        const id    = a._id;
+        const color = annSubjectColor(a.subject);
+        const imagesHtml = a.images && a.images.length
+          ? `<div class="ann-images">${a.images.map(src =>
+              `<img class="ann-image" src="${src}" alt="" loading="lazy">`
+            ).join('')}</div>`
+          : '';
+        return `
+          <div class="ann-card" data-id="${id}">
+            <div class="ann-card-header">
+              <span class="ann-channel-badge" style="background:${color};">${escHtml(a.subject)}</span>
+              <span class="ann-announcer">${escHtml(a.announcer)}</span>
+              <span class="ann-date-pill">${annFormatDate(a.date)}</span>
+              <button class="ann-delete-btn" data-id="${id}" title="Delete">✕</button>
+            </div>
+            <div class="ann-content">${a.content}</div>
+            ${imagesHtml}
+          </div>`;
+      }).join('');
+      return `<div class="ann-date-group"><div class="ann-date-header">${groupLabel}</div>${cards}</div>`;
+    }).join('');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function annLoad() {
+    try {
+      const res  = await fetch('/api/tools/announcements');
+      const data = await res.json();
+      if (!data.success) return;
+      annAllData = data.announcements;
+      annRefresh();
+    } catch (e) {
+      document.getElementById('ann-list').innerHTML = '<div class="ann-empty">Failed to load announcements.</div>';
+    }
+  }
+
+  document.getElementById('ann-submit-btn').addEventListener('click', async () => {
+    const announcer = document.getElementById('ann-announcer').value.trim();
+    const date      = document.getElementById('ann-date').value;
+    const subject   = document.getElementById('ann-subject').value.trim();
+    const content   = document.getElementById('ann-content').value.trim();
+    if (!announcer || !date || !subject || !content) {
+      alert('Please fill in all fields.');
+      return;
+    }
+    const btn = document.getElementById('ann-submit-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Saving...';
+    try {
+      const formData = new FormData();
+      formData.append('announcer', announcer);
+      formData.append('date', date);
+      formData.append('subject', subject);
+      formData.append('content', content);
+      const files = document.getElementById('ann-images').files;
+      for (const file of files) formData.append('images', file);
+
+      const res  = await fetch('/api/tools/announcements', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('ann-announcer').value = '';
+        document.getElementById('ann-date').value      = '';
+        document.getElementById('ann-subject').value   = '';
+        document.getElementById('ann-content').value   = '';
+        document.getElementById('ann-images').value    = '';
+        // Insert at front (newest first) and re-render immediately — no second fetch
+        annAllData.unshift(data.announcement);
+        annRefresh();
+      } else {
+        alert(data.error || 'Failed to save.');
+      }
+    } catch (e) {
+      alert('Network error.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '➕ Add Announcement';
+    }
+  });
+
+  document.getElementById('ann-subject-chips').addEventListener('click', e => {
+    if (!e.target.classList.contains('ann-chip')) return;
+    annActiveSubject = e.target.dataset.subject;
+    annRefresh();
+  });
+
+  document.getElementById('ann-list').addEventListener('click', async e => {
+    const btn = e.target.closest('.ann-delete-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (!confirm('Delete this announcement?')) return;
+    try {
+      await fetch(`/api/tools/announcements/${id}`, { method: 'DELETE' });
+      annAllData = annAllData.filter(a => a._id !== id);
+      annRefresh();
+    } catch (e) {
+      alert('Failed to delete.');
+    }
+  });
+
+  // Ask AI
+  const annAnswerBox = document.getElementById('ann-answer-box');
+
+  async function annAsk() {
+    const question = document.getElementById('ann-question').value.trim();
+    if (!question) return;
+    const btn = document.getElementById('ann-ask-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Thinking...';
+    annAnswerBox.className = 'ann-answer-box visible';
+    annAnswerBox.innerHTML = `
+      <div class="ann-answer-label">AI Answer</div>
+      <div class="ann-answer-question">${escHtml(question)}</div>
+      <div class="ann-answer-loading">Searching through announcements...</div>`;
+    try {
+      const res  = await fetch('/api/tools/announcements/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+      const data = await res.json();
+      annAnswerBox.innerHTML = `
+        <div class="ann-answer-label">AI Answer</div>
+        <div class="ann-answer-question">${escHtml(question)}</div>
+        <div class="ann-answer-text">${data.answer || 'No answer returned.'}</div>`;
+    } catch (err) {
+      annAnswerBox.innerHTML = `
+        <div class="ann-answer-label">AI Answer</div>
+        <div class="ann-answer-text" style="color:#ef4444;">Failed to get an answer. Please try again.</div>`;
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Ask AI';
+    }
+  }
+
+  document.getElementById('ann-ask-btn').addEventListener('click', annAsk);
+  document.getElementById('ann-question').addEventListener('keydown', e => {
+    if (e.key === 'Enter') annAsk();
+  });
+
+  annLoad();
 });

@@ -1,6 +1,10 @@
 'use strict';
 
+const fs   = require('fs');
+const path = require('path');
+
 const airportsDatabase = require('../airports_data.json');
+const Announcement     = require('../models/Announcement');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
@@ -583,3 +587,116 @@ exports.syncEOC = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// ---------------------------------------------------------------------------
+// ANNOUNCEMENTS
+// ---------------------------------------------------------------------------
+
+const ANN_UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'announcements');
+fs.promises.mkdir(ANN_UPLOADS_DIR, { recursive: true }).catch(() => {});
+
+exports.getAnnouncements = catchAsync(async (req, res) => {
+  const announcements = await Announcement.find().sort({ date: -1, createdAt: -1 }).lean();
+  res.json({ success: true, announcements });
+});
+
+exports.addAnnouncement = catchAsync(async (req, res) => {
+  const { announcer, subject, date, content } = req.body;
+  if (!announcer || !subject || !date || !content) {
+    return res.status(400).json({ success: false, error: 'All fields are required.' });
+  }
+
+  const formatPrompt = `You are a text formatter. Your ONLY job is to add HTML formatting to the announcement text below.
+STRICT RULES — violating any of these makes your output invalid:
+1. Do NOT change, add, or remove a single word. Every word in the original must appear exactly as-is.
+2. Return only the inner HTML — no <html>, <body>, <p> wrappers, no markdown, no code fences.
+3. Allowed tags only: <strong>, <ul>, <li>, <br>, <span style="color:...">
+4. Use <strong> for key names, deadlines, action items, or important phrases.
+5. If the text has multiple distinct points or steps, convert them into a <ul><li> list.
+6. Use <span style="color:#dc2626;font-weight:600"> for urgent or critical items.
+7. Use <span style="color:#2563eb"> for reference numbers, codes, dates, or technical terms.
+8. If the text is a single sentence with nothing to highlight, return it unchanged.
+
+Announcement text:
+"""
+${content.trim()}
+"""`;
+
+  let formattedContent = content.trim();
+  try {
+    const model  = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await geminiQueue.run(() => model.generateContent(formatPrompt));
+    const raw    = result.response.text().trim();
+    // Strip accidental code-fence wrappers the model may add
+    formattedContent = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
+  } catch (err) {
+    console.warn('[Announcement] AI formatting skipped:', err.message);
+  }
+
+  // Save uploaded image files to disk
+  const imagePaths = [];
+  if (req.files && req.files.length) {
+    for (const file of req.files) {
+      const safeName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      await fs.promises.writeFile(path.join(ANN_UPLOADS_DIR, safeName), file.buffer);
+      imagePaths.push(`/uploads/announcements/${safeName}`);
+    }
+  }
+
+  const doc = await Announcement.create({ announcer, subject, date, content: formattedContent, images: imagePaths });
+  res.json({ success: true, announcement: doc });
+});
+
+exports.askAnnouncements = catchAsync(async (req, res) => {
+  const { question } = req.body;
+  if (!question?.trim()) return res.status(400).json({ success: false, error: 'Question is required.' });
+
+  const announcements = await Announcement.find().sort({ date: -1 }).lean();
+  if (!announcements.length) {
+    return res.json({ success: true, answer: 'There are no announcements logged yet.' });
+  }
+
+  const stripHtml = s => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const context = announcements.map((a, i) =>
+    `[${i + 1}] Date: ${a.date} | Subject: ${a.subject} | Announcer: ${a.announcer}\n${stripHtml(a.content)}`
+  ).join('\n\n');
+
+  const prompt = `You are an assistant that answers questions based only on the workplace announcements below.
+
+ANNOUNCEMENTS:
+---
+${context}
+---
+
+QUESTION: ${question.trim()}
+
+INSTRUCTIONS:
+- Answer based ONLY on the announcements above. Do not invent or assume anything.
+- If the answer is found, give a clear direct answer and reference which announcement it came from (by date and subject).
+- If no announcement addresses the question, respond with exactly: "There is no policy or announcement addressing this."
+- Format your response as clean inner HTML using only these tags: <strong>, <ul>, <li>, <br>, <span style="color:...">
+- Use <strong> for key facts, names, deadlines, and action items.
+- Use <ul><li> when listing multiple points.
+- Use <span style="color:#dc2626;font-weight:600"> for urgent or critical items.
+- Use <span style="color:#2563eb"> for dates, reference numbers, or source citations.
+- No <html>, <body>, <p> wrappers. No markdown. No code fences. Return inner HTML only.`;
+
+  const model  = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const result = await geminiQueue.run(() => model.generateContent(prompt));
+  const raw    = result.response.text().trim();
+  const answer = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
+
+  res.json({ success: true, answer });
+});
+
+exports.deleteAnnouncement = catchAsync(async (req, res) => {
+  const deleted = await Announcement.findByIdAndDelete(req.params.id);
+  if (!deleted) return res.status(404).json({ success: false, error: 'Not found.' });
+  if (deleted.images && deleted.images.length) {
+    await Promise.all(deleted.images.map(imgPath =>
+      fs.promises.unlink(path.join(__dirname, '..', 'public', imgPath)).catch(() => {})
+    ));
+  }
+  res.json({ success: true });
+});

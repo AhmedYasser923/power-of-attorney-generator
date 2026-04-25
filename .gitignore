@@ -1,5 +1,6 @@
 node_modules/
 config.env
+.flightstats_session.json
 .DS_Store
 plans/
 .claude/
@@ -9,3 +10,4 @@ CLAUDE.md
 .agent/
 overview.md
 specs/
+modifications/
