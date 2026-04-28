@@ -393,6 +393,46 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
+  // FLIGHT TRACKER URL BUILDERS
+  // ---------------------------------------------------------------------------
+  const _trackerMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function buildTrackerURLs(flightNum, date) {
+    const m = (flightNum || '').trim().match(/^([A-Za-z]{3}|[A-Za-z0-9]{2})\s*(\d{1,4})$/);
+    if (!m) return null;
+    const airline = m[1].toUpperCase(), num = m[2], numClean = String(parseInt(num, 10));
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { airportInfo: null, flightStats: null, flightera: null };
+    const [year, month, day] = date.split('-');
+    return {
+      airportInfo: `https://airportinfo.live/flight/${(airline + num).toLowerCase()}?d=${date}`,
+      flightStats: `https://www.flightstats.com/v2/historical-flight/${airline}/${numClean}/${year}/${parseInt(month)}/${parseInt(day)}`,
+      flightera: `https://www.flightera.net/en/flight/${airline}${numClean}/${_trackerMonths[parseInt(month) - 1]}-${year}#flight_list`
+    };
+  }
+
+  function buildTrackerLinksHTML(flightNum, date) {
+    const urls = buildTrackerURLs(flightNum, date);
+    if (!urls) return '';
+    const fn = (flightNum || '').trim();
+    if (urls.airportInfo) {
+      return `<span class="fc-tracker-links" data-flight="${fn}" data-date="${date || ''}">`
+        + `<a href="${urls.airportInfo}" target="_blank" rel="noopener" class="fc-tracker-link">AirportInfo</a>`
+        + `<span class="fc-tracker-sep">&middot;</span>`
+        + `<a href="${urls.flightStats}" target="_blank" rel="noopener" class="fc-tracker-link">FlightStats</a>`
+        + `<span class="fc-tracker-sep">&middot;</span>`
+        + `<a href="${urls.flightera}" target="_blank" rel="noopener" class="fc-tracker-link">Flightera</a>`
+        + `</span>`;
+    }
+    return `<span class="fc-tracker-links fc-tracker-links--disabled" data-flight="${fn}" data-date="">`
+      + `<span class="fc-tracker-link fc-tracker-link--disabled" title="Set a complete date to enable">AirportInfo</span>`
+      + `<span class="fc-tracker-sep">&middot;</span>`
+      + `<span class="fc-tracker-link fc-tracker-link--disabled" title="Set a complete date to enable">FlightStats</span>`
+      + `<span class="fc-tracker-sep">&middot;</span>`
+      + `<span class="fc-tracker-link fc-tracker-link--disabled" title="Set a complete date to enable">Flightera</span>`
+      + `</span>`;
+  }
+
+  // ---------------------------------------------------------------------------
   // BUG 3 + BUG 4 FIX — updateExpirationBadge
   // Now reads data-years correctly (server always sends them even when date was
   // missing), and toggles the expired-alert-active class on the parent card.
@@ -497,6 +537,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (expC) updateExpirationBadge(expC, fullDate);
 
     flightCard.querySelectorAll('.btn-check-status').forEach(b => b.dataset.date = fullDate);
+    flightCard.querySelectorAll('.fc-tracker-links').forEach(container => {
+      const fn = container.dataset.flight;
+      container.outerHTML = buildTrackerLinksHTML(fn, fullDate);
+    });
+    const cb = flightCard.querySelector('.fc-select-checkbox');
+    if (cb) cb.dataset.date = fullDate;
     flightCard.dataset.confirmedDate = fullDate;
   }
 
@@ -777,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
               if (fns.length) {
                 fnDisp = fns.join(' <span style="color:#cbd5e1;font-weight:400;margin:0 4px;">/</span> ');
                 if (isStopover) fnDisp += ` <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:800;border:1px solid #fde68a;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;white-space:nowrap;">Stopover</span>`;
-                fns.forEach(fn => { const c = fn.trim(); if (c && c !== 'N/A' && c !== 'Unknown') stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; });
+                fns.forEach(fn => { const c = fn.trim(); if (c && c !== 'N/A' && c !== 'Unknown') { stBtns += `<button type="button" class="btn-check-status" data-flight="${c}" data-date="${flight.date || 'Unknown'}" data-origin="${flight.originIata || ''}" data-dest="${flight.destinationIata || ''}" style="margin-left:6px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:0.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">📡 ${c} Stats</button>`; stBtns += buildTrackerLinksHTML(c, flight.date); } });
               } else { fnDisp = 'N/A'; }
 
               const stopoverBanner = isStopover ? `<div style="background:#fefce8;border:1px dashed #fde047;border-radius:8px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#92400e;"><span style="font-size:16px;">&#9888;&#65039;</span> This flight has a stopover — the connecting airport was not shown on the ticket.</div>` : '';
@@ -866,11 +912,13 @@ document.addEventListener('DOMContentLoaded', () => {
               // BUG 4: Mark expired cards with a data attribute so we can add
               // the amber pulsing class after the HTML is in the DOM.
               const isExpiredCard = flight.ec261Leg?.claimExpiration?.isExpired === true;
+              const cbFlights = fns.filter(f => { const t = f.trim(); return t && t !== 'N/A' && t !== 'Unknown'; }).join(',');
 
               fcc.innerHTML += `
                 <div class="flight-card" style="opacity:${opa};"
                      data-partial-date="${partialAttr}"
                      ${isExpiredCard ? 'data-initially-expired="true"' : ''}>
+                  <label class="fc-select-checkbox-label"><input type="checkbox" class="fc-select-checkbox" data-flights="${cbFlights}" data-date="${flight.date || ''}"></label>
                   <div style="display:block;width:100%;">${swarn}</div>
                   ${stopoverBanner}
                   <div class="fc-top"><div class="fc-airline">${airText}</div></div>
@@ -925,6 +973,23 @@ document.addEventListener('DOMContentLoaded', () => {
         card.classList.add('expired-alert-active');
       });
 
+      // GROUP SEARCH BAR
+      let gsBar = document.getElementById('groupSearchBar');
+      if (gsBar) gsBar.remove();
+      gsBar = document.createElement('div');
+      gsBar.id = 'groupSearchBar';
+      gsBar.className = 'fc-group-search-bar';
+      gsBar.style.display = 'none';
+      gsBar.innerHTML = `
+        <span class="fc-group-search-count">0 flights selected</span>
+        <button type="button" class="fc-group-search-btn" data-tracker="all">Search All Trackers</button>
+        <button type="button" class="fc-group-search-btn fc-group-search-btn--secondary" data-tracker="airportinfo">AirportInfo</button>
+        <button type="button" class="fc-group-search-btn fc-group-search-btn--secondary" data-tracker="flightstats">FlightStats</button>
+        <button type="button" class="fc-group-search-btn fc-group-search-btn--secondary" data-tracker="flightera">Flightera</button>
+        <button type="button" class="fc-group-search-deselect">Deselect All</button>
+      `;
+      resultsCard.appendChild(gsBar);
+
       // Year resolution — same logic as before
       if (hasMissingYear) {
         const preFilledYear = (document.getElementById('globalJourneyYear')?.value || '').trim();
@@ -978,6 +1043,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
+  // GROUP SEARCH BAR VISIBILITY
+  // ---------------------------------------------------------------------------
+  function updateGroupSearchBar() {
+    const bar = document.getElementById('groupSearchBar');
+    if (!bar) return;
+    const checked = resultsCard.querySelectorAll('.fc-select-checkbox:checked');
+    const count = checked.length;
+    if (count === 0) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    bar.querySelector('.fc-group-search-count').textContent = `${count} flight${count > 1 ? 's' : ''} selected`;
+  }
+
+  // ---------------------------------------------------------------------------
   // EVENT DELEGATION
   // ---------------------------------------------------------------------------
   resultsCard.addEventListener('click', async (e) => {
@@ -1017,6 +1095,49 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!picker?.value) { alert('Please select a date first.'); return; }
       setBtn.disabled = true; setBtn.textContent = '⏳';
       await applyDateToCard(card, picker.value);
+      return;
+    }
+
+    // GROUP SEARCH — checkbox toggle
+    const cbTarget = e.target.closest('.fc-select-checkbox');
+    if (cbTarget) {
+      const card = cbTarget.closest('.flight-card');
+      if (card) card.classList.toggle('fc-selected', cbTarget.checked);
+      updateGroupSearchBar();
+      return;
+    }
+
+    // GROUP SEARCH — tracker buttons
+    const gsBtn = e.target.closest('.fc-group-search-btn');
+    if (gsBtn) {
+      const tracker = gsBtn.dataset.tracker;
+      const checked = resultsCard.querySelectorAll('.fc-select-checkbox:checked');
+      if (!checked.length) return;
+      let skipped = 0, opened = 0;
+      checked.forEach(cb => {
+        const flights = (cb.dataset.flights || '').split(',').filter(Boolean);
+        const date = cb.dataset.date || '';
+        flights.forEach(fn => {
+          const urls = buildTrackerURLs(fn, date);
+          if (!urls || !urls.airportInfo) { skipped++; return; }
+          if (tracker === 'all' || tracker === 'airportinfo') { window.open(urls.airportInfo, '_blank'); opened++; }
+          if (tracker === 'all' || tracker === 'flightstats') { window.open(urls.flightStats, '_blank'); opened++; }
+          if (tracker === 'all' || tracker === 'flightera') { window.open(urls.flightera, '_blank'); opened++; }
+        });
+      });
+      if (skipped > 0) alert(`${skipped} flight(s) skipped — incomplete date. Set a full date first.`);
+      return;
+    }
+
+    // GROUP SEARCH — deselect all
+    const dsBtn = e.target.closest('.fc-group-search-deselect');
+    if (dsBtn) {
+      resultsCard.querySelectorAll('.fc-select-checkbox:checked').forEach(cb => {
+        cb.checked = false;
+        const card = cb.closest('.flight-card');
+        if (card) card.classList.remove('fc-selected');
+      });
+      updateGroupSearchBar();
       return;
     }
 

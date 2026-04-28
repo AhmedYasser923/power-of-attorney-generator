@@ -546,6 +546,59 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // EOC SCANNER
+  // ---------------------------------------------------------------------------
+  document.getElementById('btn-eoc').addEventListener('click', async (e) => {
+    const btn       = e.target;
+    const date      = document.getElementById('e-date-picker').value;
+    const oInput    = document.getElementById('e-o-iata');
+    const dInput    = document.getElementById('e-d-iata');
+    const oIata     = oInput.dataset.iata || oInput.value.trim();
+    const dIata     = dInput.dataset.iata || dInput.value.trim();
+    const oCount    = document.getElementById('e-o-country').value.trim();
+    const dCount    = document.getElementById('e-d-country').value.trim();
+    const resultDiv = document.getElementById('eocResult');
+
+    if (!date) return alert('Date is required to scan EOCs!');
+
+    btn.innerHTML = '⏳ Scanning...';
+    btn.disabled  = true;
+
+    try {
+      const query = `date=${date}&originIata=${encodeURIComponent(oIata)}&destIata=${encodeURIComponent(dIata)}&originCountry=${encodeURIComponent(oCount)}&destCountry=${encodeURIComponent(dCount)}`;
+      const res   = await fetch(`/api/tools/check-eoc?${query}`);
+      const data  = await res.json();
+
+      if (data.eocFound && data.events && data.events.length > 0) {
+        const headerText = data.events.length > 1
+          ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${data.events.length})`
+          : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
+
+        const eventsHtml = data.events.map((ev, index) => `
+          <div style="${index > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px dashed #fca5a5;' : ''}color:#450a0a;display:grid;grid-template-columns:max-content 1fr;gap:8px 12px;align-items:baseline;">
+            <strong style="color:#991b1b;">Category:</strong> <span>${ev.category}</span>
+            <strong style="color:#991b1b;">Event:</strong>    <span>${ev.event}</span>
+            <strong style="color:#991b1b;">Location:</strong> <span>${ev.location}</span>
+            <strong style="color:#991b1b;">Decision:</strong> <span style="font-weight:800;color:#dc2626;">${ev.decision}</span>
+          </div>`).join('');
+
+        resultDiv.innerHTML = `
+          <div class="eoc-alert-active" style="background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444;padding:20px;border-radius:8px;color:#7f1d1d;">
+            <div style="font-weight:800;color:#dc2626;margin-bottom:12px;text-transform:uppercase;font-size:13px;">${headerText}</div>
+            ${eventsHtml}
+          </div>`;
+      } else {
+        resultDiv.innerHTML = `<div style="background:#dcfce7;color:#166534;padding:16px;border-radius:8px;font-weight:700;border:1px solid #bbf7d0;">✅ No EOCs found for this route on this date.</div>`;
+      }
+    } catch (err) {
+      resultDiv.innerHTML = '❌ Error scanning EOC database.';
+    }
+
+    btn.innerHTML = '⚠️ Scan EOC Database';
+    btn.disabled  = false;
+  });
+
+  // ---------------------------------------------------------------------------
   // EOC SYNC
   // ---------------------------------------------------------------------------
   document.getElementById('btn-sync-eoc').addEventListener('click', async () => {
@@ -709,6 +762,57 @@ document.addEventListener('DOMContentLoaded', () => {
   if (iataInput) iataInput.addEventListener('keydown', e => { if (e.key === 'Enter') runIataLookup(); });
 
   // ---------------------------------------------------------------------------
+  // FLIGHT SEARCH (open 3 tracker tabs)
+  // ---------------------------------------------------------------------------
+  const fsFlightInput = document.getElementById('fs-flight');
+  const fsDateInput   = document.getElementById('fs-date');
+
+  if (fsDateInput) {
+    fsDateInput.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const parsed = parseDateFromDisplay(pastedText);
+      if (parsed) {
+        fsDateInput.value = parsed;
+      } else {
+        alert('Could not read that date. Please use the calendar or type YYYY-MM-DD.');
+      }
+    });
+  }
+
+  document.getElementById('btn-flight-search').addEventListener('click', () => {
+    const raw  = (fsFlightInput.value || '').trim();
+    const date = fsDateInput.value;
+
+    if (!raw || !date) return alert('Flight number and date are required!');
+
+    const match = raw.match(/^([A-Za-z]{3}|[A-Za-z0-9]{2})\s*(\d{1,4})$/);
+    if (!match) return alert('Invalid flight number. Examples: VY7835, U2 8412, EZY1234');
+
+    const airline  = match[1].toUpperCase();
+    const num      = match[2];
+    const numClean = String(parseInt(num, 10));
+    const [year, month, day] = date.split('-');
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const chkAi = document.getElementById('fs-chk-ai');
+    const chkFs = document.getElementById('fs-chk-fs');
+    const chkFt = document.getElementById('fs-chk-ft');
+
+    if (!chkAi.checked && !chkFs.checked && !chkFt.checked) return alert('Select at least one tracker.');
+
+    if (chkAi.checked) window.open(`https://airportinfo.live/flight/${(airline + num).toLowerCase()}?d=${date}`, '_blank');
+    if (chkFs.checked) window.open(`https://www.flightstats.com/v2/historical-flight/${airline.toUpperCase()}/${numClean}/${year}/${parseInt(month)}/${parseInt(day)}`, '_blank');
+    if (chkFt.checked) window.open(`https://www.flightera.net/en/flight/${airline.toUpperCase()}${numClean}/${monthNames[parseInt(month) - 1]}-${year}#flight_list`, '_blank');
+  });
+
+  if (fsFlightInput) {
+    fsFlightInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-flight-search').click();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // SMART EMAIL BUILDER
   // ---------------------------------------------------------------------------
 
@@ -809,6 +913,14 @@ document.addEventListener('DOMContentLoaded', () => {
           englishBox.style.display = 'none';
         }
         resultBox.style.display = 'block';
+
+        document.querySelectorAll('input[name="emTemplates"]').forEach(cb => cb.checked = false);
+        document.getElementById('emLink').value = '';
+        if (emUseNote) { emUseNote.checked = false; emNoteArea.style.display = 'none'; }
+        document.getElementById('emCustomNote').value = '';
+        document.getElementById('emDraftText').value = '';
+        const wrapperCb = document.getElementById('emUseWrapper');
+        if (wrapperCb) wrapperCb.checked = true;
       } else {
         alert('Error generating content: ' + (data.message || 'Server error'));
       }

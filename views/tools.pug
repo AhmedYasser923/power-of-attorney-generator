@@ -710,7 +710,31 @@ block content
     //- TAB 2: COMBINED TOOLKIT (Grid Layout)
     #toolkit.ts-tab-content
       .ts-toolkit-grid
-        
+
+        //- TOOL: FLIGHT SEARCH (Full Width)
+        .ts-card.ts-grid-full.tk-collapsed
+          .tk-header
+            h2.tk-title 🔎 Flight Search
+            span.tk-chevron ▼
+          .ts-form-row
+            .ts-form-group(style="flex: 1;")
+              label.ts-label Flight Number
+              input#fs-flight.ts-input(type="text" placeholder="e.g. VY7835 or VY 7835")
+            .ts-form-group(style="flex: 1;")
+              label.ts-label Flight Date
+              input#fs-date.ts-input(type="date")
+          .ts-form-row(style="gap: 16px; align-items: center; flex-wrap: wrap;")
+            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
+              input#fs-chk-ai(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
+              | AirportInfo
+            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
+              input#fs-chk-fs(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
+              | FlightStats
+            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
+              input#fs-chk-ft(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
+              | Flightera
+          button#btn-flight-search.ts-btn-action(type="button") 🔎 Search Flights
+
         //- TOOL: EOC RADAR (Full Width)
         .ts-card.ts-grid-full.tk-collapsed
           .tk-header
@@ -779,6 +803,9 @@ block content
             span.tk-chevron ▼
 
           form#emailBuilderForm
+            p flight on time, no cancellation proof, proceeding as per passenger statement
+            p flight on delayed, no cancellation proof, proceeding as per passenger statement
+            p Please send claim to the airline despite missing docs - test claim
 
             //- INNER TABS
             .em-inner-tabs

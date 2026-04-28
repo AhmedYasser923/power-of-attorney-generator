@@ -36540,6 +36540,12 @@
     "country": "Indonesia"
   },
   {
+    "name": "Emerald Airlines",
+    "iata": "EA",
+    "icao": "EAI",
+    "country": "Ireland"
+  },
+  {
     "name": "Norse Atlantic Airways",
     "iata": "N0",
     "icao": "NBT",

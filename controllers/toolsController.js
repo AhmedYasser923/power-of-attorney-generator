@@ -85,6 +85,59 @@ const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
+// IFRAME PROXY — strips X-Frame-Options / CSP for sites that block iframes
+// but don't require login. Only whitelisted domains are allowed.
+// ---------------------------------------------------------------------------
+
+const PROXY_ALLOWED_HOSTS = new Set(['airportinfo.live']);
+
+exports.proxyPage = async (req, res) => {
+  try {
+    const host = req.params.host;
+    if (!host || !PROXY_ALLOWED_HOSTS.has(host)) {
+      return res.status(403).send('Domain not allowed');
+    }
+
+    const restPath = Array.isArray(req.params.rest)
+      ? '/' + req.params.rest.join('/')
+      : req.params.rest ? `/${req.params.rest}` : '/';
+    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    const targetUrl = `https://${host}${restPath}${qs}`;
+
+    const upstream = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
+        'Accept': req.headers['accept'] || '*/*',
+        'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',
+      },
+      redirect: 'follow',
+    });
+
+    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+    res.status(upstream.status);
+    res.setHeader('Content-Type', contentType);
+    const cacheControl = upstream.headers.get('cache-control');
+    if (cacheControl) res.setHeader('Cache-Control', cacheControl);
+
+    if (contentType.includes('text/html')) {
+      const body = await upstream.text();
+      const base = `https://${host}`;
+      const patched = body
+        .replace(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '')
+        .replace(/(<head[^>]*>)/i, `$1<base href="${base}/">`);
+      res.send(patched);
+    } else {
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+      res.send(buffer);
+    }
+  } catch (err) {
+    console.error('[proxyPage]', err.message);
+    res.status(502).send('Proxy error');
+  }
+};
+
+// ---------------------------------------------------------------------------
 // RENDER
 // ---------------------------------------------------------------------------
 

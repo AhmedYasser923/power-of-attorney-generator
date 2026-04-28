@@ -70,6 +70,7 @@ router.get('/ticket-analyzer', ticketController.renderAnalyzer);
 
 // --- Tools Suite ---
 router.get('/tools', toolsController.renderTools);
+router.get('/api/tools/proxy/:host/*rest',  toolsController.proxyPage);
 router.get('/api/tools/flight-status',     toolsController.checkFlightStatus);
 router.get('/api/tools/check-eoc', toolsController.checkEOC);
 router.get('/api/tools/search-airports', toolsController.searchAirports);
