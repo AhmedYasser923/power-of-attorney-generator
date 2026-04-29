@@ -2942,7 +2942,8 @@ body:has(.app-layout.sidebar-collapsed) .sidebar-expand-btn {
 }
 
 @media (max-width: 900px) {
-  .app-layout {
+  .app-layout,
+  .app-layout.sidebar-collapsed {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;

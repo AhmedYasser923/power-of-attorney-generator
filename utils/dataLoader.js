@@ -7,7 +7,7 @@
  *
  * Data files:
  *   jurisdiction_data.json  – statute-of-limitations per country
- *   airline_docs_data.json  – required claim documents per airline
+ *   airlines_codes.json     – master airline database with optional reqs field
  */
 
 'use strict';
@@ -21,8 +21,8 @@ const path = require('path');
 /** @type {Array<{country: string, years: number|null, note?: string}>} */
 const jurisdictionData = require(path.join(__dirname, '../jurisdiction_data.json'));
 
-/** @type {Array<{names: string[], reqs: string}>} */
-const airlineDocsData = require(path.join(__dirname, '../airline_docs_data.json'));
+/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string}>} */
+const airlinesCodesData = require(path.join(__dirname, '../airlines_codes.json'));
 
 // ---------------------------------------------------------------------------
 // Build a fast lookup map: lowercase country name → raw limit value
@@ -79,29 +79,40 @@ function getJurisdictionYears(country) {
 // Airline document requirements lookup
 // ---------------------------------------------------------------------------
 
+function normalizeAirline(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
 /**
  * Returns the document requirements string for a given airline name or IATA
  * code, or a default string if no specific requirements are recorded.
+ *
+ * Looks up against airlines_codes.json using a 3-tier strategy:
+ *   1. Exact IATA match
+ *   2. Exact name match (accent-normalised)
+ *   3. Airline name contains the query (min 4 chars)
  *
  * @param {string} airlineName
  * @returns {string}
  */
 function getAirlineReqs(airlineName) {
-  if (!airlineName || airlineName === 'Unknown') {
-    return 'No documents required';
-  }
+  if (!airlineName || airlineName === 'Unknown') return 'No documents required';
 
-  const normalized = airlineName.toLowerCase().trim();
+  const q = normalizeAirline(airlineName);
 
-  for (const item of airlineDocsData) {
-    if (item.names.some(keyword =>
-      new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(normalized)
-    )) {
-      return item.reqs;
-    }
-  }
+  // 1. Exact IATA match (ignore 'NA' placeholder)
+  let match = airlinesCodesData.find(a =>
+    a.iata && a.iata.toLowerCase() !== 'na' && a.iata.toLowerCase() === q
+  );
 
-  return 'No documents required';
+  // 2. Exact name match (accent-normalised)
+  if (!match) match = airlinesCodesData.find(a => normalizeAirline(a.name) === q);
+
+  // 3. Partial: airline name contains the query
+  if (!match && q.length >= 4)
+    match = airlinesCodesData.find(a => normalizeAirline(a.name).includes(q));
+
+  return match?.reqs || 'No documents required';
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +121,7 @@ function getAirlineReqs(airlineName) {
 
 module.exports = {
   jurisdictionData,
-  airlineDocsData,
+  airlinesCodesData,
   getJurisdictionLimit,
   getJurisdictionYears,
   getAirlineReqs,

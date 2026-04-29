@@ -70,6 +70,10 @@ block content
         justify-content: space-between;
         cursor: pointer;
         user-select: none;
+        margin-bottom: 20px;
+    }
+    .ts-card.tk-collapsed .tk-header {
+        margin-bottom: 0;
     }
     .tk-title {
         color: #1e293b;
@@ -765,8 +769,8 @@ block content
           #syncEocResult
           #eocResult
 
-        //- TOOL: DOCUMENT CHECKER (Half Width)
-        .ts-card.tk-collapsed
+        //- TOOL: DOCUMENT CHECKER (Full Width)
+        .ts-card.ts-grid-full.tk-collapsed
           .tk-header
             h2.tk-title 📄 Document Check
             span.tk-chevron ▼
@@ -775,8 +779,8 @@ block content
             input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
           #docsResult.ts-results-row(style="margin-top: 24px;")
 
-        //- TOOL: JURISDICTION CHECKER (Half Width)
-        .ts-card.tk-collapsed
+        //- TOOL: JURISDICTION CHECKER (Full Width)
+        .ts-card.ts-grid-full.tk-collapsed
           .tk-header
             h2.tk-title 🏛️ Jurisdiction Checker
             span.tk-chevron ▼
@@ -785,8 +789,8 @@ block content
             input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
           #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
 
-        //- TOOL: IATA LOOKUP (Half Width)
-        .ts-card.tk-collapsed
+        //- TOOL: IATA LOOKUP (Full Width)
+        .ts-card.ts-grid-full.tk-collapsed
           .tk-header
             h2.tk-title ✈️ IATA Lookup
             span.tk-chevron ▼

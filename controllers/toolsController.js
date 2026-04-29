@@ -71,14 +71,10 @@ const jurisdictionLimitsForClient = Object.fromEntries(
   ])
 );
 
-let airlineDatabase = [];
-try {
-  airlineDatabase = require('../airlines_data.json');
-} catch (err) {
-  console.warn("⚠️ airlines_data.json not found. Please run 'node build_airlines.js' first.");
-}
-
 const airlineCodesDatabase = require('../airlines_codes.json');
+
+const normalizeStr = s =>
+  (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 
@@ -412,17 +408,27 @@ exports.checkFlightStatus = async (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 exports.checkDocs = catchAsync(async (req, res, next) => {
-  const query = (req.query.airline || '').toLowerCase().trim();
+  const query = normalizeStr(req.query.airline || '');
   if (!query) return res.status(400).json({ error: 'Airline name is required' });
 
-  const dbMatch      = airlineDatabase.find(a => a.name.toLowerCase() === query || a.iata.toLowerCase() === query);
+  const dbMatch = airlineCodesDatabase.find(a =>
+    normalizeStr(a.name) === query ||
+    (a.iata && a.iata.toLowerCase() !== 'na' && a.iata.toLowerCase() === query)
+  );
   const displayAirline = dbMatch ? dbMatch.name : query;
 
   // getAirlineReqs returns "No documents required" when there's no specific entry
   const reqs    = getAirlineReqs(dbMatch ? dbMatch.name : query);
   const hasDocs = reqs !== 'No documents required';
 
-  res.status(200).json({ airline: displayAirline, hasDocs, reqs });
+  res.status(200).json({
+    airline: displayAirline,
+    hasDocs,
+    reqs,
+    iata:    dbMatch?.iata    || 'N/A',
+    icao:    dbMatch?.icao    || 'N/A',
+    country: dbMatch?.country || 'N/A',
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -430,12 +436,13 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 exports.searchAirlines = catchAsync(async (req, res, next) => {
-  const query = (req.query.q || '').toLowerCase().trim();
+  const query = normalizeStr(req.query.q || '');
   if (!query || query.length < 2) return res.json([]);
 
   const results = [];
-  for (const airline of airlineDatabase) {
-    if (airline.name.toLowerCase().includes(query) || airline.iata.toLowerCase().includes(query)) {
+  for (const airline of airlineCodesDatabase) {
+    const iataMatch = airline.iata && airline.iata.toLowerCase() !== 'na' && airline.iata.toLowerCase().includes(query);
+    if (normalizeStr(airline.name).includes(query) || iataMatch) {
       results.push({ name: airline.name, iata: airline.iata });
     }
     if (results.length >= 10) break;
@@ -449,7 +456,7 @@ exports.searchAirlines = catchAsync(async (req, res, next) => {
 
 exports.lookupIATA = (req, res, next) => {
   try {
-    const q = (req.query.q || '').trim().toLowerCase();
+    const q = normalizeStr(req.query.q || '');
     if (!q || q.length < 2) return res.json([]);
 
     const activeExact = [], activeStartsWith = [], activeIncludes = [];
@@ -458,7 +465,7 @@ exports.lookupIATA = (req, res, next) => {
     airlineCodesDatabase.forEach(a => {
       const iata = (a.iata || '').toLowerCase();
       const icao = (a.icao || '').toLowerCase();
-      const name = (a.name || '').toLowerCase();
+      const name = normalizeStr(a.name);
       const isActive = a.active === 'Y';
       const bucket = isActive
         ? { exact: activeExact, sw: activeStartsWith, inc: activeIncludes }

@@ -321,10 +321,21 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<div style="font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5;">${data.reqs}</div>`
         : `<div style="font-size: 15px; font-weight: 600; color: #16a34a; line-height: 1.5;">${data.reqs}</div>`;
 
+      const jurisdictionKey = (data.country || '').toLowerCase().trim();
+      const jurisdictionVal = jurisdictionLimits[jurisdictionKey];
+      const jurisdictionSuffix = jurisdictionVal !== undefined ? ` · ${jurisdictionVal} yrs` : '';
+
       resultDiv.innerHTML = `
         <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; width: 100%; animation: ts-fadeIn 0.4s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <div style="font-size: 18px; font-weight: 800; color: #0f172a; text-transform: capitalize;">✈️ ${data.airline}</div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <div>
+              <div style="font-size: 18px; font-weight: 800; color: #0f172a; text-transform: capitalize;">✈️ ${data.airline}</div>
+              <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">IATA: ${data.iata}</span>
+                <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">ICAO: ${data.icao}</span>
+                <span style="background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">🌍 ${data.country}${jurisdictionSuffix}</span>
+              </div>
+            </div>
             ${statusBadge}
           </div>
           <div style="border-top: 1px solid #cbd5e1; padding-top: 16px;">
@@ -367,8 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
           list.innerHTML = '';
 
           if (data.length > 0) {
-            // Check for exact match and display results immediately
-            const exactMatch = data.find(airline => airline.name.toLowerCase() === val.toLowerCase());
+            const valLower = val.toLowerCase();
+            const exactMatch = data.find(airline =>
+              airline.name.toLowerCase() === valLower ||
+              (airline.iata && airline.iata.toLowerCase() !== 'na' && airline.iata.toLowerCase() === valLower)
+            );
             if (exactMatch) {
               fetchAndDisplayDocs(exactMatch.name);
               list.style.display = 'none';
@@ -705,7 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const iataResultDiv = document.getElementById('iata-lookup-result');
 
   async function runIataLookup() {
-    const val = (iataInput.value || '').trim();
+    const val = (iataInput.value || '').trim().toLowerCase();
     if (val.length < 2) {
       iataResultDiv.innerHTML = `<div style="color:#64748b;font-size:14px;padding:8px 0;">Enter at least 2 characters.</div>`;
       return;
