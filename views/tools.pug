@@ -448,14 +448,6 @@ block content
                       label.split-footer-lbl(for="emLink") Upload Link
                       input#emLink.input.ts-input(type="text" placeholder="https://...")
                       p.email-field__hint For Passenger Docs, Signed POA, and Fill Dashboard.
-                    label.email-toggle.em-freestyle-toggle
-                      input#emUseNote(type="checkbox")
-                      span.email-toggle__label Custom Request
-                    #emNoteArea(style="display: none;")
-                      textarea#emCustomNote.textarea.ts-input(placeholder="Additional message to include...")
-                    label.email-toggle.em-freestyle-toggle
-                      input#emUseWrapper(type="checkbox" checked)
-                      span.email-toggle__label Wrap in formal intro and outro
               #emTabDraft.em-inner-tab-content
                 .split-group
                   .split-group-label Your Message
@@ -474,6 +466,15 @@ block content
                         input(type="radio" name="emTone" value="firm")
                         | Firm
             .split-footer
+              .email-footer-options
+                label.email-toggle.em-freestyle-toggle
+                  input#emUseNote(type="checkbox")
+                  span.email-toggle__label Custom Request
+                #emNoteArea(style="display: none;")
+                  textarea#emCustomNote.textarea.ts-input(placeholder="Additional message to include...")
+                label.email-toggle.em-freestyle-toggle
+                  input#emUseWrapper(type="checkbox" checked)
+                  span.email-toggle__label Formal intro and outro
               .split-footer-row.email-lang.em-language-group
                 label.split-footer-lbl(for="emLanguage") Language
                 select#emLanguage.split-lang
@@ -544,6 +545,9 @@ block content
 
   //- ── PANEL: ANNOUNCEMENTS ──────────────────────────────────────────────────
   .tool-panel#panel-announcements
+    .ann-page-header
+      h1 Announcements
+      p Log operational updates and search previous announcements
     .ann-layout
       aside.ann-sub-sidebar
         .ann-sub-header
@@ -552,7 +556,6 @@ block content
           span.ann-nav-sec Feed
           #ann-subject-chips.ann-filter-row
           span.ann-nav-sec Tools
-          button.ann-nav-item.ann-tool-toggle#ann-focus-ask(type="button") Ask AI
           button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="saved") Archive
           button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="interactions") Interactions
         button.ann-post-btn(type="button" data-ann-panel="post") + Post Announcement

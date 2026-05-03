@@ -1398,6 +1398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (!data.success) return;
       annAllData = data.announcements;
+      if (!annActiveSubject) annActiveSubject = 'All';
       annRefresh();
     } catch (e) {
       document.getElementById('ann-list').innerHTML = '<div class="ann-empty">Failed to load announcements.</div>';
@@ -1451,14 +1452,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!chip) return;
     annSetActiveSubject(chip.dataset.subject);
   });
-
-  const annFocusAsk = document.getElementById('ann-focus-ask');
-  if (annFocusAsk) {
-    annFocusAsk.addEventListener('click', () => {
-      annClosePanels();
-      document.getElementById('ann-question')?.focus();
-    });
-  }
 
   document.querySelectorAll('#panel-announcements [data-ann-panel]').forEach(btn => {
     btn.addEventListener('click', () => annOpenPanel(btn.dataset.annPanel));
