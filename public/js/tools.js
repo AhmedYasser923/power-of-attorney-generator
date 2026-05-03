@@ -244,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const match = jurisdictionLimits[query];
 
     if (match !== undefined) {
+      const limitLabel = typeof match === 'number' ? `${match} years` : match;
       jResult.innerHTML = `
         <div class="ops-result">
           <div class="ops-result__top">
@@ -251,33 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="ops-result__title" style="text-transform:capitalize;">${escHtml(query)}</div>
               <div class="ops-result__subtitle">EC261 claim limitation period</div>
             </div>
-            <span class="ops-badge ops-badge--warning">Limit ${match} years</span>
-          </div>
-          <div class="ops-row">
-            <span class="ops-row__label">Country</span>
-            <span class="ops-row__value" style="text-transform:capitalize;">${escHtml(query)}</span>
-          </div>
-          <div class="ops-row">
-            <span class="ops-row__label">Limitation Period</span>
-            <span class="ops-row__value">${match} years</span>
+            <span class="ops-badge ops-badge--warning">Limit ${limitLabel}</span>
           </div>
         </div>`;
     } else {
-      const partials = Object.keys(jurisdictionLimits).filter(k => k.includes(query));
-      if (partials.length > 0) {
-        jResult.innerHTML = `<div class="ops-result">Did you mean: ${
-          partials.map(p =>
-            `<button type="button" class="ops-inline-choice"
-                    onclick="document.getElementById('j-country').value='${p}';
-                             document.getElementById('j-country').dispatchEvent(new Event('input'))">${escHtml(p)}</button>`
-          ).join(' ')
-        }?</div>`;
-      } else {
-        jResult.innerHTML = `
-          <div class="ops-result ops-result--warning">
-            No specific EC261 jurisdiction limit found for "${escHtml(query)}".
-          </div>`;
-      }
+      jResult.innerHTML = '';
     }
   }
 
@@ -355,7 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const jurisdictionKey = (data.country || '').toLowerCase().trim();
       const jurisdictionVal = jurisdictionLimits[jurisdictionKey];
-      const jurisdictionSuffix = jurisdictionVal !== undefined ? ` · ${jurisdictionVal} yrs` : '';
+      const jLimitLabel = typeof jurisdictionVal === 'number' ? `${jurisdictionVal} yrs` : jurisdictionVal;
+      const jurisdictionSuffix = jurisdictionVal !== undefined ? ` · ${jLimitLabel}` : '';
 
       resultDiv.innerHTML = `
         <div class="ops-result">
@@ -363,9 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div>
               <div class="ops-result__title">${escHtml(data.airline || airlineName)}</div>
               <div class="ops-badges">
-                <span class="ops-badge">IATA ${escHtml(data.iata || 'N/A')}</span>
-                <span class="ops-badge">ICAO ${escHtml(data.icao || 'N/A')}</span>
-                <span class="ops-badge">${escHtml((data.country || 'Unknown') + jurisdictionSuffix)}</span>
+                <span class="ops-badge" style="background:#dbeafe;color:#1d4ed8;">IATA ${escHtml(data.iata || 'N/A')}</span>
+                <span class="ops-badge" style="background:#ede9fe;color:#6d28d9;">ICAO ${escHtml(data.icao || 'N/A')}</span>
+                <span class="ops-badge" style="background:#dcfce7;color:#15803d;">${escHtml((data.country || 'Unknown') + jurisdictionSuffix)}</span>
               </div>
             </div>
             ${statusBadge}
@@ -399,8 +379,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let timeout = null;
 
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = input.value.trim();
+        if (val.length >= 2) { list.style.display = 'none'; fetchAndDisplayDocs(val); }
+      }
+    });
+
     input.addEventListener('input', (e) => {
       clearTimeout(timeout);
+      document.getElementById('docsResult').innerHTML = '';
       const val = e.target.value;
       if (val.length < 2) { list.style.display = 'none'; return; }
 
@@ -450,14 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupAirlineAutocomplete('d-airline');
-  const docCheckBtn = document.getElementById('btn-doc-check');
-  if (docCheckBtn) {
-    docCheckBtn.addEventListener('click', () => {
-      const airlineName = (document.getElementById('d-airline').value || '').trim();
-      if (!airlineName) return alert('Airline is required.');
-      fetchAndDisplayDocs(airlineName);
-    });
-  }
 
   // ---------------------------------------------------------------------------
   // CIRIUM FLIGHT STATUS
