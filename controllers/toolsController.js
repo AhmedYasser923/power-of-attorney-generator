@@ -55,8 +55,6 @@ function buildTemplateListSync() {
 }
 
 exports.seedEmailTemplates = async function () {
-  const count = await EmailTemplate.countDocuments();
-  if (count > 0) return;
   const json = require('../data/emailTemplates.json');
   const meta = json.meta || {};
   const docs = [];
@@ -66,8 +64,29 @@ exports.seedEmailTemplates = async function () {
   Object.entries(json.rejectionTemplates || {}).forEach(([key, text]) => {
     docs.push({ key, text, type: 'rejection', label: meta[key]?.label || key, category: 'Rejection Reason', isInfoOnly: false, noWrapper: false });
   });
-  await EmailTemplate.insertMany(docs);
-  console.log(`[EmailTemplate] Seeded ${docs.length} templates from JSON`);
+
+  const count = await EmailTemplate.countDocuments();
+  if (count === 0) {
+    await EmailTemplate.insertMany(docs);
+    console.log(`[EmailTemplate] Seeded ${docs.length} templates from JSON`);
+    return;
+  }
+
+  // Sync structural metadata (category, label, flags) without touching user-edited text
+  const ops = docs.map(d => ({
+    updateOne: {
+      filter: { key: d.key },
+      update: {
+        $set: { type: d.type, category: d.category, label: d.label, isInfoOnly: d.isInfoOnly, noWrapper: d.noWrapper },
+        $setOnInsert: { key: d.key, text: d.text },
+      },
+      upsert: true,
+    },
+  }));
+  const result = await EmailTemplate.bulkWrite(ops);
+  if (result.modifiedCount > 0 || result.upsertedCount > 0) {
+    console.log(`[EmailTemplate] Synced metadata for ${result.modifiedCount} templates and inserted ${result.upsertedCount} new templates`);
+  }
 };
 
 function buildOutro(selectedDocKeys, link, hasCustomNote) {
@@ -99,6 +118,15 @@ function buildOutro(selectedDocKeys, link, hasCustomNote) {
 
 function wrapWithTemplate(content, outro) {
   return `In order to proceed with your claim and process your compensation, we require the following information and documents:\n\n${content}\n\n${outro}`;
+}
+
+function deriveEmailTemplateFields(category) {
+  const type = category === 'Rejection Reason' ? 'rejection' : 'document';
+  return {
+    type,
+    isInfoOnly: type === 'document' && category === 'Others',
+    noWrapper:  type === 'document' && category === 'Others',
+  };
 }
 
 const EocRecord            = require('../models/EocRecord');
@@ -540,145 +568,111 @@ exports.lookupIATA = (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
-// HELPER FUNCTIONS FOR EMAIL GENERATION
-// ---------------------------------------------------------------------------
-
-function buildFreestylePrompt(draftText, tone) {
-  const toneDescriptions = {
-    neutral:    'clear, professional, and straightforward',
-    empathetic: 'warm and understanding while still professional — passengers are often in a stressful situation regarding their claims',
-    firm:       'direct and assertive while remaining courteous',
-  };
-  const toneDesc = toneDescriptions[tone] || toneDescriptions.neutral;
-
-  return `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.
-
-Tone: ${toneDesc}
-
-Rewrite the following message following these rules:
-- Preserve the user's intent exactly — do not add or remove meaning
-- No filler phrases (e.g. "I hope this email finds you well", "Please do not hesitate to contact us", "I would like to take this opportunity")
-- Concise — say what needs to be said, nothing more
-- Output only the email body — no subject line, no greeting, no sign-off
-
-Message to refine:
-"${draftText}"`;
-}
-
-// ---------------------------------------------------------------------------
 // SMART EMAIL BUILDER
 // ---------------------------------------------------------------------------
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
   await loadTemplates();
-  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, draftText, tone, placeholderValues } = req.body;
+  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, placeholderValues } = req.body;
 
   if (!mode) return next(new AppError('Please provide the email mode', 400));
+  if (mode !== 'request') return next(new AppError('Invalid mode', 400));
+  if (!selectedTemplates.length && !customNote?.trim()) {
+    return next(new AppError('Please select at least one template or add a custom note', 400));
+  }
 
   const isEnglish = language === 'English';
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  let englishBody = '';
   let generationResult = null;
+  let translationResult = null;
 
-  if (mode === 'request') {
-    if (!selectedTemplates.length && !customNote?.trim()) {
-      return next(new AppError('Please select at least one template or add a custom note', 400));
+  const docKeys = Object.keys(DOCUMENT_TEMPLATES);
+  const rejKeys = Object.keys(REJECTION_TEMPLATES);
+
+  const sortedSelected = [...selectedTemplates].sort((a, b) => {
+    if (a === 'Signed Power of Attorney') return -1;
+    if (b === 'Signed Power of Attorney') return 1;
+    return 0;
+  });
+
+  const normalizePlaceholderName = name => String(name || '').trim().toLowerCase().replace(/[\s_-]+/g, ' ');
+  const formatPlaceholderValue = (key, value) => {
+    const val = String(value || '').trim();
+    if (!val) return '';
+    if (normalizePlaceholderName(key) === 'amount' && !/\u20ac/.test(val)) {
+      const amount = val
+        .replace(/^(eur|euro)\s*/i, '')
+        .replace(/\s*(eur|euro)$/i, '')
+        .trim();
+      return `\u20ac${amount}`;
     }
+    return val;
+  };
 
-    const docKeys = Object.keys(DOCUMENT_TEMPLATES);
-    const rejKeys = Object.keys(REJECTION_TEMPLATES);
-
-    const sortedSelected = [...selectedTemplates].sort((a, b) => {
-      if (a === 'Signed Power of Attorney') return -1;
-      if (b === 'Signed Power of Attorney') return 1;
-      return 0;
+  const applyPlaceholders = text => {
+    if (!placeholderValues || typeof placeholderValues !== 'object') return text;
+    return text.replace(/\{([^}]+)\}/g, (_, key) => {
+      const val = formatPlaceholderValue(key, placeholderValues[key.trim()]);
+      return val || `{${key}}`;
     });
+  };
 
-    const applyPlaceholders = text => {
-      if (!placeholderValues || typeof placeholderValues !== 'object') return text;
-      return text.replace(/\{([^}]+)\}/g, (_, key) => {
-        const val = (placeholderValues[key.trim()] || '').trim();
-        return val || `{${key}}`;
-      });
-    };
+  const makeBullet = name => {
+    let text = link
+      ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
+      : DOCUMENT_TEMPLATES[name];
+    text = applyPlaceholders(text);
+    return `• ${text}`;
+  };
 
-    const makeBullet = name => {
-      let text = link
-        ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
-        : DOCUMENT_TEMPLATES[name];
-      text = applyPlaceholders(text);
-      return `• ${text}`;
-    };
+  const noWrapBullets = sortedSelected
+    .filter(name => docKeys.includes(name) && NO_WRAPPER_DOC_KEYS.has(name))
+    .map(makeBullet);
 
-    const noWrapBullets = sortedSelected
-      .filter(name => docKeys.includes(name) && NO_WRAPPER_DOC_KEYS.has(name))
-      .map(makeBullet);
+  const docTemplateBullets = sortedSelected
+    .filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name))
+    .map(makeBullet);
 
-    const wrapBullets = sortedSelected
-      .filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name))
-      .map(makeBullet);
-
-    if (customNote?.trim()) {
-      const notePolishPrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
-      try {
-        generationResult = await geminiQueue.run(() => model.generateContent(notePolishPrompt));
-      } catch (err) {
-        if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
-        return next(new AppError(`Email generation failed: ${err.message}`, 502));
-      }
-      wrapBullets.push(`• ${generationResult.response.text().trim()}`);
-    }
-
-    const rejectionText = selectedTemplates
-      .filter(name => rejKeys.includes(name))
-      .map(name => REJECTION_TEMPLATES[name])
-      .join('\n\n');
-
-    if (rejectionText) englishBody = rejectionText;
-
-    if (noWrapBullets.length) {
-      const noWrapSection = noWrapBullets.join('\n\n');
-      englishBody = englishBody ? `${englishBody}\n\n${noWrapSection}` : noWrapSection;
-    }
-
-    if (wrapBullets.length) {
-      const allWrapBullets = wrapBullets.join('\n\n');
-      const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name));
-      const outro = buildOutro(wrapDocKeys, link, !!customNote?.trim());
-      let docSection;
-      if (!useWrapper) {
-        docSection = allWrapBullets;
-      } else if (noWrapBullets.length > 0) {
-        docSection = `${allWrapBullets}\n\n${outro}`;
-      } else {
-        docSection = wrapWithTemplate(allWrapBullets, outro);
-      }
-      englishBody = englishBody ? `${englishBody}\n\n${docSection}` : docSection;
-    }
-
-  } else if (mode === 'draft') {
-    if (!draftText?.trim()) {
-      return next(new AppError('Please provide the message to draft or polish', 400));
-    }
-    const prompt = buildFreestylePrompt(draftText.trim(), tone || 'neutral');
+  let customNoteBullet = null;
+  if (customNote?.trim()) {
+    const noteRewritePrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
     try {
-      generationResult = await geminiQueue.run(() => model.generateContent(prompt));
+      generationResult = await geminiQueue.run(() => model.generateContent(noteRewritePrompt));
     } catch (err) {
       if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
       return next(new AppError(`Email generation failed: ${err.message}`, 502));
     }
-    englishBody = generationResult.response.text().trim();
-
-  } else {
-    return next(new AppError('Invalid mode', 400));
+    customNoteBullet = `• ${generationResult.response.text().trim()}`;
   }
+
+  const sections = [];
+  const rejectionText = selectedTemplates
+    .filter(name => rejKeys.includes(name))
+    .map(name => REJECTION_TEMPLATES[name])
+    .join('\n\n');
+
+  if (rejectionText) sections.push(rejectionText);
+  if (noWrapBullets.length) sections.push(noWrapBullets.join('\n\n'));
+
+  const allWrapBullets = [...docTemplateBullets, ...(customNoteBullet ? [customNoteBullet] : [])];
+  if (allWrapBullets.length) {
+    // Outro is automatic when doc templates are selected; for custom note alone it respects the useWrapper flag
+    const addOutro = docTemplateBullets.length > 0 || (customNoteBullet && useWrapper);
+    const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name));
+    const outro = buildOutro(wrapDocKeys, link, !!customNoteBullet);
+    const docSection = addOutro
+      ? `${allWrapBullets.join('\n\n')}\n\n${outro}`
+      : allWrapBullets.join('\n\n');
+    sections.push(docSection);
+  }
+
+  const englishBody = sections.join('\n\n');
 
   // --- Translate if needed ---
   let email, englishTranslation = null;
   if (!isEnglish) {
     const translationPrompt = `You are a professional multilingual translator and flight compensation specialist.\n\nTranslate the following email content into ${language}.\n\nIMPORTANT: Output ONLY the translated content. No subject line, no explanatory text, no metadata.\n\n---\n${englishBody}\n---`;
-    let translationResult;
     try {
       translationResult = await geminiQueue.run(() => model.generateContent(translationPrompt));
     } catch (err) {
@@ -692,8 +686,14 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   }
 
   // --- Log usage ---
-  const usageMeta = generationResult?.response?.usageMetadata || {};
-  const { promptTokenCount: iTok = 0, candidatesTokenCount: oTok = 0, thoughtsTokenCount: tTok = 0 } = usageMeta;
+  const usageTotals = [generationResult, translationResult].reduce((totals, result) => {
+    const usageMeta = result?.response?.usageMetadata || {};
+    totals.iTok += usageMeta.promptTokenCount || 0;
+    totals.oTok += usageMeta.candidatesTokenCount || 0;
+    totals.tTok += usageMeta.thoughtsTokenCount || 0;
+    return totals;
+  }, { iTok: 0, oTok: 0, tTok: 0 });
+  const { iTok, oTok, tTok } = usageTotals;
   const { MODEL_PRICING } = require('../utils/pricing');
   const emailRates = MODEL_PRICING['gemini-2.5-flash'];
   const emailCostUSD = (iTok / 1_000_000) * emailRates.input + ((oTok + tTok) / 1_000_000) * emailRates.output;
@@ -719,32 +719,44 @@ exports.getEmailTemplates = catchAsync(async (req, res) => {
 });
 
 exports.createEmailTemplate = catchAsync(async (req, res, next) => {
-  const { key, text, label, type, category, isInfoOnly, noWrapper } = req.body;
-  if (!key || !text || !type || !category) return next(new AppError('key, text, type, and category are required', 400));
-  if (type !== 'document' && type !== 'rejection') return next(new AppError('type must be document or rejection', 400));
+  const { key, text, label } = req.body;
+  const { category } = req.body;
+  if (!key || !text || !category) return next(new AppError('key, text, and category are required', 400));
+  const derived = deriveEmailTemplateFields(category);
 
   const existing = await EmailTemplate.findOne({ key });
   if (existing) return next(new AppError('A template with that key already exists', 409));
 
-  await EmailTemplate.create({ key, text, type, label: label || key, category, isInfoOnly: !!isInfoOnly, noWrapper: !!noWrapper });
+  await EmailTemplate.create({ key, text, type: derived.type, label: label || key, category, isInfoOnly: derived.isInfoOnly, noWrapper: derived.noWrapper });
   _templatesCached = false;
   await loadTemplates();
   res.json({ success: true, templates: buildTemplateListSync() });
 });
 
 exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
-  const { key, text, label, category, isInfoOnly, noWrapper } = req.body;
+  const { key, text, label } = req.body;
+  const { category } = req.body;
   if (!key) return next(new AppError('key is required', 400));
+
+  const existing = await EmailTemplate.findOne({ key });
+  if (!existing) return next(new AppError('Template not found', 404));
 
   const update = {};
   if (text     !== undefined) update.text      = text;
   if (label    !== undefined) update.label     = label;
-  if (category !== undefined) update.category  = category;
-  if (isInfoOnly !== undefined) update.isInfoOnly = !!isInfoOnly;
-  if (noWrapper  !== undefined) update.noWrapper  = !!noWrapper;
+  if (category !== undefined) {
+    update.category = category;
+    update.type = deriveEmailTemplateFields(category).type;
+    if (category !== existing.category) {
+      const derived = deriveEmailTemplateFields(category);
+      update.isInfoOnly = derived.isInfoOnly;
+      update.noWrapper  = derived.noWrapper;
+    }
+  }
 
-  const doc = await EmailTemplate.findOneAndUpdate({ key }, { $set: update }, { new: true, runValidators: true });
-  if (!doc) return next(new AppError('Template not found', 404));
+  if (Object.keys(update).length) {
+    await EmailTemplate.updateOne({ key }, { $set: update }, { runValidators: true });
+  }
 
   _templatesCached = false;
   await loadTemplates();

@@ -41,23 +41,24 @@ block app-content
     .ad-grid
       //- Live Operations Feed
       .ad-panel
-        h2.ad-panel__title
-          span(style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; margin-right:6px; animation: pulse-dot 1.5s infinite;")
-          | Live Operations Feed
-        .ad-overview-controls
-          .ad-month-picker
-            label(for="overviewMonth") Period:
-            select#overviewMonth
-              each opt in monthOptions
-                option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
-          .ad-month-picker
-            label(for="overviewDay") Day:
-            select#overviewDay
-              option(value="") All
-          .ad-overview-summary
-            span.ad-overview-stat#overview-month-ops= totalOpsThisMonth + ' ops'
-            span.ad-overview-stat-sep ·
-            span.ad-overview-stat#overview-month-cost= '$' + cc(totalCostThisMonth)
+        .ad-live-header
+          h2.ad-panel__title
+            span.ad-live-dot
+            | Live Operations Feed
+          .ad-overview-controls
+            .ad-month-picker
+              label(for="overviewMonth") Period:
+              select#overviewMonth
+                each opt in monthOptions
+                  option(value=`${opt.year}-${opt.month}`, selected=opt.selected)= opt.label
+            .ad-month-picker
+              label(for="overviewDay") Day:
+              select#overviewDay
+                option(value="") All
+            .ad-overview-summary
+              span.ad-overview-stat#overview-month-ops= totalOpsThisMonth + ' ops'
+              span.ad-overview-stat-sep /
+              span.ad-overview-stat#overview-month-cost= '$' + cc(totalCostThisMonth)
         .ad-feed
           table.ad-feed-table
             thead
@@ -68,11 +69,11 @@ block app-content
                 th Cost
             tbody#operations-feed-table
               tr#ops-loading-row
-                td(colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;font-size:0.875rem;") Loading operations…
+                td(colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem;font-size:0.875rem;") Loading operations...
         .ad-pagination#ops-pagination
-          button.ud-page-btn#ops-prev-page(disabled) ← Prev
+          button.ud-page-btn#ops-prev-page(disabled) Prev
           span.ud-page-info#ops-page-info Page 1 of #{opsTotalPages}
-          button.ud-page-btn#ops-next-page(disabled=opsTotalPages <= 1) Next →
+          button.ud-page-btn#ops-next-page(disabled=opsTotalPages <= 1) Next
 
 
   //- ── TAB 2: NOTIFICATIONS ─────────────────────────────────────────────────

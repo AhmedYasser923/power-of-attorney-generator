@@ -41,6 +41,106 @@ document.addEventListener('DOMContentLoaded', () => {
       letter-spacing: -0.005em;
     }
 
+    #resultsCard .route-header,
+    #resultsCard .fc-airline,
+    #resultsCard .fc-iata,
+    #resultsCard .fc-airport {
+      color: #E8ECF8 !important;
+    }
+
+    #resultsCard .flight-card {
+      background: #111525 !important;
+      border-color: #1E2440 !important;
+      color: #E8ECF8 !important;
+    }
+
+    #resultsCard .flight-card:hover {
+      border-color: rgba(61,110,250,0.27) !important;
+    }
+
+    #resultsCard .fc-city,
+    #resultsCard .fc-info-strip,
+    #resultsCard .fc-date-pill,
+    #resultsCard .fc-strip-sep,
+    #resultsCard .fc-original-time,
+    #resultsCard .fc-collapse-icon {
+      color: #8896C0 !important;
+    }
+
+    #resultsCard .fc-info-strip,
+    #resultsCard .fc-collapse-trigger,
+    #resultsCard .fc-date-edit-row,
+    #resultsCard .fc-date-cancel-btn {
+      background: #0B0E1A !important;
+      border-color: #1E2440 !important;
+    }
+
+    #resultsCard .fc-times-row,
+    #resultsCard .fc-footer {
+      border-top-color: #1A1F35 !important;
+    }
+
+    #resultsCard .fc-line {
+      border-top-color: #4A5270 !important;
+    }
+
+    #resultsCard .fc-plane {
+      background: #111525 !important;
+      color: #5584FF !important;
+    }
+
+    #resultsCard .fc-time,
+    #resultsCard .fc-flight-num,
+    #resultsCard .fc-date-edit-btn:hover,
+    #resultsCard .fc-collapse-trigger.expanded .fc-collapse-icon {
+      color: #5584FF !important;
+    }
+
+    #resultsCard .fc-flight-num,
+    #resultsCard .fc-date-edit-btn:hover,
+    #resultsCard .fc-collapse-trigger:hover {
+      background: rgba(61,110,250,0.13) !important;
+      border-color: rgba(61,110,250,0.27) !important;
+    }
+
+    #resultsCard .fc-collapse-trigger {
+      color: #8896C0 !important;
+    }
+
+    #resultsCard .fc-collapse-trigger:hover {
+      color: #E8ECF8 !important;
+    }
+
+    #resultsCard .fc-eoc-wrapper > div[title="Claim may be invalidated by EOC"] {
+      background: rgba(239,68,68,0.13) !important;
+      color: #F87171 !important;
+      border-color: rgba(239,68,68,0.35) !important;
+    }
+
+    #resultsCard .eoc-flight-alert {
+      background: rgba(239,68,68,0.10) !important;
+      border-color: rgba(239,68,68,0.35) !important;
+      border-left-color: #EF4444 !important;
+      color: #E8ECF8 !important;
+    }
+
+    #resultsCard .eoc-flight-alert > div:first-child,
+    #resultsCard .eoc-flight-alert strong {
+      color: #F87171 !important;
+    }
+
+    #resultsCard .eoc-flight-alert > div:not(:first-child) {
+      border-top-color: rgba(239,68,68,0.35) !important;
+    }
+
+    #resultsCard .eoc-flight-alert span {
+      color: #E8ECF8 !important;
+    }
+
+    #resultsCard .eoc-flight-alert strong + span:last-child {
+      color: #EF4444 !important;
+    }
+
     @keyframes pulsyGlassyRed {
       0%   { box-shadow: 0 0 0 0 rgba(220,38,38,0.5), inset 0 0 10px rgba(220,38,38,0.1);
               background-color: rgba(254,242,242,0.4); border-color: rgba(239,68,68,0.5); }
@@ -631,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentFiles.length) return alert('Please upload a ticket or boarding pass first.');
 
     analyzeBtn.disabled = true;
-    analyzeBtn.innerHTML = '<div class="modern-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div>';
+    analyzeBtn.innerHTML = '<div class="modern-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;background:conic-gradient(#0000 10%, #fff);"></div>';
     resultsCard.style.display = 'none';
 
     const applyYearBtn = document.getElementById('applyYearBtn');
@@ -874,8 +974,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
               const editableSpan = `<span class="pnr-editable ${colorClass}" contenteditable="true" spellcheck="false" data-placeholder="Scan..." onfocus="const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(this); sel.removeAllRanges(); sel.addRange(range);">${pn}</span>`;
               const pnrBadge = (pr === pn && pn !== '') || (pr === '' && pn !== '')
-                ? `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
-                : `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:11px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
+                ? `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;gap:6px;font-size:12px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="white-space:nowrap;margin-top:1px;">📱 PNR:</span> ${editableSpan}</div>`
+                : `<div class="${colorClass}" style="display:inline-flex;align-items:flex-start;flex-wrap:wrap;gap:6px;font-size:12px;background:#f8fafc;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;color:#334155;font-weight:700;max-width:100%;"><span style="color:#64748b;white-space:nowrap;margin-top:1px;">🖨️ Printed Ref: <span style="color:#475569;">${pr || 'N/A'}</span></span><span style="color:#cbd5e1;margin-top:1px;">|</span><span style="white-space:nowrap;margin-top:1px;">📱 True PNR:</span> ${editableSpan}</div>`;
 
               // 🎫 PER-LEG PASSENGER TICKETS RENDERING
               let passengerTicketsHtml = '';
@@ -945,10 +1045,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${datePillHtml}
                     <span class="fc-strip-sep">·</span>
                     <span class="fc-flight-num" style="display:flex;align-items:center;flex-wrap:wrap;">✈ ${fnDisp} ${stBtns}</span>
-                    <span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>
+                    <span class="fc-strip-sep" style="width:100%;height:1px;background:#1A1F35;margin:4px 0;"></span>
                     ${pnrBadge}
                     ${passengerTicketsHtml}
-                    ${docsHtml ? `<span class="fc-strip-sep" style="width:100%;height:1px;background:#e2e8f0;margin:4px 0;"></span>${docsHtml}` : ''}
+                    ${docsHtml ? `<span class="fc-strip-sep" style="width:100%;height:1px;background:#1A1F35;margin:4px 0;"></span>${docsHtml}` : ''}
                   </div>
                   <div class="fc-footer">
                     <div style="display:flex;gap:8px;align-items:center;">${eocHtml}</div>

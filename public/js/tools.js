@@ -911,10 +911,26 @@ document.addEventListener('DOMContentLoaded', () => {
     emLanguageSelect.value = localStorage.getItem('emLastLanguage');
   }
   const emOutputTab = document.querySelector('.stab[data-preview-tab="output"]');
-  if (emOutputTab) emOutputTab.textContent = emLanguageSelect.value;
+  const emVerifyTab = document.querySelector('.stab[data-preview-tab="verify"]');
+
+  function isEmailLanguageEnglish() {
+    return emLanguageSelect.value === 'English';
+  }
+
+  function updateEmailPreviewTabs() {
+    if (emOutputTab) emOutputTab.textContent = emLanguageSelect.value;
+    if (emVerifyTab) {
+      emVerifyTab.style.display = isEmailLanguageEnglish() ? 'none' : '';
+      if (isEmailLanguageEnglish() && emVerifyTab.classList.contains('active')) {
+        showEmailPreviewTab('output');
+      }
+    }
+  }
+
+  updateEmailPreviewTabs();
   emLanguageSelect.addEventListener('change', () => {
     localStorage.setItem('emLastLanguage', emLanguageSelect.value);
-    if (emOutputTab) emOutputTab.textContent = emLanguageSelect.value;
+    updateEmailPreviewTabs();
   });
 
   function updateEmailPillStates() {
@@ -924,9 +940,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pill.classList.toggle('sel', !!input?.checked && !isRejection);
       pill.classList.toggle('sel-r', !!input?.checked && isRejection);
     });
+    const hasRegularDocs = Array.from(
+      document.querySelectorAll('input[name="emTemplates"]:checked')
+    ).some(cb => emRegularDocKeys.has(cb.value));
+    const wrapperRow = document.getElementById('emWrapperRow');
+    if (wrapperRow) wrapperRow.style.display = hasRegularDocs ? 'none' : '';
   }
 
-  const EM_CATEGORY_ORDER = ['Documents', 'Passenger Info', 'Compensation', 'Rejection Reason'];
+  const EM_CATEGORY_ORDER = ['Documents', 'Others', 'Rejection Reason'];
 
   function emEscHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -936,7 +957,45 @@ document.addEventListener('DOMContentLoaded', () => {
     return str.replace(/[_\-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  function normalizePlaceholderName(name) {
+    return String(name || '').trim().toLowerCase().replace(/[\s_-]+/g, ' ');
+  }
+
+  function renderPlaceholderInput(name, value) {
+    const normalized = normalizePlaceholderName(name);
+    const safeName = emEscHtml(name);
+    const safeValue = emEscHtml(value || '');
+
+    if (normalized === 'date') {
+      return `<input class="input ts-input em-placeholder-input em-ph-panel__input" type="date" ` +
+        `data-placeholder="${safeName}" value="${safeValue}">`;
+    }
+
+    if (normalized === 'amount') {
+      return `<div class="em-ph-panel__amount-wrap">` +
+        `<span class="em-ph-panel__amount-prefix">&euro;</span>` +
+        `<input class="input ts-input em-placeholder-input em-ph-panel__input em-ph-panel__input--amount" ` +
+          `type="text" inputmode="decimal" data-placeholder="${safeName}" ` +
+          `placeholder="${safeName}" value="${safeValue}">` +
+      `</div>`;
+    }
+
+    return `<input class="input ts-input em-placeholder-input em-ph-panel__input" type="text" ` +
+      `data-placeholder="${safeName}" placeholder="${safeName}" value="${safeValue}">`;
+  }
+
   const emTemplateMap = new Map((window.EMAIL_TEMPLATES || []).map(t => [t.key, t.text]));
+  let emRegularDocKeys = new Set();
+
+  function syncEmailTemplateCaches(templates) {
+    emTemplateMap.clear();
+    (templates || []).forEach(t => emTemplateMap.set(t.key, t.text));
+    emRegularDocKeys = new Set((templates || [])
+      .filter(t => t.type === 'document' && !t.noWrapper)
+      .map(t => t.key));
+  }
+
+  syncEmailTemplateCaches(window.EMAIL_TEMPLATES || []);
 
   function getSelectedPlaceholders() {
     const keys = Array.from(document.querySelectorAll('input[name="emTemplates"]:checked')).map(cb => cb.value);
@@ -971,6 +1030,13 @@ document.addEventListener('DOMContentLoaded', () => {
       existing[inp.dataset.placeholder] = inp.value;
     });
 
+    if (emHasGeneratedContent) {
+      emHasGeneratedContent = false;
+      const output = document.getElementById('emResultBox');
+      const verify = document.getElementById('emEnglishBox');
+      if (output) output.style.display = 'none';
+      if (verify) verify.style.display = 'none';
+    }
     if (emptyMsg) emptyMsg.style.display = 'none';
     section.style.display = '';
     section.innerHTML =
@@ -980,10 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
           [...placeholders.entries()].map(([name, label]) =>
             `<div class="em-ph-panel__field">` +
               `<label class="em-ph-panel__label">${emEscHtml(label)}</label>` +
-              `<input class="input ts-input em-placeholder-input em-ph-panel__input" type="text" ` +
-                `data-placeholder="${emEscHtml(name)}" ` +
-                `placeholder="${emEscHtml(name)}" ` +
-                `value="${emEscHtml(existing[name] || '')}">` +
+              renderPlaceholderInput(name, existing[name]) +
             `</div>`
           ).join('') +
         '</div>' +
@@ -1029,20 +1092,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   buildEmailPills(window.EMAIL_TEMPLATES || []);
 
-  // Inner tab switching
-  document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.em-inner-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.em-inner-tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      const tabId = 'emTab' + btn.dataset.emTab.charAt(0).toUpperCase() + btn.dataset.emTab.slice(1);
-      document.getElementById(tabId).classList.add('active');
-      const isRequest = btn.dataset.emTab === 'request';
-      document.getElementById('emSidebarRequest').style.display = isRequest ? '' : 'none';
-      document.getElementById('emSidebarDraft').style.display   = isRequest ? 'none' : '';
-    });
-  });
-
   // Toggle custom note area
   const emUseNote = document.getElementById('emUseNote');
   const emNoteArea = document.getElementById('emNoteArea');
@@ -1054,17 +1103,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let emLastPayload = null;
   function showEmailPreviewTab(tabName) {
+    if (tabName === 'verify' && isEmailLanguageEnglish()) tabName = 'output';
     document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.previewTab === tabName);
     });
-    const output      = document.getElementById('emResultBox');
-    const verify      = document.getElementById('emEnglishBox');
-    const placeholder = document.getElementById('emPlaceholder');
-    const phSection   = document.getElementById('emPlaceholderSection');
-    if (output) output.style.display = emHasGeneratedContent && tabName === 'output' ? 'block' : 'none';
-    if (verify) verify.style.display = emHasGeneratedContent && tabName === 'verify' ? 'block' : 'none';
-    if (placeholder) placeholder.style.display = emHasGeneratedContent ? 'none' : 'flex';
-    if (phSection && emHasGeneratedContent) phSection.style.display = 'none';
+    const output    = document.getElementById('emResultBox');
+    const verify    = document.getElementById('emEnglishBox');
+    const phSection = document.getElementById('emPlaceholderSection');
+    if (emHasGeneratedContent) {
+      if (output)    output.style.display    = tabName === 'output' ? 'block' : 'none';
+      if (verify)    verify.style.display    = tabName === 'verify' ? 'block' : 'none';
+      if (phSection) phSection.style.display = 'none';
+      const placeholder = document.getElementById('emPlaceholder');
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      if (output) output.style.display = 'none';
+      if (verify) verify.style.display = 'none';
+      // #emPlaceholder and #emPlaceholderSection are exclusively managed by renderPlaceholderInputs()
+    }
   }
 
   document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
@@ -1073,35 +1129,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function restoreEmailFormFromPayload(payload) {
     if (!payload) return false;
+    emHasGeneratedContent = false;
+    showEmailPreviewTab('output');
 
-    document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
-      if (btn.dataset.emTab === payload.mode) btn.click();
+    const selected = new Set(payload.selectedTemplates || []);
+    document.querySelectorAll('input[name="emTemplates"]').forEach(cb => {
+      cb.checked = selected.has(cb.value);
     });
-
-    if (payload.mode === 'request') {
-      const selected = new Set(payload.selectedTemplates || []);
-      document.querySelectorAll('input[name="emTemplates"]').forEach(cb => {
-        cb.checked = selected.has(cb.value);
+    updateEmailPillStates();
+    document.getElementById('emLink').value = payload.link || '';
+    if (emUseNote) {
+      emUseNote.checked = !!payload.customNote;
+      emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
+    }
+    document.getElementById('emCustomNote').value = payload.customNote || '';
+    document.getElementById('emUseWrapper').checked = !!payload.useWrapper;
+    renderPlaceholderInputs();
+    if (payload.placeholderValues) {
+      Object.entries(payload.placeholderValues).forEach(([name, val]) => {
+        const inp = document.querySelector(`.em-placeholder-input[data-placeholder="${CSS.escape(name)}"]`);
+        if (inp) inp.value = val;
       });
-      updateEmailPillStates();
-      document.getElementById('emLink').value = payload.link || '';
-      if (emUseNote) {
-        emUseNote.checked = !!payload.customNote;
-        emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
-      }
-      document.getElementById('emCustomNote').value = payload.customNote || '';
-      document.getElementById('emUseWrapper').checked = !!payload.useWrapper;
-      renderPlaceholderInputs();
-      if (payload.placeholderValues) {
-        Object.entries(payload.placeholderValues).forEach(([name, val]) => {
-          const inp = document.querySelector(`.em-placeholder-input[data-placeholder="${CSS.escape(name)}"]`);
-          if (inp) inp.value = val;
-        });
-      }
-    } else {
-      document.getElementById('emDraftText').value = payload.draftText || '';
-      const toneInput = document.querySelector(`input[name="emTone"][value="${payload.tone || 'neutral'}"]`);
-      if (toneInput) toneInput.checked = true;
     }
 
     return true;
@@ -1117,39 +1165,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const englishTextDiv = document.getElementById('emEnglishText');
     const charCountDiv   = document.getElementById('emCharCount');
 
-    const activeTabBtn = document.querySelector('.em-inner-tab-btn.active');
-    const mode = activeTabBtn ? activeTabBtn.dataset.emTab : 'request';
+    const selectedTemplates = Array.from(
+      document.querySelectorAll('input[name="emTemplates"]:checked')
+    ).map(cb => cb.value);
+    const link       = document.getElementById('emLink').value.trim();
+    const customNote = emUseNote?.checked ? document.getElementById('emCustomNote').value.trim() : '';
+    const useWrapper = document.getElementById('emUseWrapper').checked;
 
-    let payload = { language: emLanguageSelect.value, mode };
-
-    if (mode === 'request') {
-      const selectedTemplates = Array.from(
-        document.querySelectorAll('input[name="emTemplates"]:checked')
-      ).map(cb => cb.value);
-      const link       = document.getElementById('emLink').value.trim();
-      const customNote = emUseNote?.checked ? document.getElementById('emCustomNote').value.trim() : '';
-      const useWrapper = document.getElementById('emUseWrapper').checked;
-
-      if (!selectedTemplates.length && !customNote) {
-        alert('Please select at least one template or add a custom note.');
-        return;
-      }
-      const placeholderValues = {};
-      document.querySelectorAll('.em-placeholder-input').forEach(inp => {
-        if (inp.dataset.placeholder) placeholderValues[inp.dataset.placeholder] = inp.value.trim();
-      });
-      payload = { ...payload, selectedTemplates, link, customNote, useWrapper, placeholderValues };
-
-    } else {
-      const draftText = document.getElementById('emDraftText').value.trim();
-      const tone      = document.querySelector('input[name="emTone"]:checked')?.value || 'neutral';
-
-      if (!draftText) {
-        alert('Please enter your message to draft or polish.');
-        return;
-      }
-      payload = { ...payload, draftText, tone };
+    if (!selectedTemplates.length && !customNote) {
+      alert('Please select at least one template or add a custom note.');
+      return;
     }
+    const placeholderValues = {};
+    document.querySelectorAll('.em-placeholder-input').forEach(inp => {
+      if (inp.dataset.placeholder) placeholderValues[inp.dataset.placeholder] = inp.value.trim();
+    });
+    const payload = {
+      language: emLanguageSelect.value,
+      mode: 'request',
+      selectedTemplates,
+      link,
+      customNote,
+      useWrapper,
+      placeholderValues,
+    };
 
     emLastPayload           = { ...payload };
     btn.disabled            = true;
@@ -1182,7 +1221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('emLink').value = '';
         if (emUseNote) { emUseNote.checked = false; emNoteArea.style.display = 'none'; }
         document.getElementById('emCustomNote').value = '';
-        document.getElementById('emDraftText').value = '';
         const wrapperCb = document.getElementById('emUseWrapper');
         if (wrapperCb) wrapperCb.checked = false;
       } else {
@@ -1324,21 +1362,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function buildForm(tpl, isNew) {
-      const isDoc = !tpl || tpl.type === 'document';
-      const docCats = ['Documents', 'Passenger Info', 'Compensation'];
-      const catOptions = (isNew ? [...docCats, 'Rejection Reason'] : (isDoc ? docCats : ['Rejection Reason']))
+      const categories = ['Documents', 'Others', 'Rejection Reason'];
+      const catOptions = categories
         .map(c => `<option value="${esc(c)}"${(!isNew && tpl && tpl.category === c) ? ' selected' : ''}>${esc(c)}</option>`)
         .join('');
-
-      const flagsHtml = `
-        <div class="em-tpl-form__flags" id="emTplFlags" style="${!isNew && !isDoc ? 'display:none' : ''}">
-          <label class="em-tpl-form__flag">
-            <input type="checkbox" id="emTplIsInfo"${!isNew && tpl && tpl.isInfoOnly ? ' checked' : ''}> Asks for information, not a document <span class="em-tpl-form__note">(changes outro: "reply with the requested information" instead of "documents")</span>
-          </label>
-          <label class="em-tpl-form__flag">
-            <input type="checkbox" id="emTplNoWrapper"${!isNew && tpl && tpl.noWrapper ? ' checked' : ''}> Output as plain text — no "In order to proceed…" intro or closing sentence <span class="em-tpl-form__note">(like rejection templates)</span>
-          </label>
-        </div>`;
 
       return `
         <div class="em-tpl-form" id="emTplForm">
@@ -1351,13 +1378,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <label class="em-tpl-form__label">Key ${!isNew ? '<span class="em-tpl-form__note">(cannot change)</span>' : ''}</label>
               <input class="em-tpl-form__input" id="emTplKey" type="text" value="${esc(tpl ? tpl.key : '')}"
                 placeholder="Unique identifier" ${!isNew ? 'readonly' : ''}>
-            </div>
-            <div class="em-tpl-form__field">
-              <label class="em-tpl-form__label">Type</label>
-              <select class="em-tpl-form__select" id="emTplType" ${!isNew ? 'disabled' : ''}>
-                <option value="document"${!isNew && !isDoc ? '' : ' selected'}>Document</option>
-                <option value="rejection"${!isNew && !isDoc ? ' selected' : ''}>Rejection</option>
-              </select>
             </div>
             <div class="em-tpl-form__field">
               <label class="em-tpl-form__label">Category</label>
@@ -1373,7 +1393,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <textarea class="em-tpl-form__textarea" id="emTplText" placeholder="Email text… use {placeholder} for dynamic values">${esc(tpl ? tpl.text : '')}</textarea>
             </div>
           </div>
-          ${flagsHtml}
           <div class="em-tpl-form__btns">
             <button type="button" class="em-tpl-form__cancel" id="emTplFormCancel">Cancel</button>
             <button type="button" class="em-tpl-form__save" id="emTplFormSave">${isNew ? 'Create' : 'Save Changes'}</button>
@@ -1382,9 +1401,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function wireFormEvents(isNew) {
-      const typeSelect = document.getElementById('emTplType');
-      const catSelect  = document.getElementById('emTplCategory');
-      const flagsDiv   = document.getElementById('emTplFlags');
       const labelInput = document.getElementById('emTplLabel');
       const keyInput   = document.getElementById('emTplKey');
 
@@ -1394,14 +1410,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!keyInput.dataset.edited) keyInput.value = labelInput.value;
         });
         keyInput.addEventListener('input', () => { keyInput.dataset.edited = '1'; });
-
-        typeSelect.addEventListener('change', () => {
-          const isDoc = typeSelect.value === 'document';
-          const docCats = ['Documents', 'Passenger Info', 'Compensation'];
-          const cats = isDoc ? docCats : ['Rejection Reason'];
-          catSelect.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-          flagsDiv.style.display = isDoc ? '' : 'none';
-        });
       }
 
       document.getElementById('emTplFormCancel').addEventListener('click', () => {
@@ -1437,12 +1445,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const saveBtn = document.getElementById('emTplFormSave');
       const label    = document.getElementById('emTplLabel').value.trim();
       const key      = document.getElementById('emTplKey').value.trim();
-      const typeEl   = document.getElementById('emTplType');
-      const type     = typeEl ? typeEl.value : null;
-      const category = document.getElementById('emTplCategory').value;
+      let category = document.getElementById('emTplCategory').value;
       const text     = document.getElementById('emTplText').value.trim();
-      const isInfoOnly = document.getElementById('emTplIsInfo')?.checked || false;
-      const noWrapper  = document.getElementById('emTplNoWrapper')?.checked || false;
+      const type = category === 'Rejection Reason' ? 'rejection' : 'document';
+      const isRejection = type === 'rejection';
+      const isInfoOnly = !isRejection && category === 'Others';
+      const noWrapper  = !isRejection && category === 'Others';
 
       if (!label || !key || !text || !category) {
         alert('Label, Key, Category, and Template Text are all required.');
@@ -1461,7 +1469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Save failed');
         cachedTemplates = data.templates;
-        cachedTemplates.forEach(t => emTemplateMap.set(t.key, t.text));
+        syncEmailTemplateCaches(cachedTemplates);
         renderList(cachedTemplates);
         buildEmailPills(cachedTemplates);
       } catch (err) {
@@ -1484,8 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Delete failed');
         cachedTemplates = data.templates;
-        cachedTemplates.forEach(t => emTemplateMap.set(t.key, t.text));
-        emTemplateMap.forEach((_, key) => { if (!cachedTemplates.find(t => t.key === key)) emTemplateMap.delete(key); });
+        syncEmailTemplateCaches(cachedTemplates);
         renderList(cachedTemplates);
         buildEmailPills(cachedTemplates);
       } catch (err) {

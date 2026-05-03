@@ -12,7 +12,8 @@
     "Proof of delay": "Please provide proof of your flight delay.\nIf the delay is publicly recorded (e.g. Flightradar24, FlightAware), we may\nalready have access to it. If not, please provide any official communication\nfrom the airline acknowledging the delay, such as an email, SMS, or airport\nnotification.",
     "Proof of cancellation": "Please provide proof of your flight cancellation.\nThis can be an email or SMS from the airline confirming the cancellation, or\nany official notification you received. If you were rebooked, please also\ninclude the details of the replacement flight offered.",
     "passengers documents not complete": "After carefully reviewing your case, we believe you may be eligible for compensation. We are now preparing all the necessary documentation to submit your claim to the airline.\n\nIn the meantime, please upload all documents for your fellow passengers using the following link: [link]\n\nWe will notify you as soon as your claim is filed and keep you updated on the next steps in the process.",
-    "confirmed delay": "we've confirmed the cancellation of your flight {flight number} on {date} was delayed by {duration} which makes entitled by law to a {amount} compensation by law, and in order to be able to pursue the compensation on your behalf we're just missing a few detalis and information :"
+    "confirmed delay": "we've confirmed the cancellation of your flight {flight number} on {date} was delayed by {duration} which makes entitled by law to a {amount} compensation by law, and in order to be able to pursue the compensation on your behalf we're just missing a few detalis and information :",
+    "missed connection confirmation": "Please confirm whether you missed your connecting flight {connecting route}, flight number {connecting flight number}, due to the {delay duration} delay that occurred on your flight {delayed route}, flight number {delayed flight number}."
   },
   "rejectionTemplates": {
     "Visa/Documentation Rejection": "After a thorough review of your case, we regret to inform you that we are unable to pursue your compensation claim. The reason for this decision is that based on the documentation and information provided, the disruption to your journey appears to be related to visa or documentation issues, which fall outside the scope of the applicable passenger rights regulations. As a result, we are unable to represent you in this matter.",
@@ -25,7 +26,7 @@
   "meta": {
     "email address": {
       "label": "Email",
-      "category": "Passenger Info",
+      "category": "Documents",
       "isInfoOnly": true,
       "noWrapper": false
     },
@@ -37,13 +38,13 @@
     },
     "fill dashboard": {
       "label": "Fill Dashboard",
-      "category": "Compensation",
+      "category": "Documents",
       "isInfoOnly": false,
       "noWrapper": false
     },
     "Service Fees": {
       "label": "Service Fees",
-      "category": "Compensation",
+      "category": "Others",
       "isInfoOnly": true,
       "noWrapper": false
     },
@@ -61,13 +62,13 @@
     },
     "ID / Passport": {
       "label": "ID / Passport",
-      "category": "Passenger Info",
+      "category": "Documents",
       "isInfoOnly": false,
       "noWrapper": false
     },
     "Signed Power of Attorney": {
       "label": "Signed POA",
-      "category": "Passenger Info",
+      "category": "Documents",
       "isInfoOnly": false,
       "noWrapper": false
     },
@@ -91,7 +92,7 @@
     },
     "passengers documents not complete": {
       "label": "Passenger Docs",
-      "category": "Passenger Info",
+      "category": "Others",
       "isInfoOnly": false,
       "noWrapper": true
     },
@@ -120,10 +121,16 @@
       "category": "Rejection Reason"
     },
     "confirmed delay": {
-      "label": "confirmed delay",
-      "category": "Compensation",
+      "label": "Confirmed Delay",
+      "category": "Others",
       "isInfoOnly": false,
       "noWrapper": true
+    },
+    "missed connection confirmation": {
+      "label": "Missed Connection",
+      "category": "Documents",
+      "isInfoOnly": true,
+      "noWrapper": false
     }
   }
 }

@@ -374,36 +374,15 @@ block content
                   h3 Select Content
                   p Choose what to include in the email
                 button#emManageBtn(type="button" title="Manage Templates") Manage
-            .em-inner-tabs
-              button.em-inner-tab-btn.active(type="button" data-em-tab="request") Request Info
-              button.em-inner-tab-btn(type="button" data-em-tab="draft") Draft / Polish
             .split-groups
-              #emTabRequest.em-inner-tab-content.active
-                #emPillGroups
-                #emSidebarRequest.email-advanced
-                  .split-group
-                    .split-group-label Advanced
-                    .email-field
-                      label.split-footer-lbl(for="emLink") Upload Link
-                      input#emLink.input.ts-input(type="text" placeholder="https://...")
-                      p.email-field__hint For Passenger Docs, Signed POA, and Fill Dashboard.
-              #emTabDraft.em-inner-tab-content
+              #emPillGroups
+              #emSidebarRequest.email-advanced
                 .split-group
-                  .split-group-label Your Message
-                  textarea#emDraftText.textarea.ts-input(placeholder="Paste your rough draft or describe what you want to say...")
-                #emSidebarDraft.email-advanced
-                  .split-group
-                    .split-group-label Tone
-                    .em-tone-pills
-                      label.em-tone-pill
-                        input(type="radio" name="emTone" value="neutral" checked)
-                        | Neutral
-                      label.em-tone-pill
-                        input(type="radio" name="emTone" value="empathetic")
-                        | Empathetic
-                      label.em-tone-pill
-                        input(type="radio" name="emTone" value="firm")
-                        | Firm
+                  .split-group-label Advanced
+                  .email-field
+                    label.split-footer-lbl(for="emLink") Upload Link
+                    input#emLink.input.ts-input(type="text" placeholder="https://...")
+                    p.email-field__hint For Passenger Docs, Signed POA, and Fill Dashboard.
             .split-footer
               .email-footer-options
                 label.email-toggle.em-freestyle-toggle
@@ -411,9 +390,10 @@ block content
                   span.email-toggle__label Custom Request
                 #emNoteArea(style="display: none;")
                   textarea#emCustomNote.textarea.ts-input(placeholder="Additional message to include...")
-                label.email-toggle.em-freestyle-toggle
-                  input#emUseWrapper(type="checkbox")
-                  span.email-toggle__label Formal intro and outro
+                #emWrapperRow
+                  label.email-toggle.em-freestyle-toggle
+                    input#emUseWrapper(type="checkbox")
+                    span.email-toggle__label Add sign-off
               .split-footer-row.email-lang.em-language-group
                 label.split-footer-lbl(for="emLanguage") Language
                 select#emLanguage.split-lang
@@ -446,7 +426,7 @@ block content
                 button.stab(type="button" data-preview-tab="verify") EN verify
             .split-preview
               #emPlaceholder.email-placeholder
-                p Select content or write a draft, then click Generate Email
+                p Select content, then click Generate Email
               #emPlaceholderSection(style="display:none")
               #emResultBox.email-mock(style="display: none;")
                 .email-body-text#emOutputText
