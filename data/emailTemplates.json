@@ -1,8 +1,8 @@
 {
   "documentTemplates": {
-    "email address" :"please provide the email address you used to book your flight. This is the email address where you received your booking confirmation and any related communications from the airline.",
+    "email address": "please provide the email address you used to book your flight. This is the email address where you received your booking confirmation and any related communications from the airline.",
     "Boarding pass": "Please provide a copy of your boarding pass for the disrupted flight(s). You can find your boarding pass in the confirmation email from the airline, in the airline's mobile app, or at the airport check-in counter. A photo or\nscan of the physical boarding pass is also acceptable.",
-    "fill dashboard":"please upload all documents for your fellow passengers using the following link: [link]",
+    "fill dashboard": "please upload all documents for your fellow passengers using the following link: [link]",
     "Service Fees": "Greetings from ReFly. At ReFly, we operate on a no-win, no-fee basis, meaning you will not incur any charges unless your claim is successfully resolved.\n\nOur standard service fee is 33% (including VAT) of the compensation amount recovered. In cases where legal action is required to pursue your claim, additional costs may arise (such as court, translation, and legal fees). In such instances, our total fee will be 50% (including VAT) of the compensation obtained.\nFor full details, please refer to our Terms and Conditions.\n\n If you wish to proceed, please reply to this email with a confirmation.\n\nThank you for choosing ReFly.\nSincerely,\nLegal Department\nReFly Management Limited\nEmail: claim@refly.org\nwww.refly.org",
     "Ticket number (13-digit)": "Please provide your 13-digit ticket number.You can find this number on your booking confirmation email (usually labelled Ticket Number or e-Ticket Number), in the airline's app under My Trips, or by contacting the airline's customer service directly.",
     "PNR / Booking Reference": "Please provide your PNR (Passenger Name Record) or Booking Reference.This is a 6-character alphanumeric code (e.g. ABC123) found in your booking confirmation email, the airline app under My Bookings, or on your printed itinerary.",
@@ -11,15 +11,119 @@
     "Booking confirmation": "Please provide a copy of your original booking confirmation. This is the email or PDF receipt you received when you completed your booking, showing the flight details, passenger name, and booking reference.",
     "Proof of delay": "Please provide proof of your flight delay.\nIf the delay is publicly recorded (e.g. Flightradar24, FlightAware), we may\nalready have access to it. If not, please provide any official communication\nfrom the airline acknowledging the delay, such as an email, SMS, or airport\nnotification.",
     "Proof of cancellation": "Please provide proof of your flight cancellation.\nThis can be an email or SMS from the airline confirming the cancellation, or\nany official notification you received. If you were rebooked, please also\ninclude the details of the replacement flight offered.",
-    "passengers documents not complete": "After carefully reviewing your case, we believe you may be eligible for compensation. We are now preparing all the necessary documentation to submit your claim to the airline.\n\nIn the meantime, please upload all documents for your fellow passengers using the following link: [link]\n\nWe will notify you as soon as your claim is filed and keep you updated on the next steps in the process."
-    
+    "passengers documents not complete": "After carefully reviewing your case, we believe you may be eligible for compensation. We are now preparing all the necessary documentation to submit your claim to the airline.\n\nIn the meantime, please upload all documents for your fellow passengers using the following link: [link]\n\nWe will notify you as soon as your claim is filed and keep you updated on the next steps in the process.",
+    "confirmed delay": "we've confirmed the cancellation of your flight {flight number} on {date} was delayed by {duration} which makes entitled by law to a {amount} compensation by law, and in order to be able to pursue the compensation on your behalf we're just missing a few detalis and information :"
   },
   "rejectionTemplates": {
     "Visa/Documentation Rejection": "After a thorough review of your case, we regret to inform you that we are unable to pursue your compensation claim. The reason for this decision is that based on the documentation and information provided, the disruption to your journey appears to be related to visa or documentation issues, which fall outside the scope of the applicable passenger rights regulations. As a result, we are unable to represent you in this matter.",
     "Short Delay / No Missed Connection Rejection": "After a thorough review of your case, we regret to inform you that we are unable to pursue your compensation claim. The disruption recorded for your flight does not meet the minimum delay threshold required under the applicable passenger rights regulations, and no missed connection was identified as a consequence of the delay. Therefore, your case does not qualify for compensation at this time.",
     "No Disruption Found Rejection": "After a thorough review of your case, we regret to inform you that we are unable to identify any recorded disruption for the flight(s) in question. Without verifiable evidence of a qualifying disruption, we are unable to pursue a compensation claim on your behalf. \n\n If you believe this assessment is inaccurate or have any supporting documentation or evidence of a disruption, we kindly request that you share it with us. We will be pleased to reassess your case accordingly.",
     "Jurisdiction expired Rejection": "After a thorough review of your case, we regret to inform you that the applicable limitation period for filing a compensation claim for this flight has expired. Under the relevant passenger rights regulations and national law, claims must be submitted within a specific time frame from the date of the disruption. Unfortunately, your case falls outside this window and we are unable to take further action.",
-    "Disrupted & Affected Flights Not Under Same Booking Rejection": "After a thorough review of your case, we regret to inform you that the disrupted flight and the affected connecting flight were not booked under the same reservation. Under the applicable passenger rights regulations, compensation for a missed connection is only available when all flights are part of a single through-ticket or booking. As the flights were booked separately, we are unable to pursue a compensation claim in this instance."
-    ,"double submission":"We would like to inform you that, since you have already contacted the airline directly regarding your compensation claim, we are unable to initiate a parallel procedure on your behalf. According to current regulations, each compensation claim must be handled by only one entity at a time, and priority rests with the operating airline. Therefore, we kindly ask you to continue your claim directly with the airline. If you have any further questions or need additional clarification, we remain available to assist you."
+    "Disrupted & Affected Flights Not Under Same Booking Rejection": "After a thorough review of your case, we regret to inform you that the disrupted flight and the affected connecting flight were not booked under the same reservation. Under the applicable passenger rights regulations, compensation for a missed connection is only available when all flights are part of a single through-ticket or booking. As the flights were booked separately, we are unable to pursue a compensation claim in this instance.",
+    "double submission": "We would like to inform you that, since you have already contacted the airline directly regarding your compensation claim, we are unable to initiate a parallel procedure on your behalf. According to current regulations, each compensation claim must be handled by only one entity at a time, and priority rests with the operating airline. Therefore, we kindly ask you to continue your claim directly with the airline. If you have any further questions or need additional clarification, we remain available to assist you."
+  },
+  "meta": {
+    "email address": {
+      "label": "Email",
+      "category": "Passenger Info",
+      "isInfoOnly": true,
+      "noWrapper": false
+    },
+    "Boarding pass": {
+      "label": "Boarding Pass",
+      "category": "Documents",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "fill dashboard": {
+      "label": "Fill Dashboard",
+      "category": "Compensation",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "Service Fees": {
+      "label": "Service Fees",
+      "category": "Compensation",
+      "isInfoOnly": true,
+      "noWrapper": false
+    },
+    "Ticket number (13-digit)": {
+      "label": "Ticket No.",
+      "category": "Documents",
+      "isInfoOnly": true,
+      "noWrapper": false
+    },
+    "PNR / Booking Reference": {
+      "label": "PNR / Ref",
+      "category": "Documents",
+      "isInfoOnly": true,
+      "noWrapper": false
+    },
+    "ID / Passport": {
+      "label": "ID / Passport",
+      "category": "Passenger Info",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "Signed Power of Attorney": {
+      "label": "Signed POA",
+      "category": "Passenger Info",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "Booking confirmation": {
+      "label": "Booking Confirmation",
+      "category": "Documents",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "Proof of delay": {
+      "label": "Proof of Delay",
+      "category": "Documents",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "Proof of cancellation": {
+      "label": "Proof of Cancellation",
+      "category": "Documents",
+      "isInfoOnly": false,
+      "noWrapper": false
+    },
+    "passengers documents not complete": {
+      "label": "Passenger Docs",
+      "category": "Passenger Info",
+      "isInfoOnly": false,
+      "noWrapper": true
+    },
+    "Visa/Documentation Rejection": {
+      "label": "Visa / Docs",
+      "category": "Rejection Reason"
+    },
+    "Short Delay / No Missed Connection Rejection": {
+      "label": "Short Delay",
+      "category": "Rejection Reason"
+    },
+    "No Disruption Found Rejection": {
+      "label": "No Disruption",
+      "category": "Rejection Reason"
+    },
+    "Jurisdiction expired Rejection": {
+      "label": "Jurisdiction",
+      "category": "Rejection Reason"
+    },
+    "Disrupted & Affected Flights Not Under Same Booking Rejection": {
+      "label": "Not Same Booking",
+      "category": "Rejection Reason"
+    },
+    "double submission": {
+      "label": "Double Submission",
+      "category": "Rejection Reason"
+    },
+    "confirmed delay": {
+      "label": "confirmed delay",
+      "category": "Compensation",
+      "isInfoOnly": false,
+      "noWrapper": true
+    }
   }
 }

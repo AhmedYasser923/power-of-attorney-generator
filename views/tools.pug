@@ -53,6 +53,7 @@ block content
   //- Inject server-side jurisdiction data for the frontend JS to consume
   script.
     window.JURISDICTION_LIMITS = !{JSON.stringify(jurisdictionLimits)};
+    window.EMAIL_TEMPLATES = !{emailTemplatesJson};
 
   //- ── PANEL: TICKET ANALYZER ────────────────────────────────────────────────
   .tool-panel#panel-ticket-analyzer
@@ -368,79 +369,17 @@ block content
         .split-layout.email-builder
           .split-left
             .split-left-header
-              h3 Select Content
-              p Choose what to include in the email
+              .split-left-header__row
+                div
+                  h3 Select Content
+                  p Choose what to include in the email
+                button#emManageBtn(type="button" title="Manage Templates") Manage
             .em-inner-tabs
               button.em-inner-tab-btn.active(type="button" data-em-tab="request") Request Info
               button.em-inner-tab-btn(type="button" data-em-tab="draft") Draft / Polish
             .split-groups
               #emTabRequest.em-inner-tab-content.active
-                .split-group
-                  .split-group-label Documents
-                  .pills-row
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Booking confirmation")
-                      span.email-checkbox__label Booking Confirmation
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="PNR / Booking Reference")
-                      span.email-checkbox__label PNR / Ref
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Ticket number (13-digit)")
-                      span.email-checkbox__label Ticket No.
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Boarding pass")
-                      span.email-checkbox__label Boarding Pass
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Proof of delay")
-                      span.email-checkbox__label Proof of Delay
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Proof of cancellation")
-                      span.email-checkbox__label Proof of Cancellation
-                .split-group
-                  .split-group-label Passenger Info
-                  .pills-row
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="ID / Passport")
-                      span.email-checkbox__label ID / Passport
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Signed Power of Attorney")
-                      span.email-checkbox__label Signed POA
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="passengers documents not complete")
-                      span.email-checkbox__label Passenger Docs
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="email address")
-                      span.email-checkbox__label Email
-                .split-group
-                  .split-group-label Compensation
-                  .pills-row
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="fill dashboard")
-                      span.email-checkbox__label Fill Dashboard
-                    label.pill.em-checklist-item
-                      input(type="checkbox" name="emTemplates" value="Service Fees")
-                      span.email-checkbox__label Service Fees
-                .split-group
-                  .split-group-label.rej Rejection Reason
-                  .pills-row
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="Visa/Documentation Rejection")
-                      span.email-checkbox__label Visa / Docs
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="Short Delay / No Missed Connection Rejection")
-                      span.email-checkbox__label Short Delay
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="No Disruption Found Rejection")
-                      span.email-checkbox__label No Disruption
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="Jurisdiction expired Rejection")
-                      span.email-checkbox__label Jurisdiction
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="Disrupted & Affected Flights Not Under Same Booking Rejection")
-                      span.email-checkbox__label Not Same Booking
-                    label.pill.em-checklist-item.rejection
-                      input(type="checkbox" name="emTemplates" value="double submission")
-                      span.email-checkbox__label Double Submission
+                #emPillGroups
                 #emSidebarRequest.email-advanced
                   .split-group
                     .split-group-label Advanced
@@ -473,7 +412,7 @@ block content
                 #emNoteArea(style="display: none;")
                   textarea#emCustomNote.textarea.ts-input(placeholder="Additional message to include...")
                 label.email-toggle.em-freestyle-toggle
-                  input#emUseWrapper(type="checkbox" checked)
+                  input#emUseWrapper(type="checkbox")
                   span.email-toggle__label Formal intro and outro
               .split-footer-row.email-lang.em-language-group
                 label.split-footer-lbl(for="emLanguage") Language
@@ -508,6 +447,7 @@ block content
             .split-preview
               #emPlaceholder.email-placeholder
                 p Select content or write a draft, then click Generate Email
+              #emPlaceholderSection(style="display:none")
               #emResultBox.email-mock(style="display: none;")
                 .email-body-text#emOutputText
               #emEnglishBox.en-verify-box(style="display: none;")

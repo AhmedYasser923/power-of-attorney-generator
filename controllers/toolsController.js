@@ -6,20 +6,69 @@ const path = require('path');
 const airportsDatabase = require('../airports_data.json');
 const Announcement     = require('../models/Announcement');
 const InteractionRecord = require('../models/InteractionRecord');
+const EmailTemplate    = require('../models/EmailTemplate');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 const logUsage   = require('../utils/logUsage');
-const emailTemplates = require('../data/emailTemplates.json');
-const DOCUMENT_TEMPLATES = emailTemplates.documentTemplates;
-const REJECTION_TEMPLATES = emailTemplates.rejectionTemplates;
 
+let DOCUMENT_TEMPLATES  = {};
+let REJECTION_TEMPLATES = {};
+let TEMPLATES_META      = {};
+let LINK_TEMPLATE_KEYS      = new Set();
+let INFO_ONLY_TEMPLATE_KEYS = new Set();
+let NO_WRAPPER_DOC_KEYS     = new Set();
+let _templatesCached = false;
 
-// Templates whose text contains a [link] placeholder (passenger uploads)
-const LINK_TEMPLATE_KEYS = new Set(['fill dashboard', 'passengers documents not complete', 'Signed Power of Attorney']);
+async function loadTemplates() {
+  if (_templatesCached) return;
+  const docs = await EmailTemplate.find().lean();
+  DOCUMENT_TEMPLATES  = {};
+  REJECTION_TEMPLATES = {};
+  TEMPLATES_META      = {};
+  docs.forEach(t => {
+    if (t.type === 'document') DOCUMENT_TEMPLATES[t.key]  = t.text;
+    else                       REJECTION_TEMPLATES[t.key] = t.text;
+    TEMPLATES_META[t.key] = { label: t.label, category: t.category, isInfoOnly: t.isInfoOnly, noWrapper: t.noWrapper };
+  });
+  LINK_TEMPLATE_KEYS      = new Set(Object.keys(DOCUMENT_TEMPLATES).filter(k => (DOCUMENT_TEMPLATES[k] || '').includes('[link]')));
+  INFO_ONLY_TEMPLATE_KEYS = new Set(Object.keys(TEMPLATES_META).filter(k => TEMPLATES_META[k].isInfoOnly));
+  NO_WRAPPER_DOC_KEYS     = new Set(Object.keys(TEMPLATES_META).filter(k => TEMPLATES_META[k].noWrapper));
+  _templatesCached = true;
+}
 
-// Templates that are pure information (not physical documents)
-const INFO_ONLY_TEMPLATE_KEYS = new Set(['email address', 'Ticket number (13-digit)', 'PNR / Booking Reference', 'Service Fees']);
+function buildTemplateListSync() {
+  return [
+    ...Object.entries(DOCUMENT_TEMPLATES).map(([key, text]) => ({
+      key, text, type: 'document',
+      label:      TEMPLATES_META[key]?.label    || key,
+      category:   TEMPLATES_META[key]?.category || 'Documents',
+      isInfoOnly: !!TEMPLATES_META[key]?.isInfoOnly,
+      noWrapper:  !!TEMPLATES_META[key]?.noWrapper,
+    })),
+    ...Object.entries(REJECTION_TEMPLATES).map(([key, text]) => ({
+      key, text, type: 'rejection',
+      label:    TEMPLATES_META[key]?.label || key,
+      category: 'Rejection Reason',
+    })),
+  ];
+}
+
+exports.seedEmailTemplates = async function () {
+  const count = await EmailTemplate.countDocuments();
+  if (count > 0) return;
+  const json = require('../data/emailTemplates.json');
+  const meta = json.meta || {};
+  const docs = [];
+  Object.entries(json.documentTemplates || {}).forEach(([key, text]) => {
+    docs.push({ key, text, type: 'document', label: meta[key]?.label || key, category: meta[key]?.category || 'Documents', isInfoOnly: !!meta[key]?.isInfoOnly, noWrapper: !!meta[key]?.noWrapper });
+  });
+  Object.entries(json.rejectionTemplates || {}).forEach(([key, text]) => {
+    docs.push({ key, text, type: 'rejection', label: meta[key]?.label || key, category: 'Rejection Reason', isInfoOnly: false, noWrapper: false });
+  });
+  await EmailTemplate.insertMany(docs);
+  console.log(`[EmailTemplate] Seeded ${docs.length} templates from JSON`);
+};
 
 function buildOutro(selectedDocKeys, link, hasCustomNote) {
   const hasLinkTemplates = !!link && selectedDocKeys.some(k => LINK_TEMPLATE_KEYS.has(k));
@@ -139,9 +188,11 @@ exports.proxyPage = async (req, res) => {
 // ---------------------------------------------------------------------------
 
 exports.renderTools = catchAsync(async (req, res, next) => {
+  await loadTemplates();
   res.render('tools', {
     title: 'Tools Suite',
     jurisdictionLimits: jurisdictionLimitsForClient,
+    emailTemplatesJson: JSON.stringify(buildTemplateListSync()),
   });
 });
 
@@ -519,7 +570,8 @@ Message to refine:
 // ---------------------------------------------------------------------------
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
-  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, draftText, tone } = req.body;
+  await loadTemplates();
+  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, draftText, tone, placeholderValues } = req.body;
 
   if (!mode) return next(new AppError('Please provide the email mode', 400));
 
@@ -543,14 +595,29 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
       return 0;
     });
 
-    const templateBullets = sortedSelected
-      .filter(name => docKeys.includes(name))
-      .map(name => {
-        const text = link
-          ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
-          : DOCUMENT_TEMPLATES[name];
-        return `• ${text}`;
+    const applyPlaceholders = text => {
+      if (!placeholderValues || typeof placeholderValues !== 'object') return text;
+      return text.replace(/\{([^}]+)\}/g, (_, key) => {
+        const val = (placeholderValues[key.trim()] || '').trim();
+        return val || `{${key}}`;
       });
+    };
+
+    const makeBullet = name => {
+      let text = link
+        ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
+        : DOCUMENT_TEMPLATES[name];
+      text = applyPlaceholders(text);
+      return `• ${text}`;
+    };
+
+    const noWrapBullets = sortedSelected
+      .filter(name => docKeys.includes(name) && NO_WRAPPER_DOC_KEYS.has(name))
+      .map(makeBullet);
+
+    const wrapBullets = sortedSelected
+      .filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name))
+      .map(makeBullet);
 
     if (customNote?.trim()) {
       const notePolishPrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
@@ -560,10 +627,8 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
         if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
         return next(new AppError(`Email generation failed: ${err.message}`, 502));
       }
-      templateBullets.push(`• ${generationResult.response.text().trim()}`);
+      wrapBullets.push(`• ${generationResult.response.text().trim()}`);
     }
-
-    const allDocBullets = templateBullets.join('\n\n');
 
     const rejectionText = selectedTemplates
       .filter(name => rejKeys.includes(name))
@@ -572,10 +637,23 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
 
     if (rejectionText) englishBody = rejectionText;
 
-    if (allDocBullets) {
-      const selectedDocKeys = selectedTemplates.filter(name => docKeys.includes(name));
-      const outro = buildOutro(selectedDocKeys, link, !!customNote?.trim());
-      const docSection = useWrapper ? wrapWithTemplate(allDocBullets, outro) : allDocBullets;
+    if (noWrapBullets.length) {
+      const noWrapSection = noWrapBullets.join('\n\n');
+      englishBody = englishBody ? `${englishBody}\n\n${noWrapSection}` : noWrapSection;
+    }
+
+    if (wrapBullets.length) {
+      const allWrapBullets = wrapBullets.join('\n\n');
+      const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name));
+      const outro = buildOutro(wrapDocKeys, link, !!customNote?.trim());
+      let docSection;
+      if (!useWrapper) {
+        docSection = allWrapBullets;
+      } else if (noWrapBullets.length > 0) {
+        docSection = `${allWrapBullets}\n\n${outro}`;
+      } else {
+        docSection = wrapWithTemplate(allWrapBullets, outro);
+      }
       englishBody = englishBody ? `${englishBody}\n\n${docSection}` : docSection;
     }
 
@@ -629,6 +707,60 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({ success: true, email, englishTranslation });
+});
+
+// ---------------------------------------------------------------------------
+// EMAIL TEMPLATE CRUD
+// ---------------------------------------------------------------------------
+
+exports.getEmailTemplates = catchAsync(async (req, res) => {
+  await loadTemplates();
+  res.json({ success: true, templates: buildTemplateListSync() });
+});
+
+exports.createEmailTemplate = catchAsync(async (req, res, next) => {
+  const { key, text, label, type, category, isInfoOnly, noWrapper } = req.body;
+  if (!key || !text || !type || !category) return next(new AppError('key, text, type, and category are required', 400));
+  if (type !== 'document' && type !== 'rejection') return next(new AppError('type must be document or rejection', 400));
+
+  const existing = await EmailTemplate.findOne({ key });
+  if (existing) return next(new AppError('A template with that key already exists', 409));
+
+  await EmailTemplate.create({ key, text, type, label: label || key, category, isInfoOnly: !!isInfoOnly, noWrapper: !!noWrapper });
+  _templatesCached = false;
+  await loadTemplates();
+  res.json({ success: true, templates: buildTemplateListSync() });
+});
+
+exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
+  const { key, text, label, category, isInfoOnly, noWrapper } = req.body;
+  if (!key) return next(new AppError('key is required', 400));
+
+  const update = {};
+  if (text     !== undefined) update.text      = text;
+  if (label    !== undefined) update.label     = label;
+  if (category !== undefined) update.category  = category;
+  if (isInfoOnly !== undefined) update.isInfoOnly = !!isInfoOnly;
+  if (noWrapper  !== undefined) update.noWrapper  = !!noWrapper;
+
+  const doc = await EmailTemplate.findOneAndUpdate({ key }, { $set: update }, { new: true, runValidators: true });
+  if (!doc) return next(new AppError('Template not found', 404));
+
+  _templatesCached = false;
+  await loadTemplates();
+  res.json({ success: true, templates: buildTemplateListSync() });
+});
+
+exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {
+  const { key } = req.body;
+  if (!key) return next(new AppError('key is required', 400));
+
+  const result = await EmailTemplate.deleteOne({ key });
+  if (!result.deletedCount) return next(new AppError('Template not found', 404));
+
+  _templatesCached = false;
+  await loadTemplates();
+  res.json({ success: true, templates: buildTemplateListSync() });
 });
 
 // ---------------------------------------------------------------------------

@@ -926,10 +926,108 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.querySelectorAll('.pill.em-checklist-item input[type="checkbox"]').forEach(input => {
-    input.addEventListener('change', updateEmailPillStates);
-  });
-  updateEmailPillStates();
+  const EM_CATEGORY_ORDER = ['Documents', 'Passenger Info', 'Compensation', 'Rejection Reason'];
+
+  function emEscHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toTitleCase(str) {
+    return str.replace(/[_\-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  const emTemplateMap = new Map((window.EMAIL_TEMPLATES || []).map(t => [t.key, t.text]));
+
+  function getSelectedPlaceholders() {
+    const keys = Array.from(document.querySelectorAll('input[name="emTemplates"]:checked')).map(cb => cb.value);
+    const seen = new Map();
+    keys.forEach(key => {
+      const text = emTemplateMap.get(key) || '';
+      for (const [, name] of text.matchAll(/\{([^}]+)\}/g)) {
+        const trimmed = name.trim();
+        if (!seen.has(trimmed)) seen.set(trimmed, toTitleCase(trimmed));
+      }
+    });
+    return seen;
+  }
+
+  let emHasGeneratedContent = false;
+
+  function renderPlaceholderInputs() {
+    const section  = document.getElementById('emPlaceholderSection');
+    const emptyMsg = document.getElementById('emPlaceholder');
+    if (!section) return;
+    const placeholders = getSelectedPlaceholders();
+
+    if (!placeholders.size) {
+      section.style.display = 'none';
+      section.innerHTML = '';
+      if (emptyMsg && !emHasGeneratedContent) emptyMsg.style.display = 'flex';
+      return;
+    }
+
+    const existing = {};
+    section.querySelectorAll('input[data-placeholder]').forEach(inp => {
+      existing[inp.dataset.placeholder] = inp.value;
+    });
+
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    section.style.display = '';
+    section.innerHTML =
+      '<div class="em-ph-panel">' +
+        '<div class="em-ph-panel__title">Fill in the details</div>' +
+        '<div class="em-ph-panel__grid">' +
+          [...placeholders.entries()].map(([name, label]) =>
+            `<div class="em-ph-panel__field">` +
+              `<label class="em-ph-panel__label">${emEscHtml(label)}</label>` +
+              `<input class="input ts-input em-placeholder-input em-ph-panel__input" type="text" ` +
+                `data-placeholder="${emEscHtml(name)}" ` +
+                `placeholder="${emEscHtml(name)}" ` +
+                `value="${emEscHtml(existing[name] || '')}">` +
+            `</div>`
+          ).join('') +
+        '</div>' +
+      '</div>';
+  }
+
+  function buildEmailPills(templates) {
+    const container = document.getElementById('emPillGroups');
+    if (!container) return;
+
+    const groups = {};
+    (templates || []).forEach(t => {
+      if (!groups[t.category]) groups[t.category] = [];
+      groups[t.category].push(t);
+    });
+
+    const cats = EM_CATEGORY_ORDER.filter(c => groups[c])
+      .concat(Object.keys(groups).filter(c => !EM_CATEGORY_ORDER.includes(c)));
+
+    container.innerHTML = cats.map(cat => {
+      const isRej = cat === 'Rejection Reason';
+      const pills = groups[cat].map(t => {
+        const safeVal   = t.key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+        const safeLabel = t.label.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        return `<label class="pill em-checklist-item${isRej ? ' rejection' : ''}">` +
+          `<input type="checkbox" name="emTemplates" value="${safeVal}">` +
+          `<span class="email-checkbox__label">${safeLabel}</span></label>`;
+      }).join('');
+      const labelClass = isRej ? 'split-group-label rej' : 'split-group-label';
+      return `<div class="split-group"><div class="${labelClass}">${cat}</div>` +
+        `<div class="pills-row">${pills}</div></div>`;
+    }).join('');
+
+    container.querySelectorAll('.pill.em-checklist-item input[type="checkbox"]').forEach(input => {
+      input.addEventListener('change', () => {
+        updateEmailPillStates();
+        renderPlaceholderInputs();
+      });
+    });
+    updateEmailPillStates();
+    renderPlaceholderInputs();
+  }
+
+  buildEmailPills(window.EMAIL_TEMPLATES || []);
 
   // Inner tab switching
   document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
@@ -954,18 +1052,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  let emHasGeneratedContent = false;
   let emLastPayload = null;
   function showEmailPreviewTab(tabName) {
     document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
       tab.classList.toggle('active', tab.dataset.previewTab === tabName);
     });
-    const output = document.getElementById('emResultBox');
-    const verify = document.getElementById('emEnglishBox');
+    const output      = document.getElementById('emResultBox');
+    const verify      = document.getElementById('emEnglishBox');
     const placeholder = document.getElementById('emPlaceholder');
+    const phSection   = document.getElementById('emPlaceholderSection');
     if (output) output.style.display = emHasGeneratedContent && tabName === 'output' ? 'block' : 'none';
     if (verify) verify.style.display = emHasGeneratedContent && tabName === 'verify' ? 'block' : 'none';
     if (placeholder) placeholder.style.display = emHasGeneratedContent ? 'none' : 'flex';
+    if (phSection && emHasGeneratedContent) phSection.style.display = 'none';
   }
 
   document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
@@ -991,7 +1090,14 @@ document.addEventListener('DOMContentLoaded', () => {
         emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
       }
       document.getElementById('emCustomNote').value = payload.customNote || '';
-      document.getElementById('emUseWrapper').checked = payload.useWrapper !== false;
+      document.getElementById('emUseWrapper').checked = !!payload.useWrapper;
+      renderPlaceholderInputs();
+      if (payload.placeholderValues) {
+        Object.entries(payload.placeholderValues).forEach(([name, val]) => {
+          const inp = document.querySelector(`.em-placeholder-input[data-placeholder="${CSS.escape(name)}"]`);
+          if (inp) inp.value = val;
+        });
+      }
     } else {
       document.getElementById('emDraftText').value = payload.draftText || '';
       const toneInput = document.querySelector(`input[name="emTone"][value="${payload.tone || 'neutral'}"]`);
@@ -1028,7 +1134,11 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Please select at least one template or add a custom note.');
         return;
       }
-      payload = { ...payload, selectedTemplates, link, customNote, useWrapper };
+      const placeholderValues = {};
+      document.querySelectorAll('.em-placeholder-input').forEach(inp => {
+        if (inp.dataset.placeholder) placeholderValues[inp.dataset.placeholder] = inp.value.trim();
+      });
+      payload = { ...payload, selectedTemplates, link, customNote, useWrapper, placeholderValues };
 
     } else {
       const draftText = document.getElementById('emDraftText').value.trim();
@@ -1068,12 +1178,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('input[name="emTemplates"]').forEach(cb => cb.checked = false);
         updateEmailPillStates();
+        renderPlaceholderInputs();
         document.getElementById('emLink').value = '';
         if (emUseNote) { emUseNote.checked = false; emNoteArea.style.display = 'none'; }
         document.getElementById('emCustomNote').value = '';
         document.getElementById('emDraftText').value = '';
         const wrapperCb = document.getElementById('emUseWrapper');
-        if (wrapperCb) wrapperCb.checked = true;
+        if (wrapperCb) wrapperCb.checked = false;
       } else {
         alert('Error generating content: ' + (data.message || 'Server error'));
       }
@@ -1120,6 +1231,277 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // EMAIL TEMPLATE MANAGER
+  // ---------------------------------------------------------------------------
+
+  (function initTemplateManager() {
+    // Inject modal HTML once
+    const modalEl = document.createElement('div');
+    modalEl.id = 'emTemplateModal';
+    modalEl.className = 'hidden';
+    modalEl.innerHTML =
+      '<div class="em-tpl-modal">' +
+        '<div class="em-tpl-modal__head">' +
+          '<span class="em-tpl-modal__title">Email Templates</span>' +
+          '<div class="em-tpl-modal__head-actions">' +
+            '<button type="button" class="em-tpl-modal__add" id="emTplAddBtn">+ Add Template</button>' +
+            '<button type="button" class="em-tpl-modal__close" id="emTplCloseBtn">&#x2715;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="em-tpl-modal__body" id="emTplBody"></div>' +
+      '</div>';
+    document.body.appendChild(modalEl);
+
+    let cachedTemplates = [];
+
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function closeModal() { modalEl.classList.add('hidden'); }
+
+    document.getElementById('emTplCloseBtn').addEventListener('click', closeModal);
+    modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+
+    async function fetchAndRender() {
+      const body = document.getElementById('emTplBody');
+      body.innerHTML = '<p class="em-tpl-msg">Loading…</p>';
+      try {
+        const res = await fetch('/api/tools/email-templates');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed');
+        cachedTemplates = data.templates;
+        renderList(cachedTemplates);
+      } catch (err) {
+        body.innerHTML = '<p class="em-tpl-msg">Failed to load templates.</p>';
+      }
+    }
+
+    function renderList(templates) {
+      const body = document.getElementById('emTplBody');
+      const groups = {};
+      templates.forEach(t => {
+        if (!groups[t.category]) groups[t.category] = [];
+        groups[t.category].push(t);
+      });
+
+      const cats = EM_CATEGORY_ORDER.filter(c => groups[c])
+        .concat(Object.keys(groups).filter(c => !EM_CATEGORY_ORDER.includes(c)));
+
+      if (!cats.length) {
+        body.innerHTML = '<p class="em-tpl-msg">No templates yet. Click "+ Add Template" to create one.</p>';
+        return;
+      }
+
+      body.innerHTML = cats.map(cat =>
+        `<div class="em-tpl-group">` +
+        `<div class="em-tpl-group-label">${esc(cat)}</div>` +
+        groups[cat].map(t =>
+          `<div class="em-tpl-row" data-key="${esc(t.key)}">` +
+            `<div class="em-tpl-row__info">` +
+              `<div class="em-tpl-row__name">${esc(t.label)}</div>` +
+              `<div class="em-tpl-row__key">${esc(t.key)}</div>` +
+              `<div class="em-tpl-row__preview">${esc(t.text)}</div>` +
+            `</div>` +
+            `<div class="em-tpl-row__btns">` +
+              `<button type="button" class="em-tpl-btn em-tpl-btn--edit" data-key="${esc(t.key)}" title="Edit">&#9998;</button>` +
+              `<button type="button" class="em-tpl-btn em-tpl-btn--del" data-key="${esc(t.key)}" title="Delete">&#128465;</button>` +
+            `</div>` +
+          `</div>`
+        ).join('') +
+        `</div>`
+      ).join('');
+
+      body.querySelectorAll('.em-tpl-btn--edit').forEach(btn => {
+        btn.addEventListener('click', () => openEditForm(btn.dataset.key));
+      });
+      body.querySelectorAll('.em-tpl-btn--del').forEach(btn => {
+        btn.addEventListener('click', () => deleteTemplate(btn.dataset.key));
+      });
+    }
+
+    function buildForm(tpl, isNew) {
+      const isDoc = !tpl || tpl.type === 'document';
+      const docCats = ['Documents', 'Passenger Info', 'Compensation'];
+      const catOptions = (isNew ? [...docCats, 'Rejection Reason'] : (isDoc ? docCats : ['Rejection Reason']))
+        .map(c => `<option value="${esc(c)}"${(!isNew && tpl && tpl.category === c) ? ' selected' : ''}>${esc(c)}</option>`)
+        .join('');
+
+      const flagsHtml = `
+        <div class="em-tpl-form__flags" id="emTplFlags" style="${!isNew && !isDoc ? 'display:none' : ''}">
+          <label class="em-tpl-form__flag">
+            <input type="checkbox" id="emTplIsInfo"${!isNew && tpl && tpl.isInfoOnly ? ' checked' : ''}> Asks for information, not a document <span class="em-tpl-form__note">(changes outro: "reply with the requested information" instead of "documents")</span>
+          </label>
+          <label class="em-tpl-form__flag">
+            <input type="checkbox" id="emTplNoWrapper"${!isNew && tpl && tpl.noWrapper ? ' checked' : ''}> Output as plain text — no "In order to proceed…" intro or closing sentence <span class="em-tpl-form__note">(like rejection templates)</span>
+          </label>
+        </div>`;
+
+      return `
+        <div class="em-tpl-form" id="emTplForm">
+          <div class="em-tpl-form__grid">
+            <div class="em-tpl-form__field">
+              <label class="em-tpl-form__label">Display Label</label>
+              <input class="em-tpl-form__input" id="emTplLabel" type="text" value="${esc(tpl ? tpl.label : '')}" placeholder="Short name shown on pill">
+            </div>
+            <div class="em-tpl-form__field">
+              <label class="em-tpl-form__label">Key ${!isNew ? '<span class="em-tpl-form__note">(cannot change)</span>' : ''}</label>
+              <input class="em-tpl-form__input" id="emTplKey" type="text" value="${esc(tpl ? tpl.key : '')}"
+                placeholder="Unique identifier" ${!isNew ? 'readonly' : ''}>
+            </div>
+            <div class="em-tpl-form__field">
+              <label class="em-tpl-form__label">Type</label>
+              <select class="em-tpl-form__select" id="emTplType" ${!isNew ? 'disabled' : ''}>
+                <option value="document"${!isNew && !isDoc ? '' : ' selected'}>Document</option>
+                <option value="rejection"${!isNew && !isDoc ? ' selected' : ''}>Rejection</option>
+              </select>
+            </div>
+            <div class="em-tpl-form__field">
+              <label class="em-tpl-form__label">Category</label>
+              <select class="em-tpl-form__select" id="emTplCategory">${catOptions}</select>
+            </div>
+            <div class="em-tpl-form__field em-tpl-form__field--full">
+              <label class="em-tpl-form__label">
+                Template Text
+                <span class="em-tpl-form__note" style="margin-left:6px;font-size:10px">
+                  Use <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px">{placeholder}</code> for dynamic fields — e.g. <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px">{origin}</code>, <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px">{delay_minutes}</code>
+                </span>
+              </label>
+              <textarea class="em-tpl-form__textarea" id="emTplText" placeholder="Email text… use {placeholder} for dynamic values">${esc(tpl ? tpl.text : '')}</textarea>
+            </div>
+          </div>
+          ${flagsHtml}
+          <div class="em-tpl-form__btns">
+            <button type="button" class="em-tpl-form__cancel" id="emTplFormCancel">Cancel</button>
+            <button type="button" class="em-tpl-form__save" id="emTplFormSave">${isNew ? 'Create' : 'Save Changes'}</button>
+          </div>
+        </div>`;
+    }
+
+    function wireFormEvents(isNew) {
+      const typeSelect = document.getElementById('emTplType');
+      const catSelect  = document.getElementById('emTplCategory');
+      const flagsDiv   = document.getElementById('emTplFlags');
+      const labelInput = document.getElementById('emTplLabel');
+      const keyInput   = document.getElementById('emTplKey');
+
+      if (isNew) {
+        // Auto-fill key from label
+        labelInput.addEventListener('input', () => {
+          if (!keyInput.dataset.edited) keyInput.value = labelInput.value;
+        });
+        keyInput.addEventListener('input', () => { keyInput.dataset.edited = '1'; });
+
+        typeSelect.addEventListener('change', () => {
+          const isDoc = typeSelect.value === 'document';
+          const docCats = ['Documents', 'Passenger Info', 'Compensation'];
+          const cats = isDoc ? docCats : ['Rejection Reason'];
+          catSelect.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+          flagsDiv.style.display = isDoc ? '' : 'none';
+        });
+      }
+
+      document.getElementById('emTplFormCancel').addEventListener('click', () => {
+        const form = document.getElementById('emTplForm');
+        if (form) form.remove();
+      });
+
+      document.getElementById('emTplFormSave').addEventListener('click', () => saveTemplate(isNew));
+    }
+
+    function openAddForm() {
+      const existing = document.getElementById('emTplForm');
+      if (existing) existing.remove();
+      const body = document.getElementById('emTplBody');
+      body.insertAdjacentHTML('afterbegin', buildForm(null, true));
+      wireFormEvents(true);
+      document.getElementById('emTplLabel').focus();
+    }
+
+    function openEditForm(key) {
+      const existing = document.getElementById('emTplForm');
+      if (existing) existing.remove();
+      const tpl = cachedTemplates.find(t => t.key === key);
+      if (!tpl) return;
+      const row = document.querySelector(`.em-tpl-row[data-key="${CSS.escape(key)}"]`);
+      if (row) row.insertAdjacentHTML('afterend', buildForm(tpl, false));
+      else document.getElementById('emTplBody').insertAdjacentHTML('afterbegin', buildForm(tpl, false));
+      wireFormEvents(false);
+      document.getElementById('emTplText').focus();
+    }
+
+    async function saveTemplate(isNew) {
+      const saveBtn = document.getElementById('emTplFormSave');
+      const label    = document.getElementById('emTplLabel').value.trim();
+      const key      = document.getElementById('emTplKey').value.trim();
+      const typeEl   = document.getElementById('emTplType');
+      const type     = typeEl ? typeEl.value : null;
+      const category = document.getElementById('emTplCategory').value;
+      const text     = document.getElementById('emTplText').value.trim();
+      const isInfoOnly = document.getElementById('emTplIsInfo')?.checked || false;
+      const noWrapper  = document.getElementById('emTplNoWrapper')?.checked || false;
+
+      if (!label || !key || !text || !category) {
+        alert('Label, Key, Category, and Template Text are all required.');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('/api/tools/email-templates', {
+          method:  isNew ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ key, label, text, type, category, isInfoOnly, noWrapper }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Save failed');
+        cachedTemplates = data.templates;
+        cachedTemplates.forEach(t => emTemplateMap.set(t.key, t.text));
+        renderList(cachedTemplates);
+        buildEmailPills(cachedTemplates);
+      } catch (err) {
+        alert('Error: ' + err.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = isNew ? 'Create' : 'Save Changes';
+      }
+    }
+
+    async function deleteTemplate(key) {
+      const tpl = cachedTemplates.find(t => t.key === key);
+      const name = tpl ? tpl.label : key;
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+      try {
+        const res = await fetch('/api/tools/email-templates', {
+          method:  'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ key }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Delete failed');
+        cachedTemplates = data.templates;
+        cachedTemplates.forEach(t => emTemplateMap.set(t.key, t.text));
+        emTemplateMap.forEach((_, key) => { if (!cachedTemplates.find(t => t.key === key)) emTemplateMap.delete(key); });
+        renderList(cachedTemplates);
+        buildEmailPills(cachedTemplates);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function openTemplateManager() {
+      modalEl.classList.remove('hidden');
+      fetchAndRender();
+    }
+
+    document.getElementById('emTplAddBtn').addEventListener('click', openAddForm);
+    const manageBtn = document.getElementById('emManageBtn');
+    if (manageBtn) manageBtn.addEventListener('click', openTemplateManager);
+  })();
 
   // ---------------------------------------------------------------------------
   // COLLAPSIBLE TOOLKIT CARDS
