@@ -1,7 +1,9 @@
 extends layout
 
-block content
+block head
   link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap")
+
+block content
   style.
     @keyframes pulsyGlassyRed {
         0% {
@@ -22,86 +24,23 @@ block content
         transition: all 0.3s ease;
     }
 
-    /* Make tabs horizontally scrollable */
-    .ts-tabs {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        gap: 12px;
-        padding-bottom: 12px;
-        -webkit-overflow-scrolling: touch; 
-        scrollbar-width: none;
-    }
-    .ts-tabs::-webkit-scrollbar {
-        display: none;
-    }
-    .ts-tab-btn {
-        flex: 0 0 auto;
-        white-space: nowrap;
-    }
-
-    /* Tab content visibility */
-    .ts-tab-content {
-        display: none !important;
-    }
-    .ts-tab-content.active {
-        display: block !important;
-    }
-
-    /* THE NEW BENTO BOX GRID */
+    /* Bento grid layout (used by announcements panel) */
     .ts-toolkit-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 24px;
         align-items: start;
     }
-    .ts-card {
-        margin-bottom: 0 !important;
-        height: 100%;
-    }
     .ts-grid-full {
         grid-column: 1 / -1;
     }
 
-    /* Collapsible toolkit cards */
-    .tk-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        user-select: none;
-        margin-bottom: 20px;
-    }
-    .ts-card.tk-collapsed .tk-header {
-        margin-bottom: 0;
-    }
+    /* Collapsible tool card title */
     .tk-title {
         color: #1e293b;
-        margin: 0;
+        margin: 0 0 20px 0;
         font-size: 18px;
         font-weight: 700;
-    }
-    .tk-chevron {
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 11px;
-        flex-shrink: 0;
-        transition: transform 0.25s ease, background 0.15s;
-    }
-    .tk-header:hover .tk-chevron {
-        background: #e2e8f0;
-    }
-    .ts-card.tk-collapsed .tk-chevron {
-        transform: rotate(-90deg);
-    }
-    .ts-card.tk-collapsed > *:not(.tk-header) {
-        display: none;
     }
 
     /* Mobile Responsiveness */
@@ -111,812 +50,419 @@ block content
         }
     }
 
-    /* Email Builder */
-    .em-builder-layout {
-        display: grid;
-        grid-template-columns: 1fr 250px;
-        gap: 20px;
-        align-items: start;
-    }
-    .em-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .em-section {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-    .em-section-title {
-        font-size: 11px;
-        font-weight: 800;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 0 0 8px 0;
-    }
-    .em-checklist {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 5px;
-        transition: opacity 0.2s ease;
-    }
-    .em-checklist-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 6px;
-        padding: 5px 8px;
-        border-radius: 6px;
-        border: 1px solid transparent;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s;
-        font-size: 12.5px;
-        color: #334155;
-        line-height: 1.3;
-        user-select: none;
-    }
-    .em-checklist-item:hover {
-        background: #eef2ff;
-        border-color: #c7d2fe;
-    }
-    .em-checklist-item input[type="checkbox"] {
-        margin-top: 2px;
-        flex-shrink: 0;
-        accent-color: #6366f1;
-        width: 13px;
-        height: 13px;
-        cursor: pointer;
-    }
-    .em-rejection-divider {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 8px 0 6px;
-    }
-    .em-rejection-divider span {
-        font-size: 11px;
-        font-weight: 800;
-        color: #991b1b;
-        white-space: nowrap;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-    .em-rejection-divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: #fecaca;
-    }
-    .em-checklist-item.rejection {
-        color: #7f1d1d;
-    }
-    .em-checklist-item.rejection:hover {
-        background: #fef2f2;
-        border-color: #fecaca;
-    }
-    .em-checklist-item.rejection input[type="checkbox"] {
-        accent-color: #dc2626;
-    }
-    .em-custom-area {
-        margin-top: 12px;
-    }
-    .em-freestyle-toggle {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-        padding: 7px 10px;
-        border-radius: 7px;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s;
-    }
-    .em-freestyle-toggle:has(input:checked) {
-        background: #eff6ff;
-        border-color: #bfdbfe;
-    }
-    .em-freestyle-toggle input[type="checkbox"] {
-        accent-color: #3b82f6;
-        width: 15px;
-        height: 15px;
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-    .em-freestyle-toggle label {
-        font-size: 13px;
-        color: #475569;
-        cursor: pointer;
-        line-height: 1.3;
-    }
-    .em-freestyle-toggle:has(input:checked) label {
-        color: #1d4ed8;
-        font-weight: 600;
-    }
-    .em-bottom-row {
-        display: flex;
-        gap: 12px;
-        align-items: stretch;
-    }
-    .em-language-group {
-        flex: 1;
-    }
-    .em-language-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-    .em-generate-btn {
-        flex-shrink: 0;
-        align-self: flex-end;
-        background: #6366f1;
-        color: #fff;
-        border: none;
-        padding: 10px 22px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background 0.15s, transform 0.1s;
-        white-space: nowrap;
-    }
-    .em-generate-btn:hover:not(:disabled) {
-        background: #4f46e5;
-    }
-    .em-generate-btn:active:not(:disabled) {
-        transform: scale(0.98);
-    }
-    .em-generate-btn:disabled {
-        background: #a5b4fc;
-        cursor: not-allowed;
-    }
-    .em-result-box {
-        margin-top: 20px;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 20px;
-    }
-    .em-result-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    .em-result-label {
-        font-size: 13px;
-        font-weight: 700;
-        color: #10b981;
-    }
-    .em-copy-btn {
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: 600;
-        color: #334155;
-        transition: background 0.15s;
-    }
-    .em-copy-btn:hover {
-        background: #e2e8f0;
-    }
-    .em-output-textarea {
-        width: 100%;
-        height: 260px;
-        padding: 14px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-family: monospace;
-        font-size: 13px;
-        line-height: 1.6;
-        resize: vertical;
-        background: #fff;
-        color: #1e293b;
-        box-sizing: border-box;
-        outline: none;
-    }
-    .em-char-count {
-        margin-top: 5px;
-        font-size: 11.5px;
-        color: #94a3b8;
-        text-align: right;
-    }
-    .em-english-box {
-        margin-top: 14px;
-        border: 1px dashed #cbd5e1;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .em-english-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 14px;
-        background: #f8fafc;
-        border-bottom: 1px dashed #cbd5e1;
-    }
-    .em-english-label {
-        font-size: 11px;
-        font-weight: 800;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .em-english-content {
-        padding: 14px;
-        font-family: monospace;
-        font-size: 12.5px;
-        line-height: 1.6;
-        background: #f8fafc;
-        color: #475569;
-        white-space: pre-wrap;
-    }
-    /* Email Builder Inner Tabs */
-    .em-inner-tabs {
-        display: flex;
-        gap: 0;
-        border-bottom: 2px solid #e2e8f0;
-        margin-bottom: 20px;
-    }
-    .em-inner-tab-btn {
-        padding: 8px 18px;
-        border: none;
-        background: none;
-        font-size: 13px;
-        font-weight: 600;
-        color: #94a3b8;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: color 0.15s, border-color 0.15s;
-        white-space: nowrap;
-    }
-    .em-inner-tab-btn:hover { color: #475569; }
-    .em-inner-tab-btn.active {
-        color: #6366f1;
-        border-bottom-color: #6366f1;
-    }
-    .em-inner-tab-content { display: none; }
-    .em-inner-tab-content.active { display: block; }
-    /* Tone selector */
-    .em-tone-pills {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 4px;
-    }
-    .em-tone-pill {
-        display: flex;
-        align-items: center;
-        padding: 7px 16px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 600;
-        color: #475569;
-        transition: all 0.15s;
-        user-select: none;
-    }
-    .em-tone-pill input[type="radio"] { display: none; }
-    .em-tone-pill:has(input:checked) {
-        background: #eff6ff;
-        border-color: #6366f1;
-        color: #4338ca;
-    }
-    .em-tone-pill:hover { border-color: #a5b4fc; }
-    @media (max-width: 900px) {
-        /* Stack builder layout */
-        .em-builder-layout { grid-template-columns: 1fr; }
-        /* Tighter section padding */
-        .em-section { padding: 10px; margin-bottom: 8px; }
-        .em-section-title { margin-bottom: 6px; }
-        .em-checklist-item { padding: 4px 7px; font-size: 12px; }
-        .em-checklist { gap: 4px; }
-        /* Sidebar becomes a compact row below the checklist */
-        .em-sidebar { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-        #emSidebarRequest { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
-        #emSidebarRequest .em-section { margin-bottom: 0; }
-        #emSidebarRequest > label.em-freestyle-toggle { grid-column: 1 / -1; margin-top: 0; }
-        #emSidebarDraft { flex: 1 1 100%; }
-        .em-sidebar > .em-language-group { flex: 1 1 auto; margin-top: 0 !important; }
-        .em-sidebar > button { flex: 0 0 auto; margin-top: 0 !important; width: auto; align-self: flex-end; }
-        /* Shorter result textarea */
-        .em-output-textarea { height: 180px; }
-        .em-bottom-row { flex-direction: column; }
-    }
-
-    /* Announcements Tab */
-    #announcements {
-        font-family: 'Nunito', sans-serif;
-    }
-    .ann-form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-    @media (max-width: 768px) {
-        .ann-form-row { grid-template-columns: 1fr; }
-    }
-    .ann-textarea {
-        width: 100%;
-        min-height: 90px;
-        resize: vertical;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 10px 12px;
-        font-size: 14px;
-        font-family: inherit;
-        color: #1e293b;
-        background: #fff;
-        box-sizing: border-box;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-    .ann-textarea:focus { border-color: #6366f1; }
-    .ann-filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        margin-bottom: 20px;
-        padding: 12px 14px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-    }
-    .ann-chip {
-        padding: 6px 16px;
-        border-radius: 20px;
-        border: 1.5px solid #e2e8f0;
-        background: #fff;
-        font-size: 13px;
-        font-weight: 700;
-        font-family: 'Nunito', sans-serif;
-        cursor: pointer;
-        color: #475569;
-        letter-spacing: 0.01em;
-        line-height: 1;
-        transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
-        white-space: nowrap;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .ann-chip:hover {
-        border-color: #a5b4fc;
-        color: #4f46e5;
-        background: #eef2ff;
-    }
-    .ann-chip.active {
-        background: #6366f1;
-        border-color: #6366f1;
-        color: #fff;
-        box-shadow: 0 2px 6px rgba(99,102,241,0.3);
-    }
-    .ann-date-group { margin-bottom: 20px; }
-    .ann-date-header {
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #94a3b8;
-        margin-bottom: 10px;
-        padding-bottom: 6px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .ann-card {
-        background: #fff;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .ann-card-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .ann-channel-badge {
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #fff;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-    .ann-announcer {
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e293b;
-    }
-    .ann-date-pill {
-        font-size: 11.5px;
-        color: #94a3b8;
-        margin-left: auto;
-    }
-    .ann-content {
-        font-size: 13.5px;
-        color: #334155;
-        line-height: 1.8;
-        word-break: break-word;
-    }
-    .ann-content br {
-        display: block;
-        margin-top: 8px;
-        content: "";
-    }
-    .ann-content ul {
-        margin: 8px 0 4px 20px;
-        padding: 0;
-    }
-    .ann-content li {
-        margin-bottom: 7px;
-        line-height: 1.75;
-    }
-    .ann-content strong {
-        font-weight: 700;
-    }
-    .ann-ask-row {
-        display: flex;
-        gap: 10px;
-        align-items: flex-end;
-    }
-    .ann-ask-row .ts-form-group {
-        flex: 1;
-        margin-bottom: 0;
-    }
-    .ann-ask-btn {
-        flex-shrink: 0;
-        white-space: nowrap;
-        width: auto !important;
-        margin-top: 0 !important;
-        padding: 12px 22px !important;
-        align-self: flex-end;
-    }
-    .ann-answer-box {
-        margin-top: 14px;
-        padding: 14px 16px;
-        background: #eef2ff;
-        border: 1.5px solid #c7d2fe;
-        border-radius: 10px;
-        display: none;
-    }
-    .ann-answer-box.visible { display: block; }
-    .ann-answer-label {
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #6366f1;
-        margin-bottom: 8px;
-    }
-    .ann-answer-question {
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #c7d2fe;
-    }
-    .ann-answer-text {
-        font-size: 14px;
-        color: #1e293b;
-        line-height: 1.8;
-        word-break: break-word;
-    }
-    .ann-answer-text strong {
-        font-weight: 700;
-    }
-    .ann-answer-text ul {
-        margin: 8px 0 4px 20px;
-        padding: 0;
-    }
-    .ann-answer-text li {
-        margin-bottom: 7px;
-        line-height: 1.75;
-    }
-    .ann-answer-text br {
-        display: block;
-        margin-top: 8px;
-        content: "";
-    }
-    .ann-answer-loading {
-        font-size: 13.5px;
-        color: #6366f1;
-        font-style: italic;
-    }
-    .ann-file-input {
-        display: block;
-        width: 100%;
-        font-size: 13px;
-        font-family: 'Nunito', sans-serif;
-        color: #475569;
-        background: #f8fafc;
-        border: 1.5px dashed #cbd5e1;
-        border-radius: 8px;
-        padding: 8px 12px;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: border-color 0.2s;
-    }
-    .ann-file-input:hover { border-color: #6366f1; }
-    .ann-images {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 6px;
-    }
-    .ann-image {
-        width: 100%;
-        max-height: 560px;
-        object-fit: contain;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        background: #f8fafc;
-        display: block;
-    }
-    .ann-delete-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #cbd5e1;
-        font-size: 16px;
-        padding: 2px 4px;
-        border-radius: 4px;
-        line-height: 1;
-        transition: color 0.15s;
-    }
-    .ann-delete-btn:hover { color: #ef4444; }
-    .ann-empty {
-        text-align: center;
-        color: #94a3b8;
-        font-size: 14px;
-        padding: 32px 0;
-    }
-
   //- Inject server-side jurisdiction data for the frontend JS to consume
   script.
     window.JURISDICTION_LIMITS = !{JSON.stringify(jurisdictionLimits)};
 
-  .ts-container
-    .ts-header
-      h1.ts-header__title 🛠️ Manual Tools Suite
-      p.ts-header__sub Run individual checks for claims without travel documents.
-    .ts-tabs
-      button.ts-tab-btn.active(data-tab="cirium") 📡 FlightStats
-      button.ts-tab-btn(data-tab="toolkit") 🧰 Claim Toolkit
-      button.ts-tab-btn(data-tab="announcements") 📢 Announcements
+  //- ── PANEL: TICKET ANALYZER ────────────────────────────────────────────────
+  .tool-panel#panel-ticket-analyzer
+    .ta-layout
+      h1.ta-header__title 🎫 Ticket Analyzer
+      p.ta-header__subtitle Drop multiple e-tickets, boarding passes, or flight screenshots below. Our vision model will instantly extract structured passenger data and evaluate EC261 / UK261 claim eligibility.
+      .ta-dropzone#ticketDropZone(tabindex="0")
+        span.ta-dropzone__icon 📥
+        h2.ta-dropzone__title Click, Drag & Drop, or Paste (Ctrl+V)
+        p.ta-dropzone__text Supports multiple PDFs, PNGs, and JPGs at once
+        input.ta-dropzone__input#ticketInput(type="file", accept="image/*,application/pdf", multiple)
+      .ta-preview#previewTicketContainer
+        .ta-preview__header
+          p.ta-preview__name#ticketNameDisplay
+          button.ta-preview__clear-btn#clearFilesBtn(type="button" title="Clear all files") ✖
+        button.ta-preview__analyze-btn#analyzeBtn ✨ Extract Ticket Data
+      .ta-results#resultsCard
 
-    //- TAB 1: FLIGHTSTATS
-    #cirium.ts-tab-content.active
-      .ts-card
-        .ts-form-row
-          .ts-form-group(style="flex: 1;")
-            label.ts-label Flight Number
-            input#c-flight.ts-input(type="text" placeholder="e.g. U28412" required)
-          .ts-form-group(style="flex: 1;")
-            label.ts-label Departure Date
-            input#c-date.ts-input(type="date" required)
-          button#btn-fetch-cirium.ts-btn-fetch(type="button") Search Flight
-        #flightResult.ts-results-row
+  //- ── PANEL: POA GENERATOR ──────────────────────────────────────────────────
+  .tool-panel#panel-poa
+    #loader-overlay.poa-loader
+      .modern-spinner
+      p.poa-loader__text Generating PDF... Please wait
+    .poa-container
+      .tool-header
+        h1.tool-header__title POA Generator
+        p.tool-header__subtitle Generate Power of Attorney documents with AI autofill and signature processing.
+      .poa-form-group
+        label.poa-label(for="templateSelector") Select Template Format
+        select#templateSelector.poa-select
+          option(value="standard") Standard ReFly Template (1 Passenger)
+          option(value="lufthansa") Lufthansa Template (Up to 4 Passengers)
+          option(value="aerlingus") Aer Lingus Template (1 Passenger)
+      .poa-ai-zone#aiZoneContainer
+        label.poa-ai-zone__label ✨ AI Autofill & Signature Drop
+        p.poa-ai-zone__desc Use <b>Ditto</b> to paste text and signatures globally. Text goes to AI, images auto-attach to the active form below.
+        textarea#aiAutofillInput.poa-textarea(rows="3" placeholder="Paste text here...")
+        button#aiAutofillBtn.poa-btn.poa-btn--success(type="button") Extract & Fill Form
+      form#standardForm.poa-form(action="/generate-standard", method="POST", enctype="multipart/form-data", autocomplete="off")
+        h3.poa-form-title Standard Form Details
+        .poa-form-group
+          label.poa-label Document Language
+          select.poa-select(name="lang")
+            option(value="En" selected) English (En)
+            option(value="Fr") French (Fr)
+            option(value="De") German (De)
+            option(value="Es") Spanish (Es)
+            option(value="It") Italian (It)
+            option(value="Pt") Portuguese (Pt)
+            option(value="Tr") Turkish (Tr)
+            option(value="Ar") Arabic (Ar)
+            option(value="Pl") Polish (Pl)
+            option(value="Sv") Swedish (Sv)
+            option(value="No") Norwegian (No)
+            option(value="Da") Danish (Da)
+            option(value="Fi") Finnish (Fi)
+            option(value="Nl") Dutch (Nl)
+            option(value="Ro") Romanian (Ro)
+            option(value="Hi") Hindi (Hi)
+            option(value="Ja") Japanese (Ja)
+            option(value="He") Hebrew (He)
+            option(value="CH") chienese (Ch)
+            option(value="Al") albanian (Al)
+            option(value="Gr") greek (Gr)
+        .poa-row
+          .poa-col
+            label.poa-label First Name *
+            input.poa-input(type="text", name="firstName", placeholder="First name", required)
+          .poa-col
+            label.poa-label Last Name *
+            input.poa-input(type="text", name="lastName", placeholder="Last name", required)
+        .poa-form-group
+          label.poa-label Address *
+          textarea.poa-textarea(name="address", rows="3", placeholder="Full address", required)
+        .poa-form-group
+          label.poa-label PNR Number *
+          input.poa-input(type="text", name="pnr", placeholder="e.g. TGFX69", required, minlength="5", pattern="[A-Za-z0-9]{5,}")
+        .poa-form-group
+          label.poa-label Date *
+          input.poa-input(type="date", name="date", required)
+        .poa-form-group
+          label.poa-label Signature Image (optional)
+          .drop-zone.poa-dropzone
+            p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+            input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;")
+            img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
+        .poa-sig-processing-box
+          label.poa-label Signature Processing Option
+          select.poa-select(name="sigProcessing")
+            option(value="none", selected) None (Use Raw Image)
+            option(value="cloudinary") Cloudinary AI (Background Removal)
+            option(value="gemini-easy") Nano Banana — Easy
+            option(value="gemini-medium") Nano Banana — Medium
+            option(value="gemini-hard") Nano Banana — Hard
+        button.poa-btn.poa-btn--primary.poa-mt-20(type="submit") Generate Standard PDF
+      form#lufthansaForm.poa-form(action="/generate-lufthansa", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
+        h3.poa-form-title Lufthansa Form Details
+        .poa-row
+          .poa-col
+            label.poa-label Flight Number
+            input.poa-input(type="text", name="flightNumber")
+          .poa-col
+            label.poa-label PNR / Booking Code *
+            input.poa-input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
+          .poa-col
+            label.poa-label Flight Date *
+            input.poa-input(type="date", name="flightDate", required)
+        .poa-row.poa-row--align-start.poa-mt-20
+          .poa-col.poa-col--1-2
+            h4 Passenger Details
+            #names-container.poa-panel
+              - for (var i = 1; i <= 4; i++)
+                .poa-row.poa-row--no-margin.poa-row--center
+                  .poa-col.poa-col--no-margin
+                    label.poa-label Passenger #{i} Full Name #{i === 1 ? '*' : '(Optional)'}
+                    input.poa-input(type="text", name=`fullName${i}`, placeholder="e.g. Pamela Nelson", required=(i === 1))
+                if i === 1
+                  .poa-row.poa-row--no-margin.poa-mt-10
+                    .poa-col.poa-col--no-margin
+                      label.poa-label Main Claimer Address *
+                      textarea.poa-textarea(name="address1", rows="2", required=true)
+          .poa-col.poa-col--1
+            h4 Signatures
+            #signatures-container.poa-panel
+              .poa-form-group.poa-form-group--no-margin
+                label.poa-label Claim Submission Date *
+                input.poa-input(type="date", name="claimDate", required)
+              .drop-zone.poa-dropzone#lufthansa-drop-zone
+                p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+                input#lufthansa-sig-input(type="file", name="signatures", accept="image/*", multiple=true, style="display: none;")
+              #lufthansa-sig-previews.poa-sig-previews
+                span#preview-placeholder.poa-preview-placeholder Previews appear here...
+              div
+                label.poa-label.poa-label--bold Processing Method per Signature:
+                .poa-sig-processing-list
+                  - for (var i = 1; i <= 4; i++)
+                    .poa-sig-processing-item
+                      label.poa-sig-processing-item__label Sig #{i}:
+                      select.poa-select.poa-select--small(name=`sigProcessing${i}`)
+                        option(value="none", selected) None (Raw)
+                        option(value="cloudinary") Cloudinary AI
+                        option(value="gemini-easy") Easy
+                        option(value="gemini-medium") Medium
+                        option(value="gemini-hard") Hard
+        button.poa-btn.poa-btn--primary.poa-btn--full.poa-mt-25(type="submit") Generate Lufthansa PDF
+      form#aerLingusForm.poa-form(action="/generate-aerlingus", method="POST", enctype="multipart/form-data", style="display: none;", autocomplete="off")
+        h3.poa-form-title Aer Lingus Form Details
+        .poa-row
+          .poa-col
+            label.poa-label Type of Claim *
+            select.poa-select(name="claimType" required)
+              option(value="compensation") Compensation Claim (Regulation EC 261/2004)
+              option(value="expense") Expense Claim
+              option(value="baggage") Delayed, Lost or Damaged Baggage Claim
+              option(value="complaint") Complaint
+              option(value="other") Other
+          .poa-col
+            label.poa-label Case Number (Optional)
+            input.poa-input(type="text", name="caseNumber")
+        .poa-row
+          .poa-col
+            label.poa-label Passenger First Name *
+            input.poa-input(type="text", name="firstName", required)
+          .poa-col
+            label.poa-label Passenger Last Name *
+            input.poa-input(type="text", name="lastName", required)
+        .poa-form-group
+          label.poa-label Passenger Address *
+          textarea.poa-textarea(name="address", rows="2", required)
+        .poa-row
+          .poa-col
+            label.poa-label PNR / Booking Code *
+            input.poa-input(type="text", name="pnr", required, minlength="5", maxlength="9", pattern="[A-Za-z0-9]{5,9}")
+          .poa-col
+            label.poa-label Flight Number
+            input.poa-input(type="text", name="flightNumber")
+          .poa-col
+            label.poa-label Flight Date *
+            input.poa-input(type="date", name="flightDate", required)
+        .poa-form-group
+          label.poa-label Route (Specify to and from)
+          input.poa-input(type="text", name="route", placeholder="e.g. DUB - JFK")
+        .poa-form-group
+          label.poa-label Signature Image *
+          .drop-zone.poa-dropzone
+            p.drop-zone-text.poa-dropzone__text Click to Upload, Drag & Drop, or Paste (Ctrl+V)
+            input.sig-file-input(type="file", name="signature", accept="image/*", style="display: none;", required)
+            img.sig-preview(src="", style="max-height: 80px; display: none; margin: 10px auto;")
+        .poa-sig-processing-box
+          label.poa-label Signature Processing Option
+          select.poa-select(name="sigProcessing")
+            option(value="none", selected) None (Use Raw Image)
+            option(value="cloudinary") Cloudinary AI (Background Removal)
+            option(value="gemini-easy") Nano Banana — Easy
+            option(value="gemini-medium") Nano Banana — Medium
+            option(value="gemini-hard") Nano Banana — Hard
+        button.poa-btn.poa-btn--aerlingus.poa-btn--full.poa-mt-25(type="submit") Generate Aer Lingus PDF
 
-    //- TAB 2: COMBINED TOOLKIT (Grid Layout)
-    #toolkit.ts-tab-content
-      .ts-toolkit-grid
+  //- ── PANEL: FLIGHTSTATS (CIRIUM) ───────────────────────────────────────────
+  .tool-panel#panel-flight-stats
+    .ts-card
+      h2.tk-title 📡 FlightStats (Cirium)
+      .ts-form-row
+        .ts-form-group(style="flex: 1;")
+          label.ts-label Flight Number
+          input#c-flight.ts-input(type="text" placeholder="e.g. U28412" required)
+        .ts-form-group(style="flex: 1;")
+          label.ts-label Departure Date
+          input#c-date.ts-input(type="date" required)
+        button#btn-fetch-cirium.ts-btn-fetch(type="button") Search Flight
+      #flightResult.ts-results-row
+  //- ── PANEL: EXTERNAL FLIGHT TRACKERS ───────────────────────────────────────
+  .tool-panel#panel-flight-search
+    .flight-search-tool
+      .flight-search-tool__header
+        h1.flight-search-tool__title Flight Search
+        p.flight-search-tool__subtitle Look up real-time flight data and passenger information
+      .flight-search-tool__grid
+        .flight-search-tool__field
+          label.flight-search-tool__label(for="fs-flight") Flight Number
+          input#fs-flight.flight-search-tool__input.flight-search-tool__input--mono(type="text" placeholder="e.g. BA0123")
+        .flight-search-tool__field
+          label.flight-search-tool__label(for="fs-date") Travel Date
+          input#fs-date.flight-search-tool__input(type="date")
+      .flight-search-tool__options
+        label.flight-search-tool__option
+          input#fs-chk-ai(type="checkbox" checked)
+          | AirportInfo
+        label.flight-search-tool__option
+          input#fs-chk-fs(type="checkbox" checked)
+          | FlightStats
+        label.flight-search-tool__option
+          input#fs-chk-ft(type="checkbox" checked)
+          | Flightera
+      button#btn-flight-search.flight-search-tool__button(type="button" disabled) Search Flights
 
-        //- TOOL: FLIGHT SEARCH (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title 🔎 Flight Search
-            span.tk-chevron ▼
-          .ts-form-row
-            .ts-form-group(style="flex: 1;")
-              label.ts-label Flight Number
-              input#fs-flight.ts-input(type="text" placeholder="e.g. VY7835 or VY 7835")
-            .ts-form-group(style="flex: 1;")
-              label.ts-label Flight Date
-              input#fs-date.ts-input(type="date")
-          .ts-form-row(style="gap: 16px; align-items: center; flex-wrap: wrap;")
-            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
-              input#fs-chk-ai(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
-              | AirportInfo
-            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
-              input#fs-chk-fs(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
-              | FlightStats
-            label(style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;")
-              input#fs-chk-ft(type="checkbox" checked style="accent-color:#6366f1;width:15px;height:15px;cursor:pointer;")
-              | Flightera
-          button#btn-flight-search.ts-btn-action(type="button") 🔎 Search Flights
+  //- ── PANEL: ROC RADAR ──────────────────────────────────────────────────────
+  .tool-panel#panel-eoc
+    .eoc-tool
+      .eoc-tool__header
+        h1.eoc-tool__title ROC Radar
+        p.eoc-tool__subtitle Scan extraordinary circumstance records by flight date and route
+      .eoc-tool__grid
+        .eoc-tool__field
+          label.eoc-tool__label(for="e-date") Flight Date
+          .eoc-tool__date-control
+            input#e-date.eoc-tool__input(type="text" placeholder="Select or paste a date..." required)
+            input#e-date-picker.eoc-tool__date-picker(type="date" required)
+            label.eoc-tool__date-trigger(for="e-date-picker") 📅
+        .eoc-tool__field
+          label.eoc-tool__label(for="e-o-iata") Origin Airport
+          input#e-o-iata.eoc-tool__input.eoc-tool__input--mono(type="text" placeholder="e.g. LHR or Heathrow")
+        .eoc-tool__field
+          label.eoc-tool__label(for="e-d-iata") Destination Airport
+          input#e-d-iata.eoc-tool__input.eoc-tool__input--mono(type="text" placeholder="e.g. BER or Berlin")
+        .eoc-tool__field
+          label.eoc-tool__label(for="e-o-country") Origin Country
+          input#e-o-country.eoc-tool__input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+        .eoc-tool__field
+          label.eoc-tool__label(for="e-d-country") Destination Country
+          input#e-d-country.eoc-tool__input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+      .eoc-tool__actions
+        button#btn-eoc.eoc-tool__button.eoc-tool__button--primary(type="button") Scan EOC Database
+        button#btn-sync-eoc.eoc-tool__button.eoc-tool__button--secondary(type="button") Sync EOC Database
+      #syncEocResult
+      #eocResult
 
-        //- TOOL: EOC RADAR (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title ⚠️ EOC Radar
-            span.tk-chevron ▼
-          .ts-form-grid
-            .ts-form-group
-              label.ts-label Flight Date
-              div(style="position: relative; display: flex; align-items: center;")
-                input#e-date.ts-input(type="text" placeholder="Select or paste a date..." required style="padding-right: 40px; flex: 1;")
-                input#e-date-picker.ts-input(type="date" required style="opacity: 0; position: absolute; right: 0; cursor: pointer; width: 40px; height: 40px; margin: 0;")
-                label(for="e-date-picker" style="position: absolute; right: 8px; pointer-events: none; font-size: 18px; user-select: none;") 📅
-            .ts-form-group
-              label.ts-label (Optional) Origin Airport
-              input#e-o-iata.ts-input(type="text" placeholder="e.g. LHR or Heathrow")
-            .ts-form-group
-              label.ts-label (Optional) Dest Airport
-              input#e-d-iata.ts-input(type="text" placeholder="e.g. BER or Berlin")
-            .ts-form-group
-              label.ts-label (Optional) Origin Country
-              input#e-o-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-            .ts-form-group
-              label.ts-label (Optional) Dest Country
-              input#e-d-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-          .ts-form-row(style="gap: 12px; margin-top: 0;")
-            button#btn-eoc.ts-btn-action ⚠️ Scan EOC Database
-            button#btn-sync-eoc.ts-btn-action(style="background: #0f172a; border-color: #0f172a; font-size: 13px;") 🔄 Sync EOC Database (only if you get notified that it has been updated)
-          #syncEocResult
-          #eocResult
+  //- ── PANEL: DOCUMENT CHECK ─────────────────────────────────────────────────
+  .tool-panel#panel-doc-check
+    .ops-tool
+      .ops-tool__header
+        h1.ops-tool__title Document Check
+        p.ops-tool__subtitle Verify required claim documents by airline
+      .ops-tool__action-row
+        .ops-tool__field.ops-tool__field--grow
+          label.ops-tool__label(for="d-airline") Airline
+          input#d-airline.ops-tool__input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
+        button#btn-doc-check.ops-tool__button.ops-tool__button--primary(type="button") Check Documents
+      #docsResult.ops-tool__results
 
-        //- TOOL: DOCUMENT CHECKER (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title 📄 Document Check
-            span.tk-chevron ▼
-          .ts-form-group
-            label.ts-label Search Airline
-            input#d-airline.ts-input(type="text" placeholder="Start typing an airline name..." required autocomplete="off")
-          #docsResult.ts-results-row(style="margin-top: 24px;")
+  //- ── PANEL: JURISDICTION ───────────────────────────────────────────────────
+  .tool-panel#panel-jurisdiction
+    .ops-tool
+      .ops-tool__header
+        h1.ops-tool__title Jurisdiction Checker
+        p.ops-tool__subtitle Identify applicable compensation limitation periods by country
+      .ops-tool__action-row
+        .ops-tool__field.ops-tool__field--grow
+          label.ops-tool__label(for="j-country") Country
+          input#j-country.ops-tool__input(type="text" placeholder="Start typing a country... e.g. Germany" autocomplete="off")
+      #jurisdictionResult.ops-tool__results
 
-        //- TOOL: JURISDICTION CHECKER (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title 🏛️ Jurisdiction Checker
-            span.tk-chevron ▼
-          .ts-form-group
-            label.ts-label Search Country
-            input#j-country.ts-input(type="text" placeholder="Start typing a country... (e.g. Germany)" autocomplete="off")
-          #jurisdictionResult.ts-results-row(style="margin-top: 24px;")
+  //- ── PANEL: IATA LOOKUP ────────────────────────────────────────────────────
+  .tool-panel#panel-iata
+    .ops-tool
+      .ops-tool__header
+        h1.ops-tool__title IATA Lookup
+        p.ops-tool__subtitle Resolve airline codes and carrier details instantly
+      .ops-tool__action-row
+        .ops-tool__field.ops-tool__field--grow
+          label.ops-tool__label(for="iata-lookup-input") Airline Name or IATA Code
+          input#iata-lookup-input.ops-tool__input.ops-tool__input--mono(type="text" placeholder="e.g. AA or American Airlines" autocomplete="off")
+        button#btn-iata-lookup.ops-tool__button.ops-tool__button--primary(type="button") Search
+      #iata-lookup-result.ops-tool__results
 
-        //- TOOL: IATA LOOKUP (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title ✈️ IATA Lookup
-            span.tk-chevron ▼
-          .ts-form-group
-            label.ts-label Airline Name or IATA Code
-            input#iata-lookup-input.ts-input(type="text" placeholder="e.g. AA or American Airlines" autocomplete="off")
-          button#btn-iata-lookup.ts-btn-action(type="button" style="margin-top: 12px;") 🔍 Search
-          #iata-lookup-result(style="margin-top: 16px;")
-
-        //- TOOL: SMART EMAIL BUILDER (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title ✉️ Multilingual Email Builder
-            span.tk-chevron ▼
-
-          form#emailBuilderForm
-            p flight on time, no cancellation proof, proceeding as per passenger statement
-            p flight on delayed, no cancellation proof, proceeding as per passenger statement
-            p Please send claim to the airline despite missing docs - test claim
-
-            //- INNER TABS
+  //- ── PANEL: EMAIL BUILDER ──────────────────────────────────────────────────
+  .tool-panel#panel-email
+    .ts-card
+      .tool-header
+        h1.tool-header__title Multilingual Email Builder
+        p.tool-header__subtitle Generate passenger correspondence in multiple languages
+      form#emailBuilderForm
+        .split-layout.email-builder
+          .split-left
+            .split-left-header
+              h3 Select Content
+              p Choose what to include in the email
             .em-inner-tabs
-              button.em-inner-tab-btn.active(type="button" data-em-tab="request") 📋 Request Info
-              button.em-inner-tab-btn(type="button" data-em-tab="draft") ✏️ Draft / Polish
-
-            .em-builder-layout
-
-              //- MAIN COLUMN (tab content)
-              .em-main
-
-                //- TAB: REQUEST INFO
-                #emTabRequest.em-inner-tab-content.active
-                  .em-section
-                    p.em-section-title Documents
-                    .em-checklist
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Boarding pass")
-                        span Boarding Pass
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Ticket number (13-digit)")
-                        span Ticket Number (13-digit)
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="PNR / Booking Reference")
-                        span PNR / Booking Reference
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="ID / Passport")
-                        span ID / Passport
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Signed Power of Attorney")
-                        span Signed Power of Attorney
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Booking confirmation")
-                        span Booking Confirmation
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Proof of delay")
-                        span Proof of Delay
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Proof of cancellation")
-                        span Proof of Cancellation
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="passengers documents not complete")
-                        span Passengers Docs (Link)
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="email address")
-                        span Email Address
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="fill dashboard")
-                        span Fill Dashboard (Link)
-                      label.em-checklist-item
-                        input(type="checkbox" name="emTemplates" value="Service Fees")
-                        span Service Fees
-
-                    .em-rejection-divider
-                      span Rejections
-
-                    .em-checklist
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="Visa/Documentation Rejection")
-                        span Visa / Documentation
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="Short Delay / No Missed Connection Rejection")
-                        span Short Delay / No Missed Connection
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="No Disruption Found Rejection")
-                        span No Disruption Found
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="Jurisdiction expired Rejection")
-                        span Jurisdiction Expired
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="Disrupted & Affected Flights Not Under Same Booking Rejection")
-                        span Not Same Booking
-                      label.em-checklist-item.rejection
-                        input(type="checkbox" name="emTemplates" value="double submission")
-                        span Double Submission
-
-                //- TAB: DRAFT / POLISH
-                #emTabDraft.em-inner-tab-content
-                  .em-section
-                    p.em-section-title Your Message
-                    textarea#emDraftText.ts-input(placeholder="Paste your rough draft or describe what you want to say..." style="min-height: 140px; resize: vertical; width: 100%; box-sizing: border-box;")
-
-              //- SIDEBAR (always visible)
-              .em-sidebar
-
-                //- Request Info controls
-                #emSidebarRequest
-                  .em-section
-                    p.em-section-title Upload Link
-                    p(style="font-size: 11px; color: #94a3b8; margin: 0 0 5px;") For Passengers Docs &amp; Signed POA
-                    input#emLink.ts-input(type="text" placeholder="https://..." style="width: 100%; box-sizing: border-box; font-size: 12px;")
-
-                  .em-section
-                    label.em-freestyle-toggle(style="margin-top: 0;")
+              button.em-inner-tab-btn.active(type="button" data-em-tab="request") Request Info
+              button.em-inner-tab-btn(type="button" data-em-tab="draft") Draft / Polish
+            .split-groups
+              #emTabRequest.em-inner-tab-content.active
+                .split-group
+                  .split-group-label Documents
+                  .pills-row
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Booking confirmation")
+                      span.email-checkbox__label Booking Confirmation
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="PNR / Booking Reference")
+                      span.email-checkbox__label PNR / Ref
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Ticket number (13-digit)")
+                      span.email-checkbox__label Ticket No.
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Boarding pass")
+                      span.email-checkbox__label Boarding Pass
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Proof of delay")
+                      span.email-checkbox__label Proof of Delay
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Proof of cancellation")
+                      span.email-checkbox__label Proof of Cancellation
+                .split-group
+                  .split-group-label Passenger Info
+                  .pills-row
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="ID / Passport")
+                      span.email-checkbox__label ID / Passport
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Signed Power of Attorney")
+                      span.email-checkbox__label Signed POA
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="passengers documents not complete")
+                      span.email-checkbox__label Passenger Docs
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="email address")
+                      span.email-checkbox__label Email
+                .split-group
+                  .split-group-label Compensation
+                  .pills-row
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="fill dashboard")
+                      span.email-checkbox__label Fill Dashboard
+                    label.pill.em-checklist-item
+                      input(type="checkbox" name="emTemplates" value="Service Fees")
+                      span.email-checkbox__label Service Fees
+                .split-group
+                  .split-group-label.rej Rejection Reason
+                  .pills-row
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="Visa/Documentation Rejection")
+                      span.email-checkbox__label Visa / Docs
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="Short Delay / No Missed Connection Rejection")
+                      span.email-checkbox__label Short Delay
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="No Disruption Found Rejection")
+                      span.email-checkbox__label No Disruption
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="Jurisdiction expired Rejection")
+                      span.email-checkbox__label Jurisdiction
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="Disrupted & Affected Flights Not Under Same Booking Rejection")
+                      span.email-checkbox__label Not Same Booking
+                    label.pill.em-checklist-item.rejection
+                      input(type="checkbox" name="emTemplates" value="double submission")
+                      span.email-checkbox__label Double Submission
+                #emSidebarRequest.email-advanced
+                  .split-group
+                    .split-group-label Advanced
+                    .email-field
+                      label.split-footer-lbl(for="emLink") Upload Link
+                      input#emLink.input.ts-input(type="text" placeholder="https://...")
+                      p.email-field__hint For Passenger Docs, Signed POA, and Fill Dashboard.
+                    label.email-toggle.em-freestyle-toggle
                       input#emUseNote(type="checkbox")
-                      | Custom Request
+                      span.email-toggle__label Custom Request
                     #emNoteArea(style="display: none;")
-                      textarea#emCustomNote.ts-input(placeholder="Additional message to include..." style="min-height: 60px; margin-top: 8px; resize: vertical; width: 100%; box-sizing: border-box; font-size: 12px;")
-
-                  label.em-freestyle-toggle
-                    input#emUseWrapper(type="checkbox" checked)
-                    | Wrap in formal intro &amp; outro
-
-                //- Draft / Polish controls
-                #emSidebarDraft(style="display: none;")
-                  .em-section
-                    p.em-section-title Tone
+                      textarea#emCustomNote.textarea.ts-input(placeholder="Additional message to include...")
+                    label.email-toggle.em-freestyle-toggle
+                      input#emUseWrapper(type="checkbox" checked)
+                      span.email-toggle__label Wrap in formal intro and outro
+              #emTabDraft.em-inner-tab-content
+                .split-group
+                  .split-group-label Your Message
+                  textarea#emDraftText.textarea.ts-input(placeholder="Paste your rough draft or describe what you want to say...")
+                #emSidebarDraft.email-advanced
+                  .split-group
+                    .split-group-label Tone
                     .em-tone-pills
                       label.em-tone-pill
                         input(type="radio" name="emTone" value="neutral" checked)
@@ -927,106 +473,164 @@ block content
                       label.em-tone-pill
                         input(type="radio" name="emTone" value="firm")
                         | Firm
+            .split-footer
+              .split-footer-row.email-lang.em-language-group
+                label.split-footer-lbl(for="emLanguage") Language
+                select#emLanguage.split-lang
+                  option(value="English") English
+                  option(value="Spanish") Spanish
+                  option(value="French") French
+                  option(value="German") German
+                  option(value="Italian") Italian
+                  option(value="Dutch") Dutch
+                  option(value="Swedish") Swedish
+                  option(value="Polish") Polish
+                  option(value="Portuguese") Portuguese
+                  option(value="Danish") Danish
+                  option(value="Norwegian") Norwegian
+                  option(value="Finnish") Finnish
+                  option(value="Romanian") Romanian
+                  option(value="Czech") Czech
+                  option(value="Hungarian") Hungarian
+                  option(value="Greek") Greek
+                  option(value="Turkish") Turkish
+                  option(value="Arabic") Arabic
+              button#emGenerateBtn.split-gen(type="submit")
+                span.split-gen-icon *
+                | Generate Email
+          .split-right
+            .split-right-header
+              h3 Preview
+              .tab-row
+                button.stab.active(type="button" data-preview-tab="output") English
+                button.stab(type="button" data-preview-tab="verify") EN verify
+            .split-preview
+              #emPlaceholder.email-placeholder
+                p Select content or write a draft, then click Generate Email
+              #emResultBox.email-mock(style="display: none;")
+                .email-body-text#emOutputText
+              #emEnglishBox.en-verify-box(style="display: none;")
+                .en-verify-header
+                  span.en-verify-label English Verification
+                .en-verify-body#emEnglishText
+            .split-actions
+              button#emCopyBtn.act-primary(type="button") Copy Email
+              button#emRegenBtn.act-secondary(type="button") Regenerate
+              button#emCopyEnglishBtn.act-secondary(type="button") Copy English
+              span#emCharCount.act-meta -
 
-                //- Language + Generate (always visible)
-                .em-language-group(style="margin-top: 4px;")
-                  label(for="emLanguage") Output Language
-                  select#emLanguage.ts-input
-                    option(value="English") English
-                    option(value="Spanish") Spanish
-                    option(value="French") French
-                    option(value="German") German
-                    option(value="Italian") Italian
-                    option(value="Dutch") Dutch
-                    option(value="Swedish") Swedish
-                    option(value="Polish") Polish
-                    option(value="Portuguese") Portuguese
-                    option(value="Danish") Danish
-                    option(value="Norwegian") Norwegian
-                    option(value="Finnish") Finnish
-                    option(value="Romanian") Romanian
-                    option(value="Czech") Czech
-                    option(value="Hungarian") Hungarian
-                    option(value="Greek") Greek
-                    option(value="Turkish") Turkish
-                    option(value="Arabic") Arabic
-                button#emGenerateBtn.em-generate-btn(type="submit" style="width: 100%; margin-top: 10px;") ✨ Generate
+  //- ── PANEL: EC261 CALCULATOR ───────────────────────────────────────────────
+  .tool-panel#panel-ec261
+    .ops-tool
+      .ops-tool__header
+        h1.ops-tool__title EC261 Compensation Calculator
+        p.ops-tool__subtitle Calculate statutory passenger compensation under EU Regulation 261/2004
+      .ops-tool__grid
+        .ops-tool__field
+          label.ops-tool__label(for="l-origin") Departure Airport
+          input#l-origin.ops-tool__input.ops-tool__input--mono(type="text" placeholder="e.g. LHR or Heathrow" required)
+        .ops-tool__field
+          label.ops-tool__label(for="l-origin-country") Origin Country
+          input#l-origin-country.ops-tool__input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+        .ops-tool__field
+          label.ops-tool__label(for="l-dest") Arrival Airport
+          input#l-dest.ops-tool__input.ops-tool__input--mono(type="text" placeholder="e.g. JFK or Kennedy" required)
+        .ops-tool__field
+          label.ops-tool__label(for="l-dest-country") Destination Country
+          input#l-dest-country.ops-tool__input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
+      .ops-tool__actions
+        button#btn-ec261.ops-tool__button.ops-tool__button--primary(type="button") Calculate Compensation
+      #ec261Result.ops-tool__results
 
-          //- RESULT BOX
-          #emResultBox.em-result-box(style="display: none;")
-            .em-result-header
-              span.em-result-label ✅ Content Generated
-              button#emCopyBtn.em-copy-btn(type="button") 📋 Copy
-            textarea#emOutputText.em-output-textarea(readonly)
-            div#emCharCount.em-char-count
-            #emEnglishBox(style="display: none;")
-              .em-english-box
-                .em-english-header
-                  span.em-english-label English (Verification)
-                  button#emCopyEnglishBtn.em-copy-btn(type="button") 📋 Copy English
-                div#emEnglishText.em-english-content
+  //- ── PANEL: ANNOUNCEMENTS ──────────────────────────────────────────────────
+  .tool-panel#panel-announcements
+    .ann-layout
+      aside.ann-sub-sidebar
+        .ann-sub-header
+          h1 Announcements
+        nav.ann-nav
+          span.ann-nav-sec Feed
+          #ann-subject-chips.ann-filter-row
+          span.ann-nav-sec Tools
+          button.ann-nav-item.ann-tool-toggle#ann-focus-ask(type="button") Ask AI
+          button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="saved") Archive
+          button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="interactions") Interactions
+        button.ann-post-btn(type="button" data-ann-panel="post") + Post Announcement
 
-        //- TOOL: COMPENSATION CALCULATOR (Full Width)
-        .ts-card.ts-grid-full.tk-collapsed
-          .tk-header
-            h2.tk-title 💸 EC261 Comp Calculator
-            span.tk-chevron ▼
-          .ts-route
-            .ts-route__node
-              .ts-form-grid(style="margin-bottom: 0;")
-                .ts-form-group
-                  label.ts-label Origin Airport
-                  input#l-origin.ts-input(type="text" placeholder="Start typing... e.g. LHR or Heathrow" required)
-                .ts-form-group
-                  label.ts-label Origin Country
-                  input#l-origin-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-            .ts-route__node
-              .ts-form-grid(style="margin-bottom: 0;")
-                .ts-form-group
-                  label.ts-label Final Destination Airport
-                  input#l-dest.ts-input(type="text" placeholder="Start typing... e.g. JFK or Kennedy" required)
-                .ts-form-group
-                  label.ts-label Destination Country
-                  input#l-dest-country.ts-input(type="text" placeholder="Auto-filled" readonly tabindex="-1")
-          button#btn-ec261.ts-btn-action 💸 Calculate Compensation
-          #ec261Result
+      section.ann-main
+        .ann-toolbar
+          .ann-ask-inline
+            span.ann-btn-icon *
+            input#ann-question(type="text" placeholder="Ask AI about announcements...")
+          button#ann-ask-btn.ann-ai-btn(type="button")
+            span.ann-btn-icon *
+            | Ask AI
+          button.ann-post-main-btn(type="button" data-ann-panel="post") + New Post
+          button.ann-saved-btn(type="button" data-ann-panel="saved") Saved
 
-    //- TAB 3: ANNOUNCEMENTS
-    #announcements.ts-tab-content
-      .ts-toolkit-grid
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 📢 Log Announcement
-          .ann-form-row
-            .ts-form-group
-              label.ts-label Announcer Name
-              input#ann-announcer.ts-input(type="text" placeholder="e.g. Ahmed")
-            .ts-form-group
-              label.ts-label Date
-              input#ann-date.ts-input(type="date")
-            .ts-form-group
-              label.ts-label Subject
-              input#ann-subject.ts-input(type="text" placeholder="e.g. Policy Update, System Change")
-          .ts-form-group(style="margin-bottom: 12px;")
-            label.ts-label Announcement
-            textarea#ann-content.ann-textarea(placeholder="Paste or type the announcement here...")
-          .ts-form-group(style="margin-bottom: 12px;")
-            label.ts-label Images (optional)
-            input#ann-images.ann-file-input(type="file" accept="image/*" multiple)
-          button#ann-submit-btn.ts-btn-action(type="button") ➕ Add Announcement
+        .ann-panel-stack#ann-panel-stack
+          .ann-drawer#ann-post-panel
+            .ann-drawer-header
+              h2 New Announcement
+              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
+            .ann-form-row
+              .ann-field
+                label(for="ann-announcer") Announcer Name
+                input#ann-announcer.ann-input(type="text" placeholder="e.g. Ahmed")
+              .ann-field
+                label(for="ann-date") Date
+                input#ann-date.ann-input(type="date")
+            .ann-field
+              label(for="ann-content") Announcement
+              textarea#ann-content.ann-textarea(placeholder="Paste or type the announcement here...")
+            .ann-field
+              label(for="ann-images") Images (optional)
+              input#ann-images.ann-file-input.ann-file-input--hidden(type="file" accept="image/*" multiple)
+              .ann-upload-review(data-upload-zone data-input-id="ann-images" data-multiple="true" tabindex="0")
+                .ann-upload-copy
+                  .ann-upload-title Drag, paste, or choose screenshots
+                  .ann-upload-subtitle Images appear here for review before posting.
+                button.ann-upload-browse(type="button" data-upload-browse) Choose
+                .ann-upload-list(data-upload-list)
+            .ann-actions
+              button#ann-submit-btn.ann-submit-btn(type="button") Add Announcement
+          .ann-drawer#ann-saved-panel
+            .ann-drawer-header
+              h2 Saved Answers
+              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
+            #ann-saved-list.ann-saved-list
+          .ann-drawer#ann-interactions-panel
+            .ann-drawer-header
+              h2 Interaction Records
+              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
+            .int-form-row
+              .ann-field
+                label(for="int-ticket") Ticket Number
+                input#int-ticket.ann-input(type="text" placeholder="e.g. TKT-12345")
+              .ann-field
+                label(for="int-person") Person Name
+                input#int-person.ann-input(type="text" placeholder="e.g. John Doe")
+              .ann-field
+                label(for="int-date") Date
+                input#int-date.ann-input(type="date")
+            .ann-field
+              label(for="int-notes") Notes (optional)
+              textarea#int-notes.ann-textarea(placeholder="Brief notes about the interaction...")
+            .ann-field
+              label(for="int-screenshot") Screenshot
+              input#int-screenshot.ann-file-input.ann-file-input--hidden(type="file" accept="image/*")
+              .ann-upload-review(data-upload-zone data-input-id="int-screenshot" data-multiple="false" tabindex="0")
+                .ann-upload-copy
+                  .ann-upload-title Drag, paste, or choose screenshot
+                  .ann-upload-subtitle Screenshot appears here for review before saving.
+                button.ann-upload-browse(type="button" data-upload-browse) Choose
+                .ann-upload-list(data-upload-list)
+            .ann-actions
+              button#int-submit-btn.ann-submit-btn(type="button") Save Record
+            #int-records-list.int-records-list
 
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 🤖 Ask About Announcements
-          .ann-ask-row
-            .ts-form-group
-              label.ts-label Your Question
-              input#ann-question.ts-input(type="text" placeholder="e.g. What is the new leave policy?")
-            button#ann-ask-btn.ts-btn-action.ann-ask-btn(type="button") Ask AI
-          #ann-answer-box.ann-answer-box
+        .ann-feed#ann-list
 
-        .ts-card.ts-grid-full
-          h2(style="color: #1e293b; margin-top: 0; margin-bottom: 16px; font-size: 18px;") 🗂️ All Announcements
-          .ann-filter-row
-            #ann-subject-chips
-          #ann-list
-
+  script(src="/js/ticket-analyzer.js")
+  script(src="/js/poa-form.js")
   script(src="/js/tools.js")

@@ -1,12 +1,4 @@
-extends layout-app
-
-block sidebar-nav
-  .sidebar__section
-    p.sidebar__label Navigation
-    a.sidebar__link(href="/") Workspace
-    a.sidebar__link.sidebar__link--active(href="/me") My Usage
-    if user && user.role === 'admin'
-      a.sidebar__link(href="/admin") Admin Panel
+extends layout
 
 block app-content
   - function cc(v) { return (!v || v <= 0) ? '0.00' : (Math.ceil(v * 100) / 100).toFixed(2); }

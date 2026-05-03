@@ -54,19 +54,13 @@ router.get('/admin/logs', require('../controllers/adminController.js').getAdminL
 router.post('/admin/reload-clients', require('../controllers/adminController.js').reloadClients);
 router.post('/admin/recalculate-costs', require('../controllers/adminController.js').recalculateCosts);
 
-// --- Central Dashboard ---
-router.get('/', (req, res, next) => {
-  try {
-    res.render('dashboard', { title: 'Main Workspace Dashboard' });
-  } catch (error) {
-    next(error);
-  }
-});
+// --- Central Dashboard (shows My Usage) ---
+router.get('/', require('../controllers/userController.js').renderDashboard);
 
 // --- POA Generator ---
-router.get('/poa', reflyController.showForm);
+router.get('/poa', (req, res) => res.redirect(302, '/tools#poa'));
 router.get('/preview-lufthansa', lufthansaController.preview);
-router.get('/ticket-analyzer', ticketController.renderAnalyzer);
+router.get('/ticket-analyzer', (req, res) => res.redirect(302, '/tools#ticket-analyzer'));
 
 // --- Tools Suite ---
 router.get('/tools', toolsController.renderTools);
@@ -83,6 +77,9 @@ router.get('/api/tools/announcements',        toolsController.getAnnouncements);
 router.post('/api/tools/announcements',       upload.array('images', 10), toolsController.addAnnouncement);
 router.post('/api/tools/announcements/ask',   toolsController.askAnnouncements);
 router.delete('/api/tools/announcements/:id', toolsController.deleteAnnouncement);
+router.get('/api/tools/interactions',         toolsController.getInteractions);
+router.post('/api/tools/interactions',        upload.single('screenshot'), toolsController.addInteraction);
+router.delete('/api/tools/interactions/:id',  toolsController.deleteInteraction);
 
 // --- POA Generation ---
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);

@@ -3,59 +3,106 @@ html(lang="en")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title= title || 'Workspace Dashboard'
+    title= title || 'Refly Workspace'
     link(rel="stylesheet", href="/css/style.css")
     link(rel="icon", type="image/png", href="/images/image-removebg-preview.png")
+    link(href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600&display=swap", rel="stylesheet")
+    script(src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js")
+    block head
   body
-    //- A11Y [CRITICAL]: Skip to content link for keyboard-only navigation
     a.skip-link(href="#main-content") Skip to main content
 
     if user
-      .app-layout.sidebar-collapsed.no-transition#appLayout
-        aside.sidebar
-          .sidebar__logo#sidebarToggle(title="Collapse sidebar")
+      .app-shell
+        aside.sidebar#sidebar
+          .sidebar__logo
             img(src="/images/image-removebg-preview.png", alt="Refly Logo")
-          .sidebar__section
-            p.sidebar__label Workspace
-            a.sidebar__link(href="/") Dashboard
-            a.sidebar__link(href="/me") My Usage
-          if user.role === 'admin'
+            span.sidebar__wordmark Refly
+
+          nav.sidebar__nav
             .sidebar__section
-              p.sidebar__label Administration
-              a.sidebar__link(href="/admin") Admin Panel
-          .sidebar__spacer
-          .sidebar__section
-            a.sidebar__link.sidebar__link--danger(href="/logout") Sign Out
-        main#main-content.app-main
-          block content
-      button.sidebar-expand-btn#sidebarExpand(title="Expand sidebar")
-        img(src="/images/image-removebg-preview.png", alt="Refly Logo")
+              .sidebar__section-header Main
+              a.nav-item(href="/" data-page="dashboard")
+                span.nav-item__icon
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                span.nav-item__label Dashboard
+
+            .sidebar__section-divider
+
+            .sidebar__section
+              .sidebar__section-header Tools
+              a.nav-item(href="/tools#ticket-analyzer" data-panel="ticket-analyzer")
+                span.nav-item__icon 🎫
+                span.nav-item__label Ticket Analyzer
+              a.nav-item(href="/tools#poa" data-panel="poa")
+                span.nav-item__icon 📄
+                span.nav-item__label POA Generator
+              a.nav-item(href="/tools#flight-search" data-panel="flight-search")
+                span.nav-item__icon ✈
+                span.nav-item__label External Trackers
+              a.nav-item(href="/tools#eoc" data-panel="eoc")
+                span.nav-item__icon ◎
+                span.nav-item__label ROC Radar
+              a.nav-item(href="/tools#doc-check" data-panel="doc-check")
+                span.nav-item__icon ◻
+                span.nav-item__label Document Check
+              a.nav-item(href="/tools#jurisdiction" data-panel="jurisdiction")
+                span.nav-item__icon ⚖
+                span.nav-item__label Jurisdiction
+              a.nav-item(href="/tools#iata" data-panel="iata")
+                span.nav-item__icon ⬡
+                span.nav-item__label IATA Lookup
+              a.nav-item(href="/tools#email" data-panel="email")
+                span.nav-item__icon ✉
+                span.nav-item__label Email Builder
+              a.nav-item(href="/tools#ec261" data-panel="ec261")
+                span.nav-item__icon €
+                span.nav-item__label EC261 Calculator
+              a.nav-item(href="/tools#announcements" data-panel="announcements")
+                span.nav-item__icon 📢
+                span.nav-item__label Announcements
+              a.nav-item(href="/tools#flight-stats" data-panel="flight-stats")
+                span.nav-item__icon FS
+                span.nav-item__label FlightStats
+
+            if user.role === 'admin'
+              .sidebar__section-divider
+              .sidebar__section
+                .sidebar__section-header Admin
+                a.nav-item(href="/admin" data-page="admin")
+                  span.nav-item__icon ⚙
+                  span.nav-item__label Admin Panel
+
+          .sidebar__footer
+            .sidebar__user
+              .avatar= user.name ? user.name.charAt(0).toUpperCase() : 'U'
+              .sidebar__user-info
+                .sidebar__user-name= user.name || 'User'
+            a.sidebar__signout(href="/logout" title="Sign Out")
+              span.nav-item__icon
+                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              span.sidebar__signout-label Sign Out
+
+        .main
+          main#main-content.content
+            .content__inner
+              block content
+              block app-content
     else
       main#main-content
         block content
+
     script.
       (function () {
-        var layout = document.getElementById('appLayout');
-        var toggle = document.getElementById('sidebarToggle');
-        var expand = document.getElementById('sidebarExpand');
-        if (layout && toggle) {
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              layout.classList.remove('no-transition');
-            });
-          });
-          toggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            layout.classList.add('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', '1');
-          });
-        }
-        if (layout && expand) {
-          expand.addEventListener('click', function () {
-            layout.classList.remove('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', '0');
-          });
-        }
+        // Highlight active nav item based on current path (data-page items only)
+        var path = window.location.pathname;
+        var items = document.querySelectorAll('.nav-item[data-page]');
+        items.forEach(function (item) {
+          var href = item.getAttribute('href');
+          if (path === href || (href !== '/' && path.startsWith(href))) {
+            item.classList.add('is-active');
+          }
+        });
       })();
     script.
       (function () {
@@ -80,7 +127,7 @@ html(lang="en")
             + '<div style="font-size:12px;opacity:.75;margin-top:3px;">This page will refresh automatically</div></div></div>'
             + '<div style="position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.5);border-radius:0 0 14px 14px;animation:ub-bar 3s linear forwards;"></div>';
           toast.style.cssText = 'position:fixed;top:24px;left:50%;z-index:99999;padding:16px 24px;border-radius:14px;color:#fff;font-family:system-ui,sans-serif;'
-            + 'background:linear-gradient(135deg,#1e40af,#2563eb);box-shadow:0 8px 32px rgba(0,0,0,.25);'
+            + 'background:linear-gradient(135deg,#1e40af,#3D6EFA);box-shadow:0 8px 32px rgba(0,0,0,.35);'
             + 'transform:translateX(-50%) translateY(-120px);opacity:0;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .4s ease;overflow:hidden;';
 
           var style = document.createElement('style');
@@ -100,8 +147,6 @@ html(lang="en")
           }, 3000);
         }
 
-        // Poll /api/version — require 3 consecutive hits of the new version
-        // before reloading, so the rollout is fully stable across all instances
         function checkVersion() {
           fetch('/api/version').then(function (r) { return r.json(); }).then(function (d) {
             if (!knownVersion) { knownVersion = d.version; return; }
@@ -118,7 +163,6 @@ html(lang="en")
         checkVersion();
         setInterval(checkVersion, 5000);
 
-        // SSE for instant admin-triggered reloads
         if (#{user ? 'true' : 'false'}) {
           var es = new EventSource('/api/sse/events');
           es.onmessage = function (e) {

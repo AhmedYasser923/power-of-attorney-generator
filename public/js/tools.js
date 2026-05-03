@@ -4,23 +4,30 @@
    server-side jurisdiction_data.json via toolsController.renderTools().
    ============================================================================= */
 
+// ---------------------------------------------------------------------------
+// PANEL SWITCHING — hash-based SPA
+// ---------------------------------------------------------------------------
+function activatePanel(panelId) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('is-active'));
+  document.querySelectorAll('.nav-item[data-panel]').forEach(n => n.classList.remove('is-active'));
+  var panel = document.getElementById('panel-' + panelId);
+  if (panel) panel.classList.add('is-active');
+  var nav = document.querySelector('.nav-item[data-panel="' + panelId + '"]');
+  if (nav) nav.classList.add('is-active');
+}
+
+(function () {
+  var initPanel = location.hash.slice(1) || 'ticket-analyzer';
+  activatePanel(initPanel);
+})();
+
+window.addEventListener('hashchange', function () {
+  var id = location.hash.slice(1);
+  if (id) activatePanel(id);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   window.searchedFlights = new Set();
-
-  // ---------------------------------------------------------------------------
-  // TAB SWITCHING
-  // ---------------------------------------------------------------------------
-  const tabBtns     = document.querySelectorAll('.ts-tab-btn');
-  const tabContents = document.querySelectorAll('.ts-tab-content');
-
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach(b     => b.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
-    });
-  });
 
   // ---------------------------------------------------------------------------
   // DATE FORMATTING UTILITIES
@@ -84,6 +91,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   const eDatePicker = document.getElementById('e-date-picker');
   const eDate = document.getElementById('e-date');
+  const eDateTrigger = document.querySelector('.eoc-tool__date-trigger');
+
+  function openEocDatePicker() {
+    if (!eDatePicker) return;
+    if (typeof eDatePicker.showPicker === 'function') {
+      eDatePicker.showPicker();
+    } else {
+      eDatePicker.focus();
+      eDatePicker.click();
+    }
+  }
 
   // When user selects a date from the date picker
   if (eDatePicker) {
@@ -91,6 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eDatePicker.value) {
         eDate.value = formatDateForDisplay(eDatePicker.value);
       }
+    });
+  }
+
+  if (eDateTrigger) {
+    eDateTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      openEocDatePicker();
     });
   }
 
@@ -220,30 +245,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (match !== undefined) {
       jResult.innerHTML = `
-        <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 20px; border-radius: 12px; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; animation: ts-fadeIn 0.3s ease;">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 80px;">
-            <span style="font-size: 24px;">🏛️</span>
-            <span style="font-size: 16px; font-weight: 800; color: #b45309; text-transform: capitalize;">${query}</span>
+        <div class="ops-result">
+          <div class="ops-result__top">
+            <div>
+              <div class="ops-result__title" style="text-transform:capitalize;">${escHtml(query)}</div>
+              <div class="ops-result__subtitle">EC261 claim limitation period</div>
+            </div>
+            <span class="ops-badge ops-badge--warning">Limit ${match} years</span>
           </div>
-          <div style="background: #fef3c7; padding: 14px 20px; border-radius: 8px; border: 1px solid #fcd34d; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-grow: 1; max-width: max-content; justify-content: center;">
-            <span style="font-size: 18px;">⚖️</span>
-            <span style="font-size: 16px; font-weight: 800; color: #d97706;">Limit: ${match} years</span>
+          <div class="ops-row">
+            <span class="ops-row__label">Country</span>
+            <span class="ops-row__value" style="text-transform:capitalize;">${escHtml(query)}</span>
+          </div>
+          <div class="ops-row">
+            <span class="ops-row__label">Limitation Period</span>
+            <span class="ops-row__value">${match} years</span>
           </div>
         </div>`;
     } else {
       const partials = Object.keys(jurisdictionLimits).filter(k => k.includes(query));
       if (partials.length > 0) {
-        jResult.innerHTML = `<div style="color: #64748b; font-size: 14px; padding: 10px;">Did you mean: ${
+        jResult.innerHTML = `<div class="ops-result">Did you mean: ${
           partials.map(p =>
-            `<span style="color:var(--primary);cursor:pointer;font-weight:600;text-transform:capitalize;"
-                   onclick="document.getElementById('j-country').value='${p}';
-                            document.getElementById('j-country').dispatchEvent(new Event('input'))">${p}</span>`
-          ).join(', ')
+            `<button type="button" class="ops-inline-choice"
+                    onclick="document.getElementById('j-country').value='${p}';
+                             document.getElementById('j-country').dispatchEvent(new Event('input'))">${escHtml(p)}</button>`
+          ).join(' ')
         }?</div>`;
       } else {
         jResult.innerHTML = `
-          <div style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; color: #64748b; font-weight: 600;">
-            No specific EC261 jurisdiction limit found for "${query}".
+          <div class="ops-result ops-result--warning">
+            No specific EC261 jurisdiction limit found for "${escHtml(query)}".
           </div>`;
       }
     }
@@ -282,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'autocomplete-item';
             item.innerHTML = `
               <div class="ac-top" style="align-items: center; padding: 4px 0;">
-                <span class="ac-city" style="color: #334155; font-weight: 600; font-size: 14px; text-transform: capitalize;">🏛️ ${country}</span>
+                <span class="ac-city" style="text-transform: capitalize;">${escHtml(country)}</span>
               </div>`;
             item.addEventListener('click', () => {
               input.value        = country;
@@ -307,44 +339,45 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   async function fetchAndDisplayDocs(airlineName) {
     const resultDiv = document.getElementById('docsResult');
-    resultDiv.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b; font-weight: 600;">⏳ Checking requirements for ${airlineName}...</div>`;
+    resultDiv.innerHTML = `<div class="ops-result">Checking requirements for ${escHtml(airlineName)}...</div>`;
 
     try {
       const res  = await fetch(`/api/tools/check-docs?airline=${encodeURIComponent(airlineName)}`);
       const data = await res.json();
 
       const statusBadge = data.hasDocs
-        ? `<div style="font-size: 11px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #fde68a;">⚠️ DOCUMENTS REQUIRED</div>`
-        : `<div style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 6px; display: inline-block; border: 1px solid #bbf7d0;">✅ NO EXTRA DOCS REQUIRED</div>`;
+        ? `<span class="ops-badge ops-badge--warning">Documents Required</span>`
+        : `<span class="ops-badge ops-badge--success">No Extra Docs Required</span>`;
 
       const reqsDisplay = data.hasDocs
-        ? `<div style="font-size: 15px; font-weight: 600; color: #0f172a; line-height: 1.5;">${data.reqs}</div>`
-        : `<div style="font-size: 15px; font-weight: 600; color: #16a34a; line-height: 1.5;">${data.reqs}</div>`;
+        ? `<div class="ops-note">${escHtml(data.reqs || '')}</div>`
+        : `<div class="ops-note" style="color:var(--success);">${escHtml(data.reqs || '')}</div>`;
 
       const jurisdictionKey = (data.country || '').toLowerCase().trim();
       const jurisdictionVal = jurisdictionLimits[jurisdictionKey];
       const jurisdictionSuffix = jurisdictionVal !== undefined ? ` · ${jurisdictionVal} yrs` : '';
 
       resultDiv.innerHTML = `
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 24px; border-radius: 12px; width: 100%; animation: ts-fadeIn 0.4s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div class="ops-result">
+          <div class="ops-result__top">
             <div>
-              <div style="font-size: 18px; font-weight: 800; color: #0f172a; text-transform: capitalize;">✈️ ${data.airline}</div>
-              <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-                <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">IATA: ${data.iata}</span>
-                <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">ICAO: ${data.icao}</span>
-                <span style="background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700;">🌍 ${data.country}${jurisdictionSuffix}</span>
+              <div class="ops-result__title">${escHtml(data.airline || airlineName)}</div>
+              <div class="ops-badges">
+                <span class="ops-badge">IATA ${escHtml(data.iata || 'N/A')}</span>
+                <span class="ops-badge">ICAO ${escHtml(data.icao || 'N/A')}</span>
+                <span class="ops-badge">${escHtml((data.country || 'Unknown') + jurisdictionSuffix)}</span>
               </div>
             </div>
             ${statusBadge}
           </div>
-          <div style="border-top: 1px solid #cbd5e1; padding-top: 16px;">
-            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Required Claim Documents</div>
-            ${reqsDisplay}
+          <div class="ops-row">
+            <span class="ops-row__label">Required Claim Documents</span>
+            <span class="ops-row__value">${data.hasDocs ? 'Review needed' : 'Clear'}</span>
           </div>
+          ${reqsDisplay}
         </div>`;
     } catch (err) {
-      resultDiv.innerHTML = `<div style="background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 8px; font-weight: 700; border: 1px solid #fecaca;">❌ Error fetching document requirements.</div>`;
+      resultDiv.innerHTML = `<div class="ops-result ops-result--danger">Error fetching document requirements.</div>`;
     }
   }
 
@@ -395,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
               item.className = 'autocomplete-item';
               item.innerHTML = `
                 <div class="ac-top" style="align-items: center; padding: 4px 0;">
-                  <span class="ac-city" style="color: #334155; font-weight: 600; font-size: 14px;">${airline.name}</span>
+                  <span class="ac-city">${escHtml(airline.name || '')}</span>
                 </div>`;
               item.addEventListener('click', () => {
                 input.value        = airline.name;
@@ -417,6 +450,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupAirlineAutocomplete('d-airline');
+  const docCheckBtn = document.getElementById('btn-doc-check');
+  if (docCheckBtn) {
+    docCheckBtn.addEventListener('click', () => {
+      const airlineName = (document.getElementById('d-airline').value || '').trim();
+      if (!airlineName) return alert('Airline is required.');
+      fetchAndDisplayDocs(airlineName);
+    });
+  }
 
   // ---------------------------------------------------------------------------
   // CIRIUM FLIGHT STATUS
@@ -575,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!date) return alert('Date is required to scan EOCs!');
 
-    btn.innerHTML = '⏳ Scanning...';
+    btn.textContent = 'Scanning...';
     btn.disabled  = true;
 
     try {
@@ -585,30 +626,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.eocFound && data.events && data.events.length > 0) {
         const headerText = data.events.length > 1
-          ? `⚠️ MULTIPLE EXTRAORDINARY CIRCUMSTANCES DETECTED (${data.events.length})`
-          : `⚠️ EXTRAORDINARY CIRCUMSTANCE DETECTED`;
+          ? `Multiple Extraordinary Circumstances Detected (${data.events.length})`
+          : 'Extraordinary Circumstance Detected';
 
-        const eventsHtml = data.events.map((ev, index) => `
-          <div style="${index > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px dashed #fca5a5;' : ''}color:#450a0a;display:grid;grid-template-columns:max-content 1fr;gap:8px 12px;align-items:baseline;">
-            <strong style="color:#991b1b;">Category:</strong> <span>${ev.category}</span>
-            <strong style="color:#991b1b;">Event:</strong>    <span>${ev.event}</span>
-            <strong style="color:#991b1b;">Location:</strong> <span>${ev.location}</span>
-            <strong style="color:#991b1b;">Decision:</strong> <span style="font-weight:800;color:#dc2626;">${ev.decision}</span>
+        const eventsHtml = data.events.map((ev) => `
+          <div class="eoc-tool__event">
+            <span class="eoc-tool__event-label">Category</span>
+            <span class="eoc-tool__event-value">${escHtml(ev.category || '')}</span>
+            <span class="eoc-tool__event-label">Event</span>
+            <span class="eoc-tool__event-value">${escHtml(ev.event || '')}</span>
+            <span class="eoc-tool__event-label">Location</span>
+            <span class="eoc-tool__event-value">${escHtml(ev.location || '')}</span>
+            <span class="eoc-tool__event-label">Decision</span>
+            <span class="eoc-tool__event-value eoc-tool__event-value--decision">${escHtml(ev.decision || '')}</span>
           </div>`).join('');
 
         resultDiv.innerHTML = `
-          <div class="eoc-alert-active" style="background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #ef4444;padding:20px;border-radius:8px;color:#7f1d1d;">
-            <div style="font-weight:800;color:#dc2626;margin-bottom:12px;text-transform:uppercase;font-size:13px;">${headerText}</div>
+          <div class="eoc-tool__result eoc-tool__result--danger">
+            <div class="eoc-tool__result-title">${headerText}</div>
             ${eventsHtml}
           </div>`;
       } else {
-        resultDiv.innerHTML = `<div style="background:#dcfce7;color:#166534;padding:16px;border-radius:8px;font-weight:700;border:1px solid #bbf7d0;">✅ No EOCs found for this route on this date.</div>`;
+        resultDiv.innerHTML = `
+          <div class="eoc-tool__result eoc-tool__result--clear">
+            <p class="eoc-tool__clear-text">No EOCs found for this route on this date.</p>
+          </div>`;
       }
     } catch (err) {
-      resultDiv.innerHTML = '❌ Error scanning EOC database.';
+      resultDiv.innerHTML = `
+        <div class="eoc-tool__notice eoc-tool__notice--danger">
+          Error scanning EOC database.
+        </div>`;
     }
 
-    btn.innerHTML = '⚠️ Scan EOC Database';
+    btn.textContent = 'Scan EOC Database';
     btn.disabled  = false;
   });
 
@@ -620,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultDiv = document.getElementById('syncEocResult');
     const orig      = btn.innerHTML;
 
-    btn.innerHTML = '⏳ Syncing...';
+    btn.textContent = 'Syncing...';
     btn.disabled  = true;
     resultDiv.innerHTML = '';
 
@@ -631,12 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         const deltaColor = data.delta > 0 ? '#16a34a' : (data.delta < 0 ? '#dc2626' : '#64748b');
         const deltaLabel = data.delta > 0 ? `+${data.delta} new` : (data.delta < 0 ? `${data.delta} removed` : 'no change');
-        resultDiv.innerHTML = `<div style="background:#f0fdf4;color:#166534;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #bbf7d0;margin-bottom:12px;font-size:13px;">✅ Synced ${data.newCount} records <span style="color:${deltaColor};margin-left:8px;">(${deltaLabel})</span></div>`;
+        resultDiv.innerHTML = `<div class="eoc-tool__notice eoc-tool__notice--success">Synced ${data.newCount} records <span style="color:${deltaColor};margin-left:8px;">(${deltaLabel})</span></div>`;
       } else {
-        resultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;margin-bottom:12px;font-size:13px;">❌ Sync failed: ${data.error || 'Unknown error'}</div>`;
+        resultDiv.innerHTML = `<div class="eoc-tool__notice eoc-tool__notice--danger">Sync failed: ${escHtml(data.error || 'Unknown error')}</div>`;
       }
     } catch {
-      resultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;margin-bottom:12px;font-size:13px;">❌ Network error during sync.</div>`;
+      resultDiv.innerHTML = `<div class="eoc-tool__notice eoc-tool__notice--danger">Network error during sync.</div>`;
     }
 
     btn.innerHTML = orig;
@@ -698,15 +749,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resultDiv.innerHTML = `
-      <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:24px;border-radius:12px;display:grid;grid-template-columns:1fr 1fr;gap:16px;animation:ts-fadeIn 0.4s ease;">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Flight Distance</div>
-          <div style="font-size:20px;font-weight:800;color:#0f172a;">${dist} km</div>
-          <div style="font-size:12px;color:#64748b;margin-top:2px;">${type}</div>
+      <div class="ops-result">
+        <div class="comp-result">
+          <div class="comp-result__amount">${comp}</div>
+          <div class="comp-result__caption">Statutory compensation per passenger</div>
         </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Compensation Amount</div>
-          <div style="font-size:24px;font-weight:800;color:#16a34a;">💸 ${comp}</div>
+        <div class="ops-row">
+          <span class="ops-row__label">Route</span>
+          <span class="ops-row__value ops-row__value--mono">${escHtml((oInput.dataset.iata || oInput.value || '???').toUpperCase())} → ${escHtml((dInput.dataset.iata || dInput.value || '???').toUpperCase())}</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row__label">Distance</span>
+          <span class="ops-row__value">${dist} km</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row__label">Band</span>
+          <span class="ops-row__value">${type}</span>
+        </div>
+        <div class="ops-row">
+          <span class="ops-row__label">Regulation</span>
+          <span class="ops-row__value">EU 261/2004</span>
         </div>
       </div>`;
   });
@@ -721,10 +783,10 @@ document.addEventListener('DOMContentLoaded', () => {
   async function runIataLookup() {
     const val = (iataInput.value || '').trim().toLowerCase();
     if (val.length < 2) {
-      iataResultDiv.innerHTML = `<div style="color:#64748b;font-size:14px;padding:8px 0;">Enter at least 2 characters.</div>`;
+      iataResultDiv.innerHTML = `<div class="ops-result">Enter at least 2 characters.</div>`;
       return;
     }
-    iataBtn.innerHTML = '⏳ Searching...';
+    iataBtn.textContent = 'Searching...';
     iataBtn.disabled  = true;
     try {
       const res  = await fetch(`/api/tools/lookup-iata?q=${encodeURIComponent(val)}`);
@@ -732,42 +794,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!data.length) {
         iataResultDiv.innerHTML = `
-          <div style="background:#f1f5f9;border:1px solid #e2e8f0;padding:16px;border-radius:8px;color:#64748b;font-weight:600;">
-            No airlines found for "${val}".
+          <div class="ops-result ops-result--warning">
+            No airlines found for "${escHtml(val)}".
           </div>`;
         return;
       }
 
       const rows = data.map(a => `
         <tr>
-          <td style="padding:10px 12px;font-weight:700;color:#0f172a;">${a.name}</td>
-          <td style="padding:10px 12px;text-align:center;">
-            <span style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-weight:800;font-size:13px;color:#1e293b;">${a.iata || '—'}</span>
-          </td>
-          <td style="padding:10px 12px;text-align:center;">
-            <span style="background:#eff6ff;padding:3px 8px;border-radius:5px;font-weight:700;font-size:13px;color:#1d4ed8;">${a.icao || '—'}</span>
-          </td>
-          <td style="padding:10px 12px;color:#475569;font-size:13px;">${a.country || '—'}</td>
+          <td>${escHtml(a.name || 'Unknown')}</td>
+          <td><span class="ops-table__code">${escHtml(a.iata || '—')}</span></td>
+          <td><span class="ops-table__code">${escHtml(a.icao || '—')}</span></td>
+          <td>${escHtml(a.country || '—')}</td>
         </tr>`).join('');
 
       iataResultDiv.innerHTML = `
-        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;">
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <div class="ops-table-wrap">
+          <table class="ops-table">
             <thead>
-              <tr style="background:#e2e8f0;">
-                <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Airline</th>
-                <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">IATA</th>
-                <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">ICAO</th>
-                <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Country</th>
+              <tr>
+                <th>Airline</th>
+                <th>IATA</th>
+                <th>ICAO</th>
+                <th>Country</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
         </div>`;
     } catch (err) {
-      iataResultDiv.innerHTML = `<div style="background:#fef2f2;color:#991b1b;padding:16px;border-radius:8px;font-weight:700;border:1px solid #fecaca;">❌ Error fetching IATA data.</div>`;
+      iataResultDiv.innerHTML = `<div class="ops-result ops-result--danger">Error fetching IATA data.</div>`;
     } finally {
-      iataBtn.innerHTML = '🔍 Search';
+      iataBtn.textContent = 'Search';
       iataBtn.disabled  = false;
     }
   }
@@ -780,6 +838,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------------------------------------------------------------------------
   const fsFlightInput = document.getElementById('fs-flight');
   const fsDateInput   = document.getElementById('fs-date');
+  const fsSearchBtn   = document.getElementById('btn-flight-search');
+
+  function updateFlightSearchButton() {
+    if (!fsSearchBtn) return;
+    const hasFlight = !!(fsFlightInput && fsFlightInput.value.trim());
+    const hasDate   = !!(fsDateInput && fsDateInput.value);
+    fsSearchBtn.disabled = !(hasFlight && hasDate);
+  }
 
   if (fsDateInput) {
     fsDateInput.addEventListener('paste', (e) => {
@@ -788,13 +854,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const parsed = parseDateFromDisplay(pastedText);
       if (parsed) {
         fsDateInput.value = parsed;
+        updateFlightSearchButton();
       } else {
         alert('Could not read that date. Please use the calendar or type YYYY-MM-DD.');
       }
     });
+    fsDateInput.addEventListener('input', updateFlightSearchButton);
+    fsDateInput.addEventListener('change', updateFlightSearchButton);
   }
 
-  document.getElementById('btn-flight-search').addEventListener('click', () => {
+  if (fsFlightInput) {
+    fsFlightInput.addEventListener('input', updateFlightSearchButton);
+  }
+
+  updateFlightSearchButton();
+
+  fsSearchBtn.addEventListener('click', () => {
     const raw  = (fsFlightInput.value || '').trim();
     const date = fsDateInput.value;
 
@@ -822,7 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (fsFlightInput) {
     fsFlightInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('btn-flight-search').click();
+      if (e.key === 'Enter') fsSearchBtn.click();
     });
   }
 
@@ -835,9 +910,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('emLastLanguage')) {
     emLanguageSelect.value = localStorage.getItem('emLastLanguage');
   }
+  const emOutputTab = document.querySelector('.stab[data-preview-tab="output"]');
+  if (emOutputTab) emOutputTab.textContent = emLanguageSelect.value;
   emLanguageSelect.addEventListener('change', () => {
     localStorage.setItem('emLastLanguage', emLanguageSelect.value);
+    if (emOutputTab) emOutputTab.textContent = emLanguageSelect.value;
   });
+
+  function updateEmailPillStates() {
+    document.querySelectorAll('.pill.em-checklist-item').forEach(pill => {
+      const input = pill.querySelector('input[type="checkbox"]');
+      const isRejection = pill.classList.contains('rejection');
+      pill.classList.toggle('sel', !!input?.checked && !isRejection);
+      pill.classList.toggle('sel-r', !!input?.checked && isRejection);
+    });
+  }
+
+  document.querySelectorAll('.pill.em-checklist-item input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', updateEmailPillStates);
+  });
+  updateEmailPillStates();
 
   // Inner tab switching
   document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
@@ -860,6 +952,53 @@ document.addEventListener('DOMContentLoaded', () => {
     emUseNote.addEventListener('change', () => {
       emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
     });
+  }
+
+  let emHasGeneratedContent = false;
+  let emLastPayload = null;
+  function showEmailPreviewTab(tabName) {
+    document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.previewTab === tabName);
+    });
+    const output = document.getElementById('emResultBox');
+    const verify = document.getElementById('emEnglishBox');
+    const placeholder = document.getElementById('emPlaceholder');
+    if (output) output.style.display = emHasGeneratedContent && tabName === 'output' ? 'block' : 'none';
+    if (verify) verify.style.display = emHasGeneratedContent && tabName === 'verify' ? 'block' : 'none';
+    if (placeholder) placeholder.style.display = emHasGeneratedContent ? 'none' : 'flex';
+  }
+
+  document.querySelectorAll('.stab[data-preview-tab]').forEach(tab => {
+    tab.addEventListener('click', () => showEmailPreviewTab(tab.dataset.previewTab));
+  });
+
+  function restoreEmailFormFromPayload(payload) {
+    if (!payload) return false;
+
+    document.querySelectorAll('.em-inner-tab-btn').forEach(btn => {
+      if (btn.dataset.emTab === payload.mode) btn.click();
+    });
+
+    if (payload.mode === 'request') {
+      const selected = new Set(payload.selectedTemplates || []);
+      document.querySelectorAll('input[name="emTemplates"]').forEach(cb => {
+        cb.checked = selected.has(cb.value);
+      });
+      updateEmailPillStates();
+      document.getElementById('emLink').value = payload.link || '';
+      if (emUseNote) {
+        emUseNote.checked = !!payload.customNote;
+        emNoteArea.style.display = emUseNote.checked ? 'block' : 'none';
+      }
+      document.getElementById('emCustomNote').value = payload.customNote || '';
+      document.getElementById('emUseWrapper').checked = payload.useWrapper !== false;
+    } else {
+      document.getElementById('emDraftText').value = payload.draftText || '';
+      const toneInput = document.querySelector(`input[name="emTone"][value="${payload.tone || 'neutral'}"]`);
+      if (toneInput) toneInput.checked = true;
+    }
+
+    return true;
   }
 
   // Form submission
@@ -902,9 +1041,12 @@ document.addEventListener('DOMContentLoaded', () => {
       payload = { ...payload, draftText, tone };
     }
 
+    emLastPayload           = { ...payload };
     btn.disabled            = true;
-    btn.innerHTML           = '⏳ Generating...';
+    btn.textContent         = 'Generating...';
+    emHasGeneratedContent   = false;
     resultBox.style.display = 'none';
+    showEmailPreviewTab('output');
 
     try {
       const response = await fetch('/api/generate-email', {
@@ -915,20 +1057,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       if (data.success) {
-        outputText.value = data.email;
+        outputText.textContent = data.email;
         const wordCount  = data.email.trim().split(/\s+/).length;
         const charCount  = data.email.length;
-        charCountDiv.textContent = `${wordCount} words · ${charCount} characters`;
+        charCountDiv.textContent = `${wordCount} words - ${charCount} chars`;
 
-        if (data.englishTranslation) {
-          englishTextDiv.textContent = data.englishTranslation;
-          englishBox.style.display   = 'block';
-        } else {
-          englishBox.style.display = 'none';
-        }
-        resultBox.style.display = 'block';
+        englishTextDiv.textContent = data.englishTranslation || data.email;
+        emHasGeneratedContent = true;
+        showEmailPreviewTab('output');
 
         document.querySelectorAll('input[name="emTemplates"]').forEach(cb => cb.checked = false);
+        updateEmailPillStates();
         document.getElementById('emLink').value = '';
         if (emUseNote) { emUseNote.checked = false; emNoteArea.style.display = 'none'; }
         document.getElementById('emCustomNote').value = '';
@@ -943,17 +1082,20 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Network error while generating content.');
     } finally {
       btn.disabled  = false;
-      btn.innerHTML = '✨ Generate';
+      btn.textContent = 'Generate Email';
     }
   });
 
   document.getElementById('emCopyBtn').addEventListener('click', () => {
-    const text    = document.getElementById('emOutputText');
-    text.select();
-    document.execCommand('copy');
-    const btn     = document.getElementById('emCopyBtn');
-    btn.innerHTML = '✅ Copied!';
-    setTimeout(() => { btn.innerHTML = '📋 Copy'; }, 2000);
+    const text = document.getElementById('emOutputText').textContent;
+    const btn  = document.getElementById('emCopyBtn');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy Email'; }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
+    });
   });
 
   const copyEnglishBtn = document.getElementById('emCopyEnglishBtn');
@@ -961,12 +1103,21 @@ document.addEventListener('DOMContentLoaded', () => {
     copyEnglishBtn.addEventListener('click', () => {
       const englishText = document.getElementById('emEnglishText').textContent;
       navigator.clipboard.writeText(englishText).then(() => {
-        copyEnglishBtn.innerHTML = '✅ Copied!';
-        setTimeout(() => { copyEnglishBtn.innerHTML = '📋 Copy English'; }, 2000);
+        copyEnglishBtn.textContent = 'Copied!';
+        setTimeout(() => { copyEnglishBtn.textContent = 'Copy English'; }, 2000);
       }).catch(err => {
         console.error('Failed to copy:', err);
         alert('Failed to copy to clipboard');
       });
+    });
+  }
+
+  const emRegenBtn = document.getElementById('emRegenBtn');
+  if (emRegenBtn) {
+    emRegenBtn.addEventListener('click', () => {
+      if (restoreEmailFormFromPayload(emLastPayload)) {
+        document.getElementById('emailBuilderForm').requestSubmit();
+      }
     });
   }
 
@@ -1010,12 +1161,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let annAllData      = [];
-  let annActiveSubject = 'All';
+  let annActiveSubject = null;
+
+  function annVisibleData(data, subjectFilter) {
+    return data.filter(a => {
+      const subjectMatch = !subjectFilter || subjectFilter === 'All' || a.subject === subjectFilter;
+      return subjectMatch;
+    });
+  }
 
   function annRefresh() {
     const subjects = [...new Set(annAllData.map(a => a.subject))].sort();
     annRenderChips(subjects);
-    annRenderTimeline(annAllData, annActiveSubject);
+    if (!annActiveSubject) {
+      annClearPreview();
+      return;
+    }
+    annRenderTimeline(annVisibleData(annAllData, annActiveSubject));
   }
 
   function annRenderChips(subjects) {
@@ -1023,16 +1185,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const all       = ['All', ...subjects];
     container.innerHTML = all.map(s => {
       const active = s === annActiveSubject ? ' active' : '';
-      return `<button class="ann-chip${active}" data-subject="${s}">${s}</button>`;
+      const count = s === 'All' ? annAllData.length : annAllData.filter(a => a.subject === s).length;
+      return `<button class="ann-chip${active}" data-subject="${escHtml(s)}"><span>${escHtml(s)}</span><span class="ann-badge">${count}</span></button>`;
     }).join('');
   }
 
-  function annRenderTimeline(data, subjectFilter) {
+  function annRenderTimeline(filtered) {
     const listEl = document.getElementById('ann-list');
-    let filtered = subjectFilter && subjectFilter !== 'All'
-      ? data.filter(a => a.subject === subjectFilter)
-      : data;
-
     if (!filtered.length) {
       listEl.innerHTML = '<div class="ann-empty">No announcements found.</div>';
       return;
@@ -1059,10 +1218,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="ann-card" data-id="${id}">
             <div class="ann-card-header">
               <span class="ann-channel-badge" style="background:${color};">${escHtml(a.subject)}</span>
-              <span class="ann-announcer">${escHtml(a.announcer)}</span>
-              <span class="ann-date-pill">${annFormatDate(a.date)}</span>
+              <div class="ann-card-meta">
+                <span class="ann-announcer">${escHtml(a.announcer)}</span>
+                <span class="ann-date-pill">${annFormatDate(a.date)}</span>
+              </div>
               <button class="ann-delete-btn" data-id="${id}" title="Delete">✕</button>
             </div>
+            <div class="ann-card-subject">${escHtml(a.subject)}</div>
             <div class="ann-content">${a.content}</div>
             ${imagesHtml}
           </div>`;
@@ -1071,8 +1233,163 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
+  function annClearPreview() {
+    const listEl = document.getElementById('ann-list');
+    if (listEl) listEl.innerHTML = '';
+  }
+
   function escHtml(str) {
+    str = String(str || '');
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function stripTags(str) {
+    return String(str || '').replace(/<[^>]+>/g, ' ');
+  }
+
+  const annUploadUrls = new Map();
+
+  function annFileSize(bytes) {
+    if (!bytes) return '0 KB';
+    if (bytes < 1048576) return `${Math.ceil(bytes / 1024)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  }
+
+  function annFilesFromList(fileList) {
+    return [...(fileList || [])].filter(file => file.type.startsWith('image/'));
+  }
+
+  function annSetInputFiles(input, files) {
+    const transfer = new DataTransfer();
+    files.forEach(file => transfer.items.add(file));
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function annResetUploadReview(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    annSetInputFiles(input, []);
+  }
+
+  function annRenderUploadReview(zone, input) {
+    const list = zone.querySelector('[data-upload-list]');
+    if (!list) return;
+    const previousUrls = annUploadUrls.get(input.id) || [];
+    previousUrls.forEach(url => URL.revokeObjectURL(url));
+    const nextUrls = [];
+    const files = annFilesFromList(input.files);
+    zone.classList.toggle('has-files', files.length > 0);
+    if (!files.length) {
+      list.innerHTML = '';
+      annUploadUrls.set(input.id, nextUrls);
+      return;
+    }
+    list.innerHTML = files.map((file, index) => {
+      const url = URL.createObjectURL(file);
+      nextUrls.push(url);
+      return `
+        <div class="ann-upload-item" data-index="${index}">
+          <img class="ann-upload-thumb" src="${url}" alt="">
+          <div class="ann-upload-meta">
+            <div class="ann-upload-name">${escHtml(file.name || 'Pasted screenshot')}</div>
+            <div class="ann-upload-size">${annFileSize(file.size)}</div>
+          </div>
+          <button class="ann-upload-remove" type="button" data-upload-remove="${index}" aria-label="Remove screenshot">x</button>
+        </div>`;
+    }).join('');
+    annUploadUrls.set(input.id, nextUrls);
+  }
+
+  function annAddUploadFiles(input, files, append) {
+    const images = annFilesFromList(files);
+    if (!images.length) return false;
+    const nextFiles = append ? [...annFilesFromList(input.files), ...images] : [images[0]];
+    annSetInputFiles(input, nextFiles);
+    return true;
+  }
+
+  function annSetupUploadReview(inputId) {
+    const input = document.getElementById(inputId);
+    const zone = document.querySelector(`[data-upload-zone][data-input-id="${inputId}"]`);
+    if (!input || !zone) return;
+    const append = zone.dataset.multiple === 'true';
+    const browse = zone.querySelector('[data-upload-browse]');
+
+    browse?.addEventListener('click', () => input.click());
+    zone.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      input.click();
+    });
+    input.addEventListener('change', () => annRenderUploadReview(zone, input));
+
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('is-dragging');
+    });
+    zone.addEventListener('dragleave', e => {
+      if (!zone.contains(e.relatedTarget)) zone.classList.remove('is-dragging');
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('is-dragging');
+      annAddUploadFiles(input, e.dataTransfer?.files, append);
+    });
+    zone.addEventListener('paste', e => {
+      const items = [...(e.clipboardData?.items || [])].map(item => item.getAsFile()).filter(Boolean);
+      if (annAddUploadFiles(input, items, append)) {
+        e.preventDefault();
+      }
+    });
+    zone.closest('.ann-drawer')?.addEventListener('paste', e => {
+      if (e.target.closest('[data-upload-zone]')) return;
+      const items = [...(e.clipboardData?.items || [])].map(item => item.getAsFile()).filter(Boolean);
+      if (annAddUploadFiles(input, items, append)) e.preventDefault();
+    });
+    zone.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    zone.querySelector('[data-upload-list]')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-upload-remove]');
+      if (!btn) return;
+      const removeIndex = Number(btn.dataset.uploadRemove);
+      const nextFiles = annFilesFromList(input.files).filter((_, index) => index !== removeIndex);
+      annSetInputFiles(input, nextFiles);
+    });
+  }
+
+  function annSetActiveSubject(subject) {
+    annActiveSubject = subject;
+    annClosePanels();
+    annRefresh();
+  }
+
+  function annOpenPanel(name) {
+    const stack = document.getElementById('ann-panel-stack');
+    if (!stack) return;
+    document.querySelectorAll('#panel-announcements .ann-drawer').forEach(panel => {
+      panel.classList.toggle('is-open', panel.id === `ann-${name}-panel`);
+    });
+    stack.classList.toggle('is-interactions', name === 'interactions');
+    if (name === 'saved' || name === 'interactions') {
+      annActiveSubject = null;
+      annRefresh();
+    }
+    if (name === 'saved') {
+      annRenderSaved();
+    }
+    stack.classList.add('is-open');
+  }
+
+  function annClosePanels() {
+    const stack = document.getElementById('ann-panel-stack');
+    if (!stack) return;
+    stack.classList.remove('is-open');
+    stack.classList.remove('is-interactions');
+    document.querySelectorAll('#panel-announcements .ann-drawer').forEach(panel => panel.classList.remove('is-open'));
   }
 
   async function annLoad() {
@@ -1090,9 +1407,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ann-submit-btn').addEventListener('click', async () => {
     const announcer = document.getElementById('ann-announcer').value.trim();
     const date      = document.getElementById('ann-date').value;
-    const subject   = document.getElementById('ann-subject').value.trim();
     const content   = document.getElementById('ann-content').value.trim();
-    if (!announcer || !date || !subject || !content) {
+    if (!announcer || !date || !content) {
       alert('Please fill in all fields.');
       return;
     }
@@ -1103,7 +1419,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const formData = new FormData();
       formData.append('announcer', announcer);
       formData.append('date', date);
-      formData.append('subject', subject);
       formData.append('content', content);
       const files = document.getElementById('ann-images').files;
       for (const file of files) formData.append('images', file);
@@ -1113,11 +1428,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         document.getElementById('ann-announcer').value = '';
         document.getElementById('ann-date').value      = '';
-        document.getElementById('ann-subject').value   = '';
         document.getElementById('ann-content').value   = '';
-        document.getElementById('ann-images').value    = '';
+        annResetUploadReview('ann-images');
         // Insert at front (newest first) and re-render immediately — no second fetch
         annAllData.unshift(data.announcement);
+        annActiveSubject = data.announcement.subject;
+        annClosePanels();
         annRefresh();
       } else {
         alert(data.error || 'Failed to save.');
@@ -1126,14 +1442,30 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Network error.');
     } finally {
       btn.disabled    = false;
-      btn.textContent = '➕ Add Announcement';
+      btn.textContent = 'Add Announcement';
     }
   });
 
   document.getElementById('ann-subject-chips').addEventListener('click', e => {
-    if (!e.target.classList.contains('ann-chip')) return;
-    annActiveSubject = e.target.dataset.subject;
-    annRefresh();
+    const chip = e.target.closest('.ann-chip');
+    if (!chip) return;
+    annSetActiveSubject(chip.dataset.subject);
+  });
+
+  const annFocusAsk = document.getElementById('ann-focus-ask');
+  if (annFocusAsk) {
+    annFocusAsk.addEventListener('click', () => {
+      annClosePanels();
+      document.getElementById('ann-question')?.focus();
+    });
+  }
+
+  document.querySelectorAll('#panel-announcements [data-ann-panel]').forEach(btn => {
+    btn.addEventListener('click', () => annOpenPanel(btn.dataset.annPanel));
+  });
+
+  document.querySelectorAll('#panel-announcements [data-ann-panel-close]').forEach(btn => {
+    btn.addEventListener('click', annClosePanels);
   });
 
   document.getElementById('ann-list').addEventListener('click', async e => {
@@ -1150,20 +1482,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Ask AI
-  const annAnswerBox = document.getElementById('ann-answer-box');
-
   async function annAsk() {
     const question = document.getElementById('ann-question').value.trim();
     if (!question) return;
     const btn = document.getElementById('ann-ask-btn');
+    const listEl = document.getElementById('ann-list');
     btn.disabled    = true;
     btn.textContent = 'Thinking...';
-    annAnswerBox.className = 'ann-answer-box visible';
-    annAnswerBox.innerHTML = `
-      <div class="ann-answer-label">AI Answer</div>
-      <div class="ann-answer-question">${escHtml(question)}</div>
-      <div class="ann-answer-loading">Searching through announcements...</div>`;
+    annActiveSubject = null;
+    annRenderChips([...new Set(annAllData.map(a => a.subject))].sort());
+    annClosePanels();
+    listEl.innerHTML = `
+      <div class="ann-answer-box ann-answer-box--preview visible">
+        <div class="ann-answer-label">AI Answer</div>
+        <div class="ann-answer-question">${escHtml(question)}</div>
+        <div class="ann-answer-loading">Searching through announcements...</div>
+      </div>`;
     try {
       const res  = await fetch('/api/tools/announcements/ask', {
         method: 'POST',
@@ -1171,19 +1505,233 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ question }),
       });
       const data = await res.json();
-      annAnswerBox.innerHTML = `
-        <div class="ann-answer-label">AI Answer</div>
-        <div class="ann-answer-question">${escHtml(question)}</div>
-        <div class="ann-answer-text">${data.answer || 'No answer returned.'}</div>`;
+      if (!data.success) throw new Error(data.error || 'Failed to get answer.');
+      listEl.innerHTML = `
+      <div class="ann-answer-box ann-answer-box--preview visible">
+        <div class="ann-answer-text">${data.answer || 'No answer returned.'}</div>
+        <button class="ann-save-answer-btn" type="button">Save Answer</button>
+      </div>`;
+      const saveBtn = listEl.querySelector('.ann-save-answer-btn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+          const saved = annGetSavedAnswers();
+          saved.unshift({
+            id: Date.now().toString(),
+            question,
+            answer: data.answer || 'No answer returned.',
+            savedAt: new Date().toISOString(),
+          });
+          if (saved.length > 100) saved.length = 100;
+          localStorage.setItem('annSavedAnswers', JSON.stringify(saved));
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Saved';
+          annRenderSaved();
+        });
+      }
     } catch (err) {
-      annAnswerBox.innerHTML = `
+      listEl.innerHTML = `
+      <div class="ann-answer-box ann-answer-box--preview visible">
         <div class="ann-answer-label">AI Answer</div>
-        <div class="ann-answer-text" style="color:#ef4444;">Failed to get an answer. Please try again.</div>`;
+        <div class="ann-answer-text" style="color:#ef4444;">Failed to get an answer. Please try again.</div>
+      </div>`;
     } finally {
       btn.disabled    = false;
       btn.textContent = 'Ask AI';
     }
   }
+
+  function annGetSavedAnswers() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('annSavedAnswers') || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function annRenderSaved() {
+    const list = document.getElementById('ann-saved-list');
+    if (!list) return;
+    const saved = annGetSavedAnswers();
+    if (!saved.length) {
+      list.innerHTML = '<div class="ann-empty">No saved answers yet.</div>';
+      return;
+    }
+    list.innerHTML = saved.map(sa => `
+      <div class="ann-saved-card" data-id="${escHtml(sa.id)}">
+        <button class="ann-saved-toggle" type="button" aria-expanded="false">
+          <span class="ann-saved-question">${escHtml(sa.question)}</span>
+          <span class="ann-saved-toggle-icon">+</span>
+        </button>
+        <div class="ann-saved-answer" hidden>${sa.answer || ''}</div>
+        <div class="ann-saved-meta">
+          <span>${annFormatDate(String(sa.savedAt || '').slice(0, 10))}</span>
+          <button class="ann-saved-delete-btn" data-id="${escHtml(sa.id)}" type="button">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('ann-saved-list')?.addEventListener('click', e => {
+    const deleteBtn = e.target.closest('.ann-saved-delete-btn');
+    if (deleteBtn) {
+      if (!confirm('Delete this saved answer?')) return;
+      const filtered = annGetSavedAnswers().filter(sa => sa.id !== deleteBtn.dataset.id);
+      localStorage.setItem('annSavedAnswers', JSON.stringify(filtered));
+      annRenderSaved();
+      return;
+    }
+
+    const toggleBtn = e.target.closest('.ann-saved-toggle');
+    if (!toggleBtn) return;
+    const card = toggleBtn.closest('.ann-saved-card');
+    const answer = card?.querySelector('.ann-saved-answer');
+    const icon = toggleBtn.querySelector('.ann-saved-toggle-icon');
+    if (!answer) return;
+    const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    toggleBtn.setAttribute('aria-expanded', String(!expanded));
+    answer.hidden = expanded;
+    card.classList.toggle('is-expanded', !expanded);
+    if (icon) icon.textContent = expanded ? '+' : '-';
+  });
+
+  const annSavedPanel = document.getElementById('ann-saved-panel');
+  if (annSavedPanel) {
+    new MutationObserver(() => {
+      if (annSavedPanel.classList.contains('is-open')) annRenderSaved();
+    }).observe(annSavedPanel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // ---------------------------------------------------------------------------
+  // INTERACTION RECORDS
+  // ---------------------------------------------------------------------------
+
+  let intAllRecords = [];
+
+  function intRenderRecords() {
+    const list = document.getElementById('int-records-list');
+    if (!list) return;
+    if (!intAllRecords.length) {
+      list.innerHTML = '<div class="ann-empty">No interaction records yet.</div>';
+      return;
+    }
+    list.innerHTML = intAllRecords.map(record => {
+      const date = annFormatDate(record.date);
+      const screenshotHtml = record.screenshot
+        ? `<img class="int-screenshot" src="${escHtml(record.screenshot)}" alt="Screenshot" loading="lazy">`
+        : '';
+      const notesHtml = record.notes ? `<div class="int-notes">${escHtml(record.notes)}</div>` : '';
+      return `
+        <div class="int-record-card" data-id="${escHtml(record._id)}">
+          <div class="int-record-header">
+            <button class="int-record-toggle" type="button" aria-expanded="false">
+              <span class="int-ticket-badge">${escHtml(record.ticketNumber)}</span>
+              <span class="int-person">${escHtml(record.personName)}</span>
+              <span class="int-date">${date}</span>
+              <span class="int-toggle-icon">+</span>
+            </button>
+            <button class="int-delete-btn" data-id="${escHtml(record._id)}" title="Delete" type="button">x</button>
+          </div>
+          <div class="int-record-body" hidden>
+            ${notesHtml}
+            ${screenshotHtml}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function intLoad() {
+    try {
+      const res = await fetch('/api/tools/interactions');
+      const data = await res.json();
+      if (data.success) {
+        intAllRecords = data.records;
+        intRenderRecords();
+      }
+    } catch (err) {
+      const list = document.getElementById('int-records-list');
+      if (list) list.innerHTML = '<div class="ann-empty">Failed to load records.</div>';
+    }
+  }
+
+  document.getElementById('int-submit-btn')?.addEventListener('click', async () => {
+    const ticketNumber = document.getElementById('int-ticket').value.trim();
+    const personName = document.getElementById('int-person').value.trim();
+    const date = document.getElementById('int-date').value;
+    const notes = document.getElementById('int-notes').value.trim();
+    if (!ticketNumber || !personName || !date) {
+      alert('Ticket number, person name, and date are required.');
+      return;
+    }
+    const btn = document.getElementById('int-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      const formData = new FormData();
+      formData.append('ticketNumber', ticketNumber);
+      formData.append('personName', personName);
+      formData.append('date', date);
+      formData.append('notes', notes);
+      const fileInput = document.getElementById('int-screenshot');
+      if (fileInput.files[0]) formData.append('screenshot', fileInput.files[0]);
+
+      const res = await fetch('/api/tools/interactions', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('int-ticket').value = '';
+        document.getElementById('int-person').value = '';
+        document.getElementById('int-date').value = '';
+        document.getElementById('int-notes').value = '';
+        annResetUploadReview('int-screenshot');
+        intAllRecords.unshift(data.record);
+        intRenderRecords();
+      } else {
+        alert(data.error || 'Failed to save.');
+      }
+    } catch (err) {
+      alert('Network error.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Record';
+    }
+  });
+
+  document.getElementById('int-records-list')?.addEventListener('click', async e => {
+    const deleteBtn = e.target.closest('.int-delete-btn');
+    if (deleteBtn) {
+      if (!confirm('Delete this interaction record?')) return;
+      try {
+        await fetch(`/api/tools/interactions/${deleteBtn.dataset.id}`, { method: 'DELETE' });
+        intAllRecords = intAllRecords.filter(record => record._id !== deleteBtn.dataset.id);
+        intRenderRecords();
+      } catch (err) {
+        alert('Failed to delete.');
+      }
+      return;
+    }
+
+    const toggleBtn = e.target.closest('.int-record-toggle');
+    if (!toggleBtn) return;
+    const card = toggleBtn.closest('.int-record-card');
+    const body = card?.querySelector('.int-record-body');
+    const icon = toggleBtn.querySelector('.int-toggle-icon');
+    if (!body) return;
+    const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    toggleBtn.setAttribute('aria-expanded', String(!expanded));
+    body.hidden = expanded;
+    card.classList.toggle('is-expanded', !expanded);
+    if (icon) icon.textContent = expanded ? '+' : '-';
+  });
+
+  const intPanel = document.getElementById('ann-interactions-panel');
+  if (intPanel) {
+    new MutationObserver(() => {
+      if (intPanel.classList.contains('is-open')) intLoad();
+    }).observe(intPanel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  annSetupUploadReview('ann-images');
+  annSetupUploadReview('int-screenshot');
 
   document.getElementById('ann-ask-btn').addEventListener('click', annAsk);
   document.getElementById('ann-question').addEventListener('keydown', e => {

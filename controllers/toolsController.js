@@ -5,6 +5,7 @@ const path = require('path');
 
 const airportsDatabase = require('../airports_data.json');
 const Announcement     = require('../models/Announcement');
+const InteractionRecord = require('../models/InteractionRecord');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
@@ -654,6 +655,11 @@ exports.syncEOC = async (req, res) => {
 
 const ANN_UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'announcements');
 fs.promises.mkdir(ANN_UPLOADS_DIR, { recursive: true }).catch(() => {});
+const INT_UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'interactions');
+fs.promises.mkdir(INT_UPLOADS_DIR, { recursive: true }).catch(() => {});
+let annCacheVersion = 0;
+const annAnswerCache = new Map();
+const ANN_CACHE_MAX = 50;
 
 exports.getAnnouncements = catchAsync(async (req, res) => {
   const announcements = await Announcement.find().sort({ date: -1, createdAt: -1 }).lean();
@@ -661,8 +667,8 @@ exports.getAnnouncements = catchAsync(async (req, res) => {
 });
 
 exports.addAnnouncement = catchAsync(async (req, res) => {
-  const { announcer, subject, date, content } = req.body;
-  if (!announcer || !subject || !date || !content) {
+  const { announcer, date, content } = req.body;
+  if (!announcer || !date || !content) {
     return res.status(400).json({ success: false, error: 'All fields are required.' });
   }
 
@@ -684,13 +690,39 @@ ${content.trim()}
 
   let formattedContent = content.trim();
   try {
-    const model  = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model  = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
     const result = await geminiQueue.run(() => model.generateContent(formatPrompt));
     const raw    = result.response.text().trim();
     // Strip accidental code-fence wrappers the model may add
     formattedContent = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
   } catch (err) {
     console.warn('[Announcement] AI formatting skipped:', err.message);
+  }
+
+  let subject = 'General';
+  try {
+    const existingSubjects = await Announcement.distinct('subject');
+    const labelPrompt = `You are a categorization assistant. Given the announcement text below and the list of existing category labels, assign this announcement to the BEST matching existing label OR create a short new one (1-3 words, Title Case) if none fit.
+
+EXISTING LABELS: ${existingSubjects.length ? existingSubjects.join(', ') : 'None yet'}
+
+ANNOUNCEMENT:
+"""
+${content.trim()}
+"""
+
+RULES:
+- Return ONLY the label text, nothing else - no quotes, no explanation, no punctuation.
+- Prefer reusing an existing label if the topic is close enough.
+- If creating a new label, keep it generic enough to apply to future similar announcements.
+- Examples of good labels: Policy Update, Schedule Change, System Maintenance, HR Notice, Training, Safety Alert`;
+
+    const labelModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const labelResult = await geminiQueue.run(() => labelModel.generateContent(labelPrompt));
+    const rawLabel = labelResult.response.text().trim().replace(/^["']|["']$/g, '').replace(/[<>]/g, '');
+    if (rawLabel && rawLabel.length <= 40) subject = rawLabel;
+  } catch (err) {
+    console.warn('[Announcement] AI labeling skipped:', err.message);
   }
 
   // Save uploaded image files to disk
@@ -704,12 +736,19 @@ ${content.trim()}
   }
 
   const doc = await Announcement.create({ announcer, subject, date, content: formattedContent, images: imagePaths });
+  annCacheVersion++;
   res.json({ success: true, announcement: doc });
 });
 
 exports.askAnnouncements = catchAsync(async (req, res) => {
   const { question } = req.body;
   if (!question?.trim()) return res.status(400).json({ success: false, error: 'Question is required.' });
+
+  const cacheKey = question.trim().toLowerCase();
+  const cached = annAnswerCache.get(cacheKey);
+  if (cached && cached.version === annCacheVersion) {
+    return res.json({ success: true, answer: cached.answer });
+  }
 
   const announcements = await Announcement.find().sort({ date: -1 }).lean();
   if (!announcements.length) {
@@ -724,7 +763,7 @@ exports.askAnnouncements = catchAsync(async (req, res) => {
 
   const prompt = `You are an assistant that answers questions based only on the workplace announcements below.
 
-ANNOUNCEMENTS:
+ANNOUNCEMENTS (sorted newest-first):
 ---
 ${context}
 ---
@@ -735,7 +774,14 @@ INSTRUCTIONS:
 - Answer based ONLY on the announcements above. Do not invent or assume anything.
 - If the answer is found, give a clear direct answer and reference which announcement it came from (by date and subject).
 - If no announcement addresses the question, respond with exactly: "There is no policy or announcement addressing this."
-- Format your response as clean inner HTML using only these tags: <strong>, <ul>, <li>, <br>, <span style="color:...">
+- CONTRADICTION CHECK: Compare announcements chronologically. If a newer announcement contradicts, overrides, or updates information from an older one on the same topic, include a contradiction block using EXACTLY this HTML:
+  <div class="ann-contradiction">
+    <div class="ann-contradiction-title">Update Detected</div>
+    <div class="ann-contradiction-old"><strong>Previous (DATE - SUBJECT):</strong> what the old announcement said</div>
+    <div class="ann-contradiction-new"><strong>Current (DATE - SUBJECT):</strong> what the newer announcement says</div>
+  </div>
+  Always treat the NEWEST announcement as the authoritative source.
+- Format your response as clean inner HTML using only these tags: <strong>, <ul>, <li>, <br>, <span style="color:...">, <div class="ann-contradiction">, <div class="ann-contradiction-title">, <div class="ann-contradiction-old">, <div class="ann-contradiction-new">
 - Use <strong> for key facts, names, deadlines, and action items.
 - Use <ul><li> when listing multiple points.
 - Use <span style="color:#dc2626;font-weight:600"> for urgent or critical items.
@@ -747,16 +793,63 @@ INSTRUCTIONS:
   const raw    = result.response.text().trim();
   const answer = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
 
+  if (annAnswerCache.size >= ANN_CACHE_MAX) {
+    const oldest = annAnswerCache.keys().next().value;
+    annAnswerCache.delete(oldest);
+  }
+  annAnswerCache.set(cacheKey, { answer, version: annCacheVersion });
   res.json({ success: true, answer });
 });
 
 exports.deleteAnnouncement = catchAsync(async (req, res) => {
   const deleted = await Announcement.findByIdAndDelete(req.params.id);
   if (!deleted) return res.status(404).json({ success: false, error: 'Not found.' });
+  annCacheVersion++;
   if (deleted.images && deleted.images.length) {
     await Promise.all(deleted.images.map(imgPath =>
       fs.promises.unlink(path.join(__dirname, '..', 'public', imgPath)).catch(() => {})
     ));
+  }
+  res.json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// INTERACTION RECORDS
+// ---------------------------------------------------------------------------
+
+exports.getInteractions = catchAsync(async (req, res) => {
+  const records = await InteractionRecord.find().sort({ createdAt: -1 }).lean();
+  res.json({ success: true, records });
+});
+
+exports.addInteraction = catchAsync(async (req, res) => {
+  const { ticketNumber, personName, date, notes } = req.body;
+  if (!ticketNumber?.trim() || !personName?.trim() || !date) {
+    return res.status(400).json({ success: false, error: 'Ticket number, person name, and date are required.' });
+  }
+
+  let screenshot = '';
+  if (req.file) {
+    const safeName = `${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    await fs.promises.writeFile(path.join(INT_UPLOADS_DIR, safeName), req.file.buffer);
+    screenshot = `/uploads/interactions/${safeName}`;
+  }
+
+  const doc = await InteractionRecord.create({
+    ticketNumber: ticketNumber.trim(),
+    personName: personName.trim(),
+    date,
+    notes: (notes || '').trim(),
+    screenshot,
+  });
+  res.json({ success: true, record: doc });
+});
+
+exports.deleteInteraction = catchAsync(async (req, res) => {
+  const deleted = await InteractionRecord.findByIdAndDelete(req.params.id);
+  if (!deleted) return res.status(404).json({ success: false, error: 'Not found.' });
+  if (deleted.screenshot) {
+    fs.promises.unlink(path.join(__dirname, '..', 'public', deleted.screenshot)).catch(() => {});
   }
   res.json({ success: true });
 });

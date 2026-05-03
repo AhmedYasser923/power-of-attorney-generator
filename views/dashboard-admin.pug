@@ -1,13 +1,4 @@
-extends layout-app
-
-block sidebar-nav
-  .sidebar__section
-    p.sidebar__label Workspace
-    a.sidebar__link(href="/") Dashboard
-    a.sidebar__link(href="/me") My Usage
-  .sidebar__section
-    p.sidebar__label Administration
-    a.sidebar__link.sidebar__link--active(href="/admin") Admin Panel
+extends layout
 
 block app-content
   - function cc(v) { return (!v || v <= 0) ? '0.00' : (Math.ceil(v * 100) / 100).toFixed(2); }
@@ -17,7 +8,7 @@ block app-content
     p.app-main__subtitle Real-time insights, user management, and cost tracking
     button#reload-clients-btn(
       type="button"
-      style="margin-top:10px; padding:7px 16px; font-size:13px; border:1px solid #d97706; border-radius:6px; background:#fffbeb; color:#b45309; cursor:pointer;"
+      style="margin-top:10px; padding:7px 16px; font-size:13px; border:1px solid var(--warning-border); border-radius:6px; background:var(--warning-dim); color:var(--warning); cursor:pointer;"
       title="Force all connected users to reload their browser"
     ) Reload All Clients
 
@@ -33,7 +24,7 @@ block app-content
         span#daily-cost-stat(data-raw=dailyCost)= cc(dailyCost)
     .stat-card
       p.stat-card__label Pending Signups
-      p.stat-card__value(style="color: #d97706;")#pending-stat-count= pendingCount
+      p.stat-card__value.stat-card__value--amber#pending-stat-count= pendingCount
 
   //- Tab Navigation
   nav.ad-tabs(role="tablist")
