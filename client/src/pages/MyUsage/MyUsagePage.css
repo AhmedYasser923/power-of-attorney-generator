@@ -1,0 +1,317 @@
+.content__inner:has(.my-usage) {
+  width: 100%;
+  max-width: 980px;
+}
+
+.my-usage {
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.my-usage__header {
+  margin-bottom: 20px;
+}
+
+.my-usage__header h1 {
+  margin: 0 0 5px;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.my-usage__header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.my-usage__filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.my-usage__filters label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.my-usage__filters select {
+  min-width: 92px;
+  height: 38px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  color-scheme: dark;
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.my-usage__filters select:focus {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.my-usage__month-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.my-usage__month-stat {
+  min-height: 28px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.my-usage__month-stat-sep {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.my-usage__alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-dim);
+  color: #fca5a5;
+  font-size: 12px;
+}
+
+.my-usage__alert button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #fecaca;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.my-usage__stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.my-usage__stat-card {
+  min-height: 86px;
+  padding: 17px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.my-usage__stat-label {
+  margin: 0 0 10px;
+  color: var(--text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.my-usage__stat-value {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.my-usage__stat-value--accent {
+  color: var(--success);
+}
+
+.my-usage__section {
+  margin-bottom: 14px;
+}
+
+.my-usage__section h2 {
+  margin: 0 0 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.my-usage__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.my-usage__table {
+  width: 100%;
+  min-width: 640px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  border-spacing: 0;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.my-usage__table th {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-inner);
+  background: var(--bg-card);
+  color: var(--text-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.my-usage__table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.my-usage__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.my-usage__table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+
+.my-usage__muted-cell {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+}
+
+.my-usage__cost-cell {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.my-usage__empty-cell {
+  padding: 18px 15px !important;
+  color: var(--text-muted) !important;
+  text-align: center;
+}
+
+.my-usage__op-pill {
+  display: inline-flex;
+  min-height: 19px;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid #2a314d;
+  border-radius: 4px;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.my-usage__op-pill[data-type="ticket_analysis"] {
+  border-color: var(--purple-border);
+  background: var(--purple-dim);
+  color: var(--purple);
+}
+
+.my-usage__op-pill[data-type="poa_standard"],
+.my-usage__op-pill[data-type="poa_lufthansa"],
+.my-usage__op-pill[data-type="poa_aerlingus"] {
+  border-color: var(--success-border);
+  background: var(--success-dim);
+  color: #86efac;
+}
+
+.my-usage__op-pill[data-type="email_translation"] {
+  border-color: var(--warning-border);
+  background: var(--warning-dim);
+  color: #fbbf24;
+}
+
+.my-usage__op-pill[data-type="sig_processing"] {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+  color: #93c5fd;
+}
+
+.my-usage__pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -1px;
+  padding: 10px 15px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--bg-card);
+}
+
+.my-usage__pagination button {
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.my-usage__pagination button:hover:not(:disabled) {
+  color: var(--accent-hover);
+}
+
+.my-usage__pagination button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.my-usage__pagination span {
+  flex: 1;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: center;
+}
+
+@media (max-width: 679px) {
+  .my-usage__filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .my-usage__month-summary {
+    margin-left: 0;
+  }
+
+  .my-usage__stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
