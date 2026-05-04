@@ -8,7 +8,7 @@ const parseJsonResponse = async (response) => {
   return payload;
 };
 
-export const getToolsFlightStatus = async ({ flightNumber, date, signal }) => {
+export const getCiriumFlightStatus = async ({ flightNumber, date, signal }) => {
   const params = new URLSearchParams({
     flightNumber: flightNumber || '',
     date: date || ''

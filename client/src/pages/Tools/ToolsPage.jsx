@@ -4,7 +4,7 @@ import Ec261CalculatorPage from '../Ec261Calculator/Ec261CalculatorPage.jsx';
 import EocRadarPage from '../EocRadar/EocRadarPage.jsx';
 import EmailBuilderPage from '../EmailBuilder/EmailBuilderPage.jsx';
 import FlightSearchPage from '../FlightTools/FlightSearchPage.jsx';
-import FlightStatsPage from '../FlightTools/FlightStatsPage.jsx';
+import FlightStatsPage from '../FlightStats/FlightStatsPage.jsx';
 import IataLookupPage from '../IataLookup/IataLookupPage.jsx';
 import JurisdictionCheckerPage from '../Jurisdiction/JurisdictionCheckerPage.jsx';
 import PoaGeneratorPage from '../PoaGenerator/PoaGeneratorPage.jsx';

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { getToolsFlightStatus } from '../../api/flightTools.js';
-import FlightStatusResult from '../TicketAnalyzer/components/FlightStatusResult.jsx';
-import { getFlightSearchData, parseDateFromDisplay } from './flightToolsUtils.js';
-import './FlightToolsPage.css';
+import { getCiriumFlightStatus } from '../../api/flightStats.js';
+import FlightStatusCard from './FlightStatusCard.jsx';
+import { getFlightStatsSearchData, parseDateFromDisplay } from './flightStatsUtils.js';
+import './FlightStatsPage.css';
 
 export default function FlightStatsPage() {
   const abortRef = useRef(null);
@@ -31,7 +31,7 @@ export default function FlightStatsPage() {
     event.preventDefault();
     setError('');
 
-    const search = getFlightSearchData(flightNumber, date);
+    const search = getFlightStatsSearchData(flightNumber, date);
     if (search.error) {
       setError(search.error);
       return;
@@ -49,7 +49,7 @@ export default function FlightStatsPage() {
     setLoading(true);
 
     try {
-      const data = await getToolsFlightStatus({
+      const data = await getCiriumFlightStatus({
         flightNumber: search.flight.display,
         date,
         signal: controller.signal
@@ -61,6 +61,7 @@ export default function FlightStatsPage() {
         : { id, key, flightNumber: search.flight.display, date, error: data.error || 'Status unavailable.' };
 
       setResults((current) => [nextResult, ...current]);
+      setFlightNumber('');
     } catch (err) {
       if (err.name === 'AbortError') return;
 
@@ -80,19 +81,19 @@ export default function FlightStatsPage() {
   };
 
   return (
-    <section className="flight-tools" aria-labelledby="flight-stats-title">
-      <header className="flight-tools__header">
+    <section className="flight-stats" aria-labelledby="flight-stats-title">
+      <header className="flight-stats__header">
         <h1 id="flight-stats-title">FlightStats</h1>
-        <p>Search the Cirium-backed status data used by the existing tool.</p>
+        <p>Search Cirium flight status data by flight number and operation date.</p>
       </header>
 
-      <form className="flight-tools-card flight-stats-form" onSubmit={submit}>
-        <div className="flight-tools-grid flight-tools-grid--stats">
-          <label className="flight-tools-field" htmlFor="flight-stats-number">
+      <form className="flight-stats-form" onSubmit={submit}>
+        <div className="flight-stats-form__grid">
+          <label className="flight-stats-field" htmlFor="flight-stats-number">
             <span>Flight Number</span>
             <input
               autoComplete="off"
-              className="flight-tools-input flight-tools-input--mono"
+              className="flight-stats-input flight-stats-input--mono"
               id="flight-stats-number"
               onChange={(event) => setFlightNumber(event.target.value.toUpperCase())}
               placeholder="e.g. U28412"
@@ -101,10 +102,10 @@ export default function FlightStatsPage() {
             />
           </label>
 
-          <label className="flight-tools-field" htmlFor="flight-stats-date">
+          <label className="flight-stats-field" htmlFor="flight-stats-date">
             <span>Flight Date</span>
             <input
-              className="flight-tools-input"
+              className="flight-stats-input"
               id="flight-stats-date"
               onChange={(event) => setDate(event.target.value)}
               onPaste={handleDatePaste}
@@ -113,27 +114,30 @@ export default function FlightStatsPage() {
             />
           </label>
 
-          <button className="flight-tools-button" disabled={loading || !flightNumber.trim() || !date} type="submit">
+          <button className="flight-stats-button" disabled={loading || !flightNumber.trim() || !date} type="submit">
             {loading ? 'Searching...' : 'Search Flight'}
           </button>
         </div>
 
-        {error && <div className="flight-tools-alert flight-tools-alert--error">{error}</div>}
+        {error && <div className="flight-stats-alert flight-stats-alert--error">{error}</div>}
       </form>
 
-      <div className="flight-tools-results" aria-live="polite">
-        {loading && <FlightStatusResult result={{ loading: true }} />}
+      <div className="flight-stats-results" aria-live="polite">
+        {loading && <FlightStatusCard result={{ loading: true }} />}
 
         {results.map((result) => (
-          <article className="flight-tools-result" key={result.id}>
-            <div className="flight-tools-result__header">
+          <article className="flight-stats-result" key={result.id}>
+            <div className="flight-stats-result__header">
               <div>
                 <strong>{result.flightNumber}</strong>
                 <span>{result.date}</span>
               </div>
               <button onClick={() => removeResult(result.id)} type="button">Dismiss</button>
             </div>
-            <FlightStatusResult result={result.error ? { error: result.error } : { data: result.data }} />
+            <FlightStatusCard
+              flightNumber={result.flightNumber}
+              result={result.error ? { error: result.error } : { data: result.data }}
+            />
           </article>
         ))}
       </div>

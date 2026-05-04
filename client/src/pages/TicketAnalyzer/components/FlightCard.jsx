@@ -13,7 +13,6 @@ import {
   hasFullDate,
   isRescheduled
 } from '../ticketAnalyzerUtils.js';
-import CollapsibleSection from './CollapsibleSection.jsx';
 import FlightStatusResult from './FlightStatusResult.jsx';
 
 function DateControl({ dateValue, onDateChange }) {
@@ -83,7 +82,11 @@ function ClaimDocuments({ documents }) {
   if (!documents?.length) return null;
 
   return (
-    <CollapsibleSection count={documents.length} title="Mandatory Claim Documents">
+    <details className="ta-doc-panel">
+      <summary className="ta-doc-panel__header">
+        <span>Mandatory Claim Documents</span>
+        <small>{documents.length}</small>
+      </summary>
       <div className="ta-doc-list">
         {documents.map((document, index) => {
           const noDocsRequired = document.reqs === 'No documents required';
@@ -100,12 +103,12 @@ function ClaimDocuments({ documents }) {
                   </span>
                 )}
               </div>
-              <p>{noDocsRequired ? 'No documents required' : document.reqs}</p>
+              <p>{noDocsRequired ? 'No docs required' : document.reqs}</p>
             </div>
           );
         })}
       </div>
-    </CollapsibleSection>
+    </details>
   );
 }
 
@@ -113,7 +116,11 @@ function PassengerTickets({ tickets }) {
   if (!Array.isArray(tickets) || tickets.length === 0) return null;
 
   return (
-    <CollapsibleSection count={tickets.length} title="Ticket Numbers Used">
+    <details className="ta-ticket-panel">
+      <summary className="ta-ticket-panel__header">
+        <span>Ticket Numbers Used</span>
+        <small>{tickets.length}</small>
+      </summary>
       <div className="ta-ticket-list">
         {tickets.map((ticket, index) => (
           <span className="ta-ticket-number" key={`${ticket.passengerName}-${ticket.ticketNumber}-${index}`}>
@@ -121,7 +128,7 @@ function PassengerTickets({ tickets }) {
           </span>
         ))}
       </div>
-    </CollapsibleSection>
+    </details>
   );
 }
 
@@ -143,6 +150,15 @@ function EocStatus({ eoc }) {
   }
 
   return <span className="ta-eoc ta-eoc--clear">No EOC found</span>;
+}
+
+function formatDistance(distance) {
+  const value = String(distance || '').trim();
+
+  if (!value) return '';
+  if (/km$/i.test(value)) return value.toUpperCase();
+
+  return `${value} KM`;
 }
 
 export default function FlightCard({
@@ -176,6 +192,14 @@ export default function FlightCard({
   const expiration = getExpirationState(flight, dateValue);
   const claimValue = getClaimValueBadge(flight);
   const legEligible = flight.ec261Leg?.status && !flight.ec261Leg.status.toLowerCase().includes('not');
+  const primaryFlightNumber = flightNumbers[0] || 'N/A';
+  const flightNumberList = flightNumbers.length ? flightNumbers.join(' / ') : 'N/A';
+  const operatorLabel = flight.marketingAirline === flight.operatingAirline || !flight.operatingAirline
+    ? flight.operatingAirline || flight.marketingAirline || 'Unknown airline'
+    : `${flight.marketingAirline || 'Unknown'} -> ${flight.operatingAirline}`;
+  const distanceLabel = formatDistance(flight.distanceKm);
+  const originLimit = formatLimit(flight.ec261Leg?.claimExpiration?.originYears);
+  const destinationLimit = formatLimit(flight.ec261Leg?.claimExpiration?.destinationYears);
   const selectedPayload = useMemo(() => ({
     date: dateValue,
     flightNumbers,
@@ -276,13 +300,18 @@ export default function FlightCard({
       ].filter(Boolean).join(' ')}
       style={{ opacity: statusBadge?.opacity || 1 }}
     >
-      <label className="ta-flight-card__select">
-        <input
-          checked={selected}
-          onChange={(event) => onSelectChange(selectedPayload, event.target.checked)}
-          type="checkbox"
-        />
-      </label>
+      <div className="ta-flight-card__topbar">
+        <label className="ta-flight-card__select">
+          <input
+            checked={selected}
+            onChange={(event) => onSelectChange(selectedPayload, event.target.checked)}
+            type="checkbox"
+          />
+          <span>{primaryFlightNumber}</span>
+        </label>
+        <span className="ta-flight-card__sep">/</span>
+        <span className="ta-flight-card__operator">{operatorLabel}</span>
+      </div>
 
       {statusBadge && (
         <div className={`ta-status-badge ta-status-badge--${statusBadge.tone}`}>
@@ -306,52 +335,69 @@ export default function FlightCard({
         </div>
       )}
 
-      <div className="ta-flight-card__operator">
-        {flight.marketingAirline === flight.operatingAirline || !flight.operatingAirline
-          ? `Operated by: ${flight.operatingAirline || flight.marketingAirline || 'Unknown'}`
-          : `Booked: ${flight.marketingAirline || 'Unknown'} | Operated by: ${flight.operatingAirline}`}
-      </div>
-
       <div className="ta-flight-card__route">
-        <div>
+        <div className="ta-route-point">
           <strong>{flight.originIata || '???'}</strong>
-          <span>{flight.originName || ''}</span>
+          <span>{flight.originName || flight.originCity || ''}</span>
           <small>{flight.originCity || ''}{flight.originCountry ? `, ${flight.originCountry}` : ''}</small>
-          {flight.ec261Leg?.claimExpiration?.originYears && (
-            <em>Limit: {formatLimit(flight.ec261Leg.claimExpiration.originYears)}</em>
-          )}
         </div>
         <div className="ta-flight-card__route-line">
-          {flight.distanceKm && <span>{flight.distanceKm}</span>}
-          <div />
-          <b aria-hidden="true">AIR</b>
+          {distanceLabel && <span>{distanceLabel}</span>}
+          <div><b aria-hidden="true">AIR</b></div>
         </div>
-        <div>
+        <div className="ta-route-point">
           <strong>{flight.destinationIata || '???'}</strong>
-          <span>{flight.destinationName || ''}</span>
+          <span>{flight.destinationName || flight.destinationCity || ''}</span>
           <small>{flight.destinationCity || ''}{flight.destinationCountry ? `, ${flight.destinationCountry}` : ''}</small>
-          {flight.ec261Leg?.claimExpiration?.destinationYears && (
-            <em>Limit: {formatLimit(flight.ec261Leg.claimExpiration.destinationYears)}</em>
-          )}
         </div>
       </div>
 
       <div className="ta-flight-card__times">
         <div>
-          <span>Departure</span>
-          <strong>{rescheduled ? 'See reschedule details' : flight.departureTime || '--:--'}</strong>
+          <strong>{flight.departureTime || '--:--'}</strong>
         </div>
         <div>
-          <span>Arrival</span>
-          <strong>{rescheduled ? '-' : flight.arrivalTime || '--:--'}</strong>
+          <strong>{flight.arrivalTime || '--:--'}</strong>
         </div>
       </div>
 
-      <div className="ta-flight-card__meta">
+      <div className="ta-flight-card__claim-limits">
+        <span className={originLimit === 'N/A' ? 'is-muted' : ''}>Limit: {originLimit}</span>
+        <span className={destinationLimit === 'N/A' ? 'is-muted' : ''}>Limit: {destinationLimit}</span>
+      </div>
+
+      <div className="ta-flight-card__date-row">
         <DateControl dateValue={dateValue} onDateChange={setDateValue} />
-        <span className="ta-strip-sep">/</span>
+      </div>
+
+      <div className="ta-flight-card__details">
+        <div className="ta-detail">
+          <span>PNR</span>
+          <strong className={`ta-pnr ${pnrColorClass}`}>
+            <span
+              className="ta-pnr__editable"
+              contentEditable
+              onBlur={(event) => setPnr(event.currentTarget.textContent.trim())}
+              role="textbox"
+              spellCheck="false"
+              suppressContentEditableWarning
+            >
+              {pnr}
+            </span>
+          </strong>
+        </div>
+        <div className="ta-detail">
+          <span>Airline</span>
+          <strong>{operatorLabel}</strong>
+        </div>
+        {flight.printedReference && flight.printedReference !== 'Not Provided' && flight.printedReference !== pnr && (
+          <span className="ta-printed-ref">Printed Ref: {flight.printedReference}</span>
+        )}
+      </div>
+
+      <div className="ta-flight-card__actions">
         <span className="ta-flight-number-list">
-          {flightNumbers.length ? flightNumbers.join(' / ') : 'N/A'}
+          {flightNumberList}
           {isStopover && <span className="ta-stopover-chip">Stopover</span>}
         </span>
         {flightNumbers.map((flightNumber) => (
@@ -362,25 +408,6 @@ export default function FlightCard({
             <TrackerLinks dateValue={dateValue} flightNumber={flightNumber} />
           </span>
         ))}
-      </div>
-
-      <div className="ta-flight-card__pnr">
-        {flight.printedReference && flight.printedReference !== 'Not Provided' && flight.printedReference !== pnr && (
-          <span className="ta-printed-ref">Printed Ref: {flight.printedReference}</span>
-        )}
-        <span className={`ta-pnr ${pnrColorClass}`}>
-          <span>PNR:</span>
-          <span
-            className="ta-pnr__editable"
-            contentEditable
-            onBlur={(event) => setPnr(event.currentTarget.textContent.trim())}
-            role="textbox"
-            spellCheck="false"
-            suppressContentEditableWarning
-          >
-            {pnr}
-          </span>
-        </span>
       </div>
 
       <PassengerTickets tickets={flight.passengerTickets} />
