@@ -88,13 +88,6 @@ router.post('/api/tools/email-templates',   toolsController.createEmailTemplate)
 router.put('/api/tools/email-templates',    toolsController.updateEmailTemplate);
 router.delete('/api/tools/email-templates', toolsController.deleteEmailTemplate);
 router.post('/api/tools/sync-eoc', toolsController.syncEOC);
-router.get('/api/tools/announcements',        toolsController.getAnnouncements);
-router.post('/api/tools/announcements',       upload.array('images', 10), toolsController.addAnnouncement);
-router.post('/api/tools/announcements/ask',   toolsController.askAnnouncements);
-router.delete('/api/tools/announcements/:id', toolsController.deleteAnnouncement);
-router.get('/api/tools/interactions',         toolsController.getInteractions);
-router.post('/api/tools/interactions',        upload.single('screenshot'), toolsController.addInteraction);
-router.delete('/api/tools/interactions/:id',  toolsController.deleteInteraction);
 
 // --- POA Generation ---
 router.post('/generate-standard', upload.any(), reflyController.generateStandardPDF);

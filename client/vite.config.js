@@ -12,6 +12,11 @@ export default defineConfig({
       '/generate-standard': 'http://localhost:3000',
       '/generate-lufthansa': 'http://localhost:3000',
       '/generate-aerlingus': 'http://localhost:3000',
+      '/admin/users': 'http://localhost:3000',
+      '/admin/usage': 'http://localhost:3000',
+      '/admin/logs': 'http://localhost:3000',
+      '/admin/reload-clients': 'http://localhost:3000',
+      '/admin/recalculate-costs': 'http://localhost:3000',
       '/logout': 'http://localhost:3000'
     }
   }

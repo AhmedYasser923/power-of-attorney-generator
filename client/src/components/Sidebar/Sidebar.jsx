@@ -12,7 +12,6 @@ const toolItems = [
   { href: '/tools#iata', panel: 'iata', icon: '\u2B61', label: 'IATA Lookup' },
   { href: '/tools#email', panel: 'email', icon: '\u2709', label: 'Email Builder' },
   { href: '/tools#ec261', panel: 'ec261', icon: '\u20AC', label: 'EC261 Calculator' },
-  { href: '/tools#announcements', panel: 'announcements', icon: '\uD83D\uDCE2', label: 'Announcements' },
   { href: '/tools#flight-stats', panel: 'flight-stats', icon: 'FS', label: 'FlightStats' }
 ];
 
@@ -96,10 +95,10 @@ export default function Sidebar({ user }) {
             <div className="sidebar__section-divider" />
             <div className="sidebar__section">
               <div className="sidebar__section-header">Admin</div>
-              <a className={`nav-item${isActivePage(location, '/admin') ? ' is-active' : ''}`} href="/admin" data-page="admin">
+              <Link className={`nav-item${isActivePage(location, '/admin') ? ' is-active' : ''}`} to="/admin" data-page="admin">
                 <span className="nav-item__icon">{'\u2699'}</span>
                 <span className="nav-item__label">Admin Panel</span>
-              </a>
+              </Link>
             </div>
           </>
         )}

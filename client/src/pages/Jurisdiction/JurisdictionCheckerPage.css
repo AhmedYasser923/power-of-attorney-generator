@@ -1,0 +1,179 @@
+.content__inner:has(.jurisdiction-checker) {
+  width: 100%;
+  max-width: 980px;
+}
+
+.jurisdiction-checker {
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.jurisdiction-checker__header {
+  margin-bottom: 22px;
+}
+
+.jurisdiction-checker__header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.jurisdiction-checker__header p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.jurisdiction-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.jurisdiction-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jurisdiction-field > span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jurisdiction-autocomplete {
+  position: relative;
+}
+
+.jurisdiction-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.jurisdiction-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(61, 110, 250, 0.15);
+}
+
+.jurisdiction-autocomplete__list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #0b1020;
+  box-shadow: var(--shadow-card);
+}
+
+.jurisdiction-autocomplete__list button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border-inner);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.jurisdiction-autocomplete__list button:last-child {
+  border-bottom: 0;
+}
+
+.jurisdiction-autocomplete__list button:hover {
+  background: var(--bg-input);
+}
+
+.jurisdiction-results {
+  margin-top: 22px;
+}
+
+.jurisdiction-result {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.jurisdiction-result__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jurisdiction-result h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.jurisdiction-result p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.jurisdiction-result span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  background: var(--warning-dim);
+  color: #fcd34d;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .jurisdiction-result__top {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .jurisdiction-card {
+    padding: 16px;
+  }
+
+  .jurisdiction-checker__header h1 {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,249 @@
+.content__inner:has(.iata-lookup) {
+  width: 100%;
+  max-width: 980px;
+}
+
+.iata-lookup {
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.iata-lookup__header {
+  margin-bottom: 22px;
+}
+
+.iata-lookup__header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.iata-lookup__header p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.iata-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.iata-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iata-field > span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iata-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.iata-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(61, 110, 250, 0.15);
+}
+
+.iata-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background var(--transition), opacity var(--transition);
+}
+
+.iata-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.iata-button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.iata-results {
+  margin-top: 22px;
+}
+
+.iata-result,
+.iata-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.iata-result {
+  padding: 16px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.iata-result--danger {
+  border-color: var(--danger-border);
+  background: var(--danger-dim);
+  color: #fca5a5;
+}
+
+.iata-result--warning {
+  border-color: var(--warning-border);
+  background: var(--warning-dim);
+  color: #fcd34d;
+}
+
+.iata-table-wrap {
+  overflow: hidden;
+}
+
+.iata-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.iata-table th,
+.iata-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-inner);
+  font-size: 12px;
+  text-align: left;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+
+.iata-table th {
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.iata-table td {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.iata-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.iata-table td:first-child {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.iata-table th:nth-child(1),
+.iata-table td:nth-child(1) {
+  width: 44%;
+}
+
+.iata-table th:nth-child(2),
+.iata-table td:nth-child(2),
+.iata-table th:nth-child(3),
+.iata-table td:nth-child(3) {
+  width: 13%;
+}
+
+.iata-table th:nth-child(4),
+.iata-table td:nth-child(4) {
+  width: 30%;
+}
+
+.iata-table td span {
+  display: inline-flex;
+  min-width: 46px;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .iata-card {
+    grid-template-columns: 1fr;
+  }
+
+  .iata-button {
+    justify-self: start;
+  }
+
+  .iata-table th,
+  .iata-table td {
+    padding: 10px 8px;
+  }
+
+  .iata-table th:nth-child(1),
+  .iata-table td:nth-child(1) {
+    width: 38%;
+  }
+
+  .iata-table th:nth-child(2),
+  .iata-table td:nth-child(2),
+  .iata-table th:nth-child(3),
+  .iata-table td:nth-child(3) {
+    width: 16%;
+  }
+
+  .iata-table th:nth-child(4),
+  .iata-table td:nth-child(4) {
+    width: 30%;
+  }
+}
+
+@media (max-width: 560px) {
+  .iata-card {
+    padding: 16px;
+  }
+
+  .iata-lookup__header h1 {
+    font-size: 24px;
+  }
+}

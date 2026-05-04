@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/AppShell/AppShell.jsx';
 import { useAuth } from './context/AuthContext.jsx';
+import AdminDashboardPage from './pages/AdminDashboard/AdminDashboardPage.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import MyUsagePage from './pages/MyUsage/MyUsagePage.jsx';
 import SignupPage from './pages/Signup/SignupPage.jsx';
@@ -77,6 +78,14 @@ export default function App() {
         element={(
           <ProtectedRoute>
             <ToolsPage />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/admin"
+        element={(
+          <ProtectedRoute>
+            <AdminDashboardPage />
           </ProtectedRoute>
         )}
       />

@@ -24,17 +24,6 @@ block content
         transition: all 0.3s ease;
     }
 
-    /* Bento grid layout (used by announcements panel) */
-    .ts-toolkit-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: start;
-    }
-    .ts-grid-full {
-        grid-column: 1 / -1;
-    }
-
     /* Collapsible tool card title */
     .tk-title {
         color: #1e293b;
@@ -43,12 +32,6 @@ block content
         font-weight: 700;
     }
 
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-        .ts-toolkit-grid {
-            grid-template-columns: 1fr;
-        }
-    }
 
   //- Inject server-side jurisdiction data for the frontend JS to consume
   script.
@@ -461,97 +444,6 @@ block content
       .ops-tool__actions
         button#btn-ec261.ops-tool__button.ops-tool__button--primary(type="button") Calculate Compensation
       #ec261Result.ops-tool__results
-
-  //- ── PANEL: ANNOUNCEMENTS ──────────────────────────────────────────────────
-  .tool-panel#panel-announcements
-    .ann-page-header
-      h1 Announcements
-      p Log operational updates and search previous announcements
-    .ann-layout
-      aside.ann-sub-sidebar
-        .ann-sub-header
-          h1 Announcements
-        nav.ann-nav
-          span.ann-nav-sec Feed
-          #ann-subject-chips.ann-filter-row
-          span.ann-nav-sec Tools
-          button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="saved") Archive
-          button.ann-nav-item.ann-tool-toggle(type="button" data-ann-panel="interactions") Interactions
-        button.ann-post-btn(type="button" data-ann-panel="post") + Post Announcement
-
-      section.ann-main
-        .ann-toolbar
-          .ann-ask-inline
-            span.ann-btn-icon *
-            input#ann-question(type="text" placeholder="Ask AI about announcements...")
-          button#ann-ask-btn.ann-ai-btn(type="button")
-            span.ann-btn-icon *
-            | Ask AI
-          button.ann-post-main-btn(type="button" data-ann-panel="post") + New Post
-          button.ann-saved-btn(type="button" data-ann-panel="saved") Saved
-
-        .ann-panel-stack#ann-panel-stack
-          .ann-drawer#ann-post-panel
-            .ann-drawer-header
-              h2 New Announcement
-              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
-            .ann-form-row
-              .ann-field
-                label(for="ann-announcer") Announcer Name
-                input#ann-announcer.ann-input(type="text" placeholder="e.g. Ahmed")
-              .ann-field
-                label(for="ann-date") Date
-                input#ann-date.ann-input(type="date")
-            .ann-field
-              label(for="ann-content") Announcement
-              textarea#ann-content.ann-textarea(placeholder="Paste or type the announcement here...")
-            .ann-field
-              label(for="ann-images") Images (optional)
-              input#ann-images.ann-file-input.ann-file-input--hidden(type="file" accept="image/*" multiple)
-              .ann-upload-review(data-upload-zone data-input-id="ann-images" data-multiple="true" tabindex="0")
-                .ann-upload-copy
-                  .ann-upload-title Drag, paste, or choose screenshots
-                  .ann-upload-subtitle Images appear here for review before posting.
-                button.ann-upload-browse(type="button" data-upload-browse) Choose
-                .ann-upload-list(data-upload-list)
-            .ann-actions
-              button#ann-submit-btn.ann-submit-btn(type="button") Add Announcement
-          .ann-drawer#ann-saved-panel
-            .ann-drawer-header
-              h2 Saved Answers
-              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
-            #ann-saved-list.ann-saved-list
-          .ann-drawer#ann-interactions-panel
-            .ann-drawer-header
-              h2 Interaction Records
-              button.ann-panel-close(type="button" data-ann-panel-close aria-label="Close") x
-            .int-form-row
-              .ann-field
-                label(for="int-ticket") Ticket Number
-                input#int-ticket.ann-input(type="text" placeholder="e.g. TKT-12345")
-              .ann-field
-                label(for="int-person") Person Name
-                input#int-person.ann-input(type="text" placeholder="e.g. John Doe")
-              .ann-field
-                label(for="int-date") Date
-                input#int-date.ann-input(type="date")
-            .ann-field
-              label(for="int-notes") Notes (optional)
-              textarea#int-notes.ann-textarea(placeholder="Brief notes about the interaction...")
-            .ann-field
-              label(for="int-screenshot") Screenshot
-              input#int-screenshot.ann-file-input.ann-file-input--hidden(type="file" accept="image/*")
-              .ann-upload-review(data-upload-zone data-input-id="int-screenshot" data-multiple="false" tabindex="0")
-                .ann-upload-copy
-                  .ann-upload-title Drag, paste, or choose screenshot
-                  .ann-upload-subtitle Screenshot appears here for review before saving.
-                button.ann-upload-browse(type="button" data-upload-browse) Choose
-                .ann-upload-list(data-upload-list)
-            .ann-actions
-              button#int-submit-btn.ann-submit-btn(type="button") Save Record
-            #int-records-list.int-records-list
-
-        .ann-feed#ann-list
 
   script(src="/js/ticket-analyzer.js")
   script(src="/js/poa-form.js")
