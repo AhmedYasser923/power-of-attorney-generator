@@ -33,13 +33,8 @@ const sendErrorDev = (err, req, res) => {
       stack: err.stack
     });
   }
-  // Rendered page: only log unexpected server errors, not operational 404s etc.
   if (!err.isOperational) console.error('ERROR', err);
-  return res.status(err.statusCode).render('error', {
-    title: 'Something went wrong!',
-    msg: err.message,
-    stack: err.stack
-  });
+  return res.status(err.statusCode).json({ status: err.status, message: err.message, stack: err.stack });
 };
 
 const sendErrorProd = (err, req, res) => {
@@ -60,19 +55,11 @@ const sendErrorProd = (err, req, res) => {
     });
   }
 
-  // Rendered-page errors
   if (err.isOperational) {
-    return res.status(err.statusCode).render('error', {
-      title: 'Something went wrong!',
-      msg: err.message
-    });
+    return res.status(err.statusCode).json({ status: err.status, message: err.message });
   }
-  // Programming / unknown error → always 500, never leak err.statusCode
   console.error('ERROR', err);
-  return res.status(500).render('error', {
-    title: 'Something went wrong!',
-    msg: 'Please try again later.'
-  });
+  return res.status(500).json({ status: 'error', message: 'Something went very wrong!' });
 };
 
 

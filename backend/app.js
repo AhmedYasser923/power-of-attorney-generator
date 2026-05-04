@@ -22,7 +22,6 @@ const app = express();
 
 const rateLimit = require('express-rate-limit');
 const globalErrorHandler = require('./controllers/errorController');
-const { isLoggedIn } = require('./middleware/auth');
 const { bootstrapAdmin } = require('./controllers/authController');
 
 
@@ -50,9 +49,6 @@ app.use('/login', rateLimit({
   validate: { trustProxy: false }
 }));
 
-// Set res.locals.user on every request for template rendering
-app.use(isLoggedIn);
-
 // SSE clients registry (used by admin reload-clients endpoint)
 app.set('sseClients', new Set());
 
@@ -63,6 +59,16 @@ app.set('appVersion', process.env.K_REVISION || Date.now().toString());
 
 // Routes
 app.use('/', require('./routes/index'));
+
+// SPA catch-all: serve React's index.html for any unmatched GET that isn't
+// an API or admin route. React Router handles client-side navigation from here.
+const reactIndex = path.join(__dirname, '..', 'client', 'dist', 'index.html');
+const fs = require('fs');
+app.get('/{*path}', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/admin')) return next();
+  if (!fs.existsSync(reactIndex)) return next();
+  res.sendFile(reactIndex);
+});
 
 // 1. Handle all unhandled routes (404)
 app.use((req, res, next) => {

@@ -210,19 +210,6 @@ exports.proxyPage = async (req, res) => {
 };
 
 // ---------------------------------------------------------------------------
-// RENDER
-// ---------------------------------------------------------------------------
-
-exports.renderTools = catchAsync(async (req, res, next) => {
-  await loadTemplates();
-  res.render('tools', {
-    title: 'Tools Suite',
-    jurisdictionLimits: jurisdictionLimitsForClient,
-    emailTemplatesJson: JSON.stringify(buildTemplateListSync()),
-  });
-});
-
-// ---------------------------------------------------------------------------
 // EOC CHECKER
 // ---------------------------------------------------------------------------
 

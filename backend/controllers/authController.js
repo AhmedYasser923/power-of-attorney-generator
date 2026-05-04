@@ -40,71 +40,6 @@ exports.bootstrapAdmin = async () => {
   }
 };
 
-exports.renderLogin = (req, res) => {
-  if (res.locals.user) return res.redirect('/');
-  res.render('login', { title: 'Sign In' });
-};
-
-exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.render('login', { title: 'Sign In', error: 'Please provide your email and password.' });
-  }
-
-  const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
-
-  if (!user || !(await user.correctPassword(password, user.password))) {
-    return res.render('login', { title: 'Sign In', error: 'Incorrect email or password.' });
-  }
-
-  if (user.status === 'pending') {
-    return res.render('login', { title: 'Sign In', error: 'Your account is awaiting admin approval.' });
-  }
-  if (user.status === 'suspended') {
-    return res.render('login', { title: 'Sign In', error: 'Your account has been suspended. Contact an administrator.' });
-  }
-
-  sendTokenCookie(user, res);
-  User.findByIdAndUpdate(user._id, { lastSeen: new Date() }).exec();
-
-  res.redirect('/');
-});
-
-exports.renderSignup = (req, res) => {
-  if (res.locals.user) return res.redirect('/');
-  res.render('signup', { title: 'Request Access' });
-};
-
-exports.signup = catchAsync(async (req, res, next) => {
-  const { name, email, password, passwordConfirm } = req.body;
-
-  if (!name || !email || !password || !passwordConfirm) {
-    return res.render('signup', { title: 'Request Access', error: 'All fields are required.' });
-  }
-  if (password.length < 8) {
-    return res.render('signup', { title: 'Request Access', error: 'Password must be at least 8 characters.' });
-  }
-  if (password !== passwordConfirm) {
-    return res.render('signup', { title: 'Request Access', error: 'Passwords do not match.' });
-  }
-
-  const existing = await User.findOne({ email: email.toLowerCase().trim() });
-  if (existing) {
-    return res.render('signup', { title: 'Request Access', error: 'This email is already registered.' });
-  }
-
-  const newUser = await User.create({
-    name: name.trim(),
-    email: email.toLowerCase().trim(),
-    password,
-    role: 'user',
-    status: 'pending'
-  });
-
-  res.render('signup', { title: 'Request Access', success: true });
-});
-
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
@@ -179,8 +114,5 @@ exports.apiSignup = catchAsync(async (req, res, next) => {
 });
 
 exports.apiGetMe = (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ status: 'fail', message: 'Not logged in.' });
-  }
   res.status(200).json({ status: 'success', data: { user: serializeUser(req.user) } });
 };

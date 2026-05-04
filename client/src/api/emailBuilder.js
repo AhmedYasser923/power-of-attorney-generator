@@ -18,7 +18,7 @@ export const getEmailTemplates = async ({ signal } = {}) => {
 };
 
 export const generateEmail = async ({ payload, signal }) => {
-  const response = await fetch('/api/generate-email', {
+  const response = await fetch('/api/tools/generate-email', {
     method: 'POST',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },

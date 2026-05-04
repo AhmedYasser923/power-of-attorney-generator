@@ -87,20 +87,6 @@ function capitalizeWords(str) {
   return str.trim().split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
-exports.preview = catchAsync(async (req, res, next) => {
-  const dummyData = {
-    flightNumber: 'LH982', bookingCode: 'xcwgia',
-    formattedFlightDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-    formattedClaimDate: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-    lufthansaLogo: getLufthansaLogoBase64(),
-    passengers: [
-      { fullName: 'Nelson, Pamela', address: 'Feldstraße, 14, Wiesbaden, 65183, Hessen, Germany', signature: null },
-      { fullName: 'Yasser Ali, Ahmed', address: 'Dagsverksvägen, Stockholm 16355, Sweden', signature: null }
-    ]
-  };
-  res.render('lufthansa-poa', dummyData);
-});
-
 exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
   const { pnr, flightDate, claimDate, flightNumber, bookingCode } = req.body;
   const files = req.files || [];

@@ -12,9 +12,9 @@ import {
 import './PoaGeneratorPage.css';
 
 const ENDPOINTS = {
-  standard: '/generate-standard',
-  lufthansa: '/generate-lufthansa',
-  aerlingus: '/generate-aerlingus'
+  standard: '/api/poa/generate-standard',
+  lufthansa: '/api/poa/generate-lufthansa',
+  aerlingus: '/api/poa/generate-aerlingus'
 };
 
 function getCleanDate(date) {
