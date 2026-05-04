@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import MyUsagePage from './pages/MyUsage/MyUsagePage.jsx';
 import SignupPage from './pages/Signup/SignupPage.jsx';
+import TicketAnalyzerPage from './pages/TicketAnalyzer/TicketAnalyzerPage.jsx';
 
 function DashboardPlaceholder() {
   return (
@@ -68,6 +69,14 @@ export default function App() {
         element={(
           <ProtectedRoute>
             <MyUsagePage />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/tools"
+        element={(
+          <ProtectedRoute>
+            <TicketAnalyzerPage />
           </ProtectedRoute>
         )}
       />
