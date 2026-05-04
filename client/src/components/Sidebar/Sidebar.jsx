@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import reflyLogo from '../../assets/refly-logo.png';
 import './Sidebar.css';
 
@@ -16,15 +16,14 @@ const toolItems = [
   { href: '/tools#flight-stats', panel: 'flight-stats', icon: 'FS', label: 'FlightStats' }
 ];
 
-const isActivePage = (href) => {
-  if (typeof window === 'undefined') return false;
-  const path = window.location.pathname;
+const isActivePage = (location, href) => {
+  const path = location.pathname;
   return path === href || (href !== '/' && path.startsWith(href));
 };
 
-const isActivePanel = (panel) => {
-  if (typeof window === 'undefined') return false;
-  return window.location.pathname === '/tools' && window.location.hash === `#${panel}`;
+const isActivePanel = (location, panel) => {
+  const activeHash = location.hash || '#ticket-analyzer';
+  return location.pathname === '/tools' && activeHash === `#${panel}`;
 };
 
 function DashboardIcon() {
@@ -49,6 +48,7 @@ function SignOutIcon() {
 }
 
 export default function Sidebar({ user }) {
+  const location = useLocation();
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   const signOut = (event) => {
@@ -66,7 +66,7 @@ export default function Sidebar({ user }) {
       <nav className="sidebar__nav">
         <div className="sidebar__section">
           <div className="sidebar__section-header">Main</div>
-          <Link className={`nav-item${isActivePage('/') ? ' is-active' : ''}`} to="/" data-page="dashboard">
+          <Link className={`nav-item${isActivePage(location, '/') ? ' is-active' : ''}`} to="/" data-page="dashboard">
             <span className="nav-item__icon">
               <DashboardIcon />
             </span>
@@ -79,15 +79,15 @@ export default function Sidebar({ user }) {
         <div className="sidebar__section">
           <div className="sidebar__section-header">Tools</div>
           {toolItems.map((item) => (
-            <a
-              className={`nav-item${isActivePanel(item.panel) ? ' is-active' : ''}`}
-              href={item.href}
+            <Link
+              className={`nav-item${isActivePanel(location, item.panel) ? ' is-active' : ''}`}
+              to={item.href}
               data-panel={item.panel}
               key={item.panel}
             >
               <span className="nav-item__icon">{item.icon}</span>
               <span className="nav-item__label">{item.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -96,7 +96,7 @@ export default function Sidebar({ user }) {
             <div className="sidebar__section-divider" />
             <div className="sidebar__section">
               <div className="sidebar__section-header">Admin</div>
-              <a className={`nav-item${isActivePage('/admin') ? ' is-active' : ''}`} href="/admin" data-page="admin">
+              <a className={`nav-item${isActivePage(location, '/admin') ? ' is-active' : ''}`} href="/admin" data-page="admin">
                 <span className="nav-item__icon">{'\u2699'}</span>
                 <span className="nav-item__label">Admin Panel</span>
               </a>

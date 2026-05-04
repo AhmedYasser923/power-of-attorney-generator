@@ -9,6 +9,9 @@ export default defineConfig({
       '/api': 'http://localhost:3000',
       '/css': 'http://localhost:3000',
       '/js': 'http://localhost:3000',
+      '/generate-standard': 'http://localhost:3000',
+      '/generate-lufthansa': 'http://localhost:3000',
+      '/generate-aerlingus': 'http://localhost:3000',
       '/logout': 'http://localhost:3000'
     }
   }
