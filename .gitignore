@@ -1,4 +1,5 @@
 node_modules/
+client/dist/
 config.env
 .flightstats_session.json
 .DS_Store

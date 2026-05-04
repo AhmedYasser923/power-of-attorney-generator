@@ -1,5 +1,7 @@
 const express = require('express');
+const fs = require('fs');
 const multer = require('multer');
+const path = require('path');
 const router = express.Router();
 
 const aiController = require('../controllers/aiController.js');
@@ -13,14 +15,23 @@ const { protect, restrictTo } = require('../middleware/auth.js');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+const reactIndex = path.join(__dirname, '..', '..', 'client', 'dist', 'index.html');
+const serveReactApp = (req, res, next) => {
+  if (!fs.existsSync(reactIndex)) return next();
+  return res.sendFile(reactIndex);
+};
+
 // ==========================================
 // PUBLIC — Auth Routes (no protection)
 // ==========================================
-router.get('/login', authController.renderLogin);
+router.get('/login', serveReactApp, authController.renderLogin);
 router.post('/login', authController.login);
-router.get('/signup', authController.renderSignup);
+router.get('/signup', serveReactApp, authController.renderSignup);
 router.post('/signup', authController.signup);
 router.get('/logout', authController.logout);
+router.post('/api/auth/login', authController.apiLogin);
+router.post('/api/auth/signup', authController.apiSignup);
+router.get('/api/auth/me', authController.apiGetMe);
 
 // Lightweight version check — clients poll this to detect deploys
 router.get('/api/version', (req, res) => {

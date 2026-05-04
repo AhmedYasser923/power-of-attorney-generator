@@ -35,6 +35,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist'), { index: false }));
 
 // Cloud Run (and other reverse proxies) set Forwarded / X-Forwarded-For headers
 app.set('trust proxy', true);

@@ -112,3 +112,75 @@ exports.logout = (req, res) => {
   });
   res.redirect('/login');
 };
+
+// --- JSON API endpoints (used by React frontend) ---
+
+const serializeUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  status: user.status
+});
+
+exports.apiLogin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ status: 'fail', message: 'Please provide your email and password.' });
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return res.status(401).json({ status: 'fail', message: 'Incorrect email or password.' });
+  }
+
+  if (user.status === 'pending') {
+    return res.status(403).json({ status: 'fail', message: 'Your account is awaiting admin approval.' });
+  }
+  if (user.status === 'suspended') {
+    return res.status(403).json({ status: 'fail', message: 'Your account has been suspended. Contact an administrator.' });
+  }
+
+  sendTokenCookie(user, res);
+  User.findByIdAndUpdate(user._id, { lastSeen: new Date() }).exec();
+
+  res.status(200).json({ status: 'success', data: { user: serializeUser(user) } });
+});
+
+exports.apiSignup = catchAsync(async (req, res, next) => {
+  const { name, email, password, passwordConfirm } = req.body;
+
+  if (!name || !email || !password || !passwordConfirm) {
+    return res.status(400).json({ status: 'fail', message: 'All fields are required.' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ status: 'fail', message: 'Password must be at least 8 characters.' });
+  }
+  if (password !== passwordConfirm) {
+    return res.status(400).json({ status: 'fail', message: 'Passwords do not match.' });
+  }
+
+  const existing = await User.findOne({ email: email.toLowerCase().trim() });
+  if (existing) {
+    return res.status(400).json({ status: 'fail', message: 'This email is already registered.' });
+  }
+
+  await User.create({
+    name: name.trim(),
+    email: email.toLowerCase().trim(),
+    password,
+    role: 'user',
+    status: 'pending'
+  });
+
+  res.status(201).json({ status: 'success', message: 'Your request was submitted and is awaiting admin approval.' });
+});
+
+exports.apiGetMe = (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ status: 'fail', message: 'Not logged in.' });
+  }
+  res.status(200).json({ status: 'success', data: { user: serializeUser(req.user) } });
+};
