@@ -23,6 +23,76 @@ const EMPTY_TEMPLATE_FORM = {
   text: ''
 };
 
+const normalizeClipboardText = (text) => String(text || '').replace(/\r\n?/g, '\n');
+
+const escapeHtml = (value) => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const buildClipboardHtml = (text) => {
+  const normalized = normalizeClipboardText(text).trim();
+  if (!normalized) return '';
+
+  const paragraphs = normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => {
+      const content = escapeHtml(paragraph).replace(/\n/g, '<br>');
+      return `<p dir="auto" style="margin:0 0 12px;white-space:pre-wrap;">${content}</p>`;
+    })
+    .join('');
+
+  return `<!doctype html><html><body>${paragraphs}</body></html>`;
+};
+
+const copyTextWithHiddenTextarea = (text) => {
+  const textarea = document.createElement('textarea');
+  textarea.value = normalizeClipboardText(text);
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.opacity = '0';
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    return document.execCommand('copy');
+  } finally {
+    document.body.removeChild(textarea);
+  }
+};
+
+const writeClipboardText = async (text) => {
+  const plainText = normalizeClipboardText(text);
+  const htmlText = buildClipboardHtml(text);
+
+  if (window.ClipboardItem && navigator.clipboard?.write && htmlText) {
+    await navigator.clipboard.write([
+      new window.ClipboardItem({
+        'text/plain': new Blob([plainText], { type: 'text/plain' }),
+        'text/html': new Blob([htmlText], { type: 'text/html' })
+      })
+    ]);
+    return;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(plainText);
+    return;
+  }
+
+  if (!copyTextWithHiddenTextarea(plainText)) {
+    throw new Error('Legacy clipboard copy failed.');
+  }
+};
+
 function TemplatePill({ checked, isRejection, label, onChange }) {
   return (
     <label className={`email-builder-pill${checked ? ' is-selected' : ''}${isRejection ? ' is-rejection' : ''}`}>
@@ -318,10 +388,15 @@ export default function EmailBuilderPage() {
     if (!text) return;
 
     try {
-      await navigator.clipboard.writeText(text);
+      await writeClipboardText(text);
       setCopyState(key);
       window.setTimeout(() => setCopyState(''), 1500);
     } catch {
+      if (copyTextWithHiddenTextarea(text)) {
+        setCopyState(key);
+        window.setTimeout(() => setCopyState(''), 1500);
+        return;
+      }
       setError('Failed to copy to clipboard.');
     }
   };

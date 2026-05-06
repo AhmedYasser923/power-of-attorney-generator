@@ -121,10 +121,10 @@
 }
 
 .email-builder-pill {
+  position: relative;
   display: inline-flex;
   min-height: 32px;
   align-items: center;
-  gap: 8px;
   padding: 7px 11px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -136,9 +136,17 @@
 }
 
 .email-builder-pill input {
-  width: 13px;
-  height: 13px;
-  accent-color: var(--accent);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.email-builder-pill:focus-within {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 2px;
 }
 
 .email-builder-pill.is-selected {

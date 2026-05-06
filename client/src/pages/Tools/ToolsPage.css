@@ -1,0 +1,33 @@
+.tools-keepalive {
+  width: 100%;
+}
+
+.tools-keepalive__panel {
+  width: 100%;
+}
+
+.tools-keepalive__panel[hidden] {
+  display: none !important;
+}
+
+.content__inner:has(.tools-keepalive[data-active-tool="ticket-analyzer"]) {
+  width: 100%;
+  max-width: 1080px;
+}
+
+.content__inner:has(.tools-keepalive[data-active-tool="email"]) {
+  width: 100%;
+  max-width: 1180px;
+}
+
+.content__inner:has(.tools-keepalive[data-active-tool="poa"]),
+.content__inner:has(.tools-keepalive[data-active-tool="flight-search"]),
+.content__inner:has(.tools-keepalive[data-active-tool="flight-stats"]),
+.content__inner:has(.tools-keepalive[data-active-tool="eoc"]),
+.content__inner:has(.tools-keepalive[data-active-tool="doc-check"]),
+.content__inner:has(.tools-keepalive[data-active-tool="jurisdiction"]),
+.content__inner:has(.tools-keepalive[data-active-tool="iata"]),
+.content__inner:has(.tools-keepalive[data-active-tool="ec261"]) {
+  width: 100%;
+  max-width: 980px;
+}

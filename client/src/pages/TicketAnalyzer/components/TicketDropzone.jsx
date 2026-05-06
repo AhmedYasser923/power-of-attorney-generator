@@ -6,11 +6,13 @@ function filesFromList(fileList) {
   );
 }
 
-export default function TicketDropzone({ onFilesAdd }) {
+export default function TicketDropzone({ active = true, onFilesAdd }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    if (!active) return undefined;
+
     const paste = (event) => {
       const items = event.clipboardData?.items;
       if (!items) return;
@@ -36,7 +38,7 @@ export default function TicketDropzone({ onFilesAdd }) {
     return () => {
       document.removeEventListener('paste', paste);
     };
-  }, [onFilesAdd]);
+  }, [active, onFilesAdd]);
 
   const openPicker = () => {
     inputRef.current?.click();

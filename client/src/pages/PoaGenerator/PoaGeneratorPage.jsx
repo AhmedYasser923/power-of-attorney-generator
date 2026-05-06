@@ -35,7 +35,7 @@ function appendObject(formData, object) {
   });
 }
 
-export default function PoaGeneratorPage() {
+export default function PoaGeneratorPage({ isActive = true }) {
   const [template, setTemplate] = useState('standard');
   const [standard, setStandard] = useState(INITIAL_STANDARD);
   const [lufthansa, setLufthansa] = useState(INITIAL_LUFTHANSA);
@@ -87,6 +87,8 @@ export default function PoaGeneratorPage() {
   }, [template]);
 
   useEffect(() => {
+    if (!isActive) return undefined;
+
     const paste = (event) => {
       const clipboard = event.clipboardData || window.clipboardData;
       const files = [];
@@ -115,7 +117,7 @@ export default function PoaGeneratorPage() {
     document.addEventListener('paste', paste);
 
     return () => document.removeEventListener('paste', paste);
-  }, [addPastedSignatures]);
+  }, [addPastedSignatures, isActive]);
 
   const runAutofill = async () => {
     const text = aiText.trim();

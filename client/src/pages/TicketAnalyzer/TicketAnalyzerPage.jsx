@@ -10,7 +10,7 @@ function isValidYear(year) {
   return /^\d{4}$/.test(String(year || '').trim());
 }
 
-export default function TicketAnalyzerPage() {
+export default function TicketAnalyzerPage({ isActive = true }) {
   const abortRef = useRef(null);
   const timerRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -171,7 +171,7 @@ export default function TicketAnalyzerPage() {
         </div>
       </div>
 
-      <TicketDropzone onFilesAdd={addFiles} />
+      <TicketDropzone active={isActive} onFilesAdd={addFiles} />
 
       <TicketPreviewBar
         analyzing={analyzing}

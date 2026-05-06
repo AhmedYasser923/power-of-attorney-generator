@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { checkEoc, checkFlightStatus } from '../../../api/ticketAnalyzer.js';
 import {
   buildFullDate,
@@ -78,18 +78,54 @@ function TrackerLinks({ dateValue, flightNumber }) {
   );
 }
 
+function FlightCardDisclosure({ children, count, meta, title, tone = 'neutral' }) {
+  const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
+
+  return (
+    <section className={`ta-flight-disclosure ta-flight-disclosure--${tone}${expanded ? ' is-expanded' : ''}`}>
+      <button
+        aria-controls={contentId}
+        aria-expanded={expanded}
+        className="ta-flight-disclosure__trigger"
+        onClick={() => setExpanded((current) => !current)}
+        type="button"
+      >
+        <span className="ta-flight-disclosure__chevron" aria-hidden="true">&gt;</span>
+        <span className="ta-flight-disclosure__title">{title}</span>
+        {meta && <span className="ta-flight-disclosure__meta">{meta}</span>}
+        {typeof count === 'number' && <span className="ta-flight-disclosure__count">{count}</span>}
+      </button>
+      <div className="ta-flight-disclosure__content" hidden={!expanded} id={contentId}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function isNoDocsRequired(document) {
+  return String(document.reqs || '').trim().toLowerCase() === 'no documents required';
+}
+
 function ClaimDocuments({ documents }) {
   if (!documents?.length) return null;
 
+  const requiredDocumentCount = documents.filter((document) => {
+    const requirements = String(document.reqs || '').trim();
+    return requirements && !isNoDocsRequired(document);
+  }).length;
+  const meta = requiredDocumentCount > 0 ? `${requiredDocumentCount} required` : 'No docs required';
+
   return (
-    <details className="ta-doc-panel">
-      <summary className="ta-doc-panel__header">
-        <span>Mandatory Claim Documents</span>
-        <small>{documents.length}</small>
-      </summary>
+    <FlightCardDisclosure
+      count={documents.length}
+      meta={meta}
+      title="Mandatory claim documents"
+      tone={requiredDocumentCount > 0 ? 'warning' : 'clear'}
+    >
       <div className="ta-doc-list">
         {documents.map((document, index) => {
-          const noDocsRequired = document.reqs === 'No documents required';
+          const noDocsRequired = isNoDocsRequired(document);
           return (
             <div className={`ta-doc-item${noDocsRequired ? ' ta-doc-item--clear' : ''}`} key={`${document.airline}-${index}`}>
               <div className="ta-doc-item__top">
@@ -103,12 +139,12 @@ function ClaimDocuments({ documents }) {
                   </span>
                 )}
               </div>
-              <p>{noDocsRequired ? 'No docs required' : document.reqs}</p>
+              <p>{noDocsRequired ? 'No docs required' : document.reqs || 'Requirements not specified'}</p>
             </div>
           );
         })}
       </div>
-    </details>
+    </FlightCardDisclosure>
   );
 }
 
@@ -116,11 +152,7 @@ function PassengerTickets({ tickets }) {
   if (!Array.isArray(tickets) || tickets.length === 0) return null;
 
   return (
-    <details className="ta-ticket-panel">
-      <summary className="ta-ticket-panel__header">
-        <span>Ticket Numbers Used</span>
-        <small>{tickets.length}</small>
-      </summary>
+    <FlightCardDisclosure count={tickets.length} title="Ticket numbers used">
       <div className="ta-ticket-list">
         {tickets.map((ticket, index) => (
           <span className="ta-ticket-number" key={`${ticket.passengerName}-${ticket.ticketNumber}-${index}`}>
@@ -128,7 +160,7 @@ function PassengerTickets({ tickets }) {
           </span>
         ))}
       </div>
-    </details>
+    </FlightCardDisclosure>
   );
 }
 
@@ -192,11 +224,13 @@ export default function FlightCard({
   const expiration = getExpirationState(flight, dateValue);
   const claimValue = getClaimValueBadge(flight);
   const legEligible = flight.ec261Leg?.status && !flight.ec261Leg.status.toLowerCase().includes('not');
-  const primaryFlightNumber = flightNumbers[0] || 'N/A';
-  const flightNumberList = flightNumbers.length ? flightNumbers.join(' / ') : 'N/A';
-  const operatorLabel = flight.marketingAirline === flight.operatingAirline || !flight.operatingAirline
-    ? flight.operatingAirline || flight.marketingAirline || 'Unknown airline'
-    : `${flight.marketingAirline || 'Unknown'} -> ${flight.operatingAirline}`;
+  const marketingAirlineLabel = flight.marketingAirline || flight.operatingAirline || 'Unknown airline';
+  const operatingAirlineLabel = flight.operatingAirline || '';
+  const hasDifferentOperatingAirline = Boolean(
+    operatingAirlineLabel &&
+    flight.marketingAirline &&
+    marketingAirlineLabel !== operatingAirlineLabel
+  );
   const distanceLabel = formatDistance(flight.distanceKm);
   const originLimit = formatLimit(flight.ec261Leg?.claimExpiration?.originYears);
   const destinationLimit = formatLimit(flight.ec261Leg?.claimExpiration?.destinationYears);
@@ -307,10 +341,8 @@ export default function FlightCard({
             onChange={(event) => onSelectChange(selectedPayload, event.target.checked)}
             type="checkbox"
           />
-          <span>{primaryFlightNumber}</span>
+          <span>Select flight</span>
         </label>
-        <span className="ta-flight-card__sep">/</span>
-        <span className="ta-flight-card__operator">{operatorLabel}</span>
       </div>
 
       {statusBadge && (
@@ -386,29 +418,45 @@ export default function FlightCard({
             </span>
           </strong>
         </div>
-        <div className="ta-detail">
+        <div className="ta-detail ta-detail--airline">
           <span>Airline</span>
-          <strong>{operatorLabel}</strong>
+          <strong className="ta-airline-summary">
+            <span className="ta-airline-summary__name">{marketingAirlineLabel}</span>
+            {flightNumbers.length > 0 ? flightNumbers.map((flightNumber) => (
+              <span className="ta-airline-summary__flight" key={flightNumber}>{flightNumber}</span>
+            )) : (
+              <span className="ta-airline-summary__flight">N/A</span>
+            )}
+          </strong>
+          {hasDifferentOperatingAirline && (
+            <small className="ta-airline-summary__operated">Operated by {operatingAirlineLabel}</small>
+          )}
         </div>
         {flight.printedReference && flight.printedReference !== 'Not Provided' && flight.printedReference !== pnr && (
           <span className="ta-printed-ref">Printed Ref: {flight.printedReference}</span>
         )}
       </div>
 
-      <div className="ta-flight-card__actions">
-        <span className="ta-flight-number-list">
-          {flightNumberList}
-          {isStopover && <span className="ta-stopover-chip">Stopover</span>}
-        </span>
-        {flightNumbers.map((flightNumber) => (
-          <span className="ta-flight-action-set" key={flightNumber}>
-            <button onClick={() => runStatusCheck(flightNumber)} type="button">
-              {flightNumber} Stats
-            </button>
-            <TrackerLinks dateValue={dateValue} flightNumber={flightNumber} />
-          </span>
-        ))}
-      </div>
+      {flightNumbers.length > 0 && (
+        <div className="ta-flight-card__actions">
+          <div className="ta-flight-actions-list">
+            {flightNumbers.map((flightNumber, index) => (
+              <div className="ta-flight-action-row" key={flightNumber}>
+                <span className="ta-flight-action-row__label">
+                  <strong>{flightNumber}</strong>
+                  {flightNumbers.length > 1 && (
+                    <small>{index === 0 ? 'Primary' : isStopover ? 'Stopover' : flight.isCodeshare ? 'Codeshare' : 'Additional'}</small>
+                  )}
+                </span>
+                <button onClick={() => runStatusCheck(flightNumber)} type="button">
+                  Stats
+                </button>
+                <TrackerLinks dateValue={dateValue} flightNumber={flightNumber} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <PassengerTickets tickets={flight.passengerTickets} />
       <ClaimDocuments documents={flight.claimDocuments} />

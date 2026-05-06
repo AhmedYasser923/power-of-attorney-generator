@@ -5,96 +5,196 @@ const path = require('path');
 
 const airportsDatabase = require('../airports_data.json');
 const EmailTemplate    = require('../models/EmailTemplate');
+const SystemSetting    = require('../models/SystemSetting');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 const logUsage   = require('../utils/logUsage');
 
-let DOCUMENT_TEMPLATES  = {};
-let REJECTION_TEMPLATES = {};
-let TEMPLATES_META      = {};
-let LINK_TEMPLATE_KEYS      = new Set();
-let INFO_ONLY_TEMPLATE_KEYS = new Set();
-let NO_WRAPPER_DOC_KEYS     = new Set();
-let _templatesCached = false;
+const EMAIL_TEMPLATES_INIT_KEY = 'emailTemplatesInitialized';
 
-async function loadTemplates() {
-  if (_templatesCached) return;
-  const docs = await EmailTemplate.find().lean();
-  DOCUMENT_TEMPLATES  = {};
-  REJECTION_TEMPLATES = {};
-  TEMPLATES_META      = {};
-  docs.forEach(t => {
-    if (t.type === 'document') DOCUMENT_TEMPLATES[t.key]  = t.text;
-    else                       REJECTION_TEMPLATES[t.key] = t.text;
-    TEMPLATES_META[t.key] = { label: t.label, category: t.category, isInfoOnly: t.isInfoOnly, noWrapper: t.noWrapper };
+function buildDefaultEmailTemplateDocs() {
+  const json = require('../data/emailTemplates.json');
+  const meta = json.meta || {};
+  const docs = [];
+
+  Object.entries(json.documentTemplates || {}).forEach(([key, text]) => {
+    docs.push({
+      key,
+      text,
+      type: 'document',
+      label: meta[key]?.label || key,
+      category: meta[key]?.category || 'Documents',
+      isInfoOnly: !!meta[key]?.isInfoOnly,
+      noWrapper: !!meta[key]?.noWrapper,
+    });
   });
-  LINK_TEMPLATE_KEYS      = new Set(Object.keys(DOCUMENT_TEMPLATES).filter(k => (DOCUMENT_TEMPLATES[k] || '').includes('[link]')));
-  INFO_ONLY_TEMPLATE_KEYS = new Set(Object.keys(TEMPLATES_META).filter(k => TEMPLATES_META[k].isInfoOnly));
-  NO_WRAPPER_DOC_KEYS     = new Set(Object.keys(TEMPLATES_META).filter(k => TEMPLATES_META[k].noWrapper));
-  _templatesCached = true;
+
+  Object.entries(json.rejectionTemplates || {}).forEach(([key, text]) => {
+    docs.push({
+      key,
+      text,
+      type: 'rejection',
+      label: meta[key]?.label || key,
+      category: 'Rejection Reason',
+      isInfoOnly: false,
+      noWrapper: false,
+    });
+  });
+
+  return docs;
 }
 
-function buildTemplateListSync() {
+function buildTemplateList(state) {
+  const { documentTemplates, rejectionTemplates, templatesMeta } = state;
   return [
-    ...Object.entries(DOCUMENT_TEMPLATES).map(([key, text]) => ({
+    ...Object.entries(documentTemplates).map(([key, text]) => ({
       key, text, type: 'document',
-      label:      TEMPLATES_META[key]?.label    || key,
-      category:   TEMPLATES_META[key]?.category || 'Documents',
-      isInfoOnly: !!TEMPLATES_META[key]?.isInfoOnly,
-      noWrapper:  !!TEMPLATES_META[key]?.noWrapper,
+      label:      templatesMeta[key]?.label    || key,
+      category:   templatesMeta[key]?.category || 'Documents',
+      isInfoOnly: !!templatesMeta[key]?.isInfoOnly,
+      noWrapper:  !!templatesMeta[key]?.noWrapper,
     })),
-    ...Object.entries(REJECTION_TEMPLATES).map(([key, text]) => ({
+    ...Object.entries(rejectionTemplates).map(([key, text]) => ({
       key, text, type: 'rejection',
-      label:    TEMPLATES_META[key]?.label || key,
+      label:    templatesMeta[key]?.label || key,
       category: 'Rejection Reason',
     })),
   ];
 }
 
-exports.seedEmailTemplates = async function () {
-  const json = require('../data/emailTemplates.json');
-  const meta = json.meta || {};
-  const docs = [];
-  Object.entries(json.documentTemplates || {}).forEach(([key, text]) => {
-    docs.push({ key, text, type: 'document', label: meta[key]?.label || key, category: meta[key]?.category || 'Documents', isInfoOnly: !!meta[key]?.isInfoOnly, noWrapper: !!meta[key]?.noWrapper });
-  });
-  Object.entries(json.rejectionTemplates || {}).forEach(([key, text]) => {
-    docs.push({ key, text, type: 'rejection', label: meta[key]?.label || key, category: 'Rejection Reason', isInfoOnly: false, noWrapper: false });
+function buildEmailTemplateState(docs) {
+  const documentTemplates = {};
+  const rejectionTemplates = {};
+  const templatesMeta = {};
+
+  docs.forEach(t => {
+    const key = String(t.key || '').trim();
+    if (!key) return;
+
+    if (t.type === 'rejection') rejectionTemplates[key] = t.text || '';
+    else                        documentTemplates[key] = t.text || '';
+
+    templatesMeta[key] = {
+      label: t.label || key,
+      category: t.category || (t.type === 'rejection' ? 'Rejection Reason' : 'Documents'),
+      isInfoOnly: !!t.isInfoOnly,
+      noWrapper: !!t.noWrapper,
+    };
   });
 
-  const count = await EmailTemplate.countDocuments();
-  if (count === 0) {
-    await EmailTemplate.insertMany(docs);
-    console.log(`[EmailTemplate] Seeded ${docs.length} templates from JSON`);
+  const state = {
+    documentTemplates,
+    rejectionTemplates,
+    templatesMeta,
+    linkTemplateKeys: new Set(Object.keys(documentTemplates).filter(k => (documentTemplates[k] || '').includes('[link]'))),
+    infoOnlyTemplateKeys: new Set(Object.keys(templatesMeta).filter(k => templatesMeta[k].isInfoOnly)),
+    noWrapperDocKeys: new Set(Object.keys(templatesMeta).filter(k => templatesMeta[k].noWrapper)),
+  };
+  state.templates = buildTemplateList(state);
+
+  return state;
+}
+
+async function getEmailTemplateState() {
+  const docs = await EmailTemplate.find().lean();
+  return buildEmailTemplateState(docs);
+}
+
+async function getEmailTemplateList() {
+  const state = await getEmailTemplateState();
+  return state.templates;
+}
+
+exports.seedEmailTemplates = async function () {
+  const [marker, count] = await Promise.all([
+    SystemSetting.findOne({ key: EMAIL_TEMPLATES_INIT_KEY }).lean(),
+    EmailTemplate.countDocuments(),
+  ]);
+
+  if (marker) return;
+
+  if (count > 0) {
+    await SystemSetting.updateOne(
+      { key: EMAIL_TEMPLATES_INIT_KEY },
+      { $setOnInsert: { key: EMAIL_TEMPLATES_INIT_KEY, value: { source: 'existing-database', templateCount: count } } },
+      { upsert: true }
+    );
+    console.log(`[EmailTemplate] Existing ${count} templates detected; default bootstrap marked complete`);
     return;
   }
 
-  // Sync structural metadata (category, label, flags) without touching user-edited text
-  const ops = docs.map(d => ({
-    updateOne: {
-      filter: { key: d.key },
-      update: {
-        $set: { type: d.type, category: d.category, label: d.label, isInfoOnly: d.isInfoOnly, noWrapper: d.noWrapper },
-        $setOnInsert: { key: d.key, text: d.text },
+  const docs = buildDefaultEmailTemplateDocs();
+  if (docs.length) {
+    await EmailTemplate.bulkWrite(docs.map(doc => ({
+      updateOne: {
+        filter: { key: doc.key },
+        update: { $setOnInsert: doc },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
-  const result = await EmailTemplate.bulkWrite(ops);
-  if (result.modifiedCount > 0 || result.upsertedCount > 0) {
-    console.log(`[EmailTemplate] Synced metadata for ${result.modifiedCount} templates and inserted ${result.upsertedCount} new templates`);
+    })));
   }
+
+  await SystemSetting.updateOne(
+    { key: EMAIL_TEMPLATES_INIT_KEY },
+    { $setOnInsert: { key: EMAIL_TEMPLATES_INIT_KEY, value: { source: 'default-json', templateCount: docs.length } } },
+    { upsert: true }
+  );
+  console.log(`[EmailTemplate] Bootstrapped ${docs.length} default templates from JSON`);
 };
 
-function buildOutro(selectedDocKeys, link, hasCustomNote) {
-  const hasLinkTemplates = !!link && selectedDocKeys.some(k => LINK_TEMPLATE_KEYS.has(k));
-  const nonLinkKeys      = selectedDocKeys.filter(k => !LINK_TEMPLATE_KEYS.has(k));
+function normalizeTemplateBody(body) {
+  const key = String(body.key || '').trim();
+  const label = String(body.label || '').trim();
+  const category = String(body.category || '').trim();
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+
+  return { key, label, category, text };
+}
+
+function buildTemplateDocument(body) {
+  const { key, label, category, text } = normalizeTemplateBody(body);
+  const derived = deriveEmailTemplateFields(category);
+
+  return {
+    key,
+    label: label || key,
+    text,
+    category,
+    type: derived.type,
+    isInfoOnly: derived.isInfoOnly,
+    noWrapper: derived.noWrapper,
+  };
+}
+
+function buildTemplateUpdate(body, existing) {
+  const update = {};
+
+  if (body.text !== undefined) update.text = String(body.text || '').trim();
+  if (body.label !== undefined) update.label = String(body.label || '').trim();
+
+  if (body.category !== undefined) {
+    const category = String(body.category || '').trim();
+    const derived = deriveEmailTemplateFields(category);
+    update.category = category;
+    update.type = derived.type;
+    if (category !== existing.category) {
+      update.isInfoOnly = derived.isInfoOnly;
+      update.noWrapper = derived.noWrapper;
+    }
+  }
+
+  return update;
+}
+
+function buildOutro(selectedDocKeys, link, hasCustomNote, state) {
+  const hasLinkTemplates = !!link && selectedDocKeys.some(k => state.linkTemplateKeys.has(k));
+  const nonLinkKeys      = selectedDocKeys.filter(k => !state.linkTemplateKeys.has(k));
   const hasNonLink       = nonLinkKeys.length > 0 || hasCustomNote;
 
   const labelFor = (keys, includesCustom) => {
-    const hasDocs = keys.some(k => !INFO_ONLY_TEMPLATE_KEYS.has(k));
-    const hasInfo = keys.some(k =>  INFO_ONLY_TEMPLATE_KEYS.has(k)) || includesCustom;
+    const hasDocs = keys.some(k => !state.infoOnlyTemplateKeys.has(k));
+    const hasInfo = keys.some(k =>  state.infoOnlyTemplateKeys.has(k)) || includesCustom;
     if (hasDocs && hasInfo) return 'documents and information';
     if (hasDocs) return 'documents';
     return 'information';
@@ -557,7 +657,12 @@ exports.lookupIATA = (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
-  await loadTemplates();
+  const templateState = await getEmailTemplateState();
+  const {
+    documentTemplates,
+    rejectionTemplates,
+    noWrapperDocKeys,
+  } = templateState;
   const { mode, language, selectedTemplates = [], link, customNote, useWrapper, placeholderValues } = req.body;
 
   if (!mode) return next(new AppError('Please provide the email mode', 400));
@@ -572,8 +677,8 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   let generationResult = null;
   let translationResult = null;
 
-  const docKeys = Object.keys(DOCUMENT_TEMPLATES);
-  const rejKeys = Object.keys(REJECTION_TEMPLATES);
+  const docKeys = Object.keys(documentTemplates);
+  const rejKeys = Object.keys(rejectionTemplates);
 
   const sortedSelected = [...selectedTemplates].sort((a, b) => {
     if (a === 'Signed Power of Attorney') return -1;
@@ -605,18 +710,18 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
 
   const makeBullet = name => {
     let text = link
-      ? DOCUMENT_TEMPLATES[name].replace(/\[link\]/g, link)
-      : DOCUMENT_TEMPLATES[name];
+      ? documentTemplates[name].replace(/\[link\]/g, link)
+      : documentTemplates[name];
     text = applyPlaceholders(text);
     return `• ${text}`;
   };
 
   const noWrapBullets = sortedSelected
-    .filter(name => docKeys.includes(name) && NO_WRAPPER_DOC_KEYS.has(name))
+    .filter(name => docKeys.includes(name) && noWrapperDocKeys.has(name))
     .map(makeBullet);
 
   const docTemplateBullets = sortedSelected
-    .filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name))
+    .filter(name => docKeys.includes(name) && !noWrapperDocKeys.has(name))
     .map(makeBullet);
 
   let customNoteBullet = null;
@@ -634,7 +739,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const sections = [];
   const rejectionText = selectedTemplates
     .filter(name => rejKeys.includes(name))
-    .map(name => REJECTION_TEMPLATES[name])
+    .map(name => rejectionTemplates[name])
     .join('\n\n');
 
   if (rejectionText) sections.push(rejectionText);
@@ -644,8 +749,8 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   if (allWrapBullets.length) {
     // Outro is automatic when doc templates are selected; for custom note alone it respects the useWrapper flag
     const addOutro = docTemplateBullets.length > 0 || (customNoteBullet && useWrapper);
-    const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !NO_WRAPPER_DOC_KEYS.has(name));
-    const outro = buildOutro(wrapDocKeys, link, !!customNoteBullet);
+    const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !noWrapperDocKeys.has(name));
+    const outro = buildOutro(wrapDocKeys, link, !!customNoteBullet, templateState);
     const docSection = addOutro
       ? `${allWrapBullets.join('\n\n')}\n\n${outro}`
       : allWrapBullets.join('\n\n');
@@ -699,65 +804,55 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 exports.getEmailTemplates = catchAsync(async (req, res) => {
-  await loadTemplates();
-  res.json({ success: true, templates: buildTemplateListSync() });
+  res.json({ success: true, templates: await getEmailTemplateList() });
 });
 
 exports.createEmailTemplate = catchAsync(async (req, res, next) => {
-  const { key, text, label } = req.body;
-  const { category } = req.body;
-  if (!key || !text || !category) return next(new AppError('key, text, and category are required', 400));
-  const derived = deriveEmailTemplateFields(category);
+  const template = buildTemplateDocument(req.body);
+  if (!template.key || !template.text || !template.category) {
+    return next(new AppError('key, text, and category are required', 400));
+  }
 
-  const existing = await EmailTemplate.findOne({ key });
+  const existing = await EmailTemplate.findOne({ key: template.key });
   if (existing) return next(new AppError('A template with that key already exists', 409));
 
-  await EmailTemplate.create({ key, text, type: derived.type, label: label || key, category, isInfoOnly: derived.isInfoOnly, noWrapper: derived.noWrapper });
-  _templatesCached = false;
-  await loadTemplates();
-  res.json({ success: true, templates: buildTemplateListSync() });
+  await EmailTemplate.create(template);
+  res.json({ success: true, templates: await getEmailTemplateList() });
 });
 
 exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
-  const { key, text, label } = req.body;
-  const { category } = req.body;
+  const key = String(req.body.key || '').trim();
   if (!key) return next(new AppError('key is required', 400));
 
   const existing = await EmailTemplate.findOne({ key });
   if (!existing) return next(new AppError('Template not found', 404));
 
-  const update = {};
-  if (text     !== undefined) update.text      = text;
-  if (label    !== undefined) update.label     = label;
-  if (category !== undefined) {
-    update.category = category;
-    update.type = deriveEmailTemplateFields(category).type;
-    if (category !== existing.category) {
-      const derived = deriveEmailTemplateFields(category);
-      update.isInfoOnly = derived.isInfoOnly;
-      update.noWrapper  = derived.noWrapper;
-    }
+  const update = buildTemplateUpdate(req.body, existing);
+  if (update.text !== undefined && !update.text) {
+    return next(new AppError('text is required', 400));
+  }
+  if (update.label !== undefined && !update.label) {
+    return next(new AppError('label is required', 400));
+  }
+  if (update.category !== undefined && !update.category) {
+    return next(new AppError('category is required', 400));
   }
 
   if (Object.keys(update).length) {
     await EmailTemplate.updateOne({ key }, { $set: update }, { runValidators: true });
   }
 
-  _templatesCached = false;
-  await loadTemplates();
-  res.json({ success: true, templates: buildTemplateListSync() });
+  res.json({ success: true, templates: await getEmailTemplateList() });
 });
 
 exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {
-  const { key } = req.body;
+  const key = String(req.body.key || '').trim();
   if (!key) return next(new AppError('key is required', 400));
 
   const result = await EmailTemplate.deleteOne({ key });
   if (!result.deletedCount) return next(new AppError('Template not found', 404));
 
-  _templatesCached = false;
-  await loadTemplates();
-  res.json({ success: true, templates: buildTemplateListSync() });
+  res.json({ success: true, templates: await getEmailTemplateList() });
 });
 
 // ---------------------------------------------------------------------------
