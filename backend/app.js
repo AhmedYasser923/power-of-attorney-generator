@@ -95,7 +95,9 @@ mongoose.connect(process.env.DATABASE)
   .then(async () => {
     console.log('[DB] MongoDB connected');
     await bootstrapAdmin();
-    await require('./controllers/toolsController').seedEmailTemplates();
+    const toolsController = require('./controllers/toolsController');
+    await toolsController.seedEmailTemplates();
+    await toolsController.migrateEmailTemplateSchema();
   })
   .catch(err => {
     console.error('[DB] MongoDB connection failed:', err);

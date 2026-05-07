@@ -30,8 +30,9 @@ router.get('/api/version', (req, res) => {
 // ==========================================
 router.use(protect);
 
-// --- Auth: session check (requires valid cookie) ---
+// --- Auth: session check & logout (requires valid cookie) ---
 router.get('/api/auth/me', authController.apiGetMe);
+router.post('/api/auth/logout', authController.apiLogout);
 
 // --- User profile & usage dashboard ---
 router.get('/api/me/usage', require('../controllers/userController.js').getMyUsage);
@@ -58,12 +59,17 @@ router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs',      toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
 router.get('/api/tools/lookup-iata',     toolsController.lookupIATA);
-router.post('/api/tools/generate-email', toolsController.generateEmail);
-router.get('/api/tools/email-templates',    toolsController.getEmailTemplates);
-router.post('/api/tools/email-templates',   toolsController.createEmailTemplate);
-router.put('/api/tools/email-templates',    toolsController.updateEmailTemplate);
-router.delete('/api/tools/email-templates', toolsController.deleteEmailTemplate);
-router.post('/api/tools/sync-eoc',       toolsController.syncEOC);
+router.post('/api/tools/generate-email',          toolsController.generateEmail);
+router.post('/api/tools/translate-email',         toolsController.translateEmail);
+router.post('/api/tools/refine-email-section',    toolsController.refineEmailSection);
+router.get('/api/tools/email-templates',           toolsController.getEmailTemplates);
+router.post('/api/tools/email-templates',          toolsController.createEmailTemplate);
+router.put('/api/tools/email-templates',           toolsController.updateEmailTemplate);
+router.delete('/api/tools/email-templates/:key',   toolsController.deleteEmailTemplate);
+router.get('/api/tools/email-references',          toolsController.getEmailReferences);
+router.post('/api/tools/email-references',         toolsController.createEmailReference);
+router.delete('/api/tools/email-references/:id',   toolsController.deleteEmailReference);
+router.post('/api/tools/sync-eoc',                 toolsController.syncEOC);
 
 // --- POA Generation ---
 router.post('/api/poa/generate-standard',  upload.any(), reflyController.generateStandardPDF);

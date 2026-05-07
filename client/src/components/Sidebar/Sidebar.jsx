@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import reflyLogo from '../../assets/refly-logo.png';
 import './Sidebar.css';
 
@@ -48,11 +49,12 @@ function SignOutIcon() {
 
 export default function Sidebar({ user }) {
   const location = useLocation();
+  const { logout } = useAuth();
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   const signOut = (event) => {
     event.preventDefault();
-    window.location.href = '/logout';
+    logout();
   };
 
   return (

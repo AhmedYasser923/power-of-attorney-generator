@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const User = require('../models/User');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const { TOKEN_RENEW_AFTER_DAYS, sendTokenCookie } = require('../controllers/authController');
 
 exports.protect = catchAsync(async (req, res, next) => {
   const token = req.cookies && req.cookies.jwt;
@@ -42,6 +43,12 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (user.changedPasswordAfter(decoded.iat)) {
     if (isApiRoute) return next(new AppError('Password was recently changed. Please log in again.', 401));
     return res.redirect('/login');
+  }
+
+  // Sliding session: renew token if older than threshold
+  const tokenAgeDays = (Date.now() / 1000 - decoded.iat) / 86400;
+  if (tokenAgeDays > TOKEN_RENEW_AFTER_DAYS) {
+    sendTokenCookie(user, res);
   }
 
   req.user = user;

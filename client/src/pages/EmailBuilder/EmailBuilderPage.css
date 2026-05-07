@@ -509,6 +509,175 @@
   gap: 8px;
 }
 
+/* --- Loading Skeleton --- */
+
+.email-skeleton-group {
+  display: grid;
+  gap: 10px;
+}
+
+.email-skeleton-heading {
+  width: 90px;
+  height: 11px;
+  border-radius: 4px;
+  background: var(--bg-hover, #ffffff12);
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.email-skeleton-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.email-skeleton-pill {
+  height: 32px;
+  border-radius: 999px;
+  background: var(--bg-hover, #ffffff12);
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+/* --- Editable Sections --- */
+
+.email-output-sections {
+  display: grid;
+  gap: 0;
+  min-height: 360px;
+}
+
+.email-editable-section {
+  position: relative;
+}
+
+.email-editable-section__textarea {
+  display: block;
+  width: 100%;
+  padding: 6px 32px 6px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.65;
+  outline: none;
+  overflow: hidden;
+  resize: none;
+}
+
+.email-editable-section__textarea:focus {
+  border-bottom-color: var(--accent-border);
+}
+
+/* --- Magic Wand --- */
+
+.email-magic-wand {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.email-editable-section:hover .email-magic-wand,
+.email-editable-section:focus-within .email-magic-wand {
+  opacity: 1;
+}
+
+.email-magic-wand:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.email-magic-wand:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.email-magic-wand__spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: wand-spin 0.6s linear infinite;
+}
+
+@keyframes wand-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Add Section Button --- */
+
+.email-add-section-btn {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.email-add-section-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--text-secondary);
+}
+
+/* --- Translating Indicator --- */
+
+.email-translating-indicator {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+/* --- Preview Head Tabs --- */
+
+.email-preview-head__tabs {
+  display: inline-flex;
+  gap: 6px;
+}
+
+/* --- Reference Library --- */
+
+.email-reference-info {
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 @media (max-width: 980px) {
   .email-builder-layout {
     grid-template-columns: 1fr;

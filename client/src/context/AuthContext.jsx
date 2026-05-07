@@ -1,29 +1,45 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { apiGetMe, apiLogin, apiSignup } from '../api/auth.js';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { apiGetMe, apiLogin, apiLogout, apiSignup, setSessionExpiredHandler } from '../api/auth.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const logoutInFlight = useRef(false);
+
+  const handleSessionExpired = useCallback(() => {
+    if (logoutInFlight.current) return;
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    setSessionExpiredHandler(handleSessionExpired);
+    return () => setSessionExpiredHandler(null);
+  }, [handleSessionExpired]);
 
   useEffect(() => {
     let mounted = true;
 
     apiGetMe()
-      .then((payload) => {
-        if (mounted) setUser(payload.data.user);
-      })
-      .catch(() => {
-        if (mounted) setUser(null);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+      .then((payload) => { if (mounted) setUser(payload.data.user); })
+      .catch(() => { if (mounted) setUser(null); })
+      .finally(() => { if (mounted) setLoading(false); });
 
-    return () => {
-      mounted = false;
+    return () => { mounted = false; };
+  }, []);
+
+  // Revalidate session when tab regains focus
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      apiGetMe()
+        .then((payload) => setUser(payload.data.user))
+        .catch(() => setUser(null));
     };
+
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   const value = useMemo(() => ({
@@ -35,8 +51,11 @@ export function AuthProvider({ children }) {
       return payload;
     },
     signup: apiSignup,
-    logout: () => {
-      window.location.href = '/logout';
+    logout: async () => {
+      logoutInFlight.current = true;
+      try { await apiLogout(); } catch { /* ignore */ }
+      setUser(null);
+      logoutInFlight.current = false;
     }
   }), [loading, user]);
 

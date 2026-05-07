@@ -3,15 +3,30 @@ const User = require('../models/User');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
+const TOKEN_MAX_AGE_DAYS = 90;
+const TOKEN_RENEW_AFTER_DAYS = 7;
+const TOKEN_MAX_AGE_MS = TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
 const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '90d' });
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: `${TOKEN_MAX_AGE_DAYS}d` });
+
+const cookieOptions = () => ({
+  expires: new Date(Date.now() + TOKEN_MAX_AGE_MS),
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax'
+});
 
 const sendTokenCookie = (user, res) => {
-  res.cookie('jwt', signToken(user._id), {
-    expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+  res.cookie('jwt', signToken(user._id), cookieOptions());
+};
+
+const clearTokenCookie = (res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: 'lax'
   });
 };
 
@@ -41,11 +56,13 @@ exports.bootstrapAdmin = async () => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie('jwt', 'loggedout', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
-  });
+  clearTokenCookie(res);
   res.redirect('/login');
+};
+
+exports.apiLogout = (req, res) => {
+  clearTokenCookie(res);
+  res.status(200).json({ status: 'success' });
 };
 
 // --- JSON API endpoints (used by React frontend) ---
@@ -116,3 +133,6 @@ exports.apiSignup = catchAsync(async (req, res, next) => {
 exports.apiGetMe = (req, res) => {
   res.status(200).json({ status: 'success', data: { user: serializeUser(req.user) } });
 };
+
+exports.TOKEN_RENEW_AFTER_DAYS = TOKEN_RENEW_AFTER_DAYS;
+exports.sendTokenCookie = sendTokenCookie;

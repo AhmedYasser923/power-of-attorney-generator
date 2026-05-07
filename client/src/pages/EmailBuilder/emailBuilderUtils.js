@@ -19,23 +19,33 @@ export const LANGUAGES = [
   'Arabic'
 ];
 
+export const TYPE_ORDER = ['document-request', 'special-case', 'rejection'];
+
+export const TYPE_LABELS = {
+  'document-request': 'Document Request',
+  'special-case': 'Special Case',
+  'rejection': 'Rejection'
+};
+
+// Keep for backward compat during transition
 export const CATEGORY_ORDER = ['Documents', 'Others', 'Rejection Reason'];
 
 export function groupTemplates(templates) {
   const groups = templates.reduce((map, template) => {
-    const category = template.category || 'Documents';
-    if (!map[category]) map[category] = [];
-    map[category].push(template);
+    const groupKey = template.type || 'document-request';
+    if (!map[groupKey]) map[groupKey] = [];
+    map[groupKey].push(template);
     return map;
   }, {});
 
-  const categories = CATEGORY_ORDER
-    .filter((category) => groups[category])
-    .concat(Object.keys(groups).filter((category) => !CATEGORY_ORDER.includes(category)).sort());
+  const orderedKeys = TYPE_ORDER
+    .filter((type) => groups[type])
+    .concat(Object.keys(groups).filter((type) => !TYPE_ORDER.includes(type)).sort());
 
-  return categories.map((category) => ({
-    category,
-    templates: groups[category]
+  return orderedKeys.map((type) => ({
+    category: TYPE_LABELS[type] || type,
+    type,
+    templates: groups[type]
   }));
 }
 
@@ -72,16 +82,12 @@ export function getWordCount(text) {
 }
 
 export function deriveTemplatePayload(form) {
-  const category = form.category || 'Documents';
-  const isRejection = category === 'Rejection Reason';
-
+  const type = form.type || 'document-request';
   return {
     key: form.key.trim(),
     label: form.label.trim(),
     text: form.text.trim(),
-    category,
-    type: isRejection ? 'rejection' : 'document',
-    isInfoOnly: !isRejection && category === 'Others',
-    noWrapper: !isRejection && category === 'Others'
+    type,
+    combineWithDocuments: type === 'special-case' ? !!form.combineWithDocuments : false
   };
 }

@@ -1,4 +1,15 @@
+let onSessionExpired = null;
+
+export const setSessionExpiredHandler = (handler) => {
+  onSessionExpired = handler;
+};
+
 const parseResponse = async (response) => {
+  if (response.status === 401 && onSessionExpired) {
+    onSessionExpired();
+    throw new Error('Session expired');
+  }
+
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -34,3 +45,6 @@ export const apiSignup = (account) =>
   });
 
 export const apiGetMe = () => request('/api/auth/me');
+
+export const apiLogout = () =>
+  request('/api/auth/logout', { method: 'POST' });

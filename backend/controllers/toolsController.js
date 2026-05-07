@@ -11,7 +11,16 @@ const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 const logUsage   = require('../utils/logUsage');
 
+const EmailReference   = require('../models/EmailReference');
+
 const EMAIL_TEMPLATES_INIT_KEY = 'emailTemplatesInitialized';
+const EMAIL_TEMPLATES_MIGRATED_KEY = 'emailTemplatesSchemaMigrated';
+const MAX_REFERENCES = 3;
+const MAX_REFERENCE_WORDS = 2000;
+
+// ---------------------------------------------------------------------------
+// Template seeding — builds docs from the JSON defaults using the NEW schema
+// ---------------------------------------------------------------------------
 
 function buildDefaultEmailTemplateDocs() {
   const json = require('../data/emailTemplates.json');
@@ -19,14 +28,14 @@ function buildDefaultEmailTemplateDocs() {
   const docs = [];
 
   Object.entries(json.documentTemplates || {}).forEach(([key, text]) => {
+    const m = meta[key] || {};
+    const isOthers = m.category === 'Others';
     docs.push({
       key,
       text,
-      type: 'document',
-      label: meta[key]?.label || key,
-      category: meta[key]?.category || 'Documents',
-      isInfoOnly: !!meta[key]?.isInfoOnly,
-      noWrapper: !!meta[key]?.noWrapper,
+      type: isOthers ? 'special-case' : 'document-request',
+      label: m.label || key,
+      combineWithDocuments: isOthers ? !m.noWrapper : false,
     });
   });
 
@@ -35,65 +44,45 @@ function buildDefaultEmailTemplateDocs() {
       key,
       text,
       type: 'rejection',
-      label: meta[key]?.label || key,
-      category: 'Rejection Reason',
-      isInfoOnly: false,
-      noWrapper: false,
+      label: (meta[key] || {}).label || key,
+      combineWithDocuments: false,
     });
   });
 
   return docs;
 }
 
-function buildTemplateList(state) {
-  const { documentTemplates, rejectionTemplates, templatesMeta } = state;
-  return [
-    ...Object.entries(documentTemplates).map(([key, text]) => ({
-      key, text, type: 'document',
-      label:      templatesMeta[key]?.label    || key,
-      category:   templatesMeta[key]?.category || 'Documents',
-      isInfoOnly: !!templatesMeta[key]?.isInfoOnly,
-      noWrapper:  !!templatesMeta[key]?.noWrapper,
-    })),
-    ...Object.entries(rejectionTemplates).map(([key, text]) => ({
-      key, text, type: 'rejection',
-      label:    templatesMeta[key]?.label || key,
-      category: 'Rejection Reason',
-    })),
-  ];
-}
+// ---------------------------------------------------------------------------
+// Template state builder — creates an optimized lookup structure
+// ---------------------------------------------------------------------------
 
 function buildEmailTemplateState(docs) {
-  const documentTemplates = {};
-  const rejectionTemplates = {};
-  const templatesMeta = {};
+  const byKey = {};
 
   docs.forEach(t => {
     const key = String(t.key || '').trim();
     if (!key) return;
-
-    if (t.type === 'rejection') rejectionTemplates[key] = t.text || '';
-    else                        documentTemplates[key] = t.text || '';
-
-    templatesMeta[key] = {
+    byKey[key] = {
+      key,
+      text: t.text || '',
+      type: t.type,
       label: t.label || key,
-      category: t.category || (t.type === 'rejection' ? 'Rejection Reason' : 'Documents'),
-      isInfoOnly: !!t.isInfoOnly,
-      noWrapper: !!t.noWrapper,
+      combineWithDocuments: !!t.combineWithDocuments,
     };
   });
 
-  const state = {
-    documentTemplates,
-    rejectionTemplates,
-    templatesMeta,
-    linkTemplateKeys: new Set(Object.keys(documentTemplates).filter(k => (documentTemplates[k] || '').includes('[link]'))),
-    infoOnlyTemplateKeys: new Set(Object.keys(templatesMeta).filter(k => templatesMeta[k].isInfoOnly)),
-    noWrapperDocKeys: new Set(Object.keys(templatesMeta).filter(k => templatesMeta[k].noWrapper)),
-  };
-  state.templates = buildTemplateList(state);
+  const linkTemplateKeys = new Set();
+  Object.values(byKey).forEach(t => {
+    if (t.type !== 'rejection' && (t.text || '').includes('[link]')) {
+      linkTemplateKeys.add(t.key);
+    }
+  });
 
-  return state;
+  return {
+    byKey,
+    linkTemplateKeys,
+    templates: Object.values(byKey),
+  };
 }
 
 async function getEmailTemplateState() {
@@ -105,6 +94,10 @@ async function getEmailTemplateList() {
   const state = await getEmailTemplateState();
   return state.templates;
 }
+
+// ---------------------------------------------------------------------------
+// Seed + migrate
+// ---------------------------------------------------------------------------
 
 exports.seedEmailTemplates = async function () {
   const [marker, count] = await Promise.all([
@@ -143,88 +136,121 @@ exports.seedEmailTemplates = async function () {
   console.log(`[EmailTemplate] Bootstrapped ${docs.length} default templates from JSON`);
 };
 
-function normalizeTemplateBody(body) {
-  const key = String(body.key || '').trim();
-  const label = String(body.label || '').trim();
-  const category = String(body.category || '').trim();
-  const text = typeof body.text === 'string' ? body.text.trim() : '';
+exports.migrateEmailTemplateSchema = async function () {
+  const marker = await SystemSetting.findOne({ key: EMAIL_TEMPLATES_MIGRATED_KEY }).lean();
+  if (marker) return;
 
-  return { key, label, category, text };
-}
+  const coll = EmailTemplate.collection;
+
+  await coll.updateMany(
+    { type: 'document', category: 'Documents' },
+    { $set: { type: 'document-request', combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
+  );
+
+  await coll.updateMany(
+    { type: 'document', category: 'Others', noWrapper: true },
+    { $set: { type: 'special-case', combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
+  );
+
+  await coll.updateMany(
+    { type: 'document', category: 'Others' },
+    { $set: { type: 'special-case', combineWithDocuments: true }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
+  );
+
+  await coll.updateMany(
+    { type: 'rejection' },
+    { $set: { combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
+  );
+
+  await SystemSetting.updateOne(
+    { key: EMAIL_TEMPLATES_MIGRATED_KEY },
+    { $setOnInsert: { key: EMAIL_TEMPLATES_MIGRATED_KEY, value: { migratedAt: new Date() } } },
+    { upsert: true }
+  );
+  console.log('[EmailTemplate] Schema migration complete (category → type)');
+};
+
+// ---------------------------------------------------------------------------
+// Template CRUD helpers
+// ---------------------------------------------------------------------------
 
 function buildTemplateDocument(body) {
-  const { key, label, category, text } = normalizeTemplateBody(body);
-  const derived = deriveEmailTemplateFields(category);
+  const key = String(body.key || '').trim();
+  const label = String(body.label || '').trim();
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  const type = body.type || 'document-request';
+  const combineWithDocuments = type === 'special-case' ? !!body.combineWithDocuments : false;
 
-  return {
-    key,
-    label: label || key,
-    text,
-    category,
-    type: derived.type,
-    isInfoOnly: derived.isInfoOnly,
-    noWrapper: derived.noWrapper,
-  };
+  return { key, label: label || key, text, type, combineWithDocuments };
 }
 
-function buildTemplateUpdate(body, existing) {
+function buildTemplateUpdate(body) {
   const update = {};
-
   if (body.text !== undefined) update.text = String(body.text || '').trim();
   if (body.label !== undefined) update.label = String(body.label || '').trim();
 
-  if (body.category !== undefined) {
-    const category = String(body.category || '').trim();
-    const derived = deriveEmailTemplateFields(category);
-    update.category = category;
-    update.type = derived.type;
-    if (category !== existing.category) {
-      update.isInfoOnly = derived.isInfoOnly;
-      update.noWrapper = derived.noWrapper;
-    }
+  if (body.type !== undefined) {
+    update.type = body.type;
+    update.combineWithDocuments = body.type === 'special-case' ? !!body.combineWithDocuments : false;
+  } else if (body.combineWithDocuments !== undefined) {
+    update.combineWithDocuments = !!body.combineWithDocuments;
   }
 
   return update;
 }
 
-function buildOutro(selectedDocKeys, link, hasCustomNote, state) {
-  const hasLinkTemplates = !!link && selectedDocKeys.some(k => state.linkTemplateKeys.has(k));
-  const nonLinkKeys      = selectedDocKeys.filter(k => !state.linkTemplateKeys.has(k));
-  const hasNonLink       = nonLinkKeys.length > 0 || hasCustomNote;
+// ---------------------------------------------------------------------------
+// Outro builder — footer appended to document-request emails
+// ---------------------------------------------------------------------------
 
-  const labelFor = (keys, includesCustom) => {
-    const hasDocs = keys.some(k => !state.infoOnlyTemplateKeys.has(k));
-    const hasInfo = keys.some(k =>  state.infoOnlyTemplateKeys.has(k)) || includesCustom;
-    if (hasDocs && hasInfo) return 'documents and information';
-    if (hasDocs) return 'documents';
-    return 'information';
-  };
+function buildOutro(selectedKeys, link, hasCustomNote, state) {
+  const hasLinkTemplates = !!link && selectedKeys.some(k => state.linkTemplateKeys.has(k));
+  const nonLinkKeys = selectedKeys.filter(k => !state.linkTemplateKeys.has(k));
+  const hasNonLink = nonLinkKeys.length > 0 || hasCustomNote;
 
   if (hasLinkTemplates && hasNonLink) {
-    const label = labelFor(nonLinkKeys, hasCustomNote);
-    return `Please upload the relevant documents through the link above and reply directly to this email with the remaining ${label} at your earliest convenience. Once we receive everything, our legal team will continue processing your compensation claim.`;
+    return `Please upload the relevant documents through the link above and reply directly to this email with the remaining documents and information at your earliest convenience. Once we receive everything, our legal team will continue processing your compensation claim.`;
   }
 
   if (hasLinkTemplates && !hasNonLink) {
     return `Please upload all required documents through the link above at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
   }
 
-  // All via email reply
-  const label = labelFor(selectedDocKeys, hasCustomNote);
-  return `Please reply directly to this email with the requested ${label} at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+  return `Please reply directly to this email with the requested documents and information at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
 }
 
-function wrapWithTemplate(content, outro) {
-  return `In order to proceed with your claim and process your compensation, we require the following information and documents:\n\n${content}\n\n${outro}`;
+const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// ---------------------------------------------------------------------------
+// Shared AI translation helper
+// ---------------------------------------------------------------------------
+
+async function translateText(text, language, model) {
+  const prompt = `You are a professional multilingual translator and flight compensation specialist.\n\nTranslate the following email content into ${language}.\n\nIMPORTANT: Output ONLY the translated content. No subject line, no explanatory text, no metadata.\n\n---\n${text}\n---`;
+  const result = await geminiQueue.run(() => model.generateContent(prompt));
+  return { text: result.response.text().trim(), result };
 }
 
-function deriveEmailTemplateFields(category) {
-  const type = category === 'Rejection Reason' ? 'rejection' : 'document';
-  return {
-    type,
-    isInfoOnly: type === 'document' && category === 'Others',
-    noWrapper:  type === 'document' && category === 'Others',
-  };
+// ---------------------------------------------------------------------------
+// Reference context helper — fetches saved references for AI prompts
+// ---------------------------------------------------------------------------
+
+async function getReferenceContext() {
+  const refs = await EmailReference.find().sort({ createdAt: -1 }).limit(MAX_REFERENCES).lean();
+  if (!refs.length) return '';
+
+  let totalWords = 0;
+  const included = [];
+  for (const ref of refs) {
+    const words = ref.content.split(/\s+/).length;
+    if (totalWords + words > MAX_REFERENCE_WORDS) break;
+    totalWords += words;
+    included.push(`--- ${ref.title} ---\n${ref.content}`);
+  }
+
+  if (!included.length) return '';
+  return `\n\nHere are reference communications for tone and style context:\n${included.join('\n\n')}\n\n`;
 }
 
 const EocRecord            = require('../models/EocRecord');
@@ -251,10 +277,6 @@ const airlineCodesDatabase = require('../airlines_codes.json');
 
 const normalizeStr = s =>
   (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-
-const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
 // IFRAME PROXY — strips X-Frame-Options / CSP for sites that block iframes
@@ -656,13 +678,31 @@ exports.lookupIATA = (req, res, next) => {
 // SMART EMAIL BUILDER
 // ---------------------------------------------------------------------------
 
+function logAiUsage(req, results, language, opType) {
+  const totals = results.reduce((acc, r) => {
+    const meta = r?.response?.usageMetadata || {};
+    acc.iTok += meta.promptTokenCount || 0;
+    acc.oTok += meta.candidatesTokenCount || 0;
+    acc.tTok += meta.thoughtsTokenCount || 0;
+    return acc;
+  }, { iTok: 0, oTok: 0, tTok: 0 });
+  const { iTok, oTok, tTok } = totals;
+  const { MODEL_PRICING } = require('../utils/pricing');
+  const rates = MODEL_PRICING['gemini-2.5-flash'];
+  const costUSD = (iTok / 1_000_000) * rates.input + ((oTok + tTok) / 1_000_000) * rates.output;
+  logUsage(req, {
+    operationType: opType || 'email_translation',
+    model: 'gemini-2.5-flash',
+    inputTokens: iTok,
+    outputTokens: oTok + tTok,
+    costUSD,
+    metadata: { language }
+  });
+}
+
 exports.generateEmail = catchAsync(async (req, res, next) => {
   const templateState = await getEmailTemplateState();
-  const {
-    documentTemplates,
-    rejectionTemplates,
-    noWrapperDocKeys,
-  } = templateState;
+  const { byKey } = templateState;
   const { mode, language, selectedTemplates = [], link, customNote, useWrapper, placeholderValues } = req.body;
 
   if (!mode) return next(new AppError('Please provide the email mode', 400));
@@ -673,12 +713,8 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
 
   const isEnglish = language === 'English';
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
   let generationResult = null;
   let translationResult = null;
-
-  const docKeys = Object.keys(documentTemplates);
-  const rejKeys = Object.keys(rejectionTemplates);
 
   const sortedSelected = [...selectedTemplates].sort((a, b) => {
     if (a === 'Signed Power of Attorney') return -1;
@@ -708,25 +744,29 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     });
   };
 
-  const makeBullet = name => {
-    let text = link
-      ? documentTemplates[name].replace(/\[link\]/g, link)
-      : documentTemplates[name];
+  const makeBullet = key => {
+    const t = byKey[key];
+    if (!t) return '';
+    let text = link ? t.text.replace(/\[link\]/g, link) : t.text;
     text = applyPlaceholders(text);
     return `• ${text}`;
   };
 
-  const noWrapBullets = sortedSelected
-    .filter(name => docKeys.includes(name) && noWrapperDocKeys.has(name))
-    .map(makeBullet);
+  // Categorize selected templates by type
+  const rejectionKeys = sortedSelected.filter(k => byKey[k]?.type === 'rejection');
+  const docRequestKeys = sortedSelected.filter(k => byKey[k]?.type === 'document-request');
+  const specialStandaloneKeys = sortedSelected.filter(k =>
+    byKey[k]?.type === 'special-case' && !byKey[k]?.combineWithDocuments
+  );
+  const specialCombinableKeys = sortedSelected.filter(k =>
+    byKey[k]?.type === 'special-case' && byKey[k]?.combineWithDocuments
+  );
 
-  const docTemplateBullets = sortedSelected
-    .filter(name => docKeys.includes(name) && !noWrapperDocKeys.has(name))
-    .map(makeBullet);
-
+  // Process custom note via AI
   let customNoteBullet = null;
   if (customNote?.trim()) {
-    const noteRewritePrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
+    const referenceContext = await getReferenceContext();
+    const noteRewritePrompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.${referenceContext}\n\nRewrite the following note as a warm, professional sentence for a flight compensation claim email. Tone: human and considerate — the passenger may be in a stressful situation. Phrase it as a polite request or question, not a command. No filler phrases. No bullet point, no greeting, no sign-off. Output only the rewritten sentence.\n\n"${customNote.trim()}"`;
     try {
       generationResult = await geminiQueue.run(() => model.generateContent(noteRewritePrompt));
     } catch (err) {
@@ -736,67 +776,113 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     customNoteBullet = `• ${generationResult.response.text().trim()}`;
   }
 
+  // Build email sections
   const sections = [];
-  const rejectionText = selectedTemplates
-    .filter(name => rejKeys.includes(name))
-    .map(name => rejectionTemplates[name])
+
+  const rejectionText = rejectionKeys
+    .filter(k => byKey[k])
+    .map(k => byKey[k].text)
     .join('\n\n');
-
   if (rejectionText) sections.push(rejectionText);
-  if (noWrapBullets.length) sections.push(noWrapBullets.join('\n\n'));
 
-  const allWrapBullets = [...docTemplateBullets, ...(customNoteBullet ? [customNoteBullet] : [])];
-  if (allWrapBullets.length) {
-    // Outro is automatic when doc templates are selected; for custom note alone it respects the useWrapper flag
-    const addOutro = docTemplateBullets.length > 0 || (customNoteBullet && useWrapper);
-    const wrapDocKeys = selectedTemplates.filter(name => docKeys.includes(name) && !noWrapperDocKeys.has(name));
-    const outro = buildOutro(wrapDocKeys, link, !!customNoteBullet, templateState);
+  const standaloneBullets = specialStandaloneKeys.filter(k => byKey[k]).map(makeBullet);
+  if (standaloneBullets.length) sections.push(standaloneBullets.join('\n\n'));
+
+  const wrappedBullets = [
+    ...docRequestKeys.filter(k => byKey[k]).map(makeBullet),
+    ...specialCombinableKeys.filter(k => byKey[k]).map(makeBullet),
+    ...(customNoteBullet ? [customNoteBullet] : [])
+  ];
+
+  if (wrappedBullets.length) {
+    const hasDocRequests = docRequestKeys.length > 0;
+    const addOutro = hasDocRequests || (customNoteBullet && useWrapper);
+    const outroKeys = [...docRequestKeys, ...specialCombinableKeys];
+    const outro = buildOutro(outroKeys, link, !!customNoteBullet, templateState);
     const docSection = addOutro
-      ? `${allWrapBullets.join('\n\n')}\n\n${outro}`
-      : allWrapBullets.join('\n\n');
+      ? `${wrappedBullets.join('\n\n')}\n\n${outro}`
+      : wrappedBullets.join('\n\n');
     sections.push(docSection);
   }
 
   const englishBody = sections.join('\n\n');
 
-  // --- Translate if needed ---
+  // Translate if needed
   let email, englishTranslation = null;
   if (!isEnglish) {
-    const translationPrompt = `You are a professional multilingual translator and flight compensation specialist.\n\nTranslate the following email content into ${language}.\n\nIMPORTANT: Output ONLY the translated content. No subject line, no explanatory text, no metadata.\n\n---\n${englishBody}\n---`;
     try {
-      translationResult = await geminiQueue.run(() => model.generateContent(translationPrompt));
+      const tr = await translateText(englishBody, language, model);
+      translationResult = tr.result;
+      email = tr.text;
+      englishTranslation = englishBody;
     } catch (err) {
       if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
       return next(new AppError(`Translation failed: ${err.message}`, 502));
     }
-    email = translationResult.response.text().trim();
-    englishTranslation = englishBody;
   } else {
     email = englishBody;
   }
 
-  // --- Log usage ---
-  const usageTotals = [generationResult, translationResult].reduce((totals, result) => {
-    const usageMeta = result?.response?.usageMetadata || {};
-    totals.iTok += usageMeta.promptTokenCount || 0;
-    totals.oTok += usageMeta.candidatesTokenCount || 0;
-    totals.tTok += usageMeta.thoughtsTokenCount || 0;
-    return totals;
-  }, { iTok: 0, oTok: 0, tTok: 0 });
-  const { iTok, oTok, tTok } = usageTotals;
-  const { MODEL_PRICING } = require('../utils/pricing');
-  const emailRates = MODEL_PRICING['gemini-2.5-flash'];
-  const emailCostUSD = (iTok / 1_000_000) * emailRates.input + ((oTok + tTok) / 1_000_000) * emailRates.output;
-  logUsage(req, {
-    operationType: 'email_translation',
-    model: 'gemini-2.5-flash',
-    inputTokens: iTok,
-    outputTokens: oTok + tTok,
-    costUSD: emailCostUSD,
-    metadata: { language, mode }
-  });
-
+  logAiUsage(req, [generationResult, translationResult], language);
   res.status(200).json({ success: true, email, englishTranslation });
+});
+
+// ---------------------------------------------------------------------------
+// TRANSLATE EMAIL — standalone translation endpoint for live sync
+// ---------------------------------------------------------------------------
+
+exports.translateEmail = catchAsync(async (req, res, next) => {
+  const { text, language } = req.body;
+  if (!text?.trim()) return next(new AppError('text is required', 400));
+  if (!language || language === 'English') return next(new AppError('Non-English language is required', 400));
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  try {
+    const tr = await translateText(text, language, model);
+    logAiUsage(req, [tr.result], language, 'email_translation_sync');
+    res.json({ success: true, translated: tr.text });
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Translation failed: ${err.message}`, 502));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// REFINE EMAIL SECTION — AI refinement with magic wand
+// ---------------------------------------------------------------------------
+
+exports.refineEmailSection = catchAsync(async (req, res, next) => {
+  const { section, context, language } = req.body;
+  if (!section?.trim()) return next(new AppError('section is required', 400));
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const referenceContext = await getReferenceContext();
+
+  const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.${referenceContext}\n\nGiven the following full email for context:\n---\n${context || ''}\n---\n\nRefine ONLY the following paragraph to be warm, professional, and contextually appropriate for a flight compensation claim email. Maintain consistency with the surrounding email tone. Output only the refined paragraph, nothing else.\n\n"${section.trim()}"`;
+
+  let refineResult, translateResult = null;
+  try {
+    refineResult = await geminiQueue.run(() => model.generateContent(prompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Refinement failed: ${err.message}`, 502));
+  }
+
+  const refined = refineResult.response.text().trim();
+  let translatedRefined = null;
+
+  if (language && language !== 'English') {
+    try {
+      const tr = await translateText(refined, language, model);
+      translateResult = tr.result;
+      translatedRefined = tr.text;
+    } catch (_) {
+      // Non-critical: return refined even if translation fails
+    }
+  }
+
+  logAiUsage(req, [refineResult, translateResult], language, 'email_refinement');
+  res.json({ success: true, refined, translatedRefined });
 });
 
 // ---------------------------------------------------------------------------
@@ -809,8 +895,8 @@ exports.getEmailTemplates = catchAsync(async (req, res) => {
 
 exports.createEmailTemplate = catchAsync(async (req, res, next) => {
   const template = buildTemplateDocument(req.body);
-  if (!template.key || !template.text || !template.category) {
-    return next(new AppError('key, text, and category are required', 400));
+  if (!template.key || !template.text || !template.type) {
+    return next(new AppError('key, text, and type are required', 400));
   }
 
   const existing = await EmailTemplate.findOne({ key: template.key });
@@ -827,15 +913,12 @@ exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
   const existing = await EmailTemplate.findOne({ key });
   if (!existing) return next(new AppError('Template not found', 404));
 
-  const update = buildTemplateUpdate(req.body, existing);
+  const update = buildTemplateUpdate(req.body);
   if (update.text !== undefined && !update.text) {
     return next(new AppError('text is required', 400));
   }
   if (update.label !== undefined && !update.label) {
     return next(new AppError('label is required', 400));
-  }
-  if (update.category !== undefined && !update.category) {
-    return next(new AppError('category is required', 400));
   }
 
   if (Object.keys(update).length) {
@@ -846,13 +929,48 @@ exports.updateEmailTemplate = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteEmailTemplate = catchAsync(async (req, res, next) => {
-  const key = String(req.body.key || '').trim();
+  const key = String(req.params.key || '').trim();
   if (!key) return next(new AppError('key is required', 400));
 
   const result = await EmailTemplate.deleteOne({ key });
   if (!result.deletedCount) return next(new AppError('Template not found', 404));
 
   res.json({ success: true, templates: await getEmailTemplateList() });
+});
+
+// ---------------------------------------------------------------------------
+// EMAIL REFERENCE CRUD — persistent AI context
+// ---------------------------------------------------------------------------
+
+exports.getEmailReferences = catchAsync(async (req, res) => {
+  const refs = await EmailReference.find().sort({ createdAt: -1 }).lean();
+  res.json({ success: true, references: refs });
+});
+
+exports.createEmailReference = catchAsync(async (req, res, next) => {
+  const title = String(req.body.title || '').trim();
+  const content = String(req.body.content || '').trim();
+  if (!title || !content) return next(new AppError('title and content are required', 400));
+
+  const count = await EmailReference.countDocuments();
+  if (count >= MAX_REFERENCES) {
+    return next(new AppError(`Maximum ${MAX_REFERENCES} references allowed. Delete one first.`, 400));
+  }
+
+  await EmailReference.create({ title, content });
+  const refs = await EmailReference.find().sort({ createdAt: -1 }).lean();
+  res.json({ success: true, references: refs });
+});
+
+exports.deleteEmailReference = catchAsync(async (req, res, next) => {
+  const id = req.params.id;
+  if (!id) return next(new AppError('id is required', 400));
+
+  const result = await EmailReference.deleteOne({ _id: id });
+  if (!result.deletedCount) return next(new AppError('Reference not found', 404));
+
+  const refs = await EmailReference.find().sort({ createdAt: -1 }).lean();
+  res.json({ success: true, references: refs });
 });
 
 // ---------------------------------------------------------------------------
