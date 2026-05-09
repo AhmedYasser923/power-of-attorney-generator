@@ -387,10 +387,57 @@ export default function AdminDashboardPage() {
 
   if (initialLoading) {
     return (
-      <section className="admin-dashboard admin-dashboard--loading">
-        <div className="dashboard-loader">
-          <div className="dashboard-loader__spinner" />
-          <p>Loading dashboard...</p>
+      <section className="admin-dashboard">
+        <header className="admin-dashboard__header">
+          <div>
+            <div className="skel skel--title-lg" />
+            <div className="skel skel--subtitle-lg" />
+          </div>
+          <div className="skel skel--btn" />
+        </header>
+        <div className="admin-stat-grid">
+          {[1, 2, 3].map((card) => (
+            <article className="admin-stat-card" key={card}>
+              <div className="skel skel--label" />
+              <div className="skel skel--big-number" />
+            </article>
+          ))}
+        </div>
+        <nav className="admin-tabs" role="tablist">
+          {[80, 100, 96, 64].map((width, index) => (
+            <div className="skel skel--tab" key={index} style={{ width }} />
+          ))}
+        </nav>
+        <div className="admin-panel">
+          <div className="admin-panel__head">
+            <div className="skel skel--section-title" />
+            <div className="admin-filters">
+              <div className="skel skel--select" />
+              <div className="skel skel--select skel--select-sm" />
+            </div>
+          </div>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((row) => (
+                  <tr key={row}>
+                    <td><div className="skel skel--td" style={{ width: '75%' }} /></td>
+                    <td><div className="skel skel--td" style={{ width: '60%' }} /></td>
+                    <td><div className="skel skel--pill" /></td>
+                    <td><div className="skel skel--td" style={{ width: '45%' }} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     );

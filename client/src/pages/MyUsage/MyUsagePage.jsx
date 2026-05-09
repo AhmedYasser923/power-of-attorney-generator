@@ -299,11 +299,57 @@ export default function MyUsagePage() {
 
   if (showInitialLoading) {
     return (
-      <section className="my-usage my-usage--loading">
-        <div className="dashboard-loader">
-          <div className="dashboard-loader__spinner" />
-          <p>Loading your usage data...</p>
+      <section className="my-usage">
+        <header className="my-usage__header">
+          <div className="skel skel--title" />
+          <div className="skel skel--subtitle" />
+        </header>
+        <div className="my-usage__filters">
+          <div className="skel skel--select" />
+          <div className="skel skel--select skel--select-sm" />
+          <div className="my-usage__month-summary">
+            <div className="skel skel--chip" />
+            <span className="my-usage__month-stat-sep">/</span>
+            <div className="skel skel--chip" />
+          </div>
         </div>
+        <div className="my-usage__stat-grid">
+          <article className="my-usage__stat-card">
+            <div className="skel skel--label" />
+            <div className="skel skel--big-number" />
+          </article>
+          <article className="my-usage__stat-card">
+            <div className="skel skel--label" />
+            <div className="skel skel--big-number" />
+          </article>
+        </div>
+        <section className="my-usage__section">
+          <div className="skel skel--section-title" />
+          <div className="my-usage__table-wrap">
+            <table className="my-usage__table">
+              <thead>
+                <tr>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                  <th><div className="skel skel--th" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((row) => (
+                  <tr key={row}>
+                    <td><div className="skel skel--td" style={{ width: '80%' }} /></td>
+                    <td><div className="skel skel--pill" /></td>
+                    <td><div className="skel skel--td" style={{ width: '60%' }} /></td>
+                    <td><div className="skel skel--td" style={{ width: '50%' }} /></td>
+                    <td><div className="skel skel--td" style={{ width: '70%' }} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
     );
   }
