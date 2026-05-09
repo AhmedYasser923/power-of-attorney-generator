@@ -20,56 +20,73 @@ const handleMulterError = (err) => {
   return new AppError(message, 400);
 };
 
+function logUnexpected(req, err) {
+  console.error(`ERROR [${req.id}]`, err);
+}
 
 // --- SEND HELPERS ---
 
 const sendErrorDev = (err, req, res) => {
-  // API: return full JSON with stack trace
   if (req.originalUrl.startsWith('/api')) {
     return res.status(err.statusCode).json({
       status: err.status,
       error: err,
       message: err.message,
+      requestId: req.id,
       stack: err.stack
     });
   }
-  if (!err.isOperational) console.error('ERROR', err);
-  return res.status(err.statusCode).json({ status: err.status, message: err.message, stack: err.stack });
+
+  if (!err.isOperational) logUnexpected(req, err);
+  return res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+    requestId: req.id,
+    stack: err.stack
+  });
 };
 
 const sendErrorProd = (err, req, res) => {
-  // API errors
   if (req.originalUrl.startsWith('/api')) {
-    // Operational / expected error → show user-friendly message
     if (err.isOperational) {
       return res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
+        message: err.message,
+        requestId: req.id
       });
     }
-    // Programming / unknown error → don't leak internals
-    console.error('ERROR', err);
+
+    logUnexpected(req, err);
     return res.status(500).json({
       status: 'error',
-      message: 'Something went very wrong!'
+      message: 'Something went very wrong!',
+      requestId: req.id
     });
   }
 
   if (err.isOperational) {
-    return res.status(err.statusCode).json({ status: err.status, message: err.message });
+    return res.status(err.statusCode).json({
+      status: err.status,
+      message: err.message,
+      requestId: req.id
+    });
   }
-  console.error('ERROR', err);
-  return res.status(500).json({ status: 'error', message: 'Something went very wrong!' });
-};
 
+  logUnexpected(req, err);
+  return res.status(500).json({
+    status: 'error',
+    message: 'Something went very wrong!',
+    requestId: req.id
+  });
+};
 
 // --- GLOBAL ERROR HANDLER ---
 module.exports = (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
-  // In both dev and prod we want to convert known framework errors to
-  // friendly AppErrors before deciding how much detail to expose.
   let error = err;
 
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
@@ -81,7 +98,6 @@ module.exports = (err, req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     sendErrorProd(error, req, res);
   } else {
-    // Development and any other NODE_ENV → full details
     sendErrorDev(error, req, res);
   }
 };

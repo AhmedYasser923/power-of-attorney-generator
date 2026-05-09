@@ -12,9 +12,23 @@ const AppError = require('./utils/appError');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('[SECURITY] JWT_SECRET is missing or too weak. Use at least 32 random characters.');
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+}
+
+const WEAK_PASSWORDS = ['SuperSecret123', 'password', 'admin', '12345678'];
+if (process.env.ADMIN_PASSWORD && WEAK_PASSWORDS.includes(process.env.ADMIN_PASSWORD)) {
+  console.error('[SECURITY] ADMIN_PASSWORD is a known weak default. Change it before deploying.');
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const helmet = require('helmet');
+const hpp = require('hpp');
 const path = require('path');
 const mongoose = require('mongoose');
 
@@ -23,31 +37,79 @@ const app = express();
 const rateLimit = require('express-rate-limit');
 const globalErrorHandler = require('./controllers/errorController');
 const { bootstrapAdmin } = require('./controllers/authController');
+const csrfProtect = require('./middleware/csrf');
+const requestId = require('./middleware/requestId');
+const sanitizeMongo = require('./middleware/sanitizeMongo');
 
 
 // View engine setup
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, '..', 'client', 'dist'), { index: false }));
-
 // Cloud Run (and other reverse proxies) set Forwarded / X-Forwarded-For headers
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
-// Rate limit login attempts: 10 per 15 minutes per IP
-app.use('/login', rateLimit({
+// Middleware
+app.use(requestId);
+app.use(helmet({ contentSecurityPolicy: false }));
+
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : [];
+
+if (allowedOrigins.length > 0) {
+  app.use(cors({
+    credentials: true,
+    origin: allowedOrigins
+  }));
+}
+
+app.use(cookieParser());
+app.use(csrfProtect);
+
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: 'Too many login attempts. Please try again in 15 minutes.',
+  message: { status: 'fail', message: 'Too many login attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
-  legacyHeaders: false,
-  validate: { trustProxy: false }
-}));
+  legacyHeaders: false
+});
+app.use('/api/auth/login', loginLimiter);
+
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { status: 'fail', message: 'Too many signup attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api/auth/signup', signupLimiter);
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { status: 'fail', message: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api', apiLimiter);
+
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { status: 'fail', message: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/admin', adminLimiter);
+
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
+app.use(sanitizeMongo);
+app.use(hpp());
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist'), { index: false }));
 
 // SSE clients registry (used by admin reload-clients endpoint)
 app.set('sseClients', new Set());
@@ -84,10 +146,10 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Allow long-running requests (Gemini signature processing) without Node.js killing the connection
-server.timeout = 0;
-server.requestTimeout = 0;
-server.headersTimeout = 0;
+// Allow generous timeouts for Gemini processing without leaving sockets unlimited.
+server.timeout = 300_000;
+server.requestTimeout = 300_000;
+server.headersTimeout = 65_000;
 server.keepAliveTimeout = 620_000; // slightly above Cloud Run's 600s LB idle timeout
 
 // Connect to MongoDB after server is up

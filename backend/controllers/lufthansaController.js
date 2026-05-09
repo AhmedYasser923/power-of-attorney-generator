@@ -5,6 +5,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 const { processSignature } = require('../services/signatureService');
+const { sanitizeFilenameComponent } = require('../utils/sanitize');
 
 function getLufthansaLogoBase64() {
   try {
@@ -72,8 +73,9 @@ exports.generateLufthansaPDF = catchAsync(async (req, res, next) => {
 
   // Flush headers immediately — keeps Cloud Run's load balancer connection alive
   // while Gemini processes signatures (which can take a long time)
+  const safePnr = sanitizeFilenameComponent(pnr, 'document');
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename=lufthansa-poa-${pnr}.pdf`);
+  res.setHeader('Content-Disposition', `attachment; filename="lufthansa-poa-${safePnr}.pdf"`);
   res.flushHeaders();
 
   // Process all signatures in parallel

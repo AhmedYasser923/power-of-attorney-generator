@@ -5,6 +5,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { MODEL_PRICING } = require('../utils/pricing');
 const { OP_LABELS, EGYPT_MS } = require('../utils/constants');
+const { assertString } = require('../middleware/validate');
 
 exports.getUsers = catchAsync(async (req, res) => {
   const users = await User.find().sort({ createdAt: -1 }).lean();
@@ -41,6 +42,8 @@ exports.resumeUser = catchAsync(async (req, res, next) => {
 
 exports.changeUserPassword = catchAsync(async (req, res, next) => {
   const { password } = req.body;
+  assertString(password, 'Password', { maxLength: 256 });
+
   if (!password || password.length < 8) {
     return next(new AppError('Password must be at least 8 characters.', 400));
   }

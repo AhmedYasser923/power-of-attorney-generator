@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const { assertEmail, assertString } = require('../middleware/validate');
 
 const TOKEN_MAX_AGE_DAYS = 90;
 const TOKEN_RENEW_AFTER_DAYS = 7;
@@ -78,9 +79,14 @@ const serializeUser = (user) => ({
 exports.apiLogin = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ status: 'fail', message: 'Invalid input.' });
+  }
   if (!email || !password) {
     return res.status(400).json({ status: 'fail', message: 'Please provide your email and password.' });
   }
+  assertEmail(email);
+  assertString(password, 'Password', { maxLength: 256 });
 
   const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
@@ -104,9 +110,17 @@ exports.apiLogin = catchAsync(async (req, res, next) => {
 exports.apiSignup = catchAsync(async (req, res, next) => {
   const { name, email, password, passwordConfirm } = req.body;
 
+  if (typeof name !== 'string' || typeof email !== 'string' ||
+      typeof password !== 'string' || typeof passwordConfirm !== 'string') {
+    return res.status(400).json({ status: 'fail', message: 'All fields must be text.' });
+  }
   if (!name || !email || !password || !passwordConfirm) {
     return res.status(400).json({ status: 'fail', message: 'All fields are required.' });
   }
+  assertString(name, 'Name', { maxLength: 100 });
+  assertEmail(email);
+  assertString(password, 'Password', { maxLength: 256 });
+  assertString(passwordConfirm, 'Password confirmation', { maxLength: 256 });
   if (password.length < 8) {
     return res.status(400).json({ status: 'fail', message: 'Password must be at least 8 characters.' });
   }

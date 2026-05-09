@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 const { processSignature } = require('../services/signatureService');
+const { sanitizeFilenameComponent } = require('../utils/sanitize');
 
 const { MODEL_PRICING } = require('../utils/pricing');
 
@@ -16,9 +17,9 @@ exports.generateStandardPDF = catchAsync(async (req, res, next) => {
     return res.render('index', { error: 'All fields are required', formData: req.body });
   }
 
-  const langCode = lang || 'En';
-  const safeFirstName = firstName.replace(/[^\x00-\x7F]/g, "").trim();
-  const safeLastName = lastName.replace(/[^\x00-\x7F]/g, "").trim();
+  const langCode = sanitizeFilenameComponent(lang || 'En', 'En');
+  const safeFirstName = sanitizeFilenameComponent(firstName, 'passenger');
+  const safeLastName = sanitizeFilenameComponent(lastName, 'document');
   const fileName = `Assignment-${langCode}_${safeFirstName}_${safeLastName}.pdf`;
 
   // Flush headers immediately — keeps Cloud Run's load balancer connection alive

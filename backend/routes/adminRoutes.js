@@ -5,8 +5,8 @@ const { protect, restrictTo } = require('../middleware/auth');
 
 router.use(protect);
 
-// SSE (all logged-in users)
-router.get('/api/sse/events', adminController.sseStream);
+// SSE (admin only)
+router.get('/api/sse/events', restrictTo('admin'), adminController.sseStream);
 
 // Admin-only
 router.get('/admin/users',                restrictTo('admin'), adminController.getUsers);

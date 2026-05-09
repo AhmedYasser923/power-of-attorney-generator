@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 const { processSignature } = require('../services/signatureService');
+const { sanitizeFilenameComponent } = require('../utils/sanitize');
 
 const { MODEL_PRICING } = require('../utils/pricing');
 
@@ -15,12 +16,14 @@ exports.generateAerLingusPDF = catchAsync(async (req, res, next) => {
     return next(new AppError('First Name, Last Name, and PNR are required.', 400));
   }
 
-  const fileName = `AerLingus_POA_${firstName}_${lastName}.pdf`;
+  const safeFirstName = sanitizeFilenameComponent(firstName, 'passenger');
+  const safeLastName = sanitizeFilenameComponent(lastName, 'document');
+  const fileName = `AerLingus_POA_${safeFirstName}_${safeLastName}.pdf`;
 
   // Flush headers immediately — keeps Cloud Run's load balancer connection alive
   // while Gemini processes the signature (which can take a long time)
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
   res.flushHeaders();
 
   const { dataUrl: signatureDataUrl, inputTokens: sigIn, outputTokens: sigOut, modelUsed } = await processSignature(signatureFile, sigProcessing);
