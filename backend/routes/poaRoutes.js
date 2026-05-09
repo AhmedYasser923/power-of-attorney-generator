@@ -18,7 +18,7 @@ const upload = multer({
   }
 });
 
-router.use(protect);
+router.use('/api/poa', protect);
 
 router.post('/api/poa/generate-standard',  userRateLimit, upload.any(), validateSignatureFiles, reflyController.generateStandardPDF);
 router.post('/api/poa/generate-lufthansa', userRateLimit, upload.any(), validateSignatureFiles, lufthansaController.generateLufthansaPDF);

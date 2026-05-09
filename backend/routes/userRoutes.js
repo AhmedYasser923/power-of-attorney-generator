@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { protect } = require('../middleware/auth');
 
-router.use(protect);
+router.use('/api/me', protect);
 router.get('/api/me/usage', userController.getMyUsage);
 router.get('/api/me/logs', userController.getUserLogs);
 

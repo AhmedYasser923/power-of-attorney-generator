@@ -4,7 +4,7 @@ const toolsController = require('../controllers/toolsController');
 const { protect, restrictTo } = require('../middleware/auth');
 const userRateLimit = require('../middleware/userRateLimit');
 
-router.use(protect);
+router.use('/api/tools', protect);
 
 router.get('/api/tools/flight-status',   toolsController.checkFlightStatus);
 router.get('/api/tools/check-eoc',       toolsController.checkEOC);

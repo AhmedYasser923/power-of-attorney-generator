@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { protect, restrictTo } = require('../middleware/auth');
 
-router.use(protect);
+router.use(['/admin', '/api/sse'], protect);
 
 // SSE (admin only)
 router.get('/api/sse/events', restrictTo('admin'), adminController.sseStream);

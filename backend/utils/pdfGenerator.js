@@ -1,5 +1,3 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -8,30 +6,26 @@ const moment = require('moment');
 class PDFGenerator {
   static async generatePOA(app, data, templateName = 'assignment-pdf') {
     
-    // 1. Standard Logo
-    const standardLogoPath = path.join(__dirname, '../public/images/Screenshot_1.png');
+    const standardLogoPath = path.join(__dirname, '../public/images/refly-logo.png');
     let standardLogoDataUrl = null;
     try {
       standardLogoDataUrl = `data:image/png;base64,${fs.readFileSync(standardLogoPath, { encoding: 'base64' })}`;
     } catch (err) {}
 
-    // 2. Lufthansa Logo
     const lufthansaLogoPath = path.join(__dirname, '../public/images/Lufthansa_Logo_2018.svg.png');
     let lufthansaLogoDataUrl = null;
     try {
       lufthansaLogoDataUrl = `data:image/png;base64,${fs.readFileSync(lufthansaLogoPath, { encoding: 'base64' })}`;
     } catch (err) {}
 
-    // 3. Star Alliance Logo
     const starAllianceLogoPath = path.join(__dirname, '../public/images/star-alliance.png');
     let starAllianceLogoDataUrl = null;
     try {
       starAllianceLogoDataUrl = `data:image/png;base64,${fs.readFileSync(starAllianceLogoPath, { encoding: 'base64' })}`;
     } catch (err) {}
 
-    // 4. NEW: Aer Lingus Logo
-    const aerlingusLogoPath = path.join(__dirname, '../public/images/aer-lingus.png');
     let aerlingusLogoDataUrl = null;
+    const aerlingusLogoPath = path.join(__dirname, '../public/images/AerLingus-logo.png');
     try {
       aerlingusLogoDataUrl = `data:image/png;base64,${fs.readFileSync(aerlingusLogoPath, { encoding: 'base64' })}`;
     } catch (err) {}

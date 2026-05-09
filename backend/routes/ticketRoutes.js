@@ -17,7 +17,7 @@ const upload = multer({
   }
 });
 
-router.use(protect);
+router.use('/api', protect);
 
 router.get('/api/flight-status',  ticketController.checkFlightStatus);
 router.get('/api/check-eoc',      ticketController.checkEOC);

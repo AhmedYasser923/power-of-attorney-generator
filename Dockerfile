@@ -1,18 +1,27 @@
-# Use Playwright image as the base
+# Stage 1: build the React client
+FROM node:24-alpine AS client-build
+
+WORKDIR /client
+
+COPY client/package*.json ./
+RUN npm ci
+
+COPY client/ ./
+RUN npm run build
+
+# Stage 2: production backend
 FROM mcr.microsoft.com/playwright:v1.58.2-jammy
 
-# Set the directory inside the container
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+ENV NODE_ENV=production
 
-# Copy the rest of your app code
-COPY . .
+COPY backend/package*.json ./
+RUN npm ci --omit=dev
 
-# Expose the port your app runs on
-EXPOSE 8080
+COPY backend/ ./
+COPY --from=client-build /client/dist ./client-dist
 
-# Start the application
+EXPOSE 3000
+
 CMD ["node", "app.js"]

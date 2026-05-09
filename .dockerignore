@@ -1,11 +1,12 @@
 node_modules
+**/node_modules
 npm-debug.log
-Dockerfile
-docker-compose.yml
 .git
 .gitignore
+*.env
 config.env
 backend/config.env
-backend/node_modules
-client/node_modules
+.flightstats_session.json
 client/dist
+plans/
+orientation/

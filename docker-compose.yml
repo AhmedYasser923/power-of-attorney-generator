@@ -4,12 +4,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     env_file:
-      - ./config.env
+      - ./backend/config.env
     environment:
       NODE_ENV: development
       PORT: 3000
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
   client:
     build:
@@ -21,3 +24,6 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    volumes:
+      - ./client:/app
+      - /app/node_modules

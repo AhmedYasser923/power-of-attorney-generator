@@ -16,7 +16,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // isLoggedIn (global middleware) already verified this token, checked status,
-  // and loaded the user — reuse it to avoid a second DB round-trip.
+  // and loaded the user - reuse it to avoid a second DB round-trip.
   if (req.user) return next();
 
   let decoded;
