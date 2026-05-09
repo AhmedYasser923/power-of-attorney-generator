@@ -6,7 +6,7 @@ const moment = require('moment');
 class PDFGenerator {
   static async generatePOA(app, data, templateName = 'assignment-pdf') {
     
-    const standardLogoPath = path.join(__dirname, '../public/images/refly-logo.png');
+    const standardLogoPath = path.join(__dirname, '../public/images/refly-icon.png');
     let standardLogoDataUrl = null;
     try {
       standardLogoDataUrl = `data:image/png;base64,${fs.readFileSync(standardLogoPath, { encoding: 'base64' })}`;
