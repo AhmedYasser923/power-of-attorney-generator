@@ -49,15 +49,17 @@ export default function StandardPoaForm({ form, onChange, onSignatureChange, onS
         <SignatureDropzone files={signature} onFilesChange={onSignatureChange} />
       </Field>
 
-      <div className="poa-processing-box">
-        <Field label="Signature Processing Option">
-          <Select name="sigProcessing" onChange={onChange} value={form.sigProcessing}>
-            {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </Select>
-        </Field>
-      </div>
+      {signature && (
+        <div className="poa-processing-box">
+          <Field label="Signature Processing Option">
+            <Select name="sigProcessing" onChange={onChange} value={form.sigProcessing}>
+              {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      )}
 
       <button className="poa-react-submit" disabled={submitting} type="submit">
         {submitting ? 'Generating...' : 'Generate Standard PDF'}

@@ -62,15 +62,17 @@ export default function AerLingusPoaForm({ form, onChange, onSignatureChange, on
         <SignatureDropzone files={signature} onFilesChange={onSignatureChange} required />
       </Field>
 
-      <div className="poa-processing-box">
-        <Field label="Signature Processing Option">
-          <Select name="sigProcessing" onChange={onChange} value={form.sigProcessing}>
-            {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </Select>
-        </Field>
-      </div>
+      {signature && (
+        <div className="poa-processing-box">
+          <Field label="Signature Processing Option">
+            <Select name="sigProcessing" onChange={onChange} value={form.sigProcessing}>
+              {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      )}
 
       <button className="poa-react-submit poa-react-submit--aerlingus" disabled={submitting} type="submit">
         {submitting ? 'Generating...' : 'Generate Aer Lingus PDF'}

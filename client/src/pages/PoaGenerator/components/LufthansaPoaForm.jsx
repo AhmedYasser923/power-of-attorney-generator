@@ -56,18 +56,20 @@ export default function LufthansaPoaForm({ form, onChange, onSignaturesChange, o
           <Field label="Signature Images">
             <SignatureDropzone files={signatures} maxFiles={4} multiple onFilesChange={onSignaturesChange} />
           </Field>
-          <div className="poa-processing-list">
-            <span>Processing Method per Signature</span>
-            {[1, 2, 3, 4].map((index) => (
-              <Field key={index} label={`Sig ${index}`}>
-                <Select name={`sigProcessing${index}`} onChange={onChange} value={form[`sigProcessing${index}`]}>
-                  {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </Select>
-              </Field>
-            ))}
-          </div>
+          {signatures.length > 0 && (
+            <div className="poa-processing-list">
+              <span>Processing Method per Signature</span>
+              {signatures.map((_, i) => i + 1).map((index) => (
+                <Field key={index} label={`Sig ${index}`}>
+                  <Select name={`sigProcessing${index}`} onChange={onChange} value={form[`sigProcessing${index}`]}>
+                    {SIGNATURE_PROCESSING_OPTIONS.map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </Select>
+                </Field>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
