@@ -149,6 +149,8 @@ export default function AdminDashboardPage() {
     [usage.opBreakdown]
   );
 
+  const initialLoading = loadingUsers && loadingUsage && loadingLogs;
+
   useEffect(() => {
     let active = true;
     setLoadingUsers(true);
@@ -379,6 +381,17 @@ export default function AdminDashboardPage() {
       <section className="admin-dashboard admin-dashboard--blocked">
         <h1>Admin Panel</h1>
         <p>Admin access is required.</p>
+      </section>
+    );
+  }
+
+  if (initialLoading) {
+    return (
+      <section className="admin-dashboard admin-dashboard--loading">
+        <div className="dashboard-loader">
+          <div className="dashboard-loader__spinner" />
+          <p>Loading dashboard...</p>
+        </div>
       </section>
     );
   }

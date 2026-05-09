@@ -194,6 +194,7 @@ function formatDistance(distance) {
 }
 
 export default function FlightCard({
+  animationIndex = 0,
   appliedYear,
   flight,
   journeyIndex,
@@ -332,7 +333,10 @@ export default function FlightCard({
         eoc.events?.length ? 'eoc-alert-active' : '',
         expiration.expired ? 'expired-alert-active' : ''
       ].filter(Boolean).join(' ')}
-      style={{ opacity: statusBadge?.opacity || 1 }}
+      style={{
+        '--card-opacity': statusBadge?.opacity || 1,
+        animationDelay: `${animationIndex * 60}ms`
+      }}
     >
       <div className="ta-flight-card__topbar">
         <label className="ta-flight-card__select">

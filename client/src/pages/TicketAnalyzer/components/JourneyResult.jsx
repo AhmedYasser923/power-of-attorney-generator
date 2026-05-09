@@ -61,6 +61,8 @@ export default function JourneyResult({
   totalJourneys,
   yearApplySignal
 }) {
+  let cardCounter = 0;
+
   return (
     <section className="ta-journey">
       {totalJourneys > 1 && <h3>Ticket / Journey {journeyIndex + 1}</h3>}
@@ -74,9 +76,11 @@ export default function JourneyResult({
           {(route.legs || []).map((flight, legIndex) => {
             const cardId = getCardId({ journeyIndex, routeIndex, legIndex, flight });
             const pnrColorClass = getPnrColorClass(flight.pnr, pnrColorMap);
+            const animationIndex = cardCounter++;
 
             return (
               <FlightCard
+                animationIndex={animationIndex}
                 appliedYear={appliedYear}
                 flight={flight}
                 journeyIndex={journeyIndex}

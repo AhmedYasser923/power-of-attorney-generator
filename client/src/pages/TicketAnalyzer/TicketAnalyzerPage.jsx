@@ -145,30 +145,15 @@ export default function TicketAnalyzerPage({ isActive = true }) {
         <h1 id="ticket-analyzer-title">Ticket Analyzer</h1>
       </header>
 
-      <div className="ticket-year-box">
-        <label htmlFor="ticket-journey-year">Confirm Flight Year</label>
-        <p>
-          Boarding passes often hide the year. Enter the year of travel before analyzing when the document only shows day and month.
-        </p>
-        <div>
-          <input
-            id="ticket-journey-year"
-            max="2050"
-            min="2000"
-            onChange={(event) => setJourneyYear(event.target.value)}
-            placeholder="YYYY"
-            type="number"
-            value={journeyYear}
-          />
-          {showApplyYear && (
-            <button disabled={!isValidYear(journeyYear)} onClick={applyYear} type="button">
-              Apply Year
-            </button>
-          )}
-        </div>
-      </div>
-
-      <TicketDropzone active={isActive} onFilesAdd={addFiles} />
+      <TicketDropzone
+        active={isActive}
+        isValidYear={isValidYear(journeyYear)}
+        journeyYear={journeyYear}
+        onApplyYear={applyYear}
+        onFilesAdd={addFiles}
+        onYearChange={setJourneyYear}
+        showApplyYear={showApplyYear}
+      />
 
       <TicketPreviewBar
         analyzing={analyzing}

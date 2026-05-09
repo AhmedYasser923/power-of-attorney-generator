@@ -15,6 +15,41 @@
   text-align: center;
 }
 
+.admin-dashboard--loading {
+  display: grid;
+  min-height: 400px;
+  place-items: center;
+}
+
+.dashboard-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-loader__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: dash-spin 0.8s linear infinite;
+}
+
+.dashboard-loader p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .admin-dashboard__header {
   display: flex;
   align-items: flex-start;

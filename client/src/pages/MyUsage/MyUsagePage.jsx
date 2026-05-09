@@ -297,6 +297,17 @@ export default function MyUsagePage() {
 
   const showInitialLoading = usageLoading && logsLoading && logs.length === 0;
 
+  if (showInitialLoading) {
+    return (
+      <section className="my-usage my-usage--loading">
+        <div className="dashboard-loader">
+          <div className="dashboard-loader__spinner" />
+          <p>Loading your usage data...</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="my-usage" aria-labelledby="my-usage-title">
       <header className="my-usage__header">

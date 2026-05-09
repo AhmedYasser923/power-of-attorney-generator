@@ -275,6 +275,7 @@ export function getCardId({ journeyIndex, routeIndex, legIndex, flight }) {
 
 export function openTrackerUrls(items, tracker) {
   let skipped = 0;
+  const resolved = [];
 
   items.forEach((item) => {
     item.flightNumbers.forEach((flightNumber) => {
@@ -285,9 +286,19 @@ export function openTrackerUrls(items, tracker) {
         return;
       }
 
-      if (tracker === 'all' || tracker === 'airportinfo') window.open(urls.airportInfo, '_blank', 'noopener');
-      if (tracker === 'all' || tracker === 'flightstats') window.open(urls.flightStats, '_blank', 'noopener');
-      if (tracker === 'all' || tracker === 'flightera') window.open(urls.flightera, '_blank', 'noopener');
+      resolved.push(urls);
+    });
+  });
+
+  const trackers = tracker === 'all'
+    ? ['airportinfo', 'flightstats', 'flightera']
+    : [tracker];
+
+  const keyMap = { airportinfo: 'airportInfo', flightstats: 'flightStats', flightera: 'flightera' };
+
+  trackers.forEach((t) => {
+    resolved.forEach((urls) => {
+      window.open(urls[keyMap[t]], '_blank', 'noopener');
     });
   });
 

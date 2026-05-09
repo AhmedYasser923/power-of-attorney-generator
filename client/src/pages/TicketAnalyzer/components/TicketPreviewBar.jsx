@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 function getFilesLabel(files) {
   if (files.length === 1) return `1 file ready: ${files[0].name}`;
 
@@ -5,12 +7,35 @@ function getFilesLabel(files) {
 }
 
 export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, onAnalyze, onClear }) {
+  const wasAnalyzing = useRef(false);
+  const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    if (wasAnalyzing.current && !analyzing) {
+      setCompleted(true);
+      const timer = setTimeout(() => setCompleted(false), 1200);
+      return () => clearTimeout(timer);
+    }
+    wasAnalyzing.current = analyzing;
+  }, [analyzing]);
+
   if (!files.length) return null;
+
+  const pillClass = [
+    'ticket-preview__pill',
+    analyzing && 'is-analyzing',
+    completed && 'is-completed'
+  ].filter(Boolean).join(' ');
 
   return (
     <div className="ticket-preview">
       <div className="ticket-preview__header">
-        <p>{getFilesLabel(files)}</p>
+        <div className={pillClass}>
+          <span className="ticket-preview__pill-text">
+            {analyzing ? `Analyzing... ${elapsedSeconds.toFixed(1)}s` : getFilesLabel(files)}
+          </span>
+          {analyzing && <div className="ticket-preview__progress" />}
+        </div>
         <button
           aria-label="Clear all files"
           className="ticket-preview__clear"
@@ -19,15 +44,16 @@ export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, onA
         >
           x
         </button>
+        <button
+          aria-label="Analyze ticket"
+          className={`ticket-preview__gemini${analyzing ? ' is-analyzing' : ''}`}
+          disabled={analyzing}
+          onClick={onAnalyze}
+          type="button"
+        >
+          <img alt="" src="/images/gemini-color.svg" />
+        </button>
       </div>
-      <button
-        className="ticket-preview__analyze"
-        disabled={analyzing}
-        onClick={onAnalyze}
-        type="button"
-      >
-        {analyzing ? `Analyzing... ${elapsedSeconds.toFixed(1)}s` : 'Extract Ticket Data'}
-      </button>
     </div>
   );
 }
