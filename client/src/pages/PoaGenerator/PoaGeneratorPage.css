@@ -259,7 +259,7 @@
 
 .poa-react-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+  grid-template-columns: 1fr;
   gap: 10px;
   align-items: start;
   padding: 10px;
@@ -270,11 +270,6 @@
   display: grid;
   gap: 10px;
   min-width: 0;
-}
-
-.poa-form-aside {
-  position: sticky;
-  top: 16px;
 }
 
 .poa-react-form h3,
@@ -473,8 +468,7 @@
 }
 
 @media (max-width: 900px) {
-  .poa-utility-grid,
-  .poa-react-form {
+  .poa-utility-grid {
     grid-template-columns: 1fr;
   }
 
@@ -488,10 +482,6 @@
 
   .poa-react-grid--aerlingus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .poa-form-aside {
-    position: static;
   }
 }
 
