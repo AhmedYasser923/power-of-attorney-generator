@@ -1,6 +1,6 @@
 'use strict';
 
-function buildTicketAnalysisPrompt(yearDirective) {
+function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
   const rawPrompt = `
     You are an expert aviation data extractor. Analyze ALL the attached travel document(s). Try not to exceed 40s.
     ${yearDirective}
@@ -24,7 +24,9 @@ function buildTicketAnalysisPrompt(yearDirective) {
     CRITICAL DATE RULES:
     1. Every flight has its own unique date — extract it from the document, put it in rawExtractedDate.
     2. "Issue Date" / "Booking Date" / "Printed Date" is NEVER the flight date. Ignore completely.
-    3. If only day+month shown (e.g. "25 Mar"), output exactly that — no year assumption.
+    3. If only day+month shown (e.g. "25 Mar"), output exactly that in rawExtractedDate.${journeyYear
+      ? ` For the date field, you MUST use ${journeyYear} as the year → output "${journeyYear}-MM-DD". Do NOT guess or use any other year — ONLY the document year (if printed) or ${journeyYear}.`
+      : ' For the date field, output the partial as-is — NEVER assume, guess, or invent a year from context, current date, or any other source.'}
 
     🚨 JOURNEY SPLITTING:
     RULE 1 - SELF-TRANSFER: if you see "Self-transfer" / "Separate tickets" → split at that layover, each chunk is an INDEPENDENT journey.

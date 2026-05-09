@@ -54,6 +54,8 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     setAnalyzing(false);
     setElapsedSeconds(0);
     setShowApplyYear(false);
+    setAppliedYear('');
+    setYearApplySignal(0);
   };
 
   const startTimer = () => {
@@ -84,6 +86,8 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     setSelectedFlights(new Map());
     setAnalyzing(true);
     setShowApplyYear(false);
+    setAppliedYear('');
+    setYearApplySignal(0);
     startTimer();
 
     try {

@@ -50,7 +50,7 @@ CRITICAL PRIORITY RULE:
 The user-supplied year ${journeyYear} is a safety net, NOT an override. Document years always take precedence.`;
   }
 
-  const rawPrompt = buildTicketAnalysisPrompt(yearDirective);
+  const rawPrompt = buildTicketAnalysisPrompt(yearDirective, journeyYear);
   const prompt = rawPrompt.replace(/\s+/g, ' ').trim();
   const documentParts = [];
 

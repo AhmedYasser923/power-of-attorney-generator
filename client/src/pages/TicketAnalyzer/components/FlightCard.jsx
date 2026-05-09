@@ -331,7 +331,8 @@ export default function FlightCard({
         'ta-flight-card',
         selected ? 'is-selected' : '',
         eoc.events?.length ? 'eoc-alert-active' : '',
-        expiration.expired ? 'expired-alert-active' : ''
+        expiration.expired ? 'expired-alert-active' : '',
+        classifyDate(dateValue) !== 'full' ? 'year-missing-active' : ''
       ].filter(Boolean).join(' ')}
       style={{
         '--card-opacity': statusBadge?.opacity || 1,

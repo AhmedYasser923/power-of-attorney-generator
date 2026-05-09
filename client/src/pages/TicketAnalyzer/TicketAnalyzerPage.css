@@ -589,6 +589,11 @@
   box-shadow: 0 0 0 1px var(--warning-border), 0 0 24px rgba(245, 158, 11, 0.12);
 }
 
+.ta-flight-card.year-missing-active:not(.eoc-alert-active):not(.expired-alert-active) {
+  border-color: rgba(147, 197, 253, 0.4);
+  box-shadow: 0 0 0 1px rgba(147, 197, 253, 0.2), 0 0 24px rgba(147, 197, 253, 0.1);
+}
+
 .ta-flight-card__topbar {
   display: flex;
   min-height: 32px;
