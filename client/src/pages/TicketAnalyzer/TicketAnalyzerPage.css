@@ -154,17 +154,22 @@
 
 .ticket-dropzone__year {
   display: flex;
+  width: fit-content;
   align-items: center;
   gap: 8px;
-  margin-top: 18px;
+  margin-bottom: 12px;
   padding: 8px 14px;
-  border: 1px solid var(--warning-border);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--warning-dim);
+  background: linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+              linear-gradient(135deg, var(--accent-border), rgba(171, 71, 188, 0.4), var(--accent-border)) border-box;
 }
 
 .ticket-dropzone__year label {
-  color: #fbbf24;
+  background: linear-gradient(135deg, #93c5fd, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -174,7 +179,7 @@
   width: 72px;
   min-height: 30px;
   padding: 0 8px;
-  border: 1px solid var(--warning-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
   color: var(--text-primary);
@@ -185,21 +190,25 @@
   text-align: center;
 }
 
+.ticket-dropzone__year input::placeholder {
+  text-align: center;
+}
+
 .ticket-dropzone__year button {
   min-height: 30px;
   padding: 0 10px;
   border: 0;
   border-radius: var(--radius-sm);
-  background: var(--accent);
+  background: linear-gradient(135deg, #4f7cff, #ab47bc);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: opacity var(--transition);
 }
 
 .ticket-dropzone__year button:hover:not(:disabled) {
-  background: var(--accent-hover);
+  opacity: 0.85;
 }
 
 .ticket-dropzone__year button:disabled {

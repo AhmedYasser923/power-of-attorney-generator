@@ -8,9 +8,9 @@ const toolItems = [
   { href: '/tools#poa', panel: 'poa', icon: '\uD83D\uDCC4', label: 'POA Generator' },
   { href: '/tools#flight-search', panel: 'flight-search', icon: '\u2708', label: 'External Trackers' },
   { href: '/tools#eoc', panel: 'eoc', icon: '\u25CE', label: 'ROC Radar' },
-  { href: '/tools#doc-check', panel: 'doc-check', icon: '\u25BB', label: 'Document Check' },
+  { href: '/tools#doc-check', panel: 'doc-check', icon: <DocCheckIcon />, label: 'Doc Check' },
   { href: '/tools#jurisdiction', panel: 'jurisdiction', icon: '\u2696', label: 'Jurisdiction' },
-  { href: '/tools#iata', panel: 'iata', icon: '\u2B61', label: 'IATA Lookup' },
+  { href: '/tools#iata', panel: 'iata', icon: <GlobeIcon />, label: 'IATA Lookup' },
   { href: '/tools#email', panel: 'email', icon: '\u2709', label: 'Email Builder' },
   { href: '/tools#ec261', panel: 'ec261', icon: '\u20AC', label: 'EC261 Calculator' },
   { href: '/tools#flight-stats', panel: 'flight-stats', icon: 'FS', label: 'FlightStats' }
@@ -43,6 +43,26 @@ function SignOutIcon() {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3.6 9h16.8M3.6 15h16.8" />
+      <path d="M12 3c2.2 2.5 3.4 5.6 3.4 9s-1.2 6.5-3.4 9c-2.2-2.5-3.4-5.6-3.4-9s1.2-6.5 3.4-9z" />
+    </svg>
+  );
+}
+
+function DocCheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M9 15l2 2 4-4" />
     </svg>
   );
 }
@@ -107,12 +127,6 @@ export default function Sidebar({ user }) {
       </nav>
 
       <div className="sidebar__footer">
-        <div className="sidebar__user">
-          <div className="avatar">{initial}</div>
-          <div className="sidebar__user-info">
-            <div className="sidebar__user-name">{user?.name || 'User'}</div>
-          </div>
-        </div>
         <a className="sidebar__signout" href="/logout" onClick={signOut} title="Sign Out">
           <span className="nav-item__icon">
             <SignOutIcon />

@@ -251,40 +251,49 @@ export default function PoaGeneratorPage({ isActive = true }) {
 
       <header className="poa-react__header">
         <h1 id="poa-react-title">POA Generator</h1>
-        <p>Generate Power of Attorney documents with AI autofill and signature processing.</p>
       </header>
 
-      <label className="poa-field poa-field--template">
-        <span>Select Template Format</span>
-        <select
-          className="poa-react-select"
-          onChange={(event) => {
-            setTemplate(event.target.value);
-            setError('');
-            setMessage('');
-          }}
-          value={template}
-        >
-          {TEMPLATE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
-      </label>
+      <div className="poa-utility-grid">
+        <label className="poa-field poa-field--template">
+          <span>Select Template Format</span>
+          <select
+            className="poa-react-select"
+            onChange={(event) => {
+              setTemplate(event.target.value);
+              setError('');
+              setMessage('');
+            }}
+            value={template}
+          >
+            {TEMPLATE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
 
-      <section className={`poa-ai-box${pasteFlash ? ' is-success' : ''}`}>
-        <label htmlFor="poa-ai-text">AI Autofill & Signature Drop</label>
-        <p>Paste text for AI extraction. Pasted images auto-attach to the active form.</p>
-        <textarea
-          id="poa-ai-text"
-          onChange={(event) => setAiText(event.target.value)}
-          placeholder="Paste text here..."
-          rows="3"
-          value={aiText}
-        />
-        <button disabled={aiLoading} onClick={runAutofill} type="button">
-          {aiLoading ? 'Extracting...' : 'Extract & Fill Form'}
-        </button>
-      </section>
+        <section className={`poa-ai-box${pasteFlash ? ' is-success' : ''}`}>
+          <div className="poa-ai-box__copy">
+            <label htmlFor="poa-ai-text">AI Autofill & Signature Drop</label>
+          </div>
+          <textarea
+            id="poa-ai-text"
+            onChange={(event) => setAiText(event.target.value)}
+            placeholder="Paste text here..."
+            rows="2"
+            value={aiText}
+          />
+          <button
+            aria-label={aiLoading ? 'Extracting form details' : 'Extract and fill form'}
+            className={`poa-ai-gemini${aiLoading ? ' is-analyzing' : ''}`}
+            disabled={aiLoading}
+            onClick={runAutofill}
+            title={aiLoading ? 'Extracting form details' : 'Extract and fill form'}
+            type="button"
+          >
+            <img alt="" src="/images/gemini-color.svg" />
+          </button>
+        </section>
+      </div>
 
       {error && <div className="poa-react-alert poa-react-alert--error">{error}</div>}
       {message && <div className="poa-react-alert poa-react-alert--success">{message}</div>}

@@ -1,6 +1,6 @@
 .content__inner:has(.poa-react) {
   width: 100%;
-  max-width: 980px;
+  max-width: 1120px;
 }
 
 .poa-react {
@@ -10,13 +10,13 @@
 }
 
 .poa-react__header {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .poa-react__header h1 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.15;
@@ -24,7 +24,7 @@
 
 .poa-react__header p {
   max-width: 680px;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.55;
@@ -34,22 +34,29 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .poa-field > span,
 .poa-ai-box label,
 .poa-processing-list > span {
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .poa-field--template {
-  max-width: 420px;
-  margin-bottom: 20px;
+  max-width: none;
+}
+
+.poa-utility-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.48fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 16px;
 }
 
 .poa-react-select,
@@ -57,23 +64,23 @@
 .poa-react-textarea,
 .poa-ai-box textarea {
   width: 100%;
-  min-height: 42px;
-  padding: 0 12px;
+  min-height: 34px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-input);
   color: var(--text-primary);
   color-scheme: dark;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .poa-react-textarea,
 .poa-ai-box textarea {
-  min-height: 86px;
-  padding: 10px 12px;
+  min-height: 48px;
+  padding: 7px 10px;
   resize: vertical;
 }
 
@@ -97,10 +104,16 @@
 
 .poa-ai-box {
   display: grid;
-  gap: 10px;
-  margin: 22px 0;
-  padding: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: end;
+  padding: 12px;
   transition: border-color var(--transition), background var(--transition);
+}
+
+.poa-ai-box__copy {
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .poa-ai-box.is-success {
@@ -109,66 +122,166 @@
 }
 
 .poa-ai-box p {
-  margin: 0;
+  margin: 4px 0 0;
   color: var(--text-secondary);
   font-size: 12px;
 }
 
-.poa-ai-box button,
+.poa-ai-box button:not(.poa-ai-gemini),
 .poa-react-submit {
-  min-height: 42px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 10px;
   border: 0;
-  border-radius: var(--radius-md);
-  background: var(--accent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #4f7cff, #ab47bc);
   color: #fff;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
-  transition: background var(--transition), opacity var(--transition);
+  transition: opacity var(--transition);
 }
 
-.poa-ai-box button {
-  justify-self: start;
+.poa-ai-box button:not(.poa-ai-gemini) {
+  align-self: stretch;
 }
 
-.poa-ai-box button:hover:not(:disabled),
+.poa-ai-gemini {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--accent-border);
+  border-radius: 50%;
+  background: var(--accent-dim);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.poa-ai-gemini:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(79, 124, 255, 0.3);
+  transform: scale(1.08);
+}
+
+.poa-ai-gemini:disabled {
+  cursor: default;
+}
+
+.poa-ai-gemini img {
+  width: 22px;
+  height: 22px;
+}
+
+.poa-ai-gemini::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: gemini-idle-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.poa-ai-gemini.is-analyzing::after {
+  animation: none;
+  background: none;
+}
+
+@keyframes gemini-idle-shimmer {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -100% 0; }
+}
+
+.poa-ai-gemini.is-analyzing {
+  border-color: transparent;
+  animation: gemini-glow 1.5s ease-in-out infinite;
+}
+
+.poa-ai-gemini.is-analyzing img {
+  animation: gemini-spin 1.5s linear infinite;
+}
+
+@keyframes gemini-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gemini-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.4), 0 0 20px rgba(171, 71, 188, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(66, 133, 244, 0.7), 0 0 36px rgba(171, 71, 188, 0.45);
+  }
+}
+
+.poa-ai-box button:not(.poa-ai-gemini):hover:not(:disabled),
 .poa-react-submit:hover:not(:disabled) {
-  background: var(--accent-hover);
+  opacity: 0.85;
 }
 
-.poa-ai-box button:disabled,
+.poa-ai-box button:not(.poa-ai-gemini):disabled,
 .poa-react-submit:disabled {
   cursor: default;
-  opacity: 0.58;
+  opacity: 0.55;
 }
 
 .poa-react-submit {
   width: 100%;
-  margin-top: 22px;
 }
 
 .poa-react-submit--aerlingus {
-  background: var(--success);
+  background: linear-gradient(135deg, #4f7cff, #ab47bc);
 }
 
 .poa-react-form {
   display: grid;
-  gap: 16px;
-  padding: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+}
+
+.poa-form-main,
+.poa-form-aside {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.poa-form-aside {
+  position: sticky;
+  top: 16px;
 }
 
 .poa-react-form h3,
 .poa-react-panel h4 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -178,7 +291,7 @@
 
 .poa-react-grid {
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .poa-react-grid--2 {
@@ -186,6 +299,14 @@
 }
 
 .poa-react-grid--3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.poa-react-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.poa-react-grid--aerlingus {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -198,12 +319,12 @@
 
 .poa-react-panel {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 9px;
+  padding: 10px;
 }
 
 .poa-processing-box {
-  padding: 14px;
+  padding: 10px;
 }
 
 .poa-processing-list {
@@ -212,11 +333,17 @@
   padding-top: 8px;
 }
 
+.poa-passenger-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .poa-signature-dropzone {
   display: grid;
-  min-height: 118px;
+  min-height: 58px;
   place-items: center;
-  padding: 18px;
+  padding: 8px;
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -246,8 +373,8 @@
 .poa-signature-preview-grid {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
 }
 
 .poa-signature-preview {
@@ -262,7 +389,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 9px;
+  padding: 5px 7px;
   border-bottom: 1px solid var(--border-inner);
   color: var(--text-secondary);
   font-size: 11px;
@@ -286,15 +413,15 @@
 
 .poa-signature-preview img {
   width: 100%;
-  height: 86px;
+  height: 54px;
   object-fit: contain;
-  padding: 8px;
+  padding: 6px;
   background: #fff;
 }
 
 .poa-react-alert {
-  margin-bottom: 16px;
-  padding: 12px 14px;
+  margin-bottom: 10px;
+  padding: 9px 10px;
   border-radius: var(--radius-md);
   font-size: 12px;
   line-height: 1.5;
@@ -346,22 +473,64 @@
 }
 
 @media (max-width: 900px) {
-  .poa-react-grid--3,
+  .poa-utility-grid,
+  .poa-react-form {
+    grid-template-columns: 1fr;
+  }
+
   .poa-react-split {
     grid-template-columns: 1fr;
+  }
+
+  .poa-react-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .poa-react-grid--aerlingus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .poa-form-aside {
+    position: static;
   }
 }
 
 @media (max-width: 679px) {
+  .poa-react__header {
+    margin-bottom: 10px;
+  }
+
   .poa-react__header h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
-  .poa-react-grid--2 {
+  .poa-react__header p {
+    display: none;
+  }
+
+  .poa-utility-grid {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .poa-ai-box {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 8px;
+    padding: 10px;
+  }
+
+  .poa-ai-box p {
+    display: none;
+  }
+
+}
+
+@media (max-width: 360px) {
+  .poa-react-grid--2,
+  .poa-react-grid--3,
+  .poa-react-grid--4,
+  .poa-react-grid--aerlingus,
+  .poa-passenger-grid {
     grid-template-columns: 1fr;
-  }
-
-  .poa-react-form {
-    padding: 18px;
   }
 }

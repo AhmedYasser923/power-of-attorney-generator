@@ -37,20 +37,8 @@ export default function TicketAnalyzerPage({ isActive = true }) {
       return;
     }
 
-    const containsPartialDates = hasPartialDates(journeys);
-    if (!containsPartialDates) {
-      setShowApplyYear(false);
-      return;
-    }
-
-    if (isValidYear(journeyYear)) {
-      setAppliedYear(journeyYear.trim());
-      setYearApplySignal((current) => current + 1);
-      setShowApplyYear(false);
-    } else {
-      setShowApplyYear(true);
-    }
-  }, [journeyYear, journeys, rawResult]);
+    setShowApplyYear(hasPartialDates(journeys));
+  }, [journeys, rawResult]);
 
   const addFiles = useCallback((incomingFiles) => {
     setFiles((current) => [...current, ...incomingFiles]);
@@ -145,14 +133,27 @@ export default function TicketAnalyzerPage({ isActive = true }) {
         <h1 id="ticket-analyzer-title">Ticket Analyzer</h1>
       </header>
 
+      <div className="ticket-dropzone__year">
+        <label htmlFor="ticket-journey-year">Flight Year</label>
+        <input
+          id="ticket-journey-year"
+          inputMode="numeric"
+          maxLength="4"
+          onChange={(e) => setJourneyYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="YYYY"
+          type="text"
+          value={journeyYear}
+        />
+        {showApplyYear && (
+          <button disabled={!isValidYear(journeyYear)} onClick={applyYear} type="button">
+            Apply
+          </button>
+        )}
+      </div>
+
       <TicketDropzone
         active={isActive}
-        isValidYear={isValidYear(journeyYear)}
-        journeyYear={journeyYear}
-        onApplyYear={applyYear}
         onFilesAdd={addFiles}
-        onYearChange={setJourneyYear}
-        showApplyYear={showApplyYear}
       />
 
       <TicketPreviewBar

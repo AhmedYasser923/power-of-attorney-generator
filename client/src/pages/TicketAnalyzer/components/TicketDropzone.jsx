@@ -24,7 +24,7 @@ function filesFromList(fileList) {
   );
 }
 
-export default function TicketDropzone({ active = true, journeyYear, onFilesAdd, onYearChange, showApplyYear, onApplyYear, isValidYear }) {
+export default function TicketDropzone({ active = true, onFilesAdd }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
@@ -113,23 +113,6 @@ export default function TicketDropzone({ active = true, journeyYear, onFilesAdd,
         <span className="ticket-dropzone__format">{PDF_ICON} PDF</span>
         <span className="ticket-dropzone__format">{IMG_ICON} PNG</span>
         <span className="ticket-dropzone__format">{IMG_ICON} JPG</span>
-      </div>
-      <div className="ticket-dropzone__year" onClick={(e) => e.stopPropagation()}>
-        <label htmlFor="ticket-journey-year">Flight Year</label>
-        <input
-          id="ticket-journey-year"
-          max="2050"
-          min="2000"
-          onChange={(event) => onYearChange(event.target.value)}
-          placeholder="YYYY"
-          type="number"
-          value={journeyYear}
-        />
-        {showApplyYear && (
-          <button disabled={!isValidYear} onClick={onApplyYear} type="button">
-            Apply
-          </button>
-        )}
       </div>
       <input
         ref={inputRef}
