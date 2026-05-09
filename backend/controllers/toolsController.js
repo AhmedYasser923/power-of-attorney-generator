@@ -1,56 +1,19 @@
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
-
 const airportsDatabase = require('../airports_data.json');
 const EmailTemplate    = require('../models/EmailTemplate');
-const SystemSetting    = require('../models/SystemSetting');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
 const logUsage   = require('../utils/logUsage');
+const { calculateCost } = require('../utils/pricing');
+const genAI = require('../utils/geminiClient');
+const flightStatusService = require('../services/flightStatusService');
+const eocService = require('../services/eocService');
 
 const EmailReference   = require('../models/EmailReference');
 
-const EMAIL_TEMPLATES_INIT_KEY = 'emailTemplatesInitialized';
-const EMAIL_TEMPLATES_MIGRATED_KEY = 'emailTemplatesSchemaMigrated';
 const MAX_REFERENCES = 3;
 const MAX_REFERENCE_WORDS = 2000;
-
-// ---------------------------------------------------------------------------
-// Template seeding — builds docs from the JSON defaults using the NEW schema
-// ---------------------------------------------------------------------------
-
-function buildDefaultEmailTemplateDocs() {
-  const json = require('../data/emailTemplates.json');
-  const meta = json.meta || {};
-  const docs = [];
-
-  Object.entries(json.documentTemplates || {}).forEach(([key, text]) => {
-    const m = meta[key] || {};
-    const isOthers = m.category === 'Others';
-    docs.push({
-      key,
-      text,
-      type: isOthers ? 'special-case' : 'document-request',
-      label: m.label || key,
-      combineWithDocuments: isOthers ? !m.noWrapper : false,
-    });
-  });
-
-  Object.entries(json.rejectionTemplates || {}).forEach(([key, text]) => {
-    docs.push({
-      key,
-      text,
-      type: 'rejection',
-      label: (meta[key] || {}).label || key,
-      combineWithDocuments: false,
-    });
-  });
-
-  return docs;
-}
 
 // ---------------------------------------------------------------------------
 // Template state builder — creates an optimized lookup structure
@@ -94,81 +57,6 @@ async function getEmailTemplateList() {
   const state = await getEmailTemplateState();
   return state.templates;
 }
-
-// ---------------------------------------------------------------------------
-// Seed + migrate
-// ---------------------------------------------------------------------------
-
-exports.seedEmailTemplates = async function () {
-  const [marker, count] = await Promise.all([
-    SystemSetting.findOne({ key: EMAIL_TEMPLATES_INIT_KEY }).lean(),
-    EmailTemplate.countDocuments(),
-  ]);
-
-  if (marker) return;
-
-  if (count > 0) {
-    await SystemSetting.updateOne(
-      { key: EMAIL_TEMPLATES_INIT_KEY },
-      { $setOnInsert: { key: EMAIL_TEMPLATES_INIT_KEY, value: { source: 'existing-database', templateCount: count } } },
-      { upsert: true }
-    );
-    console.log(`[EmailTemplate] Existing ${count} templates detected; default bootstrap marked complete`);
-    return;
-  }
-
-  const docs = buildDefaultEmailTemplateDocs();
-  if (docs.length) {
-    await EmailTemplate.bulkWrite(docs.map(doc => ({
-      updateOne: {
-        filter: { key: doc.key },
-        update: { $setOnInsert: doc },
-        upsert: true,
-      },
-    })));
-  }
-
-  await SystemSetting.updateOne(
-    { key: EMAIL_TEMPLATES_INIT_KEY },
-    { $setOnInsert: { key: EMAIL_TEMPLATES_INIT_KEY, value: { source: 'default-json', templateCount: docs.length } } },
-    { upsert: true }
-  );
-  console.log(`[EmailTemplate] Bootstrapped ${docs.length} default templates from JSON`);
-};
-
-exports.migrateEmailTemplateSchema = async function () {
-  const marker = await SystemSetting.findOne({ key: EMAIL_TEMPLATES_MIGRATED_KEY }).lean();
-  if (marker) return;
-
-  const coll = EmailTemplate.collection;
-
-  await coll.updateMany(
-    { type: 'document', category: 'Documents' },
-    { $set: { type: 'document-request', combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
-  );
-
-  await coll.updateMany(
-    { type: 'document', category: 'Others', noWrapper: true },
-    { $set: { type: 'special-case', combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
-  );
-
-  await coll.updateMany(
-    { type: 'document', category: 'Others' },
-    { $set: { type: 'special-case', combineWithDocuments: true }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
-  );
-
-  await coll.updateMany(
-    { type: 'rejection' },
-    { $set: { combineWithDocuments: false }, $unset: { category: '', isInfoOnly: '', noWrapper: '' } }
-  );
-
-  await SystemSetting.updateOne(
-    { key: EMAIL_TEMPLATES_MIGRATED_KEY },
-    { $setOnInsert: { key: EMAIL_TEMPLATES_MIGRATED_KEY, value: { migratedAt: new Date() } } },
-    { upsert: true }
-  );
-  console.log('[EmailTemplate] Schema migration complete (category → type)');
-};
 
 // ---------------------------------------------------------------------------
 // Template CRUD helpers
@@ -220,8 +108,6 @@ function buildOutro(selectedKeys, link, hasCustomNote, state) {
 }
 
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 // ---------------------------------------------------------------------------
 // Shared AI translation helper
 // ---------------------------------------------------------------------------
@@ -279,102 +165,18 @@ const normalizeStr = s =>
   (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
 // ---------------------------------------------------------------------------
-// IFRAME PROXY — strips X-Frame-Options / CSP for sites that block iframes
-// but don't require login. Only whitelisted domains are allowed.
-// ---------------------------------------------------------------------------
-
-const PROXY_ALLOWED_HOSTS = new Set(['airportinfo.live']);
-
-exports.proxyPage = async (req, res) => {
-  try {
-    const host = req.params.host;
-    if (!host || !PROXY_ALLOWED_HOSTS.has(host)) {
-      return res.status(403).send('Domain not allowed');
-    }
-
-    const restPath = Array.isArray(req.params.rest)
-      ? '/' + req.params.rest.join('/')
-      : req.params.rest ? `/${req.params.rest}` : '/';
-    const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-    const targetUrl = `https://${host}${restPath}${qs}`;
-
-    const upstream = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
-        'Accept': req.headers['accept'] || '*/*',
-        'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
-        'Accept-Encoding': 'identity',
-      },
-      redirect: 'follow',
-    });
-
-    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
-    res.status(upstream.status);
-    res.setHeader('Content-Type', contentType);
-    const cacheControl = upstream.headers.get('cache-control');
-    if (cacheControl) res.setHeader('Cache-Control', cacheControl);
-
-    if (contentType.includes('text/html')) {
-      const body = await upstream.text();
-      const base = `https://${host}`;
-      const patched = body
-        .replace(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '')
-        .replace(/(<head[^>]*>)/i, `$1<base href="${base}/">`);
-      res.send(patched);
-    } else {
-      const buffer = Buffer.from(await upstream.arrayBuffer());
-      res.send(buffer);
-    }
-  } catch (err) {
-    console.error('[proxyPage]', err.message);
-    res.status(502).send('Proxy error');
-  }
-};
-
-// ---------------------------------------------------------------------------
 // EOC CHECKER
 // ---------------------------------------------------------------------------
 
 exports.checkEOC = async (req, res, next) => {
   try {
-    const { date, originIata, destIata, originCountry, destCountry } = req.query;
-    if (!date || date === 'Unknown') return res.json({ eocFound: false });
-
-    const oIata    = (originIata    || '').toLowerCase();
-    const dIata    = (destIata      || '').toLowerCase();
-    const oCountry = (originCountry || '').toLowerCase();
-    const dCountry = (destCountry   || '').toLowerCase();
-
-    // Collect non-empty location values to match against
-    const locs = [oIata, dIata, oCountry, dCountry, 'world wide']
-      .filter(v => v && v.trim());
-
-    // Case-insensitive exact-match regex for any of those values
-    const escaped = locs.map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    const locRegex = new RegExp('^(' + escaped.join('|') + ')$', 'i');
-
-    // Run both queries in parallel
-    const [exactMatches, ongoingMatches] = await Promise.all([
-      EocRecord.find({
-        category: { $not: /ongoing/i },
-        location: locRegex,
-        date: date                        // exact date match
-      }).lean(),
-      EocRecord.find({
-        category: /ongoing/i,
-        location: locRegex,
-        date: { $lte: date }              // event date <= flight date  (YYYY-MM-DD string compare works)
-      }).lean()
-    ]);
-
-    const matchedEvents = [...exactMatches, ...ongoingMatches];
-    res.json({ eocFound: matchedEvents.length > 0, events: matchedEvents });
+    const result = await eocService.findEOCEvents(req.query);
+    res.json(result);
   } catch (error) {
     next(error);
   }
 };
 
-// ---------------------------------------------------------------------------
 // AIRPORT SEARCH
 // ---------------------------------------------------------------------------
 
@@ -408,189 +210,10 @@ exports.searchAirports = (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 exports.checkFlightStatus = async (req, res, next) => {
-  try {
-    const { flightNumber, date, origin, destination } = req.query;
-    if (!flightNumber || flightNumber === 'N/A')
-      return res.json({ error: 'Valid flight number is required' });
-
-    const ciriumAppId  = process.env.CIRIUM_APP_ID;
-    const ciriumAppKey = process.env.CIRIUM_APP_KEY;
-    if (!ciriumAppId || !ciriumAppKey) {
-      console.error('[Cirium] Error: CIRIUM_APP_ID or CIRIUM_APP_KEY Missing in config.env!');
-      return res.json({ error: 'Cirium API Credentials Missing. Check .env file.' });
-    }
-
-    const match = flightNumber.match(/([A-Za-z]{3}|[A-Za-z0-9]{2})\s*0*(\d{1,4})/);
-    if (!match)
-      return res.json({ error: `Invalid flight format (${flightNumber}). Expected format like 'LH458', 'VS207', or 'U28412'.` });
-
-    const carrier = match[1].toUpperCase();
-    const fNum    = match[2];
-
-    let year, month, day;
-    if (date && date !== 'Unknown') {
-      [year, month, day] = date.split('-');
-    } else {
-      const today = new Date();
-      year  = today.getFullYear();
-      month = String(today.getMonth() + 1).padStart(2, '0');
-      day   = String(today.getDate()).padStart(2, '0');
-    }
-
-    const url = `https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/${carrier}/${fNum}/dep/${year}/${month}/${day}?appId=${ciriumAppId}&appKey=${ciriumAppKey}&utc=false`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    const data = await response.json();
-
-    if (data.error) return res.json({ error: data.error.errorMessage || 'Cirium API Error' });
-    if (!data.flightStatuses || data.flightStatuses.length === 0)
-      return res.json({ error: `No flight data found in Cirium for ${carrier}${fNum} on ${date}.` });
-
-    let targetFlight = data.flightStatuses[0];
-    const requestedDateStr = `${year}-${month}-${day}`;
-
-    let exactMatches = data.flightStatuses.filter(f => {
-      const originMatches = !origin      || origin      === 'Unknown' || f.departureAirportFsCode === origin.toUpperCase();
-      const destMatches   = !destination || destination === 'Unknown' || f.arrivalAirportFsCode   === destination.toUpperCase();
-      const dateMatches   = f.departureDate?.dateLocal?.startsWith(requestedDateStr);
-      return originMatches && destMatches && dateMatches;
-    });
-
-    if (!exactMatches.length) {
-      exactMatches = data.flightStatuses.filter(f => {
-        const destMatches = !destination || destination === 'Unknown' || f.arrivalAirportFsCode === destination.toUpperCase();
-        return destMatches && f.departureDate?.dateLocal?.startsWith(requestedDateStr);
-      });
-    }
-    if (!exactMatches.length) {
-      exactMatches = data.flightStatuses.filter(f => f.departureDate?.dateLocal?.startsWith(requestedDateStr));
-    }
-
-    let hasMultipleDisruptions = false;
-    if (exactMatches.length > 0) {
-      const statusPriority = { D: 1, C: 2, L: 3, A: 4, S: 5, U: 6 };
-      exactMatches.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
-      targetFlight = exactMatches[0];
-      const uniqueStatuses = [...new Set(exactMatches.map(f => f.status))];
-      if (uniqueStatuses.includes('D') && uniqueStatuses.includes('C')) hasMultipleDisruptions = true;
-    }
-
-    const formatDate = ds => {
-      if (!ds) return '--';
-      const d = new Date(ds);
-      const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return `${String(d.getDate()).padStart(2,'0')}-${m[d.getMonth()]}-${d.getFullYear()}`;
-    };
-    const formatTime = ds => {
-      if (!ds) return '--:--';
-      const d = new Date(ds);
-      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    };
-    const calcOffset = (local, utc) => {
-      if (!local || !utc) return 'Local';
-      const diff = Math.round((new Date(local) - new Date(utc)) / 3600000);
-      return diff >= 0 ? `UTC+${diff}` : `UTC${diff}`;
-    };
-    const formatDuration = mins => {
-      if (!mins || isNaN(mins)) return '--h --m';
-      return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-    };
-
-    const ops  = targetFlight.operationalTimes || {};
-    const sDep = ops.scheduledGateDeparture  || ops.scheduledRunwayDeparture || ops.publishedDeparture || {};
-    const aDep = ops.actualGateDeparture     || ops.estimatedGateDeparture   || ops.actualRunwayDeparture || sDep;
-    const sArr = ops.scheduledGateArrival    || ops.scheduledRunwayArrival   || ops.publishedArrival    || {};
-    const aArr = ops.actualGateArrival       || ops.estimatedGateArrival     || ops.actualRunwayArrival  || sArr;
-
-    const depActualLabel = (ops.actualGateDeparture || ops.actualRunwayDeparture) ? 'Actual' : (ops.estimatedGateDeparture ? 'Estimated' : 'Scheduled');
-    const arrActualLabel = (ops.actualGateArrival   || ops.actualRunwayArrival)   ? 'Actual' : (ops.estimatedGateArrival  ? 'Estimated' : 'Scheduled');
-
-    const flightDuration = formatDuration(targetFlight.flightDurations?.scheduledBlockMinutes || 0);
-    const arrDelayMins   = targetFlight.delays?.arrivalGateDelayMinutes || targetFlight.delays?.arrivalRunwayDelayMinutes || 0;
-    let arrDelayStr = 'On Time';
-    if (arrDelayMins > 0) arrDelayStr = arrDelayMins >= 60 ? formatDuration(arrDelayMins) : `${arrDelayMins} mins`;
-
-    const rawStatus          = targetFlight.status || 'U';
-    const arrTimeDataPending = rawStatus === 'L' && !ops.actualGateArrival && !ops.actualRunwayArrival && !ops.estimatedGateArrival;
-    const bannerTextCol      = '#ffffff';
-    const divertedCode       = rawStatus === 'D' ? (targetFlight.divertedAirportFsCode || '???') : null;
-    let bannerBg, bannerText, arrDelayColor;
-
-    switch (rawStatus) {
-      case 'S':
-        if (arrDelayMins > 0) { bannerBg = '#f59e0b'; bannerText = `SCHEDULED | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444'; }
-        else                  { bannerBg = '#3b82f6'; bannerText = 'SCHEDULED'; arrDelayStr = 'Scheduled'; arrDelayColor = '#3b82f6'; }
-        break;
-      case 'A':
-        if (arrDelayMins > 0) { bannerBg = '#f59e0b'; bannerText = `IN FLIGHT | Delayed ${arrDelayStr}`; arrDelayColor = '#ef4444'; }
-        else                  { bannerBg = '#3b82f6'; bannerText = 'IN FLIGHT'; arrDelayColor = '#22c55e'; }
-        break;
-      case 'L':
-        if (arrTimeDataPending)   { bannerBg = '#f59e0b'; bannerText = 'LANDED | FINAL ARRIVAL PENDING'; arrDelayStr = 'Pending / Unknown'; arrDelayColor = '#f59e0b'; }
-        else if (arrDelayMins > 0){ bannerBg = '#f59e0b'; bannerText = `LANDED | ${arrDelayStr} Late`; arrDelayColor = '#ef4444'; }
-        else                      { bannerBg = '#22c55e'; bannerText = 'LANDED | On Time'; arrDelayColor = '#22c55e'; }
-        break;
-      case 'C':
-        bannerBg = '#ef4444'; bannerText = 'FLIGHT CANCELLED'; arrDelayStr = 'CANCELLED'; arrDelayColor = '#ef4444';
-        break;
-      case 'D':
-        if (hasMultipleDisruptions) {
-          bannerBg = '#991b1b'; bannerText = `DIVERTED & CANCELLED → ${divertedCode}`; arrDelayStr = 'DIVERTED/CANCELLED'; arrDelayColor = '#ef4444';
-        } else {
-          bannerBg = '#ef4444';
-          bannerText = arrDelayMins > 0 ? `DIVERTED → ${divertedCode} | Delayed ${arrDelayStr}` : `DIVERTED → ${divertedCode}`;
-          arrDelayStr = 'DIVERTED'; arrDelayColor = '#ef4444';
-        }
-        break;
-      default:
-        bannerBg = '#64748b'; bannerText = 'STATUS UNKNOWN'; arrDelayStr = 'Unknown'; arrDelayColor = '#64748b';
-    }
-
-    let depIata = targetFlight.departureAirportFsCode || 'N/A';
-    let arrIata = targetFlight.arrivalAirportFsCode   || 'N/A';
-    let depCity = depIata, arrCity = arrIata, depName = '', arrName = '';
-    let divertedToCity = null;
-    let operatorCode = targetFlight.operatingCarrierFsCode || targetFlight.carrierFsCode || carrier;
-    let operatorName = operatorCode;
-
-    if (data.appendix?.airports) {
-      const dPort = data.appendix.airports.find(a => a.fs === depIata);
-      if (dPort) { depCity = dPort.city || depIata; depName = dPort.name || ''; }
-      const aPort = data.appendix.airports.find(a => a.fs === arrIata);
-      if (aPort) { arrCity = aPort.city || arrIata; arrName = aPort.name || ''; }
-      if (divertedCode) {
-        const dvPort = data.appendix.airports.find(a => a.fs === divertedCode);
-        if (dvPort) divertedToCity = dvPort.city || divertedCode;
-      }
-    }
-    if (data.appendix?.airlines) {
-      const opLine = data.appendix.airlines.find(a => a.fs === operatorCode || a.iata === operatorCode || a.icao === operatorCode);
-      if (opLine) operatorName = opLine.name || operatorCode;
-    }
-
-    res.json({
-      aiStats: {
-        bannerBg, bannerTextCol, bannerText, flightDuration, operatorName,
-        rawStatus, divertedTo: divertedCode, divertedToCity, arrTimeDataPending,
-        depIata, depCity, depName,
-        depDate: formatDate(sDep.dateLocal),
-        depSched: formatTime(sDep.dateLocal), depSchedZone: calcOffset(sDep.dateLocal, sDep.dateUtc),
-        depActual: formatTime(aDep.dateLocal), depActualZone: calcOffset(aDep.dateLocal, aDep.dateUtc), depActualLabel,
-        arrIata, arrCity, arrName,
-        arrDate: formatDate(sArr.dateLocal),
-        arrSched: formatTime(sArr.dateLocal), arrSchedZone: calcOffset(sArr.dateLocal, sArr.dateUtc),
-        arrActual: formatTime(aArr.dateLocal), arrActualZone: calcOffset(aArr.dateLocal, aArr.dateUtc),
-        arrActualLabel: arrTimeDataPending ? 'Data Pending' : arrActualLabel,
-        arrDelay: arrDelayStr, arrDelayColor,
-      },
-      rawResponse: data,
-    });
-  } catch (error) {
-    console.error('🔥 Flight Status Crash:', error);
-    return res.json({ error: error.message || 'An unexpected server error occurred.' });
-  }
+  const result = await flightStatusService.getFlightStatus(req.query);
+  res.json(result);
 };
 
-// ---------------------------------------------------------------------------
 // DOCUMENT CHECKER
 // ---------------------------------------------------------------------------
 
@@ -687,9 +310,11 @@ function logAiUsage(req, results, language, opType) {
     return acc;
   }, { iTok: 0, oTok: 0, tTok: 0 });
   const { iTok, oTok, tTok } = totals;
-  const { MODEL_PRICING } = require('../utils/pricing');
-  const rates = MODEL_PRICING['gemini-2.5-flash'];
-  const costUSD = (iTok / 1_000_000) * rates.input + ((oTok + tTok) / 1_000_000) * rates.output;
+  const costUSD = calculateCost('gemini-2.5-flash', {
+    promptTokenCount: iTok,
+    candidatesTokenCount: oTok,
+    thoughtsTokenCount: tTok,
+  }).costUSD;
   logUsage(req, {
     operationType: opType || 'email_translation',
     model: 'gemini-2.5-flash',

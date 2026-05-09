@@ -1,12 +1,9 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
-
-// Initialize the Gemini API with your secret key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = require('../utils/geminiClient');
 
 exports.extractData = catchAsync(async (req, res, next) => {
   const { messyText } = req.body;

@@ -109,21 +109,6 @@ exports.getUsageInsights = catchAsync(async (req, res) => {
   });
 });
 
-exports.getMonthDetail = catchAsync(async (req, res) => {
-  const year = parseInt(req.params.year);
-  const month = parseInt(req.params.month);
-
-  const logs = await UsageLog.find({ year, month })
-    .sort({ createdAt: -1 })
-    .limit(200)
-    .lean();
-
-  res.json({
-    status: 'success',
-    data: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType }))
-  });
-});
-
 // ── SSE: per-client stream ────────────────────────────────────────────────────
 exports.sseStream = (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');

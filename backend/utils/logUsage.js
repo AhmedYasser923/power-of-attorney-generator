@@ -1,4 +1,5 @@
 const UsageLog = require('../models/UsageLog');
+const { EGYPT_MS } = require('./constants');
 
 /**
  * Log a cost-generating operation to MongoDB and broadcast to admin dashboard.
@@ -18,7 +19,7 @@ module.exports = async function logUsage(req, {
 
     const now = new Date();
     // Egypt is permanently UTC+2 (no DST since 2011)
-    const egyptNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const egyptNow = new Date(now.getTime() + EGYPT_MS);
     const entry = await UsageLog.create({
       userId: user._id,
       userName: user.name,
