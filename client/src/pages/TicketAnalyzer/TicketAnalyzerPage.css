@@ -15,18 +15,10 @@
 .ticket-analyzer__header h1 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.15;
-}
-
-.ticket-analyzer__header p {
-  max-width: 720px;
-  margin: 8px 0 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.55;
 }
 
 .ticket-year-box {
@@ -61,7 +53,7 @@
 }
 
 .ticket-year-box input {
-  width: 150px;
+  width: 100px;
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid var(--warning-border);

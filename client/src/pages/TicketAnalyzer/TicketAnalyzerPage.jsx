@@ -143,9 +143,6 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     <section className="ticket-analyzer" aria-labelledby="ticket-analyzer-title">
       <header className="ticket-analyzer__header">
         <h1 id="ticket-analyzer-title">Ticket Analyzer</h1>
-        <p>
-          Drop multiple e-tickets, boarding passes, or flight screenshots below. The analyzer extracts passenger data and evaluates EC261 / UK261 claim eligibility.
-        </p>
       </header>
 
       <div className="ticket-year-box">
