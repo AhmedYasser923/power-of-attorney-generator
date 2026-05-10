@@ -22,6 +22,7 @@ router.use('/', require('./adminRoutes'));
 router.use('/', require('./toolsRoutes'));
 router.use('/', require('./poaRoutes'));
 router.use('/', require('./ticketRoutes'));
+router.use('/', require('./barcodeRoutes'));
 
 router.setDbReady = (ready = true) => {
   dbReady = ready;

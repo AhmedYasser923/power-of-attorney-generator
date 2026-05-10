@@ -1,0 +1,198 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { decodeBarcodeImage } from '../../api/barcodeDecoder.js';
+import './BarcodeDecoderPage.css';
+
+function UploadIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+      <path d="M7 9l5-5 5 5" />
+      <path d="M12 4v12" />
+    </svg>
+  );
+}
+
+function BarcodeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M4 5v14" />
+      <path d="M7 5v14" />
+      <path d="M11 5v14" />
+      <path d="M14 5v14" />
+      <path d="M20 5v14" />
+      <path d="M17 5v14" />
+    </svg>
+  );
+}
+
+export default function BarcodeDecoderPage({ isActive = true }) {
+  const abortRef = useRef(null);
+  const inputRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const [decoding, setDecoding] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  const setSelectedFile = useCallback((nextFile) => {
+    if (!nextFile) return;
+    if (!nextFile.type.startsWith('image/')) {
+      setError('Upload an image file only.');
+      return;
+    }
+
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(nextFile);
+    });
+    setFile(nextFile);
+    setResult(null);
+    setError('');
+  }, []);
+
+  useEffect(() => {
+    if (!isActive) return undefined;
+
+    const handlePaste = (event) => {
+      const pastedFile = Array.from(event.clipboardData?.files || []).find((item) => item.type.startsWith('image/'));
+      if (pastedFile) setSelectedFile(pastedFile);
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isActive, setSelectedFile]);
+
+  const clear = () => {
+    abortRef.current?.abort();
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return '';
+    });
+    setFile(null);
+    setResult(null);
+    setError('');
+    setDecoding(false);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const decode = async () => {
+    if (!file) {
+      setError('Upload a cropped barcode image first.');
+      return;
+    }
+
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    setDecoding(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const payload = await decodeBarcodeImage({
+        file,
+        signal: abortRef.current.signal,
+      });
+
+      if (!payload.success) {
+        setError(payload.error || 'Could not decode barcode.');
+        return;
+      }
+
+      setResult(payload);
+    } catch (err) {
+      if (err.name !== 'AbortError') setError(err.message);
+    } finally {
+      setDecoding(false);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setDragging(false);
+    const droppedFile = Array.from(event.dataTransfer.files || []).find((item) => item.type.startsWith('image/'));
+    if (droppedFile) setSelectedFile(droppedFile);
+  };
+
+  return (
+    <section className="barcode-decoder" aria-labelledby="barcode-decoder-title">
+      <header className="barcode-decoder__header">
+        <h1 id="barcode-decoder-title">Barcode Decoder</h1>
+      </header>
+
+      <button
+        className={`barcode-dropzone${dragging ? ' is-dragging' : ''}`}
+        onClick={() => inputRef.current?.click()}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          event.preventDefault();
+          setDragging(false);
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+        type="button"
+      >
+        <span className="barcode-dropzone__upload-icon">
+          <UploadIcon />
+        </span>
+        <span className="barcode-dropzone__title">Drop cropped barcode image</span>
+        <span className="barcode-dropzone__meta">PNG, JPG, WEBP</span>
+        <input
+          accept="image/*"
+          className="barcode-dropzone__input"
+          onChange={(event) => setSelectedFile(event.target.files?.[0])}
+          ref={inputRef}
+          type="file"
+        />
+      </button>
+
+      {file && (
+        <div className="barcode-preview">
+          <div className="barcode-preview__image">
+            <img alt="" src={previewUrl} />
+          </div>
+          <div className="barcode-preview__actions">
+            <span className="barcode-preview__name">{file.name}</span>
+            <button className="barcode-preview__decode" disabled={decoding} onClick={decode} type="button">
+              <BarcodeIcon />
+              <span>{decoding ? 'Decoding...' : 'Decode'}</span>
+            </button>
+            <button className="barcode-preview__clear" disabled={decoding} onClick={clear} type="button">
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {decoding && (
+        <div className="barcode-status" role="status">
+          Reading barcode...
+        </div>
+      )}
+
+      {error && (
+        <div className="barcode-error" role="alert">
+          <strong>{error}</strong>
+          <span>Use a sharp crop with the full barcode, visible edges, and a small margin.</span>
+        </div>
+      )}
+
+      {result && (
+        <section className="barcode-raw-result" aria-labelledby="barcode-raw-title">
+          <details className="barcode-raw-details" open>
+            <summary>Raw Barcode String</summary>
+            <pre>{result.raw}</pre>
+          </details>
+        </section>
+      )}
+    </section>
+  );
+}

@@ -1,0 +1,2 @@
+zxing-cpp
+opencv-python-headless

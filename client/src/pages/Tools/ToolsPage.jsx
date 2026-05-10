@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import BarcodeDecoderPage from '../BarcodeDecoder/BarcodeDecoderPage.jsx';
 import DocumentCheckPage from '../DocumentCheck/DocumentCheckPage.jsx';
 import Ec261CalculatorPage from '../Ec261Calculator/Ec261CalculatorPage.jsx';
 import EocRadarPage from '../EocRadar/EocRadarPage.jsx';
@@ -14,6 +15,7 @@ import './ToolsPage.css';
 
 const TOOLS = [
   { key: 'ticket-analyzer', render: (isActive) => <TicketAnalyzerPage isActive={isActive} /> },
+  { key: 'barcode-decoder', render: (isActive) => <BarcodeDecoderPage isActive={isActive} /> },
   { key: 'poa', render: (isActive) => <PoaGeneratorPage isActive={isActive} /> },
   { key: 'flight-search', render: () => <FlightSearchPage /> },
   { key: 'flight-stats', render: () => <FlightStatsPage /> },

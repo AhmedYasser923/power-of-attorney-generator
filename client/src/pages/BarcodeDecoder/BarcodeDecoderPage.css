@@ -1,0 +1,261 @@
+.content__inner:has(.barcode-decoder) {
+  width: 100%;
+  max-width: 980px;
+}
+
+.barcode-decoder {
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.barcode-decoder__header {
+  margin-bottom: 24px;
+}
+
+.barcode-decoder__header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.barcode-dropzone {
+  position: relative;
+  display: grid;
+  width: min(100%, 900px);
+  min-height: 230px;
+  place-items: center;
+  padding: 36px 22px;
+  border: 2px dashed var(--accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.barcode-dropzone:hover,
+.barcode-dropzone:focus-visible,
+.barcode-dropzone.is-dragging {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.barcode-dropzone__upload-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-input);
+  color: var(--accent-hover);
+}
+
+.barcode-dropzone__upload-icon svg,
+.barcode-preview__decode svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.barcode-dropzone__title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.barcode-dropzone__meta {
+  margin-top: 10px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.barcode-dropzone__input {
+  display: none;
+}
+
+.barcode-preview {
+  display: grid;
+  width: min(100%, 900px);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.barcode-preview__image {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #090d14;
+}
+
+.barcode-preview__image img {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.barcode-preview__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.barcode-preview__name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-dim);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barcode-preview__decode,
+.barcode-preview__clear {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), opacity var(--transition);
+}
+
+.barcode-preview__decode {
+  border: 1px solid var(--accent-border);
+  background: var(--accent);
+  color: #fff;
+}
+
+.barcode-preview__decode:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.barcode-preview__clear {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+
+.barcode-preview__clear:hover:not(:disabled) {
+  border-color: var(--danger-border);
+  color: #fca5a5;
+}
+
+.barcode-preview__decode:disabled,
+.barcode-preview__clear:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.barcode-status,
+.barcode-error,
+.barcode-raw-result {
+  width: min(100%, 900px);
+  margin-top: 16px;
+}
+
+.barcode-status {
+  padding: 12px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  background: var(--accent-dim);
+  color: #bfdbfe;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.barcode-error {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-dim);
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.barcode-error strong {
+  color: #fecaca;
+}
+
+.barcode-error span {
+  color: #fca5a5;
+}
+
+.barcode-raw-result {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.barcode-raw-details summary {
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.barcode-raw-details pre {
+  margin: 0;
+  padding: 0 14px 14px;
+  overflow-x: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .barcode-dropzone {
+    min-height: 200px;
+  }
+
+  .barcode-preview__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .barcode-preview__name {
+    width: 100%;
+    flex: none;
+  }
+}
