@@ -48,6 +48,7 @@ const { bootstrapAdmin } = require('./controllers/authController');
 const csrfProtect = require('./middleware/csrf');
 const requestId = require('./middleware/requestId');
 const sanitizeMongo = require('./middleware/sanitizeMongo');
+const { isOriginAllowed } = require('./utils/allowedOrigins');
 const routes = require('./routes/index');
 
 
@@ -63,16 +64,14 @@ app.disable('x-powered-by');
 app.use(requestId);
 app.use(helmet({ contentSecurityPolicy: false }));
 
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
-  : [];
+app.use(cors((req, callback) => {
+  const origin = req.get('Origin');
 
-if (allowedOrigins.length > 0) {
-  app.use(cors({
+  callback(null, {
     credentials: true,
-    origin: allowedOrigins
-  }));
-}
+    origin: origin && isOriginAllowed(origin, req) ? origin : false,
+  });
+}));
 
 app.use(cookieParser());
 app.use(csrfProtect);

@@ -1,22 +1,9 @@
 'use strict';
 
 const AppError = require('../utils/appError');
+const { isOriginAllowed, normalizeOrigin } = require('../utils/allowedOrigins');
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-
-function getAllowedOrigins(req) {
-  const configured = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
-    : [];
-  const host = req.get('Host');
-
-  if (host) {
-    const proto = req.secure ? 'https' : 'http';
-    configured.push(`${proto}://${host}`);
-  }
-
-  return configured;
-}
 
 module.exports = (req, res, next) => {
   if (SAFE_METHODS.has(req.method)) return next();
@@ -26,14 +13,12 @@ module.exports = (req, res, next) => {
     return next(new AppError('Missing Origin header on state-changing request.', 403));
   }
 
-  let origin;
-  try {
-    origin = new URL(originHeader).origin;
-  } catch {
+  const origin = normalizeOrigin(originHeader);
+  if (!origin) {
     return next(new AppError('Invalid Origin header.', 403));
   }
 
-  if (!getAllowedOrigins(req).includes(origin)) {
+  if (!isOriginAllowed(origin, req)) {
     return next(new AppError('Cross-origin request blocked.', 403));
   }
 
