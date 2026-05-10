@@ -7,6 +7,7 @@ const path = require('path');
 
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const logUsage = require('../utils/logUsage');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'decode_barcode.py');
 const WINDOWS_PYTHON_CANDIDATES = [
@@ -79,6 +80,15 @@ exports.decodeBarcode = catchAsync(async (req, res, next) => {
   try {
     await fs.writeFile(tmpPath, req.file.buffer);
     const result = await runDecoder(tmpPath);
+    logUsage(req, {
+      operationType: 'barcode_decode',
+      costUSD: 0,
+      metadata: {
+        success: Boolean(result.success),
+        barcodeType: result.barcodeType || null,
+        fileType: req.file.mimetype || null,
+      },
+    });
     res.status(200).json(result);
   } finally {
     await fs.unlink(tmpPath).catch(() => {});

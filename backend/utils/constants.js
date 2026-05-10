@@ -7,6 +7,7 @@ exports.OP_LABELS = {
   poa_lufthansa: 'POA (Lufthansa)',
   poa_aerlingus: 'POA (Aer Lingus)',
   text_autofill: 'Text Autofill',
+  barcode_decode: 'Barcode Decode',
   sig_processing: 'Signature Processing'
 };
 

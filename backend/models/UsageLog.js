@@ -21,6 +21,7 @@ const usageLogSchema = new mongoose.Schema({
       'poa_lufthansa',
       'poa_aerlingus',
       'text_autofill',
+      'barcode_decode',
       'sig_processing',
       'email_translation_sync',
       'email_refinement'
