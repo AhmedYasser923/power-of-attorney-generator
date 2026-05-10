@@ -17,7 +17,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY backend/package*.json ./
+COPY backend/scripts/requirements.txt ./scripts/requirements.txt
 RUN npm ci --omit=dev
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip && \
+    python3 -m pip install --no-cache-dir -r ./scripts/requirements.txt && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY backend/ ./
 COPY --from=client-build /client/dist ./client-dist
