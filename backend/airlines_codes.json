@@ -203,7 +203,8 @@
     "name": "Animawings",
     "iata": "A2",
     "icao": "AWG",
-    "country": "Romania"
+    "country": "Romania",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Avion Express",
@@ -222,7 +223,8 @@
     "iata": "JU",
     "icao": "ASL",
     "country": "Serbia",
-    "reqs": "Ticket number, Boarding pass (Boarding pass only if delayed)"
+    "reqs": "Ticket number, Boarding pass (Boarding pass only if delayed)",
+    "claimNote": "Ticket number and PNR mandatory"
   },
   {
     "name": "Air Kyrgyzstan",
@@ -235,7 +237,8 @@
     "iata": "XK",
     "icao": "CCM",
     "country": "France",
-    "reqs": "Boarding pass, ID"
+    "reqs": "Boarding pass, ID",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Aer Lingus",
@@ -327,7 +330,8 @@
     "iata": "UX",
     "icao": "AEA",
     "country": "Spain",
-    "reqs": "POA, ID, Boarding pass"
+    "reqs": "POA, ID, Boarding pass",
+    "claimNote": "Either PNR or ticket number"
   },
   {
     "name": "Air Italy",
@@ -358,7 +362,8 @@
     "iata": "AF",
     "icao": "AFR",
     "country": "France",
-    "reqs": "ID"
+    "reqs": "ID",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Aircalin/Air Caledonie International",
@@ -382,7 +387,8 @@
     "name": "Air Wisconsin",
     "iata": "ZW",
     "icao": "AWI",
-    "country": "United States"
+    "country": "United States",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Sunshine",
@@ -406,7 +412,8 @@
     "name": "Air Albania",
     "iata": "ZB",
     "icao": "ABN",
-    "country": "Albania"
+    "country": "Albania",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Alliance",
@@ -538,7 +545,8 @@
     "name": "All Nippon Airways",
     "iata": "NH",
     "icao": "ANA",
-    "country": "Japan"
+    "country": "Japan",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Senegal International",
@@ -569,13 +577,16 @@
     "iata": "AI",
     "icao": "AIC",
     "country": "India",
-    "reqs": "Ticket number, Passport (Both strictly mandatory)"
+    "reqs": "Ticket number, Passport (Both strictly mandatory)",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Air Saint Pierre",
     "iata": "PJ",
     "icao": "SPM",
-    "country": "France"
+    "country": "France",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Southwest",
@@ -624,7 +635,8 @@
     "name": "Air Namibia",
     "iata": "SW",
     "icao": "NMB",
-    "country": "Namibia"
+    "country": "Namibia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Africa World Airlines",
@@ -655,7 +667,8 @@
     "iata": "TX",
     "icao": "FWI",
     "country": "France",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Canaryfly",
@@ -707,14 +720,16 @@
     "iata": "G9",
     "icao": "ABY",
     "country": "United Arab Emirates",
-    "reqs": "Ticket number, Boarding pass, ID (If delayed: need rescheduled time)"
+    "reqs": "Ticket number, Boarding pass, ID (If delayed: need rescheduled time)",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Air Canada",
     "iata": "AC",
     "icao": "ACA",
     "country": "Canada",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "AlbaStar",
@@ -901,13 +916,15 @@
     "name": "Azerbaijan Airlines",
     "iata": "J2",
     "icao": "AHY",
-    "country": "Azerbaijan"
+    "country": "Azerbaijan",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Avies",
     "iata": "U3",
     "icao": "AIA",
-    "country": "Estonia"
+    "country": "Estonia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Incheon",
@@ -937,7 +954,8 @@
     "name": "Arkia Israel Airlines",
     "iata": "IZ",
     "icao": "AIZ",
-    "country": "Israel"
+    "country": "Israel",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Kiribati",
@@ -985,7 +1003,8 @@
     "name": "Aeroméxico",
     "iata": "AM",
     "icao": "AMX",
-    "country": "Mexico"
+    "country": "Mexico",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Airnorth",
@@ -1095,7 +1114,9 @@
     "name": "Austrian Airlines",
     "iata": "OS",
     "icao": "AUA",
-    "country": "Austria"
+    "country": "Austria",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Augsburg Airways",
@@ -1180,7 +1201,8 @@
     "iata": "AZ",
     "icao": "AZA",
     "country": "Italy",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number and PNR mandatory"
   },
   {
     "name": "Astra Airlines",
@@ -1288,7 +1310,8 @@
     "name": "Air China",
     "iata": "CA",
     "icao": "CCA",
-    "country": "China"
+    "country": "China",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Aero Condor Peru",
@@ -1337,14 +1360,16 @@
     "iata": "AH",
     "icao": "DAH",
     "country": "Algeria",
-    "reqs": "ID (Front and Back) or Copy of Passport"
+    "reqs": "ID (Front and Back) or Copy of Passport",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Air Dolomiti",
     "iata": "EN",
     "icao": "DLA",
     "country": "Italy",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Air Madrid",
@@ -1422,7 +1447,8 @@
     "name": "Atlantic Airways",
     "iata": "RC",
     "icao": "FLI",
-    "country": "Faroe Islands"
+    "country": "Faroe Islands",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Iceland",
@@ -1543,7 +1569,8 @@
     "name": "Akasa Air",
     "iata": "QP",
     "icao": "AKJ",
-    "country": "India"
+    "country": "India",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Alfa",
@@ -1605,7 +1632,8 @@
     "iata": "MK",
     "icao": "MAU",
     "country": "Mauritius",
-    "reqs": "Ticket number, DOB"
+    "reqs": "Ticket number, DOB",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Air Madagascar",
@@ -1648,7 +1676,8 @@
     "iata": "SM",
     "icao": "MSC",
     "country": "Egypt",
-    "reqs": "Boarding pass, ID"
+    "reqs": "Boarding pass, ID",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Albarka Air",
@@ -1660,7 +1689,8 @@
     "name": "Aero Contractors",
     "iata": "AJ",
     "icao": "NIG",
-    "country": "Nigeria"
+    "country": "Nigeria",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Burundi",
@@ -1750,7 +1780,8 @@
     "name": "Air Mediterranean",
     "iata": "MV",
     "icao": "RML",
-    "country": "Greece"
+    "country": "Greece",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Air Salone",
@@ -1847,7 +1878,8 @@
     "name": "Air Senegal",
     "iata": "HC",
     "icao": "SZN",
-    "country": "Senegal"
+    "country": "Senegal",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Aeromar",
@@ -1883,7 +1915,8 @@
     "name": "Air Transat",
     "iata": "TS",
     "icao": "TSC",
-    "country": "Canada"
+    "country": "Canada",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Avialeasing Aviation Company",
@@ -1919,7 +1952,8 @@
     "name": "American Airlines",
     "iata": "AA",
     "icao": "AAL",
-    "country": "United States"
+    "country": "United States",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Amsterdam Airlines",
@@ -1973,7 +2007,8 @@
     "name": "Avianca",
     "iata": "AV",
     "icao": "AVA",
-    "country": "Colombia"
+    "country": "Colombia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Avianca Argentina",
@@ -2003,7 +2038,8 @@
     "name": "Azul Linhas Aéreas Brasileiras",
     "iata": "AD",
     "icao": "AZU",
-    "country": "Brazil"
+    "country": "Brazil",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "BA CityFlyer",
@@ -2087,7 +2123,8 @@
     "name": "British Airways",
     "iata": "BA",
     "icao": "BAW",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "claimNote": "PNR is mandatory"
   },
   {
     "name": "Biman Bangladesh Airlines",
@@ -2099,7 +2136,8 @@
     "name": "Bluebird Nordic",
     "iata": "BO",
     "icao": "BBD",
-    "country": "Iceland"
+    "country": "Iceland",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "BB Airways",
@@ -2327,7 +2365,8 @@
     "name": "Brussels Airlines",
     "iata": "SN",
     "icao": "BXI",
-    "country": "Belgium"
+    "country": "Belgium",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Brit Air",
@@ -2388,7 +2427,8 @@
     "name": "Boliviana de Aviación",
     "iata": "OB",
     "icao": "BOV",
-    "country": "Bolivia"
+    "country": "Bolivia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Borajet",
@@ -2840,7 +2880,8 @@
     "iata": "CD",
     "icao": "CND",
     "country": "Netherlands",
-    "reqs": "Ticket, Boarding pass, Reservation confirmation"
+    "reqs": "Ticket, Boarding pass, Reservation confirmation",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Corendon Airlines Europe",
@@ -2860,7 +2901,8 @@
     "iata": "SS",
     "icao": "CRL",
     "country": "France",
-    "reqs": "Ticket number, DOB"
+    "reqs": "Ticket number, DOB",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Corse Méditerranée",
@@ -3016,7 +3058,6 @@
     "iata": "NA",
     "icao": "DLI",
     "country": "Ukraine"
-    
   },
   {
     "name": "Denim Air",
@@ -3196,19 +3237,22 @@
     "name": "easyJet Europe",
     "iata": "EC",
     "icao": "EJU",
-    "country": "Austria"
+    "country": "Austria",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "easyJet Switzerland",
     "iata": "DS",
     "icao": "EZS",
-    "country": "Switzerland"
+    "country": "Switzerland",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "easyJet UK",
     "iata": "U2",
     "icao": "EZY",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Edelweiss Air",
@@ -3221,7 +3265,8 @@
     "iata": "MS",
     "icao": "MSR",
     "country": "Egypt",
-    "reqs": "Ticket number, ID"
+    "reqs": "Ticket number, ID",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "El Al Israel Airlines",
@@ -3240,14 +3285,17 @@
     "name": "Emerald Airlines",
     "iata": "EA",
     "icao": "EAI",
-    "country": "Ireland"
+    "country": "Ireland",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Emirates",
     "iata": "EK",
     "icao": "UAE",
     "country": "United Arab Emirates",
-    "reqs": "Ticket number, Passport"
+    "reqs": "Ticket number, Passport",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Empire Airlines",
@@ -3303,14 +3351,17 @@
     "iata": "ET",
     "icao": "ETH",
     "country": "Ethiopia",
-    "reqs": "Ticket number, ID"
+    "reqs": "Ticket number, ID",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "can proceed without ticket number"
   },
   {
     "name": "Etihad Airways",
     "iata": "EY",
     "icao": "ETD",
     "country": "United Arab Emirates",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "can proceed without ticket number"
   },
   {
     "name": "Euro Exec Express",
@@ -3377,7 +3428,8 @@
     "name": "Eurowings",
     "iata": "EW",
     "icao": "EWG",
-    "country": "Germany"
+    "country": "Germany",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Eurowings Europe",
@@ -3467,7 +3519,8 @@
     "name": "Finnair",
     "iata": "AY",
     "icao": "FIN",
-    "country": "Finland"
+    "country": "Finland",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Finncomm Airlines",
@@ -3611,7 +3664,8 @@
     "name": "FlyEgypt",
     "iata": "FT",
     "icao": "FEG",
-    "country": "Egypt"
+    "country": "Egypt",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Flyglobespan",
@@ -3635,7 +3689,8 @@
     "name": "Flynas",
     "iata": "XY",
     "icao": "KNE",
-    "country": "Saudi Arabia"
+    "country": "Saudi Arabia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "FlyNordic",
@@ -3683,7 +3738,8 @@
     "name": "FlyOne",
     "iata": "5F",
     "icao": "FIA",
-    "country": "Moldova"
+    "country": "Moldova",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "FlyOne Armenia",
@@ -3863,7 +3919,8 @@
     "name": "Gol Transportes Aéreos",
     "iata": "G3",
     "icao": "GLO",
-    "country": "Brazil"
+    "country": "Brazil",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Golden Air",
@@ -3959,7 +4016,8 @@
     "name": "Hainan Airlines",
     "iata": "HU",
     "icao": "CHH",
-    "country": "China"
+    "country": "China",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Haiti Ambassador Airlines",
@@ -4079,7 +4137,8 @@
     "name": "HiSky Europe",
     "iata": "H4",
     "icao": "HYS",
-    "country": "Romania"
+    "country": "Romania",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Hola Airlines",
@@ -4176,7 +4235,42 @@
     "iata": "IB",
     "icao": "IBE",
     "country": "Spain",
-    "reqs": "Ticket number, Passport / National ID / Spanish Residence card"
+    "reqs": "Ticket number, Passport / National ID / Spanish Residence card",
+    "claimNote": "Ticket number and PNR mandatory"
+  },
+  {
+    "name": "Iberojet",
+    "iata": "E9",
+    "icao": "EVE",
+    "country": "Spain"
+  },
+  {
+    "name": "Estelar",
+    "iata": "ES",
+    "icao": "ETR",
+    "country": "Venezuela",
+    "ticketNumberCanReplacePnr": true
+  },
+  {
+    "name": "Euroairlines S.L.",
+    "iata": "Q4",
+    "icao": "ELE",
+    "country": "Spain",
+    "ticketNumberCanReplacePnr": true
+  },
+  {
+    "name": "GP Aviation",
+    "iata": "IV",
+    "icao": "GPX",
+    "country": "Bulgaria",
+    "ticketNumberCanReplacePnr": true
+  },
+  {
+    "name": "La Compagnie",
+    "iata": "B0",
+    "icao": "DJT",
+    "country": "France",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "IBC Airways",
@@ -4225,7 +4319,8 @@
     "name": "Icelandair",
     "iata": "FI",
     "icao": "ICE",
-    "country": "Iceland"
+    "country": "Iceland",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Independence Air",
@@ -4244,7 +4339,8 @@
     "iata": "6E",
     "icao": "IGO",
     "country": "India",
-    "reqs": "DOB"
+    "reqs": "DOB",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Indian Airlines",
@@ -4396,7 +4492,8 @@
     "iata": "AZ",
     "icao": "ITY",
     "country": "Italy",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number and PNR mandatory"
   },
   {
     "name": "Itali Airlines",
@@ -4661,7 +4758,8 @@
     "iata": "KL",
     "icao": "KLM",
     "country": "Netherlands",
-    "reqs": "ID"
+    "reqs": "ID",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Kabo Air",
@@ -4710,7 +4808,8 @@
     "iata": "KQ",
     "icao": "KQA",
     "country": "Kenya",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Key Airlines",
@@ -4818,7 +4917,8 @@
     "name": "Kuwait Airways",
     "iata": "KU",
     "icao": "KAC",
-    "country": "Kuwait"
+    "country": "Kuwait",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Kyrgyz Airlines",
@@ -4922,19 +5022,21 @@
     "country": "Chile",
     "reqs": "ID / Passport"
   },
-   {
+  {
     "name": "Neos Air",
     "iata": "NO",
     "icao": "NOS",
     "country": "Italy",
-    "reqs": "Please collect all the data: Birth details, birth place, passport no. ,Codice Fiscale for Italian citizens"
+    "reqs": "Please collect all the data: Birth details, birth place, passport no. ,Codice Fiscale for Italian citizens",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "plus ultra",
     "iata": "PU",
     "icao": "PUE",
     "country": "Spain",
-    "reqs": "Boarding, ID"
+    "reqs": "Boarding, ID",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "LATAM Paraguay",
@@ -5012,16 +5114,31 @@
     "country": "Philippines"
   },
   {
-    "name": "Lauda Air",
-    "iata": "NG",
+    "name": "Lauda Europe",
+    "iata": "lW",
     "icao": "LDA",
-    "country": "Austria"
+    "country": "Malta",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "LaudaMotion",
     "iata": "OE[32]",
     "icao": "LDM",
     "country": "Austria"
+  },
+  {
+    "name": "Sky Vision Airlines",
+    "iata": "SE",
+    "icao": "SVI",
+    "country": "Egypt",
+    "ticketNumberCanReplacePnr": true
+  },
+  {
+    "name": "4Airways",
+    "iata": "",
+    "icao": "DAK",
+    "country": "Malta",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Lebanese Air Transport",
@@ -5039,7 +5156,8 @@
     "name": "Level",
     "iata": "LL",
     "icao": "LVL",
-    "country": "Spain"
+    "country": "Spain",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Libyan Arab Airlines",
@@ -5099,7 +5217,8 @@
     "name": "Loganair",
     "iata": "LM",
     "icao": "LOG",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Longhao Airlines",
@@ -5124,7 +5243,8 @@
     "iata": "LH",
     "icao": "DLH",
     "country": "Germany",
-    "reqs": "Lufthansa POA (Ticket & Boarding pass needed later)"
+    "reqs": "Lufthansa POA (Ticket & Boarding pass needed later)",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Lufthansa CityLine",
@@ -5150,7 +5270,8 @@
     "name": "Luxair",
     "iata": "LG",
     "icao": "LGL",
-    "country": "Luxembourg"
+    "country": "Luxembourg",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Lviv Airlines",
@@ -5558,7 +5679,8 @@
     "name": "Nile Air",
     "iata": "NP",
     "icao": "NIA",
-    "country": "Egypt"
+    "country": "Egypt",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Niger Airlines",
@@ -5661,7 +5783,8 @@
     "name": "Nesma Airlines",
     "iata": "NE",
     "icao": "NMA",
-    "country": "Egypt"
+    "country": "Egypt",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "New England Airlines",
@@ -5817,7 +5940,8 @@
     "name": "Norwegian Air Shuttle",
     "iata": "DY",
     "icao": "NOZ",
-    "country": "Norway"
+    "country": "Norway",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Norwegian Air UK",
@@ -5853,7 +5977,8 @@
     "name": "Nouvel Air Tunisie",
     "iata": "BJ",
     "icao": "LBT",
-    "country": "Tunisia"
+    "country": "Tunisia",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Nova Airways",
@@ -5932,7 +6057,9 @@
     "iata": "WY",
     "icao": "OMA",
     "country": "Oman",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "SalamAir",
@@ -6088,7 +6215,8 @@
     "name": "Pakistan International Airlines",
     "iata": "PK",
     "icao": "PIA",
-    "country": "Pakistan"
+    "country": "Pakistan",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Palau Trans Pacific Airlines",
@@ -6172,7 +6300,8 @@
     "name": "Pegasus Airlines",
     "iata": "PC",
     "icao": "PGT",
-    "country": "Turkey"
+    "country": "Turkey",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "People's",
@@ -6358,7 +6487,8 @@
     "name": "Qatar Airways",
     "iata": "QR",
     "icao": "QTR",
-    "country": "Qatar"
+    "country": "Qatar",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Qeshm Air",
@@ -6509,7 +6639,9 @@
     "iata": "AT",
     "icao": "RAM",
     "country": "Morocco",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Ticket number and PNR mandatory"
   },
   {
     "name": "Royal Air Philippines",
@@ -6605,13 +6737,15 @@
     "name": "Ryanair",
     "iata": "FR",
     "icao": "RYR",
-    "country": "Ireland"
+    "country": "Ireland",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Ryanair UK",
     "iata": "RK",
     "icao": "RUK",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "UVT Aero",
@@ -6749,7 +6883,8 @@
     "name": "Scandinavian Airlines",
     "iata": "SK",
     "icao": "SAS",
-    "country": "Sweden, Denmark and Norway"
+    "country": "Sweden, Denmark and Norway",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Sabah Air",
@@ -6768,7 +6903,6 @@
     "iata": "UG",
     "icao": "TUX",
     "country": "Tunisia"
-    
   },
   {
     "name": "S7 Airlines",
@@ -6776,14 +6910,12 @@
     "icao": "SBI",
     "country": "Russia"
   },
-
-   {
+  {
     "name": "World2Fly",
     "iata": "2W",
     "icao": "WFL",
     "country": "Spain",
     "reqs": "ID/Passport number mandatory"
-
   },
   {
     "name": "SkyBahamas",
@@ -6891,7 +7023,8 @@
     "name": "SATA Air Acores",
     "iata": "SP",
     "icao": "SAT",
-    "country": "Portugal"
+    "country": "Portugal",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Scorpio Aviation",
@@ -7074,7 +7207,6 @@
     "iata": "LZ[51]",
     "icao": "SWU",
     "country": "Switzerland"
-    
   },
   {
     "name": "Swe Fly",
@@ -7111,7 +7243,8 @@
     "iata": "XQ",
     "icao": "SXS",
     "country": "Turkey",
-    "reqs": "ID"
+    "reqs": "ID",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Syrian Arab Airlines",
@@ -7341,7 +7474,8 @@
     "name": "SkyWest Airlines",
     "iata": "OO",
     "icao": "SKW",
-    "country": "United States"
+    "country": "United States",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Skyways Express",
@@ -7602,7 +7736,8 @@
     "name": "TAP Portugal",
     "iata": "TP",
     "icao": "TAP",
-    "country": "Portugal"
+    "country": "Portugal",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Taquan Air Services",
@@ -7615,13 +7750,16 @@
     "iata": "RO",
     "icao": "ROT",
     "country": "Romania",
-    "reqs": "Ticket number (No PDFs accepted)"
+    "reqs": "Ticket number (No PDFs accepted)",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "can proceed without ticket number"
   },
   {
     "name": "Tassili Airlines",
     "iata": "SF",
     "icao": "DTH",
-    "country": "Algeria"
+    "country": "Algeria",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Tavrey Airlines",
@@ -7669,7 +7807,8 @@
     "name": "Thai Airways International",
     "iata": "TG",
     "icao": "THA",
-    "country": "Thailand"
+    "country": "Thailand",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Thai Express Air",
@@ -7723,7 +7862,8 @@
     "name": "Tianjin Airlines",
     "iata": "GS",
     "icao": "GCR",
-    "country": "China"
+    "country": "China",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Tiara Air",
@@ -7910,13 +8050,15 @@
     "iata": "BY",
     "icao": "TOM",
     "country": "United Kingdom",
-    "reqs": "DOB, Mobile number"
+    "reqs": "DOB, Mobile number",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "TUI fly Belgium",
     "iata": "TB",
     "icao": "JAF",
-    "country": "Belgium"
+    "country": "Belgium",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "TUI fly Deutschland",
@@ -7953,7 +8095,9 @@
     "iata": "TU",
     "icao": "TAR",
     "country": "Tunisia",
-    "reqs": "Ticket number"
+    "reqs": "Ticket number",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Ticket number mandatory"
   },
   {
     "name": "Turan Air",
@@ -7966,7 +8110,9 @@
     "iata": "TK",
     "icao": "THY",
     "country": "Turkey",
-    "reqs": "ID"
+    "reqs": "ID",
+    "ticketNumberCanReplacePnr": true,
+    "claimNote": "Either PNR or ticket number"
   },
   {
     "name": "Turkmenistan Airlines",
@@ -7978,7 +8124,8 @@
     "name": "T'way Air",
     "iata": "TW",
     "icao": "TWB",
-    "country": "Republic of Korea"
+    "country": "Republic of Korea",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "Twin Jet",
@@ -8146,7 +8293,8 @@
     "name": "Vietnam Airlines",
     "iata": "VN",
     "icao": "HVN",
-    "country": "Vietnam"
+    "country": "Vietnam",
+    "ticketNumberCanReplacePnr": true
   },
   {
     "name": "VIM Airlines",
@@ -8220,7 +8368,8 @@
     "iata": "VY",
     "icao": "VLG",
     "country": "Spain",
-    "reqs": "ID , The email address used for booking"
+    "reqs": "ID , The email address used for booking",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Vladivostok Air",
@@ -8269,7 +8418,8 @@
     "iata": "V7",
     "icao": "VOE",
     "country": "Spain",
-    "reqs": "Boarding pass, ID"
+    "reqs": "Boarding pass, ID",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "VLM Airlines",
@@ -8397,28 +8547,32 @@
     "iata": "8Z",
     "icao": "WVL",
     "country": "Bulgaria",
-    "reqs": "Wizz Air Denied Boarding Compensation Form"
+    "reqs": "Wizz Air Denied Boarding Compensation Form",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Wizz Air",
     "iata": "W6",
     "icao": "WZZ",
     "country": "Hungary",
-    "reqs": "Wizz Air Denied Boarding Compensation Form"
+    "reqs": "Wizz Air Denied Boarding Compensation Form",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Wizz Air Malta",
     "iata": "W4",
     "icao": "WMT",
     "country": "Malta",
-    "reqs": "Wizz Air Denied Boarding Compensation Form"
+    "reqs": "Wizz Air Denied Boarding Compensation Form",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "Wizz Air UK",
     "iata": "W9",
     "icao": "WUK",
     "country": "United Kingdom",
-    "reqs": "Wizz Air Denied Boarding Compensation Form"
+    "reqs": "Wizz Air Denied Boarding Compensation Form",
+    "claimNote": "PNR mandatory"
   },
   {
     "name": "World Airways",

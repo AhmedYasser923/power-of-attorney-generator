@@ -146,7 +146,7 @@ const { syncEocFromSheet } = require('../utils/syncEoc');
 const {
   jurisdictionData,
   getJurisdictionLimit,
-  getAirlineReqs,
+  getAirlineDocInfo,
 } = require('../utils/dataLoader');
 
 // Build the flat { "country": value } map the frontend JS (tools.js) expects.
@@ -227,14 +227,16 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
   );
   const displayAirline = dbMatch ? dbMatch.name : query;
 
-  // getAirlineReqs returns "No documents required" when there's no specific entry
-  const reqs    = getAirlineReqs(dbMatch ? dbMatch.name : query);
-  const hasDocs = reqs !== 'No documents required';
+  // getAirlineDocInfo returns "No documents required" when there's no specific entry
+  const docInfo = getAirlineDocInfo(dbMatch ? dbMatch.name : query);
+  const hasDocs = docInfo.reqs !== 'No documents required';
 
   res.status(200).json({
     airline: displayAirline,
     hasDocs,
-    reqs,
+    reqs: docInfo.reqs,
+    ticketNumberCanReplacePnr: docInfo.ticketNumberCanReplacePnr,
+    claimNote: docInfo.claimNote,
     iata:    dbMatch?.iata    || 'N/A',
     icao:    dbMatch?.icao    || 'N/A',
     country: dbMatch?.country || 'N/A',

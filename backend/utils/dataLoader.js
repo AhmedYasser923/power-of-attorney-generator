@@ -21,7 +21,7 @@ const path = require('path');
 /** @type {Array<{country: string, years: number|null, note?: string}>} */
 const jurisdictionData = require(path.join(__dirname, '../jurisdiction_data.json'));
 
-/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string}>} */
+/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string}>} */
 const airlinesCodesData = require(path.join(__dirname, '../airlines_codes.json'));
 
 // ---------------------------------------------------------------------------
@@ -84,19 +84,16 @@ function normalizeAirline(s) {
 }
 
 /**
- * Returns the document requirements string for a given airline name or IATA
- * code, or a default string if no specific requirements are recorded.
- *
  * Looks up against airlines_codes.json using a 3-tier strategy:
  *   1. Exact IATA match
  *   2. Exact name match (accent-normalised)
  *   3. Airline name contains the query (min 4 chars)
  *
  * @param {string} airlineName
- * @returns {string}
+ * @returns {{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string}|undefined}
  */
-function getAirlineReqs(airlineName) {
-  if (!airlineName || airlineName === 'Unknown') return 'No documents required';
+function findAirlineDocRecord(airlineName) {
+  if (!airlineName || airlineName === 'Unknown') return undefined;
 
   const q = normalizeAirline(airlineName);
 
@@ -112,7 +109,35 @@ function getAirlineReqs(airlineName) {
   if (!match && q.length >= 4)
     match = airlinesCodesData.find(a => normalizeAirline(a.name).includes(q));
 
+  return match;
+}
+
+/**
+ * Returns the document requirements string for a given airline name or IATA
+ * code, or a default string if no specific requirements are recorded.
+ *
+ * @param {string} airlineName
+ * @returns {string}
+ */
+function getAirlineReqs(airlineName) {
+  const match = findAirlineDocRecord(airlineName);
   return match?.reqs || 'No documents required';
+}
+
+/**
+ * Returns all document-check metadata for a given airline name or IATA code.
+ *
+ * @param {string} airlineName
+ * @returns {{reqs: string, ticketNumberCanReplacePnr: boolean, claimNote: string}}
+ */
+function getAirlineDocInfo(airlineName) {
+  const match = findAirlineDocRecord(airlineName);
+
+  return {
+    reqs: match?.reqs || 'No documents required',
+    ticketNumberCanReplacePnr: !!match?.ticketNumberCanReplacePnr,
+    claimNote: match?.claimNote || '',
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -125,4 +150,5 @@ module.exports = {
   getJurisdictionLimit,
   getJurisdictionYears,
   getAirlineReqs,
+  getAirlineDocInfo,
 };

@@ -21,6 +21,11 @@ function DocumentResult({ result }) {
           <div className="document-check-badges">
             <span className="document-check-badge document-check-badge--iata">IATA {result.iata || 'N/A'}</span>
             <span className="document-check-badge document-check-badge--icao">ICAO {result.icao || 'N/A'}</span>
+            {result.ticketNumberCanReplacePnr && (
+              <span className="document-check-badge document-check-badge--ticket-pnr">
+                Ticket number can replace PNR
+              </span>
+            )}
             <span className="document-check-badge document-check-badge--country">{countryLabel}</span>
           </div>
         </div>
@@ -37,6 +42,12 @@ function DocumentResult({ result }) {
       <div className={`document-check-note${result.hasDocs ? '' : ' document-check-note--clear'}`}>
         {result.reqs || 'No documents required'}
       </div>
+
+      {result.claimNote && (
+        <div className="document-check-note document-check-note--claim">
+          {result.claimNote}
+        </div>
+      )}
     </article>
   );
 }
