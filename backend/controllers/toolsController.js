@@ -416,15 +416,15 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   if (standaloneBullets.length) sections.push(standaloneBullets.join('\n\n'));
 
   const wrappedBullets = [
-    ...docRequestKeys.filter(k => byKey[k]).map(makeBullet),
     ...specialCombinableKeys.filter(k => byKey[k]).map(makeBullet),
+    ...docRequestKeys.filter(k => byKey[k]).map(makeBullet),
     ...(customNoteBullet ? [customNoteBullet] : [])
   ];
 
   if (wrappedBullets.length) {
     const hasDocRequests = docRequestKeys.length > 0;
     const addOutro = hasDocRequests || (customNoteBullet && useWrapper);
-    const outroKeys = [...docRequestKeys, ...specialCombinableKeys];
+    const outroKeys = [...specialCombinableKeys, ...docRequestKeys];
     const outro = buildOutro(outroKeys, link, !!customNoteBullet, templateState);
     const docSection = addOutro
       ? `${wrappedBullets.join('\n\n')}\n\n${outro}`
