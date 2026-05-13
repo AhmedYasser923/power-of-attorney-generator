@@ -86,6 +86,38 @@ function normalizeAirline(s) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
+// Aggressive comparison form: drops every non-alphanumeric char so spacing /
+// punctuation differences don't kill matches. "Delta Air Lines" vs
+// "Delta AirLines" both collapse to "deltaairlines".
+function collapseAirline(s) {
+  return normalizeAirline(s).replace(/[^a-z0-9]/g, '');
+}
+
+// Pre-built index from IATA -> all matching airline records. IATA collisions
+// (e.g. PU = Plus Ultra + PLUNA, D8 = Norwegian Air Sweden + Norwegian Air
+// Shuttle) produce multi-element arrays; the context-aware lookup below
+// disambiguates them by airline name + country.
+const airlinesByIata = (() => {
+  const map = new Map();
+  for (const a of airlinesCodesData) {
+    if (!a.iata || a.iata.toLowerCase() === 'na') continue;
+    const key = a.iata.toUpperCase();
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(a);
+  }
+  return map;
+})();
+
+function extractIataCandidates(flightNumbers) {
+  if (!Array.isArray(flightNumbers)) return [];
+  const seen = new Set();
+  for (const fn of flightNumbers) {
+    const m = String(fn || '').trim().match(/^([A-Za-z]{3}|[A-Za-z0-9]{2})\d+$/);
+    if (m) seen.add(m[1].toUpperCase());
+  }
+  return Array.from(seen);
+}
+
 /**
  * Looks up against airlines_codes.json using a 3-tier strategy:
  *   1. Exact IATA match
@@ -116,6 +148,62 @@ function findAirlineDocRecord(airlineName) {
 }
 
 /**
+ * Context-aware airline-record lookup for the ticket analyzer. Uses every
+ * IATA prefix parsed from the leg's flight numbers as primary keys, scores
+ * each candidate JSON row against the airline name (and optional country),
+ * and returns the highest-scoring record. Falls back to the legacy
+ * name-only `findAirlineDocRecord` when no IATA candidate aligns — which is
+ * the case for codeshare/interline legs where the operating airline is
+ * mentioned by name only without its own flight number.
+ *
+ * Scoring per (IATA, candidate) pair:
+ *   exact normalized-name match -> 100
+ *   one name fully contains the other (shorter side >= 4 chars) -> 40
+ *   otherwise -> 0
+ *   +5 when the candidate's country matches the supplied country
+ *
+ * @param {{name?: string, flightNumbers?: string[], country?: string}} args
+ * @returns {object|undefined}
+ */
+function findAirlineDocByContext({ name, flightNumbers, country } = {}) {
+  if (!name || name === 'Unknown') return undefined;
+
+  const target = collapseAirline(name);
+  const wantedCountry = (country || '').toLowerCase().trim();
+  const iataCandidates = extractIataCandidates(flightNumbers);
+  if (iataCandidates.length === 0) return findAirlineDocRecord(name);
+
+  let best = null;
+  let bestScore = 0;
+
+  for (const iata of iataCandidates) {
+    const rows = airlinesByIata.get(iata);
+    if (!rows) continue;
+    for (const row of rows) {
+      const cName = collapseAirline(row.name);
+      let score = 0;
+      if (cName === target) {
+        score = 100;
+      } else {
+        const shorter = cName.length <= target.length ? cName : target;
+        const longer  = cName.length <= target.length ? target : cName;
+        if (shorter.length >= 4 && longer.includes(shorter)) score = 40;
+      }
+      if (score > 0 && wantedCountry && row.country &&
+          row.country.toLowerCase().trim() === wantedCountry) {
+        score += 5;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = row;
+      }
+    }
+  }
+
+  return best || findAirlineDocRecord(name);
+}
+
+/**
  * Returns the document requirements string for a given airline name or IATA
  * code, or a default string if no specific requirements are recorded.
  *
@@ -129,12 +217,20 @@ function getAirlineReqs(airlineName) {
 
 /**
  * Returns all document-check metadata for a given airline name or IATA code.
+ * When `options.flightNumbers` is provided, the lookup uses the context-aware
+ * matcher that disambiguates IATA collisions (e.g. Plus Ultra vs PLUNA) and
+ * survives airline-name variants by anchoring on the flight number's IATA
+ * prefix. Without `flightNumbers`, behaves exactly like the legacy
+ * name-only matcher (preserves Document Check page behavior).
  *
  * @param {string} airlineName
+ * @param {{flightNumbers?: string[], country?: string}} [options]
  * @returns {{reqs: string, ticketNumberCanReplacePnr: boolean, claimNote: string, iata: string, icao: string, country: string}}
  */
-function getAirlineDocInfo(airlineName) {
-  const match = findAirlineDocRecord(airlineName);
+function getAirlineDocInfo(airlineName, options) {
+  const match = options && options.flightNumbers
+    ? findAirlineDocByContext({ name: airlineName, flightNumbers: options.flightNumbers, country: options.country })
+    : findAirlineDocRecord(airlineName);
 
   return {
     reqs: match?.reqs || 'No documents required',
@@ -157,4 +253,5 @@ module.exports = {
   getJurisdictionYears,
   getAirlineReqs,
   getAirlineDocInfo,
+  findAirlineDocByContext,
 };

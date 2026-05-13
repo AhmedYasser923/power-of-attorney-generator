@@ -123,20 +123,39 @@ export default function FlightSearchPage() {
 
         {error && <div className="flight-tools-alert flight-tools-alert--error">{error}</div>}
         {message && <div className="flight-tools-alert flight-tools-alert--success">{message}</div>}
-        {override && (
-          <div className="flight-tools-alert flight-tools-alert--info">
-            <span>
-              <strong>{override.name}</strong> doesn't resolve under IATA <code>{parsed.airline}</code> on every tracker. These trackers will be searched with:
-            </span>
-            <ul className="flight-tools-alert__codes">
-              {TRACKERS.filter((t) => override.codes[t.key]).map((t) => (
-                <li key={t.key}>
-                  {t.label}: <code>{override.codes[t.key]}</code>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {override && (() => {
+          const overridden = TRACKERS.filter((t) => override.codes[t.key]);
+          const unchanged = TRACKERS.filter((t) => !override.codes[t.key]);
+          return (
+            <div className="flight-tools-alert flight-tools-alert--info">
+              <div className="flight-tools-alert__header">
+                <span className="flight-tools-alert__badge" aria-hidden="true">i</span>
+                <div className="flight-tools-alert__heading">
+                  <strong className="flight-tools-alert__airline">{override.name}</strong>
+                  <span className="flight-tools-alert__hint">Tracker code substitutions for IATA <code>{parsed.airline}</code></span>
+                </div>
+              </div>
+              <ul className="flight-tools-alert__codes">
+                {overridden.map((t) => (
+                  <li key={t.key} className="flight-tools-alert__code-row">
+                    <span className="flight-tools-alert__tracker-name">{t.label}</span>
+                    <span className="flight-tools-alert__code-swap">
+                      <code>{parsed.airline}</code>
+                      <span className="flight-tools-alert__arrow" aria-hidden="true">→</span>
+                      <code className="flight-tools-alert__code-replacement">{override.codes[t.key]}</code>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {unchanged.length > 0 && (
+                <p className="flight-tools-alert__footnote">
+                  {unchanged.map((t) => t.label).join(' and ')}{' '}
+                  {unchanged.length === 1 ? 'uses' : 'use'} the default IATA <code>{parsed.airline}</code>.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         <button className="flight-tools-button" disabled={!flightNumber.trim() || !date} type="submit">
           Search Flights

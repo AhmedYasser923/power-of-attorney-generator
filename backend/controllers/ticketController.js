@@ -214,8 +214,14 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
         const dispOp  = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
         const dispMkt = leg.marketingAirlineCountry && leg.marketingAirlineCountry !== 'Unknown' ? leg.marketingAirlineCountry : 'Unknown HQ';
 
-        const mktInfo = getAirlineDocInfo(marketing);
-        const opInfo  = getAirlineDocInfo(operating);
+        const mktInfo = getAirlineDocInfo(marketing, {
+          flightNumbers: leg.flightNumbers,
+          country: leg.marketingAirlineCountry,
+        });
+        const opInfo  = getAirlineDocInfo(operating, {
+          flightNumbers: leg.flightNumbers,
+          country: leg.operatingAirlineCountry,
+        });
 
         leg.claimDocuments = marketing === operating
           ? [{
