@@ -25,6 +25,22 @@ function BarcodeIcon() {
   );
 }
 
+const FAILURE_TIPS = {
+  timeout: 'Try a tighter crop around the barcode area.',
+  too_small: 'Use a larger image where the barcode takes more space.',
+  too_blurry: 'Retake the image with steadier focus or upload a sharper crop.',
+  low_contrast: 'Use a brighter image or crop away dark background around the barcode.',
+  manual_adjustment_needed: 'Crop closer to the barcode and keep all edges visible.',
+  no_barcode_found: 'Make sure the full barcode is visible in the image.',
+};
+
+const confidenceLabel = (value) => {
+  if (value === 'high') return 'High confidence';
+  if (value === 'medium') return 'Medium confidence';
+  if (value === 'low') return 'Low confidence';
+  return 'Decoder result';
+};
+
 export default function BarcodeDecoderPage({ isActive = true }) {
   const abortRef = useRef(null);
   const inputRef = useRef(null);
@@ -34,6 +50,7 @@ export default function BarcodeDecoderPage({ isActive = true }) {
   const [decoding, setDecoding] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [errorDetails, setErrorDetails] = useState(null);
 
   useEffect(() => () => {
     abortRef.current?.abort();
@@ -44,6 +61,7 @@ export default function BarcodeDecoderPage({ isActive = true }) {
     if (!nextFile) return;
     if (!nextFile.type.startsWith('image/')) {
       setError('Upload an image file only.');
+      setErrorDetails(null);
       return;
     }
 
@@ -54,6 +72,7 @@ export default function BarcodeDecoderPage({ isActive = true }) {
     setFile(nextFile);
     setResult(null);
     setError('');
+    setErrorDetails(null);
   }, []);
 
   useEffect(() => {
@@ -77,13 +96,15 @@ export default function BarcodeDecoderPage({ isActive = true }) {
     setFile(null);
     setResult(null);
     setError('');
+    setErrorDetails(null);
     setDecoding(false);
     if (inputRef.current) inputRef.current.value = '';
   };
 
   const decode = async () => {
     if (!file) {
-      setError('Upload a cropped barcode image first.');
+      setError('Upload a barcode image first.');
+      setErrorDetails(null);
       return;
     }
 
@@ -91,6 +112,7 @@ export default function BarcodeDecoderPage({ isActive = true }) {
     abortRef.current = new AbortController();
     setDecoding(true);
     setError('');
+    setErrorDetails(null);
     setResult(null);
 
     try {
@@ -101,12 +123,16 @@ export default function BarcodeDecoderPage({ isActive = true }) {
 
       if (!payload.success) {
         setError(payload.error || 'Could not decode barcode.');
+        setErrorDetails(payload);
         return;
       }
 
       setResult(payload);
     } catch (err) {
-      if (err.name !== 'AbortError') setError(err.message);
+      if (err.name !== 'AbortError') {
+        setError(err.message);
+        setErrorDetails(null);
+      }
     } finally {
       setDecoding(false);
     }
@@ -143,7 +169,7 @@ export default function BarcodeDecoderPage({ isActive = true }) {
         <span className="barcode-dropzone__upload-icon">
           <UploadIcon />
         </span>
-        <span className="barcode-dropzone__title">Drop cropped barcode image</span>
+        <span className="barcode-dropzone__title">Drop barcode or boarding pass image</span>
         <span className="barcode-dropzone__meta">PNG, JPG, WEBP</span>
         <input
           accept="image/*"
@@ -174,19 +200,29 @@ export default function BarcodeDecoderPage({ isActive = true }) {
 
       {decoding && (
         <div className="barcode-status" role="status">
-          Reading barcode...
+          Recovering barcode...
         </div>
       )}
 
       {error && (
         <div className="barcode-error" role="alert">
           <strong>{error}</strong>
-          <span>Use a sharp crop with the full barcode, visible edges, and a small margin.</span>
+          <span>{FAILURE_TIPS[errorDetails?.reason] || 'Use a sharp image with the full barcode, visible edges, and a small margin.'}</span>
         </div>
       )}
 
       {result && (
         <section className="barcode-raw-result" aria-labelledby="barcode-raw-title">
+          <div className={`barcode-result-meta is-${result.confidence || 'unknown'}`}>
+            <strong>{confidenceLabel(result.confidence)}</strong>
+            <span>
+              {result.decodeInfo?.bcbpValid
+                ? 'Boarding pass structure matched'
+                : result.decodeInfo?.aggressiveProcessingUsed
+                  ? 'Recovered from enhanced copy'
+                  : 'Decoded without aggressive recovery'}
+            </span>
+          </div>
           <details className="barcode-raw-details" open>
             <summary>Raw Barcode String</summary>
             <pre>{result.raw}</pre>

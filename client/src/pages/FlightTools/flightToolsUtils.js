@@ -13,7 +13,7 @@ export function parseFlightNumber(value) {
   };
 }
 
-export function getFlightSearchData(flightNumber, date) {
+export function getFlightSearchData(flightNumber, date, overrideCodes) {
   const flight = parseFlightNumber(flightNumber);
   if (!flight) {
     return { error: 'Enter a valid flight number, for example BA0123 or U28412.' };
@@ -23,7 +23,7 @@ export function getFlightSearchData(flightNumber, date) {
     return { error: 'Enter a valid travel date.' };
   }
 
-  const urls = buildTrackerURLs(flight.display, date);
+  const urls = buildTrackerURLs(flight.display, date, overrideCodes);
   if (!urls?.airportInfo) {
     return { error: 'Unable to build tracker links for this flight.' };
   }

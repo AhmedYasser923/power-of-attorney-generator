@@ -128,7 +128,7 @@ function getAirlineReqs(airlineName) {
  * Returns all document-check metadata for a given airline name or IATA code.
  *
  * @param {string} airlineName
- * @returns {{reqs: string, ticketNumberCanReplacePnr: boolean, claimNote: string}}
+ * @returns {{reqs: string, ticketNumberCanReplacePnr: boolean, claimNote: string, iata: string, icao: string, country: string}}
  */
 function getAirlineDocInfo(airlineName) {
   const match = findAirlineDocRecord(airlineName);
@@ -137,6 +137,9 @@ function getAirlineDocInfo(airlineName) {
     reqs: match?.reqs || 'No documents required',
     ticketNumberCanReplacePnr: !!match?.ticketNumberCanReplacePnr,
     claimNote: match?.claimNote || '',
+    iata: match?.iata && match.iata.toLowerCase() !== 'na' ? match.iata : '',
+    icao: match?.icao && match.icao.toLowerCase() !== 'na' ? match.icao : '',
+    country: match?.country || '',
   };
 }
 

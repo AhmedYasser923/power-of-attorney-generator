@@ -10,6 +10,7 @@ const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'decode_barcode.py');
+const DECODER_TIMEOUT_MS = Number(process.env.BARCODE_DECODER_TIMEOUT_MS || 30000);
 const WINDOWS_PYTHON_CANDIDATES = [
   path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'Python', 'Python312', 'python.exe'),
   path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'Python', 'Python311', 'python.exe'),
@@ -32,7 +33,7 @@ function tempImagePath(file) {
 
 function runDecoderWithPython(pythonBin, imagePath) {
   return new Promise((resolve, reject) => {
-    execFile(pythonBin, [SCRIPT, imagePath], { timeout: 15000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+    execFile(pythonBin, [SCRIPT, imagePath], { timeout: DECODER_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024 }, (error, stdout, stderr) => {
       const output = stdout.trim();
       if (output) {
         try {
@@ -86,6 +87,10 @@ exports.decodeBarcode = catchAsync(async (req, res, next) => {
       metadata: {
         success: Boolean(result.success),
         barcodeType: result.barcodeType || null,
+        confidence: result.confidence || null,
+        reason: result.reason || null,
+        attempts: result.diagnostics?.attempts || null,
+        candidateCount: result.diagnostics?.candidateCount || null,
         fileType: req.file.mimetype || null,
       },
     });

@@ -132,6 +132,13 @@ function ClaimDocuments({ documents }) {
                 <div>
                   {document.role && <span className="ta-doc-role">{document.role}</span>}
                   <strong>{document.airline}</strong>
+                  <div className="ta-doc-chips">
+                    {document.iata && <span className="ta-doc-chip ta-doc-chip--iata">IATA {document.iata}</span>}
+                    {document.icao && <span className="ta-doc-chip ta-doc-chip--icao">ICAO {document.icao}</span>}
+                    {document.ticketNumberCanReplacePnr && (
+                      <span className="ta-doc-chip ta-doc-chip--ticket-pnr">Ticket # replaces PNR</span>
+                    )}
+                  </div>
                 </div>
                 {document.hq && (
                   <span className="ta-doc-limit">
@@ -140,6 +147,9 @@ function ClaimDocuments({ documents }) {
                 )}
               </div>
               <p>{noDocsRequired ? 'No docs required' : document.reqs || 'Requirements not specified'}</p>
+              {document.claimNote && (
+                <p className="ta-doc-claim-note">{document.claimNote}</p>
+              )}
             </div>
           );
         })}

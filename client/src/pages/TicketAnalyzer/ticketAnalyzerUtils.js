@@ -1,3 +1,5 @@
+import { getTrackerOverrides } from '../../api/trackerOverrides.js';
+
 const MISSING_DATE_VALUES = new Set([
   '',
   'unknown',
@@ -125,7 +127,7 @@ export function getFlightNumbers(flight) {
     .filter((flightNumber) => flightNumber && flightNumber !== 'N/A' && flightNumber !== 'Unknown');
 }
 
-export function buildTrackerURLs(flightNumber, date) {
+export function buildTrackerURLs(flightNumber, date, overrideCodes) {
   const match = String(flightNumber || '').trim().match(/^([A-Za-z]{3}|[A-Za-z0-9]{2})\s*(\d{1,4})$/);
 
   if (!match) return null;
@@ -139,11 +141,16 @@ export function buildTrackerURLs(flightNumber, date) {
   }
 
   const [year, month, day] = date.split('-');
+  const codes = overrideCodes || getTrackerOverrides()[airline]?.codes;
+  const codeFor = (key) => (codes && codes[key]) || airline;
+  const aiCode = codeFor('airportInfo');
+  const fsCode = codeFor('flightStats');
+  const feCode = codeFor('flightera');
 
   return {
-    airportInfo: `https://airportinfo.live/flight/${(airline + rawNumber).toLowerCase()}?d=${date}`,
-    flightStats: `https://www.flightstats.com/v2/historical-flight/${airline}/${cleanNumber}/${year}/${Number.parseInt(month, 10)}/${Number.parseInt(day, 10)}`,
-    flightera: `https://www.flightera.net/en/flight/${airline}${cleanNumber}/${TRACKER_MONTHS[Number.parseInt(month, 10) - 1]}-${year}#flight_list`
+    airportInfo: `https://airportinfo.live/flight/${(aiCode + rawNumber).toLowerCase()}?d=${date}`,
+    flightStats: `https://www.flightstats.com/v2/historical-flight/${fsCode}/${cleanNumber}/${year}/${Number.parseInt(month, 10)}/${Number.parseInt(day, 10)}`,
+    flightera: `https://www.flightera.net/en/flight/${feCode}${cleanNumber}/${TRACKER_MONTHS[Number.parseInt(month, 10) - 1]}-${year}#flight_list`
   };
 }
 

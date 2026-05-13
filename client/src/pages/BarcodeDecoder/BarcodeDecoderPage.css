@@ -222,6 +222,38 @@
   background: var(--bg-card);
 }
 
+.barcode-result-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.barcode-result-meta strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.barcode-result-meta span {
+  color: var(--text-muted);
+}
+
+.barcode-result-meta.is-low strong {
+  color: #fbbf24;
+}
+
+.barcode-result-meta.is-medium strong {
+  color: #93c5fd;
+}
+
+.barcode-result-meta.is-high strong {
+  color: #86efac;
+}
+
 .barcode-raw-details summary {
   padding: 12px 14px;
   color: var(--text-secondary);

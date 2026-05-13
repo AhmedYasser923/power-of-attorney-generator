@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { getFlightSearchData, parseDateFromDisplay } from './flightToolsUtils.js';
+import { useEffect, useState } from 'react';
+import { loadTrackerOverrides } from '../../api/trackerOverrides.js';
+import { getFlightSearchData, parseDateFromDisplay, parseFlightNumber } from './flightToolsUtils.js';
 import './FlightToolsPage.css';
 
 const TRACKERS = [
@@ -20,6 +21,20 @@ export default function FlightSearchPage() {
   const [trackers, setTrackers] = useState(initialTrackers);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [overrides, setOverrides] = useState({});
+
+  useEffect(() => {
+    let active = true;
+
+    loadTrackerOverrides().then((map) => {
+      if (active) setOverrides(map);
+    });
+
+    return () => { active = false; };
+  }, []);
+
+  const parsed = parseFlightNumber(flightNumber);
+  const override = parsed ? overrides[parsed.airline] : null;
 
   const handleDatePaste = (event) => {
     const parsed = parseDateFromDisplay(event.clipboardData?.getData('text'));
@@ -45,7 +60,7 @@ export default function FlightSearchPage() {
       return;
     }
 
-    const search = getFlightSearchData(flightNumber, date);
+    const search = getFlightSearchData(flightNumber, date, override?.codes);
     if (search.error) {
       setError(search.error);
       return;
@@ -108,6 +123,20 @@ export default function FlightSearchPage() {
 
         {error && <div className="flight-tools-alert flight-tools-alert--error">{error}</div>}
         {message && <div className="flight-tools-alert flight-tools-alert--success">{message}</div>}
+        {override && (
+          <div className="flight-tools-alert flight-tools-alert--info">
+            <span>
+              <strong>{override.name}</strong> doesn't resolve under IATA <code>{parsed.airline}</code> on every tracker. These trackers will be searched with:
+            </span>
+            <ul className="flight-tools-alert__codes">
+              {TRACKERS.filter((t) => override.codes[t.key]).map((t) => (
+                <li key={t.key}>
+                  {t.label}: <code>{override.codes[t.key]}</code>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <button className="flight-tools-button" disabled={!flightNumber.trim() || !date} type="submit">
           Search Flights

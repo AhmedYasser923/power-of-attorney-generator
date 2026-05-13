@@ -4242,7 +4242,8 @@
     "name": "Iberojet",
     "iata": "E9",
     "icao": "EVE",
-    "country": "Spain"
+    "country": "Spain",
+    "trackerSearchCodes": { "airportInfo": "EVE", "flightStats": "EVE", "flightera": "EVE" }
   },
   {
     "name": "Estelar",
@@ -5036,7 +5037,8 @@
     "icao": "PUE",
     "country": "Spain",
     "reqs": "Boarding, ID",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": { "flightStats": "PU*" }
   },
   {
     "name": "LATAM Paraguay",
@@ -5971,7 +5973,8 @@
     "name": "Norwegian Air Sweden",
     "iata": "D8",
     "icao": "NSZ",
-    "country": "Sweden"
+    "country": "Sweden",
+    "trackerSearchCodes": { "flightStats": "D8*" }
   },
   {
     "name": "Nouvel Air Tunisie",
@@ -5985,6 +5988,13 @@
     "iata": "O9",
     "icao": "NOV",
     "country": "Sudan"
+  },
+  {
+    "name": "Air Peace",
+    "iata": "P4",
+    "icao": "APK",
+    "country": "Nigeria",
+    "trackerSearchCodes": {"flightStats": "APK" }
   },
   {
     "name": "Novair",
@@ -8125,7 +8135,8 @@
     "iata": "TW",
     "icao": "TWB",
     "country": "Republic of Korea",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": { "airportInfo": "TWB", "flightStats": "TWB", "flightera": "TWB" }
   },
   {
     "name": "Twin Jet",

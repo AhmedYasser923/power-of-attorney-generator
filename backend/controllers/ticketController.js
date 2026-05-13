@@ -25,7 +25,7 @@ const airportsDatabase = require('../airports_data.json');
 const {
   getJurisdictionLimit,
   getJurisdictionYears,
-  getAirlineReqs,
+  getAirlineDocInfo,
 } = require('../utils/dataLoader');
 
 // ---------------------------------------------------------------------------
@@ -214,11 +214,44 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
         const dispOp  = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
         const dispMkt = leg.marketingAirlineCountry && leg.marketingAirlineCountry !== 'Unknown' ? leg.marketingAirlineCountry : 'Unknown HQ';
 
+        const mktInfo = getAirlineDocInfo(marketing);
+        const opInfo  = getAirlineDocInfo(operating);
+
         leg.claimDocuments = marketing === operating
-          ? [{ airline: marketing, role: '', reqs: getAirlineReqs(marketing), hq: dispOp, limit: opLimRaw !== 'N/A' ? `${opLimRaw} years` : 'N/A' }]
+          ? [{
+              airline: marketing,
+              role: '',
+              reqs: mktInfo.reqs,
+              hq: dispOp,
+              limit: opLimRaw !== 'N/A' ? `${opLimRaw} years` : 'N/A',
+              iata: mktInfo.iata,
+              icao: mktInfo.icao,
+              ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
+              claimNote: mktInfo.claimNote,
+            }]
           : [
-              { airline: marketing, role: 'Booked',   reqs: getAirlineReqs(marketing), hq: dispMkt, limit: mktLimRaw !== 'N/A' ? `${mktLimRaw} years` : 'N/A' },
-              { airline: operating, role: 'Operated', reqs: getAirlineReqs(operating),  hq: dispOp,  limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A' },
+              {
+                airline: marketing,
+                role: 'Booked',
+                reqs: mktInfo.reqs,
+                hq: dispMkt,
+                limit: mktLimRaw !== 'N/A' ? `${mktLimRaw} years` : 'N/A',
+                iata: mktInfo.iata,
+                icao: mktInfo.icao,
+                ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
+                claimNote: mktInfo.claimNote,
+              },
+              {
+                airline: operating,
+                role: 'Operated',
+                reqs: opInfo.reqs,
+                hq: dispOp,
+                limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A',
+                iata: opInfo.iata,
+                icao: opInfo.icao,
+                ticketNumberCanReplacePnr: opInfo.ticketNumberCanReplacePnr,
+                claimNote: opInfo.claimNote,
+              },
             ];
 
         if (leg.ec261Leg?.claimExpiration) {

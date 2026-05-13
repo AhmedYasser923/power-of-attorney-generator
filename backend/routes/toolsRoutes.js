@@ -12,6 +12,7 @@ router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs',      toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
 router.get('/api/tools/lookup-iata',     toolsController.lookupIATA);
+router.get('/api/tools/tracker-overrides', toolsController.getTrackerOverrides);
 router.post('/api/tools/generate-email',          userRateLimit, toolsController.generateEmail);
 router.post('/api/tools/translate-email',         userRateLimit, toolsController.translateEmail);
 router.post('/api/tools/refine-email-section',    userRateLimit, toolsController.refineEmailSection);

@@ -1676,3 +1676,47 @@
     justify-content: center;
   }
 }
+
+.ta-doc-item .ta-doc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.ta-doc-item .ta-doc-chip {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #aeb7c8;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ta-doc-item .ta-doc-chip--iata {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+}
+
+.ta-doc-item .ta-doc-chip--icao {
+  background: rgba(168, 85, 247, 0.16);
+  color: #c4b5fd;
+}
+
+.ta-doc-item .ta-doc-chip--ticket-pnr {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.ta-doc-item .ta-doc-claim-note {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-left: 3px solid rgba(245, 158, 11, 0.5);
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+}

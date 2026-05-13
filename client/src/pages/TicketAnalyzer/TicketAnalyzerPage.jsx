@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeTicketFiles } from '../../api/ticketAnalyzer.js';
+import { loadTrackerOverrides } from '../../api/trackerOverrides.js';
 import AnalysisResults from './components/AnalysisResults.jsx';
 import TicketDropzone from './components/TicketDropzone.jsx';
 import TicketPreviewBar from './components/TicketPreviewBar.jsx';
@@ -29,6 +30,10 @@ export default function TicketAnalyzerPage({ isActive = true }) {
   useEffect(() => () => {
     abortRef.current?.abort();
     if (timerRef.current) clearInterval(timerRef.current);
+  }, []);
+
+  useEffect(() => {
+    loadTrackerOverrides();
   }, []);
 
   useEffect(() => {

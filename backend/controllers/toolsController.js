@@ -300,6 +300,34 @@ exports.lookupIATA = (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
+// TRACKER OVERRIDES - per-tracker alternative search codes for airlines whose
+// IATA doesn't resolve on external trackers. Driven by `trackerSearchCodes`
+// in airlines_codes.json, e.g.
+//   PU  -> { flightStats: "PU*" }            // asterisk only works on FlightStats
+//   E9  -> { airportInfo: "EVE", flightStats: "EVE", flightera: "EVE" }  // ICAO everywhere
+// ---------------------------------------------------------------------------
+
+const VALID_TRACKER_KEYS = new Set(['airportInfo', 'flightStats', 'flightera']);
+
+const trackerOverridesMap = Object.fromEntries(
+  airlineCodesDatabase
+    .filter(a => a.trackerSearchCodes && typeof a.trackerSearchCodes === 'object' && a.iata && a.iata.toLowerCase() !== 'na')
+    .map(a => {
+      const codes = Object.fromEntries(
+        Object.entries(a.trackerSearchCodes)
+          .filter(([k, v]) => VALID_TRACKER_KEYS.has(k) && typeof v === 'string' && v.trim())
+          .map(([k, v]) => [k, v.trim()])
+      );
+      return [a.iata.toUpperCase(), { name: a.name, codes }];
+    })
+    .filter(([, entry]) => Object.keys(entry.codes).length > 0)
+);
+
+exports.getTrackerOverrides = (req, res) => {
+  res.json(trackerOverridesMap);
+};
+
+// ---------------------------------------------------------------------------
 // SMART EMAIL BUILDER
 // ---------------------------------------------------------------------------
 
