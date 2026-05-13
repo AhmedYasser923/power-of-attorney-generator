@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { checkDocuments, searchAirlines } from '../../api/documentCheck.js';
-import { getJurisdictionSuffix, isExactAirlineMatch } from './documentCheckUtils.js';
+import { getJurisdictionSuffix } from './documentCheckUtils.js';
 import './DocumentCheckPage.css';
 
 function DocumentResult({ result }) {
@@ -102,6 +102,8 @@ export default function DocumentCheckPage() {
 
   const updateAirline = async (value) => {
     setAirline(value);
+    checkAbortRef.current?.abort();
+    setLoading(false);
     setResult(null);
 
     if (value.trim().length < 2) {
@@ -116,15 +118,8 @@ export default function DocumentCheckPage() {
 
     try {
       const matches = await searchAirlines({ query: value, signal: controller.signal });
-      const exactMatch = matches.find((match) => isExactAirlineMatch(match, value));
-
       setSuggestions(matches);
-      setSuggestionsOpen(matches.length > 0 && !exactMatch);
-
-      if (exactMatch) {
-        setAirline(exactMatch.name);
-        runCheck(exactMatch.name);
-      }
+      setSuggestionsOpen(matches.length > 0);
     } catch (err) {
       if (err.name !== 'AbortError') {
         setSuggestions([]);
@@ -142,7 +137,6 @@ export default function DocumentCheckPage() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setSuggestionsOpen(false);
-    runCheck(airline);
   };
 
   return (
