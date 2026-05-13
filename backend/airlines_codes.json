@@ -1,5 +1,21 @@
 [
   {
+    "__schema": true,
+    "_doc": "Schema reference. This entry is filtered out by backend/utils/dataLoader.js and is not exposed to any consumer. JSON has no native comments, so this object serves as in-file documentation.",
+    "_standardFields": {
+      "name": "string - display name; matching is case-insensitive and accent-normalised",
+      "iata": "string - 2-char IATA code, or 'NA' when the airline has none",
+      "icao": "string - 3-char ICAO callsign, or 'NA' when the airline has none",
+      "country": "string - country of registration (used to derive jurisdiction limits)"
+    },
+    "_specialFields": {
+      "reqs": "string - claim-document requirements shown in the Document Check tool and the Ticket Analyzer's 'Mandatory claim documents' section. Omit the field entirely when the airline needs no extra docs; the helper falls back to 'No documents required'.",
+      "ticketNumberCanReplacePnr": "boolean (default false) - when true, a passenger's ticket number alone satisfies identification; the Document Check page and Ticket Analyzer FlightCard render a 'Ticket # replaces PNR' chip.",
+      "claimNote": "string - free-form note shown next to the reqs body, e.g. 'PNR mandatory', 'Ticket number mandatory', 'Either PNR or ticket number'. Rendered as a separate paragraph beneath reqs in both tools.",
+      "trackerSearchCodes": "object { airportInfo?: string, flightStats?: string, flightera?: string } - per-tracker replacement code used when the airline's IATA doesn't resolve on an external tracker (e.g. { 'flightStats': 'PU*' } for Plus Ultra, or { 'airportInfo': 'EVE', 'flightStats': 'EVE', 'flightera': 'EVE' } for Iberojet). Trackers not listed fall back to the parsed IATA. Surfaced via GET /api/tools/tracker-overrides and consumed by client/src/pages/TicketAnalyzer/ticketAnalyzerUtils.js::buildTrackerURLs."
+    }
+  },
+  {
     "name": "2GO",
     "iata": "PR",
     "icao": "BOI",

@@ -145,6 +145,7 @@ const { syncEocFromSheet } = require('../utils/syncEoc');
 // --- Shared data helpers (jurisdiction + airline docs) ---
 const {
   jurisdictionData,
+  airlinesCodesData: airlineCodesDatabase,
   getJurisdictionLimit,
   getAirlineDocInfo,
 } = require('../utils/dataLoader');
@@ -158,8 +159,6 @@ const jurisdictionLimitsForClient = Object.fromEntries(
     entry.note ? entry.note : entry.years, // preserve display strings like "2 Months - 10"
   ])
 );
-
-const airlineCodesDatabase = require('../airlines_codes.json');
 
 const normalizeStr = s =>
   (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();

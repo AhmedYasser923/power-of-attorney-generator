@@ -21,8 +21,11 @@ const path = require('path');
 /** @type {Array<{country: string, years: number|null, note?: string}>} */
 const jurisdictionData = require(path.join(__dirname, '../jurisdiction_data.json'));
 
-/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string}>} */
-const airlinesCodesData = require(path.join(__dirname, '../airlines_codes.json'));
+/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string, trackerSearchCodes?: {airportInfo?: string, flightStats?: string, flightera?: string}}>} */
+// The first entry of airlines_codes.json may be an in-file schema reference
+// (`__schema: true`). Filter it out so consumers see only real airline rows.
+const airlinesCodesData = require(path.join(__dirname, '../airlines_codes.json'))
+  .filter(entry => entry && entry.__schema !== true);
 
 // ---------------------------------------------------------------------------
 // Build a fast lookup map: lowercase country name → raw limit value
