@@ -234,6 +234,8 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
               icao: mktInfo.icao,
               ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
               claimNote: mktInfo.claimNote,
+              oneTimeSubmission: mktInfo.oneTimeSubmission,
+              ceasedOperations: mktInfo.ceasedOperations,
             }]
           : [
               {
@@ -246,6 +248,8 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
                 icao: mktInfo.icao,
                 ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
                 claimNote: mktInfo.claimNote,
+                oneTimeSubmission: mktInfo.oneTimeSubmission,
+                ceasedOperations: mktInfo.ceasedOperations,
               },
               {
                 airline: operating,
@@ -257,6 +261,8 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
                 icao: opInfo.icao,
                 ticketNumberCanReplacePnr: opInfo.ticketNumberCanReplacePnr,
                 claimNote: opInfo.claimNote,
+                oneTimeSubmission: opInfo.oneTimeSubmission,
+                ceasedOperations: opInfo.ceasedOperations,
               },
             ];
 

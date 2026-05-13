@@ -236,6 +236,8 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
     reqs: docInfo.reqs,
     ticketNumberCanReplacePnr: docInfo.ticketNumberCanReplacePnr,
     claimNote: docInfo.claimNote,
+    oneTimeSubmission: docInfo.oneTimeSubmission,
+    ceasedOperations: docInfo.ceasedOperations,
     iata:    dbMatch?.iata    || 'N/A',
     icao:    dbMatch?.icao    || 'N/A',
     country: dbMatch?.country || 'N/A',

@@ -1709,6 +1709,16 @@
   color: #fbbf24;
 }
 
+.ta-doc-item .ta-doc-chip--one-time {
+  background: rgba(20, 184, 166, 0.15);
+  color: #5eead4;
+}
+
+.ta-doc-item .ta-doc-chip--ceased {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+}
+
 .ta-doc-item .ta-doc-claim-note {
   margin-top: 6px;
   padding: 6px 8px;

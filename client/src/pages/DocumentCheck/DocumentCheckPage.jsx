@@ -26,6 +26,16 @@ function DocumentResult({ result }) {
                 Ticket number can replace PNR
               </span>
             )}
+            {result.oneTimeSubmission && (
+              <span className="document-check-badge document-check-badge--one-time">
+                One-time submission
+              </span>
+            )}
+            {result.ceasedOperations && (
+              <span className="document-check-badge document-check-badge--ceased">
+                Ceased operations
+              </span>
+            )}
             <span className="document-check-badge document-check-badge--country">{countryLabel}</span>
           </div>
         </div>

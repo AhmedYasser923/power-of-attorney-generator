@@ -138,6 +138,12 @@ function ClaimDocuments({ documents }) {
                     {document.ticketNumberCanReplacePnr && (
                       <span className="ta-doc-chip ta-doc-chip--ticket-pnr">Ticket # replaces PNR</span>
                     )}
+                    {document.oneTimeSubmission && (
+                      <span className="ta-doc-chip ta-doc-chip--one-time">One-time submission</span>
+                    )}
+                    {document.ceasedOperations && (
+                      <span className="ta-doc-chip ta-doc-chip--ceased">Ceased operations</span>
+                    )}
                   </div>
                 </div>
                 {document.hq && (

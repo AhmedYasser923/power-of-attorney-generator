@@ -12,7 +12,9 @@
       "reqs": "string - claim-document requirements shown in the Document Check tool and the Ticket Analyzer's 'Mandatory claim documents' section. Omit the field entirely when the airline needs no extra docs; the helper falls back to 'No documents required'.",
       "ticketNumberCanReplacePnr": "boolean (default false) - when true, a passenger's ticket number alone satisfies identification; the Document Check page and Ticket Analyzer FlightCard render a 'Ticket # replaces PNR' chip.",
       "claimNote": "string - free-form note shown next to the reqs body, e.g. 'PNR mandatory', 'Ticket number mandatory', 'Either PNR or ticket number'. Rendered as a separate paragraph beneath reqs in both tools.",
-      "trackerSearchCodes": "object { airportInfo?: string, flightStats?: string, flightera?: string } - per-tracker replacement code used when the airline's IATA doesn't resolve on an external tracker (e.g. { 'flightStats': 'PU*' } for Plus Ultra, or { 'airportInfo': 'EVE', 'flightStats': 'EVE', 'flightera': 'EVE' } for Iberojet). Trackers not listed fall back to the parsed IATA. Surfaced via GET /api/tools/tracker-overrides and consumed by client/src/pages/TicketAnalyzer/ticketAnalyzerUtils.js::buildTrackerURLs."
+      "oneTimeSubmission": "boolean (default false) - when true, the Document Check page and Ticket Analyzer FlightCard render a 'One-time submission' label for airlines where a passenger-submitted claim allows a parallel request.",
+      "trackerSearchCodes": "object { airportInfo?: string, flightStats?: string, flightera?: string } - per-tracker replacement code used when the airline's IATA doesn't resolve on an external tracker (e.g. { 'flightStats': 'PU*' } for Plus Ultra, or { 'airportInfo': 'EVE', 'flightStats': 'EVE', 'flightera': 'EVE' } for Iberojet). Trackers not listed fall back to the parsed IATA. Surfaced via GET /api/tools/tracker-overrides and consumed by client/src/pages/TicketAnalyzer/ticketAnalyzerUtils.js::buildTrackerURLs.",
+      "ceasedOperations": "boolean (default false) - when true, the Document Check page and Ticket Analyzer FlightCard render a 'Ceased operations' label for airlines that no longer operate."
     }
   },
   {
@@ -50,13 +52,15 @@
     "iata": "5W",
     "icao": "WAZ",
     "country": "United Arab Emirates",
-    "reqs": "Wizz Air Denied Boarding Compensation Form"
+    "reqs": "Wizz Air Denied Boarding Compensation Form",
+    "ceasedOperations": true
   },
   {
     "name": "Bees Airline",
     "iata": "7B",
     "icao": "UBE",
-    "country": "Ukraine"
+    "country": "Ukraine",
+    "ceasedOperations": true
   },
   {
     "name": "9 Air",
@@ -347,13 +351,15 @@
     "icao": "AEA",
     "country": "Spain",
     "reqs": "POA, ID, Boarding pass",
-    "claimNote": "Either PNR or ticket number"
+    "claimNote": "Either PNR or ticket number",
+    "oneTimeSubmission": true
   },
   {
     "name": "Air Italy",
-    "iata": "IG",
+    "iata": "I9",
     "icao": "AEY",
-    "country": "Italy"
+    "country": "Italy",
+    "ceasedOperations": true
   },
   {
     "name": "Air Macau",
@@ -379,7 +385,8 @@
     "icao": "AFR",
     "country": "France",
     "reqs": "ID",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Aircalin/Air Caledonie International",
@@ -429,7 +436,8 @@
     "iata": "ZB",
     "icao": "ABN",
     "country": "Albania",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "ceasedOperations": true
   },
   {
     "name": "Air Alliance",
@@ -501,7 +509,8 @@
     "name": "Air Mediterranee",
     "iata": "ML",
     "icao": "BIE",
-    "country": "France"
+    "country": "France",
+    "ceasedOperations": true
   },
   {
     "name": "Air Mekong",
@@ -574,7 +583,8 @@
     "name": "Air Berlin",
     "iata": "AB",
     "icao": "BER",
-    "country": "Germany"
+    "country": "Germany",
+    "ceasedOperations": true
   },
   {
     "name": "Air Sinai",
@@ -694,7 +704,7 @@
     "reqs": "ID/Passport number"
   },
   {
-  "name": "dan air",
+    "name": "dan air",
     "iata": "DN",
     "icao": "DNA",
     "country": "Romania",
@@ -745,7 +755,8 @@
     "icao": "ACA",
     "country": "Canada",
     "reqs": "Ticket number",
-    "claimNote": "Ticket number mandatory"
+    "claimNote": "Ticket number mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "AlbaStar",
@@ -799,7 +810,8 @@
     "name": "Air Togo",
     "iata": "YT",
     "icao": "TGA",
-    "country": "Togo"
+    "country": "Togo",
+    "ceasedOperations": true
   },
   {
     "name": "Allegiant Air",
@@ -860,7 +872,8 @@
     "name": "Aerosvit Airlines",
     "iata": "VV",
     "icao": "AEW",
-    "country": "Ukraine"
+    "country": "Ukraine",
+    "ceasedOperations": true
   },
   {
     "name": "American Falcon",
@@ -1081,7 +1094,8 @@
     "name": "Albawings",
     "iata": "2B",
     "icao": "AWT",
-    "country": "Albania"
+    "country": "Albania",
+    "ceasedOperations": true
   },
   {
     "name": "Aires, Aerovías de Integración Regional, S.A.",
@@ -1138,7 +1152,8 @@
     "name": "Augsburg Airways",
     "iata": "IQ",
     "icao": "AUB",
-    "country": "Germany"
+    "country": "Germany",
+    "ceasedOperations": true
   },
   {
     "name": "Aurigny Air Services",
@@ -1218,7 +1233,8 @@
     "icao": "AZA",
     "country": "Italy",
     "reqs": "Ticket number",
-    "claimNote": "Ticket number and PNR mandatory"
+    "claimNote": "Ticket number and PNR mandatory",
+    "ceasedOperations": true
   },
   {
     "name": "Astra Airlines",
@@ -1296,7 +1312,8 @@
     "name": "Air VIA",
     "iata": "VL",
     "icao": "VIM",
-    "country": "Bulgaria"
+    "country": "Bulgaria",
+    "ceasedOperations": true
   },
   {
     "name": "Africa West",
@@ -1579,7 +1596,8 @@
     "name": "Albanian Airlines",
     "iata": "LV",
     "icao": "LBC",
-    "country": "Albania"
+    "country": "Albania",
+    "ceasedOperations": true
   },
   {
     "name": "Akasa Air",
@@ -1819,10 +1837,11 @@
   },
   {
     "name": "Aeroitalia",
-    "iata": "NA",
-    "icao": "ROO",
+    "iata": "XZ",
+    "icao": "AEZ",
     "country": "Italy",
-    "reqs": "ID"
+    "reqs": "ID",
+    "ceasedOperations": true
   },
   {
     "name": "AeroRepública",
@@ -2165,7 +2184,8 @@
     "name": "Blue Islands",
     "iata": "SI",
     "icao": "BCI",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "ceasedOperations": true
   },
   {
     "name": "British Caribbean Airways",
@@ -2231,7 +2251,8 @@
     "name": "Blue1",
     "iata": "KF",
     "icao": "BLF",
-    "country": "Finland"
+    "country": "Finland",
+    "ceasedOperations": true
   },
   {
     "name": "Bearskin Lake Air Service",
@@ -2261,7 +2282,8 @@
     "name": "BMI Regional",
     "iata": "BM",
     "icao": "BMR",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "ceasedOperations": true
   },
   {
     "name": "Bmibaby",
@@ -2303,7 +2325,8 @@
     "name": "Blue Panorama Airlines",
     "iata": "BV",
     "icao": "BPA",
-    "country": "Italy"
+    "country": "Italy",
+    "ceasedOperations": true
   },
   {
     "name": "BRA-Transportes Aéreos",
@@ -2419,7 +2442,8 @@
     "name": "Blue Air",
     "iata": "0B",
     "icao": "BLA",
-    "country": "Romania"
+    "country": "Romania",
+    "ceasedOperations": true
   },
   {
     "name": "British Mediterranean Airways",
@@ -2528,7 +2552,8 @@
     "name": "Cameroon Airlines",
     "iata": "UY",
     "icao": "UYC",
-    "country": "Cameroon"
+    "country": "Cameroon",
+    "ceasedOperations": true
   },
   {
     "name": "CanJet",
@@ -2744,7 +2769,8 @@
     "name": "Cimber Sterling",
     "iata": "QI",
     "icao": "CIM",
-    "country": "Denmark"
+    "country": "Denmark",
+    "ceasedOperations": true
   },
   {
     "name": "Cinnamon Air",
@@ -2852,7 +2878,8 @@
     "name": "Continental Airlines",
     "iata": "CO",
     "icao": "COA",
-    "country": "United States"
+    "country": "United States",
+    "ceasedOperations": true
   },
   {
     "name": "Continental Express",
@@ -3127,7 +3154,8 @@
     "name": "Donavia",
     "iata": "D9",
     "icao": "DNV",
-    "country": "Russia"
+    "country": "Russia",
+    "ceasedOperations": true
   },
   {
     "name": "DonbassAero",
@@ -3229,7 +3257,8 @@
     "name": "Eastern Airways",
     "iata": "T3",
     "icao": "EZE",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "ceasedOperations": true
   },
   {
     "name": "Eastern Australia Airlines",
@@ -3360,7 +3389,8 @@
     "name": "Estonian Air",
     "iata": "OV",
     "icao": "ELL",
-    "country": "Estonia"
+    "country": "Estonia",
+    "ceasedOperations": true
   },
   {
     "name": "Ethiopian Airlines",
@@ -3413,7 +3443,8 @@
     "name": "Eurolot",
     "iata": "K2",
     "icao": "ELO",
-    "country": "Poland"
+    "country": "Poland",
+    "ceasedOperations": true
   },
   {
     "name": "Euromanx Airways",
@@ -3445,7 +3476,8 @@
     "iata": "EW",
     "icao": "EWG",
     "country": "Germany",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Eurowings Europe",
@@ -3493,7 +3525,8 @@
     "name": "ExpressJet",
     "iata": "EV",
     "icao": "ASQ",
-    "country": "United States"
+    "country": "United States",
+    "ceasedOperations": true
   },
   {
     "name": "Exploits Valley Air Services",
@@ -3668,7 +3701,8 @@
     "name": "Flybe",
     "iata": "BE",
     "icao": "BEE",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "ceasedOperations": true
   },
   {
     "name": "Flybondi",
@@ -3875,13 +3909,15 @@
     "name": "Germania",
     "iata": "ST",
     "icao": "GMI",
-    "country": "Germany"
+    "country": "Germany",
+    "ceasedOperations": true
   },
   {
     "name": "Germanwings",
     "iata": "4U",
     "icao": "GWI",
-    "country": "Germany"
+    "country": "Germany",
+    "ceasedOperations": true
   },
   {
     "name": "APG Airlines",
@@ -4259,7 +4295,11 @@
     "iata": "E9",
     "icao": "EVE",
     "country": "Spain",
-    "trackerSearchCodes": { "airportInfo": "EVE", "flightStats": "EVE", "flightera": "EVE" }
+    "trackerSearchCodes": {
+      "airportInfo": "EVE",
+      "flightStats": "EVE",
+      "flightera": "EVE"
+    }
   },
   {
     "name": "Estelar",
@@ -4330,7 +4370,8 @@
     "name": "Iceland Express",
     "iata": "HC",
     "icao": "NA",
-    "country": "Iceland"
+    "country": "Iceland",
+    "ceasedOperations": true
   },
   {
     "name": "Icelandair",
@@ -4510,7 +4551,8 @@
     "icao": "ITY",
     "country": "Italy",
     "reqs": "Ticket number",
-    "claimNote": "Ticket number and PNR mandatory"
+    "claimNote": "Ticket number and PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Itali Airlines",
@@ -4776,7 +4818,8 @@
     "icao": "KLM",
     "country": "Netherlands",
     "reqs": "ID",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Kabo Air",
@@ -4854,9 +4897,10 @@
   },
   {
     "name": "Khors Aircompany",
-    "iata": "X9\r\nKO",
+    "iata": "KO",
     "icao": "KHO",
-    "country": "Ukraine"
+    "country": "Ukraine",
+    "ceasedOperations": true
   },
   {
     "name": "Kingfisher Airlines",
@@ -5045,7 +5089,8 @@
     "icao": "NOS",
     "country": "Italy",
     "reqs": "Please collect all the data: Birth details, birth place, passport no. ,Codice Fiscale for Italian citizens",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "plus ultra",
@@ -5054,7 +5099,9 @@
     "country": "Spain",
     "reqs": "Boarding, ID",
     "ticketNumberCanReplacePnr": true,
-    "trackerSearchCodes": { "flightStats": "PU*" }
+    "trackerSearchCodes": {
+      "flightStats": "PU*"
+    }
   },
   {
     "name": "LATAM Paraguay",
@@ -5427,13 +5474,15 @@
     "name": "Malmö Aviation",
     "iata": "TF",
     "icao": "SCW",
-    "country": "Sweden"
+    "country": "Sweden",
+    "ceasedOperations": true
   },
   {
     "name": "Malév Hungarian Airlines",
     "iata": "MA",
     "icao": "MAH",
-    "country": "Hungary"
+    "country": "Hungary",
+    "ceasedOperations": true
   },
   {
     "name": "Mandala Airlines",
@@ -5469,7 +5518,8 @@
     "name": "Martinair",
     "iata": "MP",
     "icao": "MPH",
-    "country": "Netherlands"
+    "country": "Netherlands",
+    "ceasedOperations": true
   },
   {
     "name": "Mastertop Linhas Aéreas",
@@ -5523,7 +5573,8 @@
     "name": "Meridiana",
     "iata": "IG",
     "icao": "ISS",
-    "country": "Italy"
+    "country": "Italy",
+    "ceasedOperations": true
   },
   {
     "name": "Merpati Nusantara Airlines",
@@ -5613,7 +5664,8 @@
     "name": "Monarch Airlines",
     "iata": "ZB",
     "icao": "MON",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "ceasedOperations": true
   },
   {
     "name": "Myway Airlines",
@@ -5643,7 +5695,8 @@
     "name": "Motor Sich Airlines",
     "iata": "M9",
     "icao": "MSI",
-    "country": "Ukraine"
+    "country": "Ukraine",
+    "ceasedOperations": true
   },
   {
     "name": "Mount Cook Airline",
@@ -5789,7 +5842,8 @@
     "iata": "NO",
     "icao": "NOS",
     "country": "Italy",
-    "reqs": "Birth details/place, Passport no. (Codice Fiscale for Italian citizens)"
+    "reqs": "Birth details/place, Passport no. (Codice Fiscale for Italian citizens)",
+    "oneTimeSubmission": true
   },
   {
     "name": "Neosiam Airways",
@@ -5814,13 +5868,15 @@
     "name": "NextJet",
     "iata": "2N",
     "icao": "NTJ",
-    "country": "Sweden"
+    "country": "Sweden",
+    "ceasedOperations": true
   },
   {
     "name": "Niki",
     "iata": "HG",
     "icao": "NLY",
-    "country": "Austria"
+    "country": "Austria",
+    "ceasedOperations": true
   },
   {
     "name": "Nok Air",
@@ -5862,7 +5918,8 @@
     "name": "NordStar",
     "iata": "Y7",
     "icao": "TYA",
-    "country": "Russia"
+    "country": "Russia",
+    "ceasedOperations": true
   },
   {
     "name": "Nordwind Airlines",
@@ -5990,7 +6047,9 @@
     "iata": "D8",
     "icao": "NSZ",
     "country": "Sweden",
-    "trackerSearchCodes": { "flightStats": "D8*" }
+    "trackerSearchCodes": {
+      "flightStats": "D8*"
+    }
   },
   {
     "name": "Nouvel Air Tunisie",
@@ -6010,13 +6069,16 @@
     "iata": "P4",
     "icao": "APK",
     "country": "Nigeria",
-    "trackerSearchCodes": {"flightStats": "APK" }
+    "trackerSearchCodes": {
+      "flightStats": "APK"
+    }
   },
   {
     "name": "Novair",
-    "iata": "1I",
+    "iata": "N9",
     "icao": "NVR",
-    "country": "Sweden"
+    "country": "Sweden",
+    "ceasedOperations": true
   },
   {
     "name": "Novo Air",
@@ -6103,7 +6165,8 @@
     "name": "Onur Air",
     "iata": "8Q",
     "icao": "OHY",
-    "country": "Turkey"
+    "country": "Turkey",
+    "ceasedOperations": true
   },
   {
     "name": "Orenburg Airlines",
@@ -6384,12 +6447,6 @@
     "country": "Thailand"
   },
   {
-    "name": "Piedmont Airlines (1948-1989)",
-    "iata": "PI",
-    "icao": "PAI",
-    "country": "United States"
-  },
-  {
     "name": "Piedmont Airlines",
     "iata": "PT",
     "icao": "PDT",
@@ -6405,7 +6462,8 @@
     "name": "Play",
     "iata": "OG",
     "icao": "FPY",
-    "country": "Iceland"
+    "country": "Iceland",
+    "ceasedOperations": true
   },
   {
     "name": "Pobeda",
@@ -7110,7 +7168,8 @@
     "name": "Sky Work Airlines",
     "iata": "SX",
     "icao": "SRK",
-    "country": "Switzerland"
+    "country": "Switzerland",
+    "ceasedOperations": true
   },
   {
     "name": "Swedline Express",
@@ -7659,13 +7718,15 @@
     "name": "Small Planet Airlines",
     "iata": "S5",
     "icao": "LLC",
-    "country": "Lithuania"
+    "country": "Lithuania",
+    "ceasedOperations": true
   },
   {
     "name": "Small Planet Airlines",
     "iata": "P7",
     "icao": "LLP",
-    "country": "Poland"
+    "country": "Poland",
+    "ceasedOperations": true
   },
   {
     "name": "Small Planet Airlines",
@@ -7949,7 +8010,8 @@
     "name": "Trans States Airlines",
     "iata": "AX",
     "icao": "LOF",
-    "country": "United States"
+    "country": "United States",
+    "ceasedOperations": true
   },
   {
     "name": "Trans World Airlines",
@@ -7961,7 +8023,8 @@
     "name": "Transaero Airlines",
     "iata": "UN",
     "icao": "TSO",
-    "country": "Russia"
+    "country": "Russia",
+    "ceasedOperations": true
   },
   {
     "name": "Transair France",
@@ -7997,7 +8060,8 @@
     "name": "Transbrasil",
     "iata": "TR",
     "icao": "TBA",
-    "country": "Brazil"
+    "country": "Brazil",
+    "ceasedOperations": true
   },
   {
     "name": "Transeuropean Airlines",
@@ -8123,7 +8187,8 @@
     "country": "Tunisia",
     "reqs": "Ticket number",
     "ticketNumberCanReplacePnr": true,
-    "claimNote": "Ticket number mandatory"
+    "claimNote": "Ticket number mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Turan Air",
@@ -8152,7 +8217,11 @@
     "icao": "TWB",
     "country": "Republic of Korea",
     "ticketNumberCanReplacePnr": true,
-    "trackerSearchCodes": { "airportInfo": "TWB", "flightStats": "TWB", "flightera": "TWB" }
+    "trackerSearchCodes": {
+      "airportInfo": "TWB",
+      "flightStats": "TWB",
+      "flightera": "TWB"
+    }
   },
   {
     "name": "Twin Jet",
@@ -8164,7 +8233,8 @@
     "name": "Tyrolean Airways",
     "iata": "VO",
     "icao": "TYR",
-    "country": "Austria"
+    "country": "Austria",
+    "ceasedOperations": true
   },
   {
     "name": "flyADVANCED",
@@ -8224,7 +8294,8 @@
     "name": "US Airways",
     "iata": "US",
     "icao": "AWE",
-    "country": "United States"
+    "country": "United States",
+    "ceasedOperations": true
   },
   {
     "name": "US-Bangla Airlines",
@@ -8327,7 +8398,8 @@
     "name": "VIM Airlines",
     "iata": "NN",
     "icao": "MOV",
-    "country": "Russia"
+    "country": "Russia",
+    "ceasedOperations": true
   },
   {
     "name": "Viasa",
@@ -8396,7 +8468,8 @@
     "icao": "VLG",
     "country": "Spain",
     "reqs": "ID , The email address used for booking",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Vladivostok Air",
@@ -8446,7 +8519,8 @@
     "icao": "VOE",
     "country": "Spain",
     "reqs": "Boarding pass, ID",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "VLM Airlines",
@@ -8583,7 +8657,8 @@
     "icao": "WZZ",
     "country": "Hungary",
     "reqs": "Wizz Air Denied Boarding Compensation Form",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "oneTimeSubmission": true
   },
   {
     "name": "Wizz Air Malta",
@@ -8653,7 +8728,8 @@
     "name": "XL Airways France",
     "iata": "SE",
     "icao": "SEU",
-    "country": "France"
+    "country": "France",
+    "ceasedOperations": true
   },
   {
     "name": "XpressAir",
@@ -8738,5 +8814,278 @@
     "iata": "Z4",
     "icao": "OOM",
     "country": "Canada"
+  },
+  {
+    "name": "Air Antilles",
+    "iata": "4I",
+    "icao": "KES",
+    "country": "Guadeloupe",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Air Contractors",
+    "iata": "AG",
+    "icao": "ABR",
+    "country": "Ireland",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Air Lituanica",
+    "iata": "LT",
+    "icao": "LTU",
+    "country": "Lithuania",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Air One",
+    "iata": "AP",
+    "icao": "ADH",
+    "country": "Italy",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Air Onix",
+    "iata": "OG",
+    "icao": "ONX",
+    "country": "Ukraine",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Air Sweden",
+    "iata": "NA",
+    "icao": "SNX",
+    "country": "Sweden",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Amerijet International",
+    "iata": "M6",
+    "icao": "AJT",
+    "country": "United States",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Belle Air",
+    "iata": "LZ",
+    "icao": "LBY",
+    "country": "Albania",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Bingo Airways",
+    "iata": "06",
+    "icao": "BGY",
+    "country": "Poland",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Cimber A/S",
+    "iata": "QA",
+    "icao": "CIM",
+    "country": "Denmark",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Fly Romania",
+    "iata": "X5",
+    "icao": "OTJ",
+    "country": "Romania",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Ten Airways",
+    "iata": "X5",
+    "icao": "OTJ",
+    "country": "Romania",
+    "ceasedOperations": true
+  },
+  {
+    "name": "German Sky Airlines",
+    "iata": "ZY",
+    "icao": "GHY",
+    "country": "Germany",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Hamburg Airways",
+    "iata": "HK",
+    "icao": "HAY",
+    "country": "Germany",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Insel Air",
+    "iata": "7I",
+    "icao": "INC",
+    "country": "Curacao",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Lotus Airline",
+    "iata": "LU",
+    "icao": "TAS",
+    "country": "Egypt",
+    "ceasedOperations": true
+  },
+  {
+    "name": "OpenSkies",
+    "iata": "LV",
+    "icao": "BOS",
+    "country": "France",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Orbest Portugal",
+    "iata": "6O",
+    "icao": "OBS",
+    "country": "Portugal",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Palestine Airlines",
+    "iata": "PF",
+    "icao": "PNW",
+    "country": "Egypt",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Polet Airlines",
+    "iata": "YQ",
+    "icao": "POT",
+    "country": "Russia",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Primera Air",
+    "iata": "PF",
+    "icao": "PRI",
+    "country": "Denmark",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Skywings",
+    "iata": "ZA",
+    "icao": "SWM",
+    "country": "Cambodia",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Thomas Cook Belgium",
+    "iata": "HQ",
+    "icao": "TCW",
+    "country": "Belgium",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Thomas Cook Belgium",
+    "iata": "FQ",
+    "icao": "TCW",
+    "country": "Belgium",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Thomas Cook UK",
+    "iata": "MT",
+    "icao": "TCX",
+    "country": "United Kingdom",
+    "ceasedOperations": true
+  },
+  {
+    "name": "VOEPASS Linhas Aéreas Brazil",
+    "iata": "2Z",
+    "icao": "PTB",
+    "country": "Brazil",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Braathens International Airways",
+    "iata": "TT",
+    "icao": "BIX",
+    "country": "Sweden",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Bees Airlines Romania",
+    "iata": "E8",
+    "icao": "BES",
+    "country": "Romania",
+    "ceasedOperations": true
+  },
+  {
+    "name": "HOP!-BRIT AIR",
+    "iata": "DB",
+    "icao": "BZH",
+    "country": "France",
+    "ceasedOperations": true
+  },
+  {
+    "name": "BMI Regional (BD)",
+    "iata": "BD",
+    "icao": "BMR",
+    "country": "United Kingdom",
+    "ceasedOperations": true
+  },
+  {
+    "name": "German Wings",
+    "iata": "4U",
+    "icao": "GWI",
+    "country": "Germany",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Khors Air",
+    "iata": "KO",
+    "icao": "KHO",
+    "country": "Ukraine",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Martin Air",
+    "iata": "MP",
+    "icao": "MPH",
+    "country": "Netherlands",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Next Jet",
+    "iata": "2N",
+    "icao": "NTJ",
+    "country": "Sweden",
+    "ceasedOperations": true
+  },
+  {
+    "name": "NordStar Airlines",
+    "iata": "Y7",
+    "icao": "TYA",
+    "country": "Russia",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Piedmont Airlines (US / PDT)",
+    "iata": "US",
+    "icao": "PDT",
+    "country": "United States",
+    "ceasedOperations": true
+  },
+  {
+    "name": "SkyWork Airlines",
+    "iata": "SX",
+    "icao": "SRK",
+    "country": "Switzerland",
+    "ceasedOperations": true
+  },
+  {
+    "name": "VIM",
+    "iata": "NN",
+    "icao": "MOV",
+    "country": "Russia",
+    "ceasedOperations": true
+  },
+  {
+    "name": "Wizzair Abu Dhabi",
+    "iata": "5W",
+    "icao": "WAZ",
+    "country": "United Arab Emirates",
+    "ceasedOperations": true
   }
 ]

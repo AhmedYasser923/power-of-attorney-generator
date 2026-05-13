@@ -208,6 +208,18 @@
   color: #fcd34d;
 }
 
+.document-check-badge--one-time {
+  border-color: rgba(20, 184, 166, 0.45);
+  background: rgba(20, 184, 166, 0.12);
+  color: #5eead4;
+}
+
+.document-check-badge--ceased {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
 .document-check-badge--country,
 .document-check-status--success {
   border-color: var(--success-border);
