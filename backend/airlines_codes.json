@@ -1227,15 +1227,7 @@
     "icao": "AYZ",
     "country": "Russia"
   },
-  {
-    "name": "Alitalia",
-    "iata": "AZ",
-    "icao": "AZA",
-    "country": "Italy",
-    "reqs": "Ticket number",
-    "claimNote": "Ticket number and PNR mandatory",
-    "ceasedOperations": true
-  },
+
   {
     "name": "Astra Airlines",
     "iata": "A2",
@@ -7820,7 +7812,7 @@
     "country": "Moldova"
   },
   {
-    "name": "TAP Portugal",
+    "name": "TAP Air Portugal",
     "iata": "TP",
     "icao": "TAP",
     "country": "Portugal",
