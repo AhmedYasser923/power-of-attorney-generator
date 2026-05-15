@@ -3651,7 +3651,16 @@
     "name": "Fly Jinnah",
     "iata": "9P",
     "icao": "FJL",
-    "country": "Pakistan"
+    "country": "Pakistan",
+    "trackerSearchCodes": {
+      "flightStats": "FJL"
+    }
+  },
+  {
+    "name": "SKY EXPRESS S.A.",
+    "iata": "GQ",
+    "icao": "SEH",
+    "country": "Greece"
   },
   {
     "name": "Fly Me Sweden",
@@ -5935,7 +5944,10 @@
     "name": "Norse Atlantic UK",
     "iata": "Z0",
     "icao": "UBT",
-    "country": "United Kingdom"
+    "country": "United Kingdom",
+    "trackerSearchCodes": {
+      "flightStats": "UBT"
+    }
   },
   {
     "name": "North Coast Air Services Ltd",
@@ -7261,7 +7273,7 @@
     "country": "Canada"
   },
   {
-    "name": "Swiss International Air Lines",
+    "name": "Swiss",
     "iata": "LX",
     "icao": "SWR",
     "country": "Switzerland",
