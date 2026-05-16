@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { getWordCount, LANGUAGES } from '../emailBuilderUtils.js';
 import EditableSection from './EditableSection.jsx';
 import PlaceholderPanel from './PlaceholderPanel.jsx';
@@ -15,6 +15,8 @@ function joinSections(sections) {
 export default function EmailPreview({
   output, setOutput,
   englishOutput, setEnglishOutput,
+  onEnglishTypingEdit,
+  onForeignTypingEdit,
   error,
   language, onLanguageChange,
   translatingLanguage,
@@ -41,11 +43,14 @@ export default function EmailPreview({
   const pendingFocusRef = useRef(null);
   const pendingMoveRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (pendingFocusRef.current !== null) {
       const idx = pendingFocusRef.current;
-      pendingFocusRef.current = null;
-      sectionRefs.current[idx]?.focus?.({ atStart: true });
+      const node = sectionRefs.current[idx];
+      if (node?.focus) {
+        pendingFocusRef.current = null;
+        node.focus({ atEnd: true });
+      }
     }
   });
 
@@ -79,14 +84,22 @@ export default function EmailPreview({
     sectionRefs.current[to]?.focus?.({ preventScroll: true });
   }, [sections]);
 
-  const writeJoined = useCallback((joined) => {
+  const writeJoined = useCallback((joined, { typing = false } = {}) => {
     if (activePreview === 'verify' || language === 'English') {
-      setEnglishOutput(joined);
-      if (language === 'English') setOutput(joined);
+      if (typing && language !== 'English') {
+        onEnglishTypingEdit(joined);
+      } else {
+        setEnglishOutput(joined);
+        if (language === 'English') setOutput(joined);
+      }
     } else {
-      setOutput(joined);
+      if (typing) {
+        onForeignTypingEdit(joined);
+      } else {
+        setOutput(joined);
+      }
     }
-  }, [activePreview, language, setOutput, setEnglishOutput]);
+  }, [activePreview, language, setOutput, setEnglishOutput, onEnglishTypingEdit, onForeignTypingEdit]);
 
   const spliceOtherSide = useCallback((fn) => {
     if (language === 'English') return;
@@ -99,12 +112,19 @@ export default function EmailPreview({
   }, [language, activePreview, output, englishOutput, setOutput, setEnglishOutput]);
 
   const updateSection = useCallback((index, newText) => {
-    if (/\n\n/.test(newText)) {
-      pendingFocusRef.current = index + 1;
-    }
     const updated = sections.map((s, i) => (i === index ? newText : s));
-    writeJoined(joinSections(updated));
+    writeJoined(joinSections(updated), { typing: true });
   }, [sections, writeJoined]);
+
+  const addSectionAfter = useCallback((index) => {
+    pendingFocusRef.current = index + 1;
+    const updated = [...sections];
+    updated.splice(index + 1, 0, '• ');
+    writeJoined(joinSections(updated), { typing: true });
+    spliceOtherSide((parts) => {
+      if (index < parts.length) parts.splice(index + 1, 0, '• ');
+    });
+  }, [sections, writeJoined, spliceOtherSide]);
 
   const moveSection = useCallback((from, to) => {
     if (to < 0 || to >= sections.length) return;
@@ -241,13 +261,14 @@ export default function EmailPreview({
                   refining={refiningIndex === i}
                   onMoveUp={i > 0 && !isLast ? () => moveSection(i, i - 1) : null}
                   onMoveDown={!isLast && !isPenultimate ? () => moveSection(i, i + 1) : null}
-                  onMergeDown={!isLast ? () => mergeWithBelow(i) : null}
+                  onMergeDown={!isLast && !isPenultimate ? () => mergeWithBelow(i) : null}
+                  onAddNext={!isLast ? () => addSectionAfter(i) : null}
                   onDelete={sections.length > 1 ? () => deleteSection(i) : null}
                 />
               );
             })}
             <p className="email-section-hints">
-              Tip: press Enter twice to split a new section. Alt+↑ / Alt+↓ reorder, Alt+M merges with below.
+              Tip: press Enter at the end of a section to add a new one. Alt+↑ / Alt+↓ reorder, Alt+M merges with below.
             </p>
           </div>
         )}

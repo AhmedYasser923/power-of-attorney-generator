@@ -3,7 +3,7 @@ import { translateEmail } from '../../../api/emailBuilder.js';
 
 const DEBOUNCE_MS = 1000;
 
-export default function useTranslationSync(language) {
+export default function useTranslationSync() {
   const abortRef = useRef(null);
   const timerRef = useRef(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -16,11 +16,11 @@ export default function useTranslationSync(language) {
 
   useEffect(() => cancel, [cancel]);
 
-  const translate = useCallback((englishText, onResult) => {
+  const translate = useCallback((target, getText, onResult) => {
     clearTimeout(timerRef.current);
     abortRef.current?.abort();
 
-    if (!englishText?.trim() || language === 'English') {
+    if (!target) {
       setIsTranslating(false);
       return;
     }
@@ -28,13 +28,19 @@ export default function useTranslationSync(language) {
     setIsTranslating(true);
 
     timerRef.current = setTimeout(async () => {
+      const text = typeof getText === 'function' ? getText() : getText;
+      if (!text?.trim()) {
+        setIsTranslating(false);
+        return;
+      }
+
       const controller = new AbortController();
       abortRef.current = controller;
 
       try {
         const data = await translateEmail({
-          text: englishText,
-          language,
+          text,
+          language: target,
           signal: controller.signal
         });
         if (abortRef.current === controller) {
@@ -48,7 +54,7 @@ export default function useTranslationSync(language) {
         if (abortRef.current === controller) setIsTranslating(false);
       }
     }, DEBOUNCE_MS);
-  }, [language]);
+  }, []);
 
   return { translate, isTranslating, cancel };
 }

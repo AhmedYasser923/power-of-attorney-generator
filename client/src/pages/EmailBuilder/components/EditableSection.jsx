@@ -9,6 +9,7 @@ const EditableSection = forwardRef(function EditableSection({
   onMoveUp,
   onMoveDown,
   onMergeDown,
+  onAddNext,
   onDelete
 }, ref) {
   const rootRef = useRef(null);
@@ -31,11 +32,23 @@ const EditableSection = forwardRef(function EditableSection({
       if (!el) return;
       el.focus({ preventScroll: !!opts.preventScroll });
       if (opts.atStart) el.setSelectionRange(0, 0);
+      else if (opts.atEnd) {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      }
     },
     getRoot: () => rootRef.current
   }));
 
   const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey && onAddNext) {
+      const el = textareaRef.current;
+      if (el && el.selectionStart === value.length && el.selectionEnd === value.length) {
+        e.preventDefault();
+        onAddNext();
+        return;
+      }
+    }
     if (!e.altKey) return;
     if (e.key === 'ArrowUp' && onMoveUp) {
       e.preventDefault();
@@ -47,7 +60,7 @@ const EditableSection = forwardRef(function EditableSection({
       e.preventDefault();
       onMergeDown();
     }
-  }, [onMoveUp, onMoveDown, onMergeDown]);
+  }, [onMoveUp, onMoveDown, onMergeDown, onAddNext, value]);
 
   return (
     <div className="email-editable-section" ref={rootRef}>

@@ -27,7 +27,7 @@ export default function EmailBuilderPage() {
   const [refineSnapshot, setRefineSnapshot] = useState(null);
   const [translatingLanguage, setTranslatingLanguage] = useState(false);
 
-  const translationSync = useTranslationSync(language);
+  const translationSync = useTranslationSync();
 
   // Cache of english body -> { [language]: translatedText }, so flipping
   // back to a previously-seen language is free.
@@ -129,13 +129,16 @@ export default function EmailBuilderPage() {
     gen.setEnglishOutput(text);
     if (language === 'English') {
       gen.setOutput(text);
-    } else {
-      translationSync.translate(text, (translated) => gen.setOutput(translated));
     }
-  }, [language, gen, translationSync]);
+  }, [language, gen]);
+
+  const handleForeignEdit = useCallback((text) => {
+    gen.setOutput(text);
+  }, [gen]);
 
   const handleLanguageChange = useCallback(async (newLanguage) => {
     if (newLanguage === language) return;
+    translationSync.cancel();
     setLanguage(newLanguage);
 
     if (!gen.englishOutput) return;
@@ -168,7 +171,7 @@ export default function EmailBuilderPage() {
     } finally {
       setTranslatingLanguage(false);
     }
-  }, [language, gen]);
+  }, [language, gen, translationSync]);
 
   const handleRefineSection = useCallback(async (index, sectionText) => {
     if (!sectionText?.trim()) return;
@@ -176,26 +179,28 @@ export default function EmailBuilderPage() {
 
     const snapshot = { output: gen.output, englishOutput: gen.englishOutput };
 
+    const englishSections = gen.englishOutput ? gen.englishOutput.split(/\n\n/) : [];
+    const englishSection = englishSections[index] || sectionText;
     const context = gen.englishOutput || gen.output;
+
     try {
       const data = await refineEmailSection({
-        section: sectionText,
+        section: englishSection,
         context,
         language
       });
       if (data.refined) {
-        const currentText = gen.activePreview === 'verify' || language === 'English'
-          ? gen.englishOutput
-          : gen.output;
-        const sections = currentText.split(/\n\n/);
-        sections[index] = data.refined;
-        const joined = sections.join('\n\n');
+        const baseEnglish = englishSections.length
+          ? [...englishSections]
+          : (gen.englishOutput || sectionText).split(/\n\n/);
+        baseEnglish[index] = data.refined;
+        const joinedEnglish = baseEnglish.join('\n\n');
+        gen.setEnglishOutput(joinedEnglish);
 
-        gen.setEnglishOutput(joined);
         if (language === 'English') {
-          gen.setOutput(joined);
+          gen.setOutput(joinedEnglish);
         } else if (data.translatedRefined) {
-          const translatedSections = gen.output.split(/\n\n/);
+          const translatedSections = gen.output ? gen.output.split(/\n\n/) : [];
           translatedSections[index] = data.translatedRefined;
           gen.setOutput(translatedSections.join('\n\n'));
         }
@@ -253,7 +258,9 @@ export default function EmailBuilderPage() {
           output={gen.output}
           setOutput={gen.setOutput}
           englishOutput={gen.englishOutput}
-          setEnglishOutput={(text) => handleEnglishEdit(text)}
+          setEnglishOutput={gen.setEnglishOutput}
+          onEnglishTypingEdit={handleEnglishEdit}
+          onForeignTypingEdit={handleForeignEdit}
           error={gen.error}
           language={language}
           onLanguageChange={handleLanguageChange}

@@ -511,7 +511,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
 exports.translateEmail = catchAsync(async (req, res, next) => {
   const { text, language } = req.body;
   if (!text?.trim()) return next(new AppError('text is required', 400));
-  if (!language || language === 'English') return next(new AppError('Non-English language is required', 400));
+  if (!language) return next(new AppError('language is required', 400));
 
   const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
   try {
