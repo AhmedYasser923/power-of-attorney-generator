@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import MagicWandButton from './MagicWandButton.jsx';
 
-export default function EditableSection({
+const EditableSection = forwardRef(function EditableSection({
   value,
   onChange,
   showMagicWand,
@@ -10,7 +10,7 @@ export default function EditableSection({
   onMoveUp,
   onMoveDown,
   onMergeDown
-}) {
+}, ref) {
   const textareaRef = useRef(null);
 
   const autoResize = useCallback(() => {
@@ -23,6 +23,15 @@ export default function EditableSection({
   useEffect(() => {
     autoResize();
   }, [value, autoResize]);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(0, 0);
+    }
+  }));
 
   const handleKeyDown = useCallback((e) => {
     if (!e.altKey) return;
@@ -54,4 +63,6 @@ export default function EditableSection({
       )}
     </div>
   );
-}
+});
+
+export default EditableSection;

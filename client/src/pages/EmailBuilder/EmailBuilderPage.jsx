@@ -17,7 +17,6 @@ export default function EmailBuilderPage() {
 
   const [selectedTemplates, setSelectedTemplates] = useState([]);
   const [placeholderValues, setPlaceholderValues] = useState({});
-  const [link, setLink] = useState('');
   const [useNote, setUseNote] = useState(false);
   const [customNote, setCustomNote] = useState('');
   const [useWrapper, setUseWrapper] = useState(false);
@@ -25,7 +24,6 @@ export default function EmailBuilderPage() {
   const [managerOpen, setManagerOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [refiningIndex, setRefiningIndex] = useState(-1);
-  const [userSectionIndices, setUserSectionIndices] = useState(new Set());
 
   const translationSync = useTranslationSync(language);
 
@@ -78,7 +76,6 @@ export default function EmailBuilderPage() {
     gen.setOutput('');
     gen.setEnglishOutput('');
     gen.setError('');
-    setUserSectionIndices(new Set());
   }, [gen, tpl.templates]);
 
   const updatePlaceholder = useCallback((name, value) => {
@@ -91,20 +88,17 @@ export default function EmailBuilderPage() {
     mode: 'request',
     language,
     selectedTemplates,
-    link: link.trim(),
     customNote: useNote ? customNote.trim() : '',
     useWrapper,
     placeholderValues
-  }), [language, selectedTemplates, link, useNote, customNote, useWrapper, placeholderValues]);
+  }), [language, selectedTemplates, useNote, customNote, useWrapper, placeholderValues]);
 
   const submit = useCallback((e) => {
     e.preventDefault();
-    setUserSectionIndices(new Set());
     gen.submitPayload(buildPayload(), {
       resetCallback: () => {
         setSelectedTemplates([]);
         setPlaceholderValues({});
-        setLink('');
         setUseNote(false);
         setCustomNote('');
         setUseWrapper(false);
@@ -178,8 +172,6 @@ export default function EmailBuilderPage() {
           />
 
           <EmailControls
-            link={link}
-            onLinkChange={setLink}
             useNote={useNote}
             onUseNoteChange={setUseNote}
             customNote={customNote}
@@ -214,8 +206,6 @@ export default function EmailBuilderPage() {
           isTranslating={translationSync.isTranslating}
           onRefineSection={handleRefineSection}
           refiningIndex={refiningIndex}
-          userSectionIndices={userSectionIndices}
-          setUserSectionIndices={setUserSectionIndices}
         />
       </form>
 

@@ -1,18 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { getWordCount } from '../emailBuilderUtils.js';
 import EditableSection from './EditableSection.jsx';
 import PlaceholderPanel from './PlaceholderPanel.jsx';
 
-function splitIntoSections(text, userSectionIndices = new Set()) {
+function splitIntoSections(text) {
   if (!text) return [];
-  return text.split(/\n\n/).map((t, i) => ({
-    text: t,
-    isUserAdded: userSectionIndices.has(i)
-  }));
+  return text.split(/\n\n/);
 }
 
 function joinSections(sections) {
-  return sections.map((s) => s.text).join('\n\n');
+  return sections.join('\n\n');
 }
 
 export default function EmailPreview({
@@ -28,28 +25,41 @@ export default function EmailPreview({
   onRegenerate,
   isTranslating,
   onRefineSection,
-  refiningIndex,
-  userSectionIndices, setUserSectionIndices
+  refiningIndex
 }) {
   const hasContent = !!output;
   const wordCount = getWordCount(activePreview === 'verify' ? englishOutput : output);
   const displayText = activePreview === 'verify' && language !== 'English' ? englishOutput : output;
 
-  const sections = useMemo(
-    () => splitIntoSections(displayText, userSectionIndices),
-    [displayText, userSectionIndices]
-  );
+  const sections = useMemo(() => splitIntoSections(displayText), [displayText]);
 
-  const updateSection = useCallback((index, newText) => {
-    const updated = sections.map((s, i) => (i === index ? { ...s, text: newText } : s));
-    const joined = joinSections(updated);
+  const sectionRefs = useRef([]);
+  const pendingFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (pendingFocusRef.current !== null) {
+      const idx = pendingFocusRef.current;
+      pendingFocusRef.current = null;
+      sectionRefs.current[idx]?.focus?.();
+    }
+  });
+
+  const writeJoined = useCallback((joined) => {
     if (activePreview === 'verify' || language === 'English') {
       setEnglishOutput(joined);
       if (language === 'English') setOutput(joined);
     } else {
       setOutput(joined);
     }
-  }, [sections, activePreview, language, setOutput, setEnglishOutput]);
+  }, [activePreview, language, setOutput, setEnglishOutput]);
+
+  const updateSection = useCallback((index, newText) => {
+    if (/\n\n/.test(newText)) {
+      pendingFocusRef.current = index + 1;
+    }
+    const updated = sections.map((s, i) => (i === index ? newText : s));
+    writeJoined(joinSections(updated));
+  }, [sections, writeJoined]);
 
   const spliceOtherSide = useCallback((fn) => {
     if (language === 'English') return;
@@ -61,43 +71,12 @@ export default function EmailPreview({
     setter(otherParts.join('\n\n'));
   }, [language, activePreview, output, englishOutput, setOutput, setEnglishOutput]);
 
-  const addSection = useCallback(() => {
-    const insertAt = sections.length > 0 ? sections.length - 1 : 0;
-    const updated = [...sections];
-    updated.splice(insertAt, 0, { text: '', isUserAdded: true });
-
-    const newIndices = new Set();
-    updated.forEach((s, i) => { if (s.isUserAdded) newIndices.add(i); });
-    setUserSectionIndices(newIndices);
-
-    const joined = updated.map((s) => s.text).join('\n\n');
-    if (activePreview === 'verify' || language === 'English') {
-      setEnglishOutput(joined);
-      if (language === 'English') setOutput(joined);
-    } else {
-      setOutput(joined);
-    }
-
-    spliceOtherSide((parts) => { parts.splice(insertAt, 0, ''); });
-  }, [sections, activePreview, language, setOutput, setEnglishOutput, setUserSectionIndices, spliceOtherSide]);
-
   const moveSection = useCallback((from, to) => {
     if (to < 0 || to >= sections.length) return;
     const reordered = [...sections];
     const [moved] = reordered.splice(from, 1);
     reordered.splice(to, 0, moved);
-
-    const newIndices = new Set();
-    reordered.forEach((s, i) => { if (s.isUserAdded) newIndices.add(i); });
-    setUserSectionIndices(newIndices);
-
-    const joined = reordered.map((s) => s.text).join('\n\n');
-    if (activePreview === 'verify' || language === 'English') {
-      setEnglishOutput(joined);
-      if (language === 'English') setOutput(joined);
-    } else {
-      setOutput(joined);
-    }
+    writeJoined(joinSections(reordered));
 
     spliceOtherSide((parts) => {
       if (from < parts.length) {
@@ -105,26 +84,15 @@ export default function EmailPreview({
         parts.splice(to, 0, m);
       }
     });
-  }, [sections, activePreview, language, setOutput, setEnglishOutput, setUserSectionIndices, spliceOtherSide]);
+  }, [sections, writeJoined, spliceOtherSide]);
 
   const mergeWithBelow = useCallback((index) => {
     if (index >= sections.length - 1) return;
     const updated = [...sections];
-    const below = updated[index + 1].text.replace(/^[•\-\*]\s*/, '');
-    updated[index] = { text: updated[index].text + ' ' + below, isUserAdded: true };
+    const below = updated[index + 1].replace(/^[•\-\*]\s*/, '');
+    updated[index] = updated[index] + ' ' + below;
     updated.splice(index + 1, 1);
-
-    const newIndices = new Set();
-    updated.forEach((s, i) => { if (s.isUserAdded) newIndices.add(i); });
-    setUserSectionIndices(newIndices);
-
-    const joined = updated.map((s) => s.text).join('\n\n');
-    if (activePreview === 'verify' || language === 'English') {
-      setEnglishOutput(joined);
-      if (language === 'English') setOutput(joined);
-    } else {
-      setOutput(joined);
-    }
+    writeJoined(joinSections(updated));
 
     spliceOtherSide((parts) => {
       if (index < parts.length - 1) {
@@ -133,7 +101,7 @@ export default function EmailPreview({
         parts.splice(index + 1, 1);
       }
     });
-  }, [sections, activePreview, language, setOutput, setEnglishOutput, setUserSectionIndices, spliceOtherSide]);
+  }, [sections, writeJoined, spliceOtherSide]);
 
   return (
     <section className="email-builder-right">
@@ -179,26 +147,20 @@ export default function EmailPreview({
             {isTranslating && activePreview === 'output' && language !== 'English' && (
               <div className="email-translating-indicator">Translating...</div>
             )}
-            {sections.map((section, i) => (
+            {sections.map((text, i) => (
               <EditableSection
                 key={i}
-                value={section.text}
-                onChange={(text) => updateSection(i, text)}
-                showMagicWand={section.isUserAdded}
-                onRefine={() => onRefineSection(i, section.text)}
+                ref={(el) => { sectionRefs.current[i] = el; }}
+                value={text}
+                onChange={(t) => updateSection(i, t)}
+                showMagicWand
+                onRefine={() => onRefineSection(i, text)}
                 refining={refiningIndex === i}
                 onMoveUp={i > 0 ? () => moveSection(i, i - 1) : null}
                 onMoveDown={i < sections.length - 1 ? () => moveSection(i, i + 1) : null}
                 onMergeDown={i < sections.length - 1 ? () => mergeWithBelow(i) : null}
               />
             ))}
-            <button
-              className="email-add-section-btn"
-              onClick={addSection}
-              type="button"
-            >
-              + Add Section
-            </button>
           </div>
         )}
       </div>

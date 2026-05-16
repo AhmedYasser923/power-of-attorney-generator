@@ -36,7 +36,8 @@ function buildEmailTemplateState(docs) {
 
   const linkTemplateKeys = new Set();
   Object.values(byKey).forEach(t => {
-    if (t.type !== 'rejection' && (t.text || '').includes('[link]')) {
+    const txt = t.text || '';
+    if (t.type !== 'rejection' && (txt.includes('[link]') || /click here/i.test(txt))) {
       linkTemplateKeys.add(t.key);
     }
   });
@@ -91,8 +92,8 @@ function buildTemplateUpdate(body) {
 // Outro builder — footer appended to document-request emails
 // ---------------------------------------------------------------------------
 
-function buildOutro(selectedKeys, link, hasCustomNote, state) {
-  const hasLinkTemplates = !!link && selectedKeys.some(k => state.linkTemplateKeys.has(k));
+function buildOutro(selectedKeys, hasCustomNote, state) {
+  const hasLinkTemplates = selectedKeys.some(k => state.linkTemplateKeys.has(k));
   const nonLinkKeys = selectedKeys.filter(k => !state.linkTemplateKeys.has(k));
   const hasNonLink = nonLinkKeys.length > 0 || hasCustomNote;
 
@@ -341,14 +342,14 @@ function logAiUsage(req, results, language, opType) {
     return acc;
   }, { iTok: 0, oTok: 0, tTok: 0 });
   const { iTok, oTok, tTok } = totals;
-  const costUSD = calculateCost('gemini-2.5-flash', {
+  const costUSD = calculateCost('gemini-3.1-flash-lite', {
     promptTokenCount: iTok,
     candidatesTokenCount: oTok,
     thoughtsTokenCount: tTok,
   }).costUSD;
   logUsage(req, {
     operationType: opType || 'email_translation',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.1-flash-lite',
     inputTokens: iTok,
     outputTokens: oTok + tTok,
     costUSD,
@@ -359,7 +360,7 @@ function logAiUsage(req, results, language, opType) {
 exports.generateEmail = catchAsync(async (req, res, next) => {
   const templateState = await getEmailTemplateState();
   const { byKey } = templateState;
-  const { mode, language, selectedTemplates = [], link, customNote, useWrapper, placeholderValues } = req.body;
+  const { mode, language, selectedTemplates = [], customNote, useWrapper, placeholderValues } = req.body;
 
   if (!mode) return next(new AppError('Please provide the email mode', 400));
   if (mode !== 'request') return next(new AppError('Invalid mode', 400));
@@ -368,7 +369,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   }
 
   const isEnglish = language === 'English';
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
   let generationResult = null;
   let translationResult = null;
 
@@ -403,7 +404,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const makeBullet = key => {
     const t = byKey[key];
     if (!t) return '';
-    let text = link ? t.text.replace(/\[link\]/g, link) : t.text;
+    let text = t.text.replace(/\[link\]/g, 'click here');
     text = applyPlaceholders(text);
     return `• ${text}`;
   };
@@ -454,7 +455,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     const hasDocRequests = docRequestKeys.length > 0;
     const addOutro = hasDocRequests || (customNoteBullet && useWrapper);
     const outroKeys = [...specialCombinableKeys, ...docRequestKeys];
-    const outro = buildOutro(outroKeys, link, !!customNoteBullet, templateState);
+    const outro = buildOutro(outroKeys, !!customNoteBullet, templateState);
     const docSection = addOutro
       ? `${wrappedBullets.join('\n\n')}\n\n${outro}`
       : wrappedBullets.join('\n\n');
@@ -492,7 +493,7 @@ exports.translateEmail = catchAsync(async (req, res, next) => {
   if (!text?.trim()) return next(new AppError('text is required', 400));
   if (!language || language === 'English') return next(new AppError('Non-English language is required', 400));
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
   try {
     const tr = await translateText(text, language, model);
     logAiUsage(req, [tr.result], language, 'email_translation_sync');
@@ -511,7 +512,7 @@ exports.refineEmailSection = catchAsync(async (req, res, next) => {
   const { section, context, language } = req.body;
   if (!section?.trim()) return next(new AppError('section is required', 400));
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
   const referenceContext = await getReferenceContext();
 
   const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.${referenceContext}\n\nGiven the following full email for context:\n---\n${context || ''}\n---\n\nRefine ONLY the following paragraph to be warm, professional, and contextually appropriate for a flight compensation claim email. Maintain consistency with the surrounding email tone. Output only the refined paragraph, nothing else.\n\n"${section.trim()}"`;

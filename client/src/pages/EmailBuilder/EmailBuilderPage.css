@@ -625,30 +625,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* --- Add Section Button --- */
-
-.email-add-section-btn {
-  display: block;
-  width: 100%;
-  min-height: 32px;
-  margin-top: 8px;
-  padding: 6px 12px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: center;
-}
-
-.email-add-section-btn:hover {
-  border-color: var(--accent-border);
-  color: var(--text-secondary);
-}
-
 /* --- Translating Indicator --- */
 
 .email-translating-indicator {

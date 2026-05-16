@@ -1,7 +1,6 @@
 import { LANGUAGES } from '../emailBuilderUtils.js';
 
 export default function EmailControls({
-  link, onLinkChange,
   useNote, onUseNoteChange,
   customNote, onCustomNoteChange,
   useWrapper, onUseWrapperChange,
@@ -12,16 +11,6 @@ export default function EmailControls({
 }) {
   return (
     <div className="email-builder-advanced">
-      <label className="email-builder-field">
-        <span>Upload Link</span>
-        <input
-          onChange={(e) => onLinkChange(e.target.value)}
-          placeholder="https://..."
-          type="text"
-          value={link}
-        />
-      </label>
-
       <label className="email-builder-toggle">
         <input checked={useNote} onChange={(e) => onUseNoteChange(e.target.checked)} type="checkbox" />
         <span>Custom Request</span>
