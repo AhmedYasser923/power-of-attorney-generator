@@ -90,6 +90,8 @@ export default function AdminDashboardPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [dailyStatsLoading, setDailyStatsLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [userFilter, setUserFilter] = useState('all');
@@ -149,7 +151,9 @@ export default function AdminDashboardPage() {
     [usage.opBreakdown]
   );
 
-  const initialLoading = loadingUsers && loadingUsage && loadingLogs;
+  const initialLoading = !initialLoadComplete && (
+    loadingUsers || loadingUsage || loadingLogs || dailyStatsLoading
+  );
 
   useEffect(() => {
     let active = true;
@@ -231,6 +235,8 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     let active = true;
 
+    setDailyStatsLoading(true);
+
     getAdminLogs({
       year: today.year,
       month: today.month,
@@ -248,12 +254,21 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {
         if (active) setDailyStats({ count: 0, cost: 0 });
+      })
+      .finally(() => {
+        if (active) setDailyStatsLoading(false);
       });
 
     return () => {
       active = false;
     };
   }, [reloadKey, today.day, today.month, today.year]);
+
+  useEffect(() => {
+    if (!loadingUsers && !loadingUsage && !loadingLogs && !dailyStatsLoading) {
+      setInitialLoadComplete(true);
+    }
+  }, [dailyStatsLoading, loadingLogs, loadingUsage, loadingUsers]);
 
   const changeMonth = (event) => {
     const [year, month] = event.target.value.split('-').map(Number);
@@ -463,8 +478,12 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="admin-stat-grid">
-        <StatCard label="Ops Today" value={dailyStats.count} />
-        <StatCard label="Cost Today (USD)" tone="blue" value={`$${ceilCurrency(dailyStats.cost)}`} />
+        <StatCard label="Ops Today" value={dailyStatsLoading ? '...' : dailyStats.count} />
+        <StatCard
+          label="Cost Today (USD)"
+          tone="blue"
+          value={dailyStatsLoading ? '$...' : `$${ceilCurrency(dailyStats.cost)}`}
+        />
         <StatCard label="Pending Signups" tone="amber" value={pendingUsers.length} />
       </div>
 
@@ -537,9 +556,9 @@ export default function AdminDashboardPage() {
                   </tr>
                 ) : logs.map((log) => (
                   <tr key={log._id || `${log.createdAt}-${log.operationType}`}>
-                    <td>{formatDateTime(log.createdAt)}</td>
-                    <td>{log.userName || '-'}</td>
-                    <td>
+                    <td data-label="Date & Time">{formatDateTime(log.createdAt)}</td>
+                    <td data-label="User">{log.userName || '-'}</td>
+                    <td data-label="Operation">
                       <span className="admin-op-pill" data-type={log.operationType || ''}>
                         {formatOperationLabel(log)}
                       </span>
@@ -547,7 +566,7 @@ export default function AdminDashboardPage() {
                         <span className="admin-log-count">{log.operationCount} ops</span>
                       )}
                     </td>
-                    <td className="admin-table__cost">${ceilCurrency(log.costUSD)}</td>
+                    <td className="admin-table__cost" data-label="Cost">${ceilCurrency(log.costUSD)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -609,18 +628,18 @@ export default function AdminDashboardPage() {
                     <tr><td className="admin-table__empty" colSpan="3">No data for this period.</td></tr>
                   ) : usage.opBreakdown.map((item) => (
                     <tr key={item._id || item.label}>
-                      <td>
+                      <td data-label="Operation">
                         <span className="admin-op-pill" data-type={item._id || ''}>{item.label || item._id}</span>
                       </td>
-                      <td>{item.count}</td>
-                      <td className="admin-table__cost">${ceilCurrency(item.totalCostUSD)}</td>
+                      <td data-label="Count">{item.count}</td>
+                      <td className="admin-table__cost" data-label="Total Cost">${ceilCurrency(item.totalCostUSD)}</td>
                     </tr>
                   ))}
                   {usage.opBreakdown.length > 0 && (
                     <tr className="admin-table__total">
-                      <td>Total</td>
-                      <td>{totalOps}</td>
-                      <td>${ceilCurrency(totalCostUSD)}</td>
+                      <td data-label="Operation">Total</td>
+                      <td data-label="Count">{totalOps}</td>
+                      <td data-label="Total Cost">${ceilCurrency(totalCostUSD)}</td>
                     </tr>
                   )}
                 </tbody>
@@ -644,9 +663,9 @@ export default function AdminDashboardPage() {
                     <tr><td className="admin-table__empty" colSpan="3">No data for this period.</td></tr>
                   ) : usage.userTotals.map((item) => (
                     <tr key={getUserId(item)}>
-                      <td>{item._id?.userName || '-'}</td>
-                      <td>{item.operationCount || 0}</td>
-                      <td className="admin-table__cost">${ceilCurrency(item.totalCostUSD)}</td>
+                      <td data-label="User">{item._id?.userName || '-'}</td>
+                      <td data-label="Operations">{item.operationCount || 0}</td>
+                      <td className="admin-table__cost" data-label="Cost">${ceilCurrency(item.totalCostUSD)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -696,20 +715,20 @@ export default function AdminDashboardPage() {
                   </tr>
                 ) : filteredUsers.map((item) => (
                   <tr key={item._id}>
-                    <td>
+                    <td data-label="Name">
                       <strong>{item.name}</strong>
                       {item.role === 'admin' && <span className="admin-badge admin-badge--admin">admin</span>}
                     </td>
-                    <td className="admin-table__muted">{item.email}</td>
-                    <td>
+                    <td className="admin-table__muted" data-label="Email">{item.email}</td>
+                    <td data-label="Status">
                       <span className={`admin-badge admin-badge--${item.status}`}>
                         {capitalize(item.status)}
                       </span>
                     </td>
-                    <td className="admin-table__muted">{formatDate(item.createdAt)}</td>
-                    <td>{item.operationCount || 0}</td>
-                    <td className="admin-table__cost">${ceilCurrency(item.totalCostUSD)}</td>
-                    <td>{renderUserActions(item)}</td>
+                    <td className="admin-table__muted" data-label="Joined">{formatDate(item.createdAt)}</td>
+                    <td data-label="Ops">{item.operationCount || 0}</td>
+                    <td className="admin-table__cost" data-label="Cost">${ceilCurrency(item.totalCostUSD)}</td>
+                    <td data-label="Actions">{renderUserActions(item)}</td>
                   </tr>
                 ))}
               </tbody>

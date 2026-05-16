@@ -57,7 +57,12 @@ function getGroupedLogStages({ perUser = false } = {}) {
         outputTokens: { $sum: '$outputTokens' },
         operationCount: { $sum: 1 },
         rawOperationTypes: { $addToSet: '$operationType' },
-        firstModel: { $first: '$model' },
+        model: {
+          $top: {
+            sortBy: { createdAt: -1 },
+            output: '$model'
+          }
+        },
         firstMetadata: { $first: '$metadata' }
       }
     },
@@ -92,13 +97,7 @@ function getGroupedLogStages({ perUser = false } = {}) {
         inputTokens: 1,
         outputTokens: 1,
         operationCount: 1,
-        model: {
-          $cond: [
-            { $gt: ['$operationCount', 1] },
-            'Multiple',
-            '$firstModel'
-          ]
-        },
+        model: 1,
         metadata: {
           $cond: [
             { $eq: ['$operationType', EMAIL_BUILDER_GROUP] },

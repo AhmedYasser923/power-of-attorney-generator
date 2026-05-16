@@ -377,16 +377,182 @@
 }
 
 @media (max-width: 679px) {
+  .my-usage__header {
+    margin-bottom: 16px;
+  }
+
   .my-usage__filters {
+    display: grid;
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr) minmax(86px, 0.55fr);
+    gap: 6px 10px;
+  }
+
+  .my-usage__filters label[for="my-usage-month"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .my-usage__filters #my-usage-month {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .my-usage__filters label[for="my-usage-day"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .my-usage__filters #my-usage-day {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .my-usage__filters select {
+    width: 100%;
+    min-width: 0;
   }
 
   .my-usage__month-summary {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: stretch;
     margin-left: 0;
+  }
+
+  .my-usage__month-stat {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
   }
 
   .my-usage__stat-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .my-usage__stat-card {
+    min-height: 76px;
+    padding: 14px 15px;
+  }
+
+  .my-usage__stat-value {
+    font-size: 24px;
+  }
+
+  .my-usage__table-wrap {
+    overflow: visible;
+  }
+
+  .my-usage__table {
+    display: block;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 11px;
+  }
+
+  .my-usage__table thead {
+    display: none;
+  }
+
+  .my-usage__table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .my-usage__table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+  }
+
+  .my-usage__table td {
+    display: block;
+    padding: 0;
+    border-bottom: 0;
+    font-size: 11px;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .my-usage__table td::before {
+    content: none;
+  }
+
+  .my-usage__table td[data-empty="true"] {
+    display: none;
+  }
+
+  .my-usage__table td[colspan] {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 16px 10px !important;
+    text-align: center !important;
+  }
+
+  .my-usage__table td[data-label="Operation"] {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .my-usage__table td[data-label="Cost"] {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .my-usage__table td[data-label="Date & Time"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .my-usage__table td[data-label="Model"] {
+    grid-column: 1;
+    grid-row: 3;
+    overflow-wrap: anywhere;
+  }
+
+  .my-usage__table td[data-label="Details"] {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: end;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .my-usage__muted-cell {
+    font-size: 11px;
+  }
+
+  .my-usage__op-pill {
+    min-height: 22px;
+    justify-content: center;
+    padding: 0 9px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .my-usage__pagination {
+    justify-content: space-between;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius-md);
   }
 }

@@ -165,6 +165,8 @@ export default function MyUsagePage() {
   const [dailyStats, setDailyStats] = useState({ count: 0, cost: 0 });
   const [usageLoading, setUsageLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(true);
+  const [dailyStatsLoading, setDailyStatsLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -255,18 +257,29 @@ export default function MyUsagePage() {
   useEffect(() => {
     let active = true;
 
+    setDailyStatsLoading(true);
+
     loadDailyStats()
       .then((stats) => {
         if (active) setDailyStats(stats);
       })
       .catch(() => {
         if (active) setDailyStats({ count: 0, cost: 0 });
+      })
+      .finally(() => {
+        if (active) setDailyStatsLoading(false);
       });
 
     return () => {
       active = false;
     };
   }, [reloadKey]);
+
+  useEffect(() => {
+    if (!usageLoading && !logsLoading && !dailyStatsLoading) {
+      setInitialLoadComplete(true);
+    }
+  }, [dailyStatsLoading, logsLoading, usageLoading]);
 
   const changeMonth = (event) => {
     const [year, month] = event.target.value.split('-').map(Number);
@@ -286,7 +299,7 @@ export default function MyUsagePage() {
     setReloadKey((current) => current + 1);
   };
 
-  const showInitialLoading = usageLoading && logsLoading && logs.length === 0;
+  const showInitialLoading = !initialLoadComplete && (usageLoading || logsLoading || dailyStatsLoading);
 
   if (showInitialLoading) {
     return (
@@ -397,12 +410,12 @@ export default function MyUsagePage() {
       <div className="my-usage__stat-grid">
         <article className="my-usage__stat-card">
           <p className="my-usage__stat-label">Ops Today</p>
-          <p className="my-usage__stat-value">{dailyStats.count}</p>
+          <p className="my-usage__stat-value">{dailyStatsLoading ? '...' : dailyStats.count}</p>
         </article>
         <article className="my-usage__stat-card">
           <p className="my-usage__stat-label">Cost Today (USD)</p>
           <p className="my-usage__stat-value my-usage__stat-value--accent">
-            ${ceilCurrency(dailyStats.cost)}
+            {dailyStatsLoading ? '$...' : `$${ceilCurrency(dailyStats.cost)}`}
           </p>
         </article>
       </div>
@@ -425,22 +438,39 @@ export default function MyUsagePage() {
               {logs.length === 0 ? (
                 <tr>
                   <td className="my-usage__empty-cell" colSpan="5">
-                    {showInitialLoading ? 'Loading operations...' : 'No operations recorded this period.'}
+                    {logsLoading ? 'Loading operations...' : 'No operations recorded this period.'}
                   </td>
                 </tr>
-              ) : logs.map((log) => (
-                <tr key={log._id || `${log.createdAt}-${log.operationType}`}>
-                  <td>{formatDateTime(log.createdAt)}</td>
-                  <td>
-                    <span className="my-usage__op-pill" data-type={log.operationType || ''}>
-                      {formatOperationLabel(log)}
-                    </span>
-                  </td>
-                  <td className="my-usage__muted-cell">{log.model || '-'}</td>
-                  <td className="my-usage__cost-cell">${ceilCurrency(log.costUSD)}</td>
-                  <td className="my-usage__muted-cell">{formatMetadata(log)}</td>
-                </tr>
-              ))}
+              ) : logs.map((log) => {
+                const modelValue = log.model || '-';
+                const detailsValue = formatMetadata(log);
+
+                return (
+                  <tr key={log._id || `${log.createdAt}-${log.operationType}`}>
+                    <td data-label="Date & Time">{formatDateTime(log.createdAt)}</td>
+                    <td data-label="Operation">
+                      <span className="my-usage__op-pill" data-type={log.operationType || ''}>
+                        {formatOperationLabel(log)}
+                      </span>
+                    </td>
+                    <td
+                      className="my-usage__muted-cell"
+                      data-empty={modelValue === '-' ? 'true' : undefined}
+                      data-label="Model"
+                    >
+                      {modelValue}
+                    </td>
+                    <td className="my-usage__cost-cell" data-label="Cost">${ceilCurrency(log.costUSD)}</td>
+                    <td
+                      className="my-usage__muted-cell"
+                      data-empty={detailsValue === '-' ? 'true' : undefined}
+                      data-label="Details"
+                    >
+                      {detailsValue}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

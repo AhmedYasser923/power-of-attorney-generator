@@ -631,18 +631,226 @@
     align-items: stretch;
   }
 
+  .admin-dashboard__header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-dashboard__header button {
+    width: 100%;
+  }
+
+  .admin-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-tabs button {
+    justify-content: center;
+  }
+
+  .admin-panel,
+  .admin-insights-grid > .admin-panel {
+    padding: 14px;
+    border-radius: var(--radius-md);
+  }
+
+  .admin-filters {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(86px, 0.55fr);
+  }
+
+  .admin-filters label {
+    min-width: 0;
+  }
+
+  .admin-filters select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-summary {
+    grid-column: 1 / -1;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .admin-filter-buttons {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-filter-buttons button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .admin-notification {
     grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .admin-notification time {
+    grid-column: 2;
+  }
+
+  .admin-notification .admin-action-row {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
   }
 }
 
 @media (max-width: 720px) {
+  .admin-table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
   .admin-table {
+    display: block;
     table-layout: auto;
   }
 
-  .admin-table th,
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .admin-table tr {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--border-inner);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+  }
+
   .admin-table td {
-    padding: 10px 8px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0;
+    border-bottom: 0;
+    font-size: 12px;
+    text-align: right;
+  }
+
+  .admin-table td::before {
+    flex: 0 0 92px;
+    color: var(--text-muted);
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .admin-table td:not([data-label])::before,
+  .admin-table td[colspan]::before {
+    content: none;
+  }
+
+  .admin-table td[colspan] {
+    display: block;
+    padding: 18px 10px !important;
+    text-align: center !important;
+  }
+
+  .admin-table__total {
+    background: var(--bg-card) !important;
+  }
+
+  .admin-op-pill,
+  .admin-badge {
+    justify-content: flex-end;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .admin-log-count {
+    margin: 5px 0 0;
+    text-align: right;
+  }
+
+  .admin-action-row {
+    justify-content: flex-end;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 12px;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td {
+    display: block;
+    text-align: left;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td::before {
+    content: none;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td[data-label="Operation"] {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td[data-label="Cost"] {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    font-size: 13px;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td[data-label="User"] {
+    grid-column: 1;
+    grid-row: 1;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) td[data-label="Date & Time"] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) .admin-log-count {
+    display: inline-block;
+    margin: 0 0 0 6px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .admin-table tr:has(td[data-label="Date & Time"]) .admin-op-pill {
+    justify-content: center;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .admin-users-table th:nth-child(1),
+  .admin-users-table td:nth-child(1),
+  .admin-users-table th:nth-child(2),
+  .admin-users-table td:nth-child(2),
+  .admin-users-table th:nth-child(7),
+  .admin-users-table td:nth-child(7) {
+    width: auto;
   }
 }
