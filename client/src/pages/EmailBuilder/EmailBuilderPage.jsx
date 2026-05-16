@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { refineEmailSection } from '../../api/emailBuilder.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { refineEmailSection, translateEmail } from '../../api/emailBuilder.js';
 import { getSelectedPlaceholders } from './emailBuilderUtils.js';
 import useEmailGeneration from './hooks/useEmailGeneration.js';
 import useEmailTemplates from './hooks/useEmailTemplates.js';
@@ -24,8 +24,14 @@ export default function EmailBuilderPage() {
   const [managerOpen, setManagerOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [refiningIndex, setRefiningIndex] = useState(-1);
+  const [refineSnapshot, setRefineSnapshot] = useState(null);
+  const [translatingLanguage, setTranslatingLanguage] = useState(false);
 
   const translationSync = useTranslationSync(language);
+
+  // Cache of english body -> { [language]: translatedText }, so flipping
+  // back to a previously-seen language is free.
+  const translationCacheRef = useRef({ key: '', map: {} });
 
   useEffect(() => {
     localStorage.setItem('emLastLanguage', language);
@@ -35,6 +41,14 @@ export default function EmailBuilderPage() {
   }, [language, gen.activePreview]);
 
   useEffect(() => () => gen.cleanup(), [gen.cleanup]);
+
+  // Invalidate translation cache whenever the English baseline changes
+  // (new generation, user edit on verify tab, refine, reorder, merge).
+  useEffect(() => {
+    if (translationCacheRef.current.key !== gen.englishOutput) {
+      translationCacheRef.current = { key: gen.englishOutput, map: {} };
+    }
+  }, [gen.englishOutput]);
 
   const placeholders = useMemo(
     () => getSelectedPlaceholders(tpl.templates, selectedTemplates),
@@ -53,16 +67,13 @@ export default function EmailBuilderPage() {
     setSelectedTemplates((curr) => {
       if (curr.includes(key)) return curr.filter((k) => k !== key);
 
-      // Mutual exclusivity: rejection deselects all others and vice versa
       if (toggled.type === 'rejection') return [key];
 
-      // Selecting a non-rejection deselects any rejection
       const withoutRejections = curr.filter((k) => {
         const t = tpl.templates.find((item) => item.key === k);
         return t?.type !== 'rejection';
       });
 
-      // Standalone special-case (non-combinable) is also exclusive
       if (toggled.type === 'special-case' && !toggled.combineWithDocuments) {
         return [key];
       }
@@ -80,9 +91,7 @@ export default function EmailBuilderPage() {
 
   const updatePlaceholder = useCallback((name, value) => {
     setPlaceholderValues((curr) => ({ ...curr, [name]: value }));
-    gen.setOutput('');
-    gen.setEnglishOutput('');
-  }, [gen]);
+  }, []);
 
   const buildPayload = useCallback(() => ({
     mode: 'request',
@@ -102,9 +111,19 @@ export default function EmailBuilderPage() {
         setUseNote(false);
         setCustomNote('');
         setUseWrapper(false);
+        setRefineSnapshot(null);
       }
     });
   }, [buildPayload, gen]);
+
+  const handleRegenerate = useCallback(() => {
+    const hasEdits = gen.englishOutput && gen.englishOutput !== gen.lastGeneratedEnglish;
+    if (hasEdits && !window.confirm('Regenerate? Your edits will be discarded.')) {
+      return;
+    }
+    setRefineSnapshot(null);
+    gen.regenerate();
+  }, [gen]);
 
   const handleEnglishEdit = useCallback((text) => {
     gen.setEnglishOutput(text);
@@ -115,9 +134,47 @@ export default function EmailBuilderPage() {
     }
   }, [language, gen, translationSync]);
 
+  const handleLanguageChange = useCallback(async (newLanguage) => {
+    if (newLanguage === language) return;
+    setLanguage(newLanguage);
+
+    if (!gen.englishOutput) return;
+
+    if (newLanguage === 'English') {
+      gen.setOutput(gen.englishOutput);
+      gen.setActivePreview('output');
+      return;
+    }
+
+    const cache = translationCacheRef.current;
+    if (cache.key === gen.englishOutput && cache.map[newLanguage]) {
+      gen.setOutput(cache.map[newLanguage]);
+      return;
+    }
+
+    setTranslatingLanguage(true);
+    try {
+      const data = await translateEmail({
+        text: gen.englishOutput,
+        language: newLanguage
+      });
+      const translated = data.translated || '';
+      if (translationCacheRef.current.key === gen.englishOutput) {
+        translationCacheRef.current.map[newLanguage] = translated;
+      }
+      gen.setOutput(translated);
+    } catch (err) {
+      gen.setError(err.message || 'Translation failed.');
+    } finally {
+      setTranslatingLanguage(false);
+    }
+  }, [language, gen]);
+
   const handleRefineSection = useCallback(async (index, sectionText) => {
     if (!sectionText?.trim()) return;
     setRefiningIndex(index);
+
+    const snapshot = { output: gen.output, englishOutput: gen.englishOutput };
 
     const context = gen.englishOutput || gen.output;
     try {
@@ -142,6 +199,7 @@ export default function EmailBuilderPage() {
           translatedSections[index] = data.translatedRefined;
           gen.setOutput(translatedSections.join('\n\n'));
         }
+        setRefineSnapshot(snapshot);
       }
     } catch (err) {
       gen.setError(err.message || 'Refinement failed.');
@@ -149,6 +207,13 @@ export default function EmailBuilderPage() {
       setRefiningIndex(-1);
     }
   }, [gen, language]);
+
+  const handleUndoRefine = useCallback(() => {
+    if (!refineSnapshot) return;
+    gen.setOutput(refineSnapshot.output);
+    gen.setEnglishOutput(refineSnapshot.englishOutput);
+    setRefineSnapshot(null);
+  }, [refineSnapshot, gen]);
 
   const removeSelectedTemplate = useCallback((key) => {
     setSelectedTemplates((curr) => curr.filter((k) => k !== key));
@@ -179,8 +244,6 @@ export default function EmailBuilderPage() {
             useWrapper={useWrapper}
             onUseWrapperChange={setUseWrapper}
             showWrapper={!hasRegularDocs}
-            language={language}
-            onLanguageChange={setLanguage}
             generating={gen.generating}
             disabled={tpl.loading}
           />
@@ -193,6 +256,8 @@ export default function EmailBuilderPage() {
           setEnglishOutput={(text) => handleEnglishEdit(text)}
           error={gen.error}
           language={language}
+          onLanguageChange={handleLanguageChange}
+          translatingLanguage={translatingLanguage}
           activePreview={gen.activePreview}
           setActivePreview={gen.setActivePreview}
           placeholders={placeholders}
@@ -202,10 +267,12 @@ export default function EmailBuilderPage() {
           onCopy={gen.copyText}
           lastPayload={gen.lastPayload}
           generating={gen.generating}
-          onRegenerate={gen.regenerate}
+          onRegenerate={handleRegenerate}
           isTranslating={translationSync.isTranslating}
           onRefineSection={handleRefineSection}
           refiningIndex={refiningIndex}
+          canUndoRefine={!!refineSnapshot}
+          onUndoRefine={handleUndoRefine}
         />
       </form>
 

@@ -34,17 +34,8 @@ function buildEmailTemplateState(docs) {
     };
   });
 
-  const linkTemplateKeys = new Set();
-  Object.values(byKey).forEach(t => {
-    const txt = t.text || '';
-    if (t.type !== 'rejection' && (txt.includes('[link]') || /click here/i.test(txt))) {
-      linkTemplateKeys.add(t.key);
-    }
-  });
-
   return {
     byKey,
-    linkTemplateKeys,
     templates: Object.values(byKey),
   };
 }
@@ -89,23 +80,44 @@ function buildTemplateUpdate(body) {
 }
 
 // ---------------------------------------------------------------------------
-// Outro builder — footer appended to document-request emails
+// Outro builder — AI-drafted footer appended to document-request emails.
+// The body up to (but not including) the footer is given as context so the
+// outro only mentions actions actually requested. The three legacy outros are
+// passed as style references; the model must adapt, not copy verbatim.
 // ---------------------------------------------------------------------------
 
-function buildOutro(selectedKeys, hasCustomNote, state) {
-  const hasLinkTemplates = selectedKeys.some(k => state.linkTemplateKeys.has(k));
-  const nonLinkKeys = selectedKeys.filter(k => !state.linkTemplateKeys.has(k));
-  const hasNonLink = nonLinkKeys.length > 0 || hasCustomNote;
+async function generateOutro(emailBody, model) {
+  const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.
 
-  if (hasLinkTemplates && hasNonLink) {
-    return `Please upload the relevant documents through the link above and reply directly to this email with the remaining documents and information at your earliest convenience. Once we receive everything, our legal team will continue processing your compensation claim.`;
-  }
+Below is the body of a flight-compensation claim email up to (but not including) the closing footer. Write the closing footer paragraph that fits THIS specific email.
 
-  if (hasLinkTemplates && !hasNonLink) {
-    return `Please upload all required documents through the link above at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
-  }
+Reference examples of footer tone and style (use them as style guidance only — do NOT copy if they do not match what the email is actually requesting):
 
-  return `Please reply directly to this email with the requested documents and information at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim.`;
+Example A (email contains a "click here" upload link AND requests one or more documents/items, regardless of whether each bullet mentions the link):
+"Please upload all requested documents through the link above at your earliest convenience. If you experience any technical issues with the upload link, you may instead reply directly to this email with the documents attached. Once we receive these items, our legal team will continue processing your compensation claim."
+
+Example B (email contains a "click here" link but only requests a signature or single action tied to that link — no other documents):
+"Please complete the requested action through the link above at your earliest convenience. Once we receive your submission, our legal team will continue processing your compensation claim."
+
+Example C (email has no upload link and asks the passenger to reply with documents or information):
+"Please reply directly to this email with the requested documents and information at your earliest convenience. Once we receive them, our legal team will continue processing your compensation claim."
+
+Rules:
+- Output ONLY the footer paragraph itself. No bullets, no greeting, no sign-off, no quotation marks.
+- Match the actions the email body actually requests. Never invent requirements not mentioned in the body.
+- If the body contains a "click here" upload link, treat that link as the primary channel for ALL requested documents — do NOT split documents between "upload through the link" and "reply with the rest". Mention replying-by-email only as a fallback ("if the upload link does not work"), not as a parallel requirement.
+- If the body contains a "click here" link tied only to a single action like signing (no other documents requested), just point to the link without offering the reply fallback.
+- If there is no "click here" link, ask the passenger to reply directly with the requested items.
+- If the body requests sensitive personal documents (passport, national ID, driver's license, boarding pass, bank details, or similar identity/financial documents) AND the upload link is being used, briefly reassure the passenger that the upload link is secure and encrypted — phrase this naturally inside the footer, not as a separate disclaimer. Skip this reassurance when no sensitive documents are requested or when there is no upload link.
+- End with what happens next on ReFly's side (the legal team continues processing the claim).
+- Keep it warm, concise, and professional. One paragraph.
+
+Email body:
+---
+${emailBody}
+---`;
+  const result = await geminiQueue.run(() => model.generateContent(prompt));
+  return { text: result.response.text().trim().replace(/^"|"$/g, ''), result };
 }
 
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
@@ -372,6 +384,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
   let generationResult = null;
   let translationResult = null;
+  let outroResult = null;
 
   const sortedSelected = [...selectedTemplates].sort((a, b) => {
     if (a === 'Signed Power of Attorney') return -1;
@@ -454,11 +467,18 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   if (wrappedBullets.length) {
     const hasDocRequests = docRequestKeys.length > 0;
     const addOutro = hasDocRequests || (customNoteBullet && useWrapper);
-    const outroKeys = [...specialCombinableKeys, ...docRequestKeys];
-    const outro = buildOutro(outroKeys, !!customNoteBullet, templateState);
-    const docSection = addOutro
-      ? `${wrappedBullets.join('\n\n')}\n\n${outro}`
-      : wrappedBullets.join('\n\n');
+    const bulletsText = wrappedBullets.join('\n\n');
+    let docSection = bulletsText;
+    if (addOutro) {
+      try {
+        const r = await generateOutro(bulletsText, model);
+        outroResult = r.result;
+        docSection = `${bulletsText}\n\n${r.text}`;
+      } catch (err) {
+        if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+        return next(new AppError(`Email generation failed: ${err.message}`, 502));
+      }
+    }
     sections.push(docSection);
   }
 
@@ -480,7 +500,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     email = englishBody;
   }
 
-  logAiUsage(req, [generationResult, translationResult], language);
+  logAiUsage(req, [generationResult, outroResult, translationResult], language);
   res.status(200).json({ success: true, email, englishTranslation });
 });
 

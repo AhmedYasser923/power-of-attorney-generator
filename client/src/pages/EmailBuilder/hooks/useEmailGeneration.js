@@ -77,6 +77,7 @@ export default function useEmailGeneration() {
   const [generating, setGenerating] = useState(false);
   const [output, setOutput] = useState('');
   const [englishOutput, setEnglishOutput] = useState('');
+  const [lastGeneratedEnglish, setLastGeneratedEnglish] = useState('');
   const [error, setError] = useState('');
   const [lastPayload, setLastPayload] = useState(null);
   const [activePreview, setActivePreview] = useState('output');
@@ -95,12 +96,16 @@ export default function useEmailGeneration() {
     setError('');
     setOutput('');
     setEnglishOutput('');
+    setLastGeneratedEnglish('');
     setActivePreview('output');
 
     try {
       const data = await generateEmail({ payload, signal: controller.signal });
-      setOutput(data.email || '');
-      setEnglishOutput(data.englishTranslation || data.email || '');
+      const email = data.email || '';
+      const english = data.englishTranslation || email;
+      setOutput(email);
+      setEnglishOutput(english);
+      setLastGeneratedEnglish(english);
       setLastPayload(payload);
       resetCallback?.();
     } catch (err) {
@@ -140,6 +145,7 @@ export default function useEmailGeneration() {
     generating,
     output, setOutput,
     englishOutput, setEnglishOutput,
+    lastGeneratedEnglish,
     error, setError,
     lastPayload,
     activePreview, setActivePreview,

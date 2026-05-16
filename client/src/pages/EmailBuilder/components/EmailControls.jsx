@@ -1,11 +1,8 @@
-import { LANGUAGES } from '../emailBuilderUtils.js';
-
 export default function EmailControls({
   useNote, onUseNoteChange,
   customNote, onCustomNoteChange,
   useWrapper, onUseWrapperChange,
   showWrapper,
-  language, onLanguageChange,
   generating,
   disabled
 }) {
@@ -35,15 +32,6 @@ export default function EmailControls({
           <span>Add sign-off</span>
         </label>
       )}
-
-      <label className="email-builder-field">
-        <span>Language</span>
-        <select onChange={(e) => onLanguageChange(e.target.value)} value={language}>
-          {LANGUAGES.map((lang) => (
-            <option key={lang} value={lang}>{lang}</option>
-          ))}
-        </select>
-      </label>
 
       <button className="email-generate-button" disabled={disabled || generating} type="submit">
         {generating ? 'Generating...' : 'Generate Email'}
