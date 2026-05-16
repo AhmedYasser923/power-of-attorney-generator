@@ -251,7 +251,10 @@
   color: #86efac;
 }
 
-.my-usage__op-pill[data-type="email_translation"] {
+.my-usage__op-pill[data-type="email_builder"],
+.my-usage__op-pill[data-type="email_translation"],
+.my-usage__op-pill[data-type="email_translation_sync"],
+.my-usage__op-pill[data-type="email_refinement"] {
   border-color: var(--warning-border);
   background: var(--warning-dim);
   color: #fbbf24;

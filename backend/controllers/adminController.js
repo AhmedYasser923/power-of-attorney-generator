@@ -4,7 +4,12 @@ const UsageLog = require('../models/UsageLog');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { MODEL_PRICING } = require('../utils/pricing');
-const { OP_LABELS, EGYPT_MS } = require('../utils/constants');
+const { EGYPT_MS } = require('../utils/constants');
+const {
+  getGroupedLogStages,
+  getUsageBreakdownStages,
+  labelUsageRows
+} = require('../utils/usageGrouping');
 const { assertString } = require('../middleware/validate');
 
 exports.getUsers = catchAsync(async (req, res) => {
@@ -78,14 +83,7 @@ exports.getUsageInsights = catchAsync(async (req, res) => {
     ]),
     UsageLog.aggregate([
       { $match: { year, month } },
-      {
-        $group: {
-          _id: '$operationType',
-          count: { $sum: 1 },
-          totalCostUSD: { $sum: '$costUSD' }
-        }
-      },
-      { $sort: { totalCostUSD: -1 } }
+      ...getUsageBreakdownStages()
     ]),
     UsageLog.aggregate([
       {
@@ -104,7 +102,7 @@ exports.getUsageInsights = catchAsync(async (req, res) => {
     status: 'success',
     data: {
       userTotals,
-      opBreakdown: opBreakdown.map(b => ({ ...b, label: OP_LABELS[b._id] || b._id })),
+      opBreakdown: labelUsageRows(opBreakdown),
       monthlyTotals,
       year,
       month
@@ -203,26 +201,41 @@ exports.getAdminLogs = catchAsync(async (req, res) => {
     matchQuery.createdAt = { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 86400000) };
   }
 
-  const [total, logs, costAgg] = await Promise.all([
+  const [totalOperations, grouped, costAgg] = await Promise.all([
     UsageLog.countDocuments(matchQuery),
-    UsageLog.find(matchQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
+    UsageLog.aggregate([
+      { $match: matchQuery },
+      ...getGroupedLogStages({ perUser: true }),
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          logs: [
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          total: [
+            { $count: 'count' }
+          ]
+        }
+      }
+    ]),
     UsageLog.aggregate([
       { $match: matchQuery },
       { $group: { _id: null, totalCostUSD: { $sum: '$costUSD' } } }
     ])
   ]);
 
+  const groupedPayload = grouped[0] || {};
+  const logs = groupedPayload.logs || [];
+  const total = groupedPayload.total?.[0]?.count || 0;
   const totalCostUSD = costAgg.length > 0 ? costAgg[0].totalCostUSD : 0;
 
   res.json({
     status: 'success',
     data: {
-      logs: logs.map(l => ({ ...l, label: OP_LABELS[l.operationType] || l.operationType })),
+      logs: labelUsageRows(logs),
       total,
+      totalOperations,
       totalCostUSD,
       page,
       totalPages: Math.ceil(total / limit) || 1

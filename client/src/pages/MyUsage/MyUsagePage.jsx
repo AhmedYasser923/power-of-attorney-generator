@@ -20,7 +20,10 @@ const MONTH_NAMES = [
 
 const OP_LABELS = {
   ticket_analysis: 'Ticket Analysis',
+  email_builder: 'Email Builder',
   email_translation: 'Email Translation',
+  email_translation_sync: 'Email Translation Sync',
+  email_refinement: 'Email Refinement',
   poa_standard: 'POA (Standard)',
   poa_lufthansa: 'POA (Lufthansa)',
   poa_aerlingus: 'POA (Aer Lingus)',
@@ -70,6 +73,11 @@ function formatOperationLabel(log) {
 
 function formatMetadata(log) {
   const metadata = log.metadata || {};
+
+  if (metadata.grouped || log.operationType === 'email_builder') {
+    const groupedCount = Number(log.operationCount || metadata.operationCount || 1);
+    return `${groupedCount} operation${groupedCount === 1 ? '' : 's'}`;
+  }
 
   if (metadata.pnr) {
     return `PNR: ${metadata.pnr}${metadata.passengerCount ? ` (${metadata.passengerCount} pax)` : ''}`;
@@ -132,31 +140,13 @@ async function loadDailyStats() {
     month: today.month,
     day: today.day,
     page: 1,
-    limit: 100
+    limit: 1
   });
   const data = firstPage.data || {};
-  const pages = data.totalPages || 1;
-  let logs = data.logs || [];
-
-  if (pages > 1) {
-    const rest = await Promise.all(
-      Array.from({ length: pages - 1 }, (_, index) =>
-        getUsageLogs({
-          year: today.year,
-          month: today.month,
-          day: today.day,
-          page: index + 2,
-          limit: 100
-        })
-      )
-    );
-
-    logs = logs.concat(rest.flatMap((payload) => payload.data?.logs || []));
-  }
 
   return {
-    count: data.total || logs.length,
-    cost: logs.reduce((sum, log) => sum + (Number(log.costUSD) || 0), 0)
+    count: data.totalOperations ?? data.total ?? 0,
+    cost: data.totalCostUSD || 0
   };
 }
 

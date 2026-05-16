@@ -17,7 +17,10 @@ export const MONTH_NAMES = [
 
 export const OP_LABELS = {
   ticket_analysis: 'Ticket Analysis',
+  email_builder: 'Email Builder',
   email_translation: 'Email Translation',
+  email_translation_sync: 'Email Translation Sync',
+  email_refinement: 'Email Refinement',
   poa_standard: 'POA (Standard)',
   poa_lufthansa: 'POA (Lufthansa)',
   poa_aerlingus: 'POA (Aer Lingus)',

@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
         if (!active) return;
         const data = payload.data || {};
         setDailyStats({
-          count: data.total || 0,
+          count: data.totalOperations ?? data.total ?? 0,
           cost: data.totalCostUSD || 0
         });
       })
@@ -543,6 +543,9 @@ export default function AdminDashboardPage() {
                       <span className="admin-op-pill" data-type={log.operationType || ''}>
                         {formatOperationLabel(log)}
                       </span>
+                      {log.operationCount > 1 && (
+                        <span className="admin-log-count">{log.operationCount} ops</span>
+                      )}
                     </td>
                     <td className="admin-table__cost">${ceilCurrency(log.costUSD)}</td>
                   </tr>
