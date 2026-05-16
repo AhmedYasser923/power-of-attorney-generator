@@ -8,7 +8,6 @@ const EditableSection = forwardRef(function EditableSection({
   refining,
   onMoveUp,
   onMoveDown,
-  onMergeDown,
   onAddNext,
   onDelete
 }, ref) {
@@ -56,11 +55,8 @@ const EditableSection = forwardRef(function EditableSection({
     } else if (e.key === 'ArrowDown' && onMoveDown) {
       e.preventDefault();
       onMoveDown();
-    } else if ((e.key === 'm' || e.key === 'M') && onMergeDown) {
-      e.preventDefault();
-      onMergeDown();
     }
-  }, [onMoveUp, onMoveDown, onMergeDown, onAddNext, value]);
+  }, [onMoveUp, onMoveDown, onAddNext, value]);
 
   return (
     <div className="email-editable-section" ref={rootRef}>
@@ -97,21 +93,6 @@ const EditableSection = forwardRef(function EditableSection({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14" />
               <path d="m19 12-7 7-7-7" />
-            </svg>
-          </button>
-        )}
-        {onMergeDown && (
-          <button
-            className="email-section-toolbar__btn"
-            onClick={onMergeDown}
-            title="Merge with section below (Alt+M)"
-            type="button"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 7h8" />
-              <path d="M8 17h8" />
-              <path d="m12 7 0 10" />
-              <path d="m9 14 3 3 3-3" />
             </svg>
           </button>
         )}

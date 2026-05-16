@@ -150,23 +150,6 @@ export default function EmailPreview({
     });
   }, [sections, writeJoined, spliceOtherSide]);
 
-  const mergeWithBelow = useCallback((index) => {
-    if (index >= sections.length - 1) return;
-    const updated = [...sections];
-    const below = updated[index + 1].replace(/^[•\-\*]\s*/, '');
-    updated[index] = updated[index] + ' ' + below;
-    updated.splice(index + 1, 1);
-    writeJoined(joinSections(updated));
-
-    spliceOtherSide((parts) => {
-      if (index < parts.length - 1) {
-        const otherBelow = parts[index + 1].replace(/^[•\-\*]\s*/, '');
-        parts[index] = parts[index] + ' ' + otherBelow;
-        parts.splice(index + 1, 1);
-      }
-    });
-  }, [sections, writeJoined, spliceOtherSide]);
-
   const deleteSection = useCallback((index) => {
     const updated = sections.filter((_, i) => i !== index);
     writeJoined(joinSections(updated));
@@ -261,14 +244,13 @@ export default function EmailPreview({
                   refining={refiningIndex === i}
                   onMoveUp={i > 0 && !isLast ? () => moveSection(i, i - 1) : null}
                   onMoveDown={!isLast && !isPenultimate ? () => moveSection(i, i + 1) : null}
-                  onMergeDown={!isLast && !isPenultimate ? () => mergeWithBelow(i) : null}
                   onAddNext={!isLast ? () => addSectionAfter(i) : null}
                   onDelete={sections.length > 1 ? () => deleteSection(i) : null}
                 />
               );
             })}
             <p className="email-section-hints">
-              Tip: press Enter at the end of a section to add a new one. Alt+↑ / Alt+↓ reorder, Alt+M merges with below.
+              Tip: press Enter at the end of a section to add a new one. Alt+↑ / Alt+↓ reorder.
             </p>
           </div>
         )}

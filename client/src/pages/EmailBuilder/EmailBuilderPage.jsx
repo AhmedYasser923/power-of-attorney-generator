@@ -43,7 +43,7 @@ export default function EmailBuilderPage() {
   useEffect(() => () => gen.cleanup(), [gen.cleanup]);
 
   // Invalidate translation cache whenever the English baseline changes
-  // (new generation, user edit on verify tab, refine, reorder, merge).
+  // (new generation, user edit on verify tab, refine, reorder).
   useEffect(() => {
     if (translationCacheRef.current.key !== gen.englishOutput) {
       translationCacheRef.current = { key: gen.englishOutput, map: {} };
