@@ -16,7 +16,9 @@ export const LANGUAGES = [
   'Hungarian',
   'Greek',
   'Turkish',
-  'Arabic'
+  'Arabic',
+  'Hebrew',
+  'Russian'
 ];
 
 export const TYPE_ORDER = ['document-request', 'special-case', 'rejection'];

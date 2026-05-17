@@ -86,6 +86,40 @@ function buildTemplateUpdate(body) {
 // passed as style references; the model must adapt, not copy verbatim.
 // ---------------------------------------------------------------------------
 
+async function combineClickHereBullets(bullets, model) {
+  const indices = [];
+  bullets.forEach((b, i) => {
+    if (/click here/i.test(b)) indices.push(i);
+  });
+  if (indices.length < 2) return { bullets, result: null };
+
+  const toMerge = indices.map(i => bullets[i]).join('\n');
+  const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.
+
+Below are multiple bullet points that each reference the same "click here" upload link. Merge them into ONE bullet that asks the passenger to click the link once and upload all the listed items in a single place.
+
+Rules:
+- Output ONLY the merged bullet text. Do not include a leading "• " marker, no quotes, no greeting, no extra commentary.
+- Use the phrase "click here" exactly once.
+- Preserve every distinct item/document mentioned across the originals. Do not invent new requirements.
+- Keep it warm, concise, and professional. One sentence if possible.
+
+Bullets to merge:
+---
+${toMerge}
+---`;
+  const result = await geminiQueue.run(() => model.generateContent(prompt));
+  const merged = result.response.text().trim().replace(/^•\s*/, '').replace(/^"|"$/g, '');
+
+  const firstIdx = indices[0];
+  const skip = new Set(indices.slice(1));
+  const newBullets = bullets
+    .map((b, i) => (i === firstIdx ? `• ${merged}` : skip.has(i) ? null : b))
+    .filter(b => b !== null);
+
+  return { bullets: newBullets, result };
+}
+
 async function generateOutro(emailBody, model) {
   const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.
 
@@ -385,6 +419,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   let generationResult = null;
   let translationResult = null;
   let outroResult = null;
+  let mergeResult = null;
 
   const sortedSelected = [...selectedTemplates].sort((a, b) => {
     if (a === 'Signed Power of Attorney') return -1;
@@ -458,13 +493,22 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   const standaloneBullets = specialStandaloneKeys.filter(k => byKey[k]).map(makeBullet);
   if (standaloneBullets.length) sections.push(standaloneBullets.join('\n\n'));
 
-  const wrappedBullets = [
+  let wrappedBullets = [
     ...specialCombinableKeys.filter(k => byKey[k]).map(makeBullet),
     ...docRequestKeys.filter(k => byKey[k]).map(makeBullet),
     ...(customNoteBullet ? [customNoteBullet] : [])
   ];
 
   if (wrappedBullets.length) {
+    try {
+      const merged = await combineClickHereBullets(wrappedBullets, model);
+      wrappedBullets = merged.bullets;
+      mergeResult = merged.result;
+    } catch (err) {
+      if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+      return next(new AppError(`Email generation failed: ${err.message}`, 502));
+    }
+
     const hasDocRequests = docRequestKeys.length > 0;
     const addOutro = hasDocRequests || (customNoteBullet && useWrapper);
     const bulletsText = wrappedBullets.join('\n\n');
@@ -500,7 +544,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
     email = englishBody;
   }
 
-  logAiUsage(req, [generationResult, outroResult, translationResult], language);
+  logAiUsage(req, [generationResult, mergeResult, outroResult, translationResult], language);
   res.status(200).json({ success: true, email, englishTranslation });
 });
 

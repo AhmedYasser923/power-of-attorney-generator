@@ -204,7 +204,6 @@ mongoose.connect(process.env.DATABASE)
     routes.setDbReady();
     await bootstrapAdmin();
     const startup = require('./utils/startup');
-    await startup.seedEmailTemplates();
     await startup.migrateEmailTemplateSchema();
   })
   .catch(err => {
