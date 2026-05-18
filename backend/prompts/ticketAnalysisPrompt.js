@@ -56,7 +56,7 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     FLIGHT STATUS RULES (mutually exclusive — pick the FIRST that matches):
     "Cancelled" → airline unilaterally cancelled, flight never operated.
     "Unused / Missed Connection" → flight operated but passenger didn't board. 🚨 DEDUCTIVE RULE: If a passenger has a ticket for A ➔ B, but the timeline shows them flying out of city A later on a different flight (A ➔ C), the original A ➔ B flight was obviously unused/replaced and MUST be tagged as "Unused / Missed Connection" or "Cancelled".
-    "Rescheduled" → SAME flight number, different time; populate originalDepartureTime + originalArrivalTime.
+    "Rescheduled" → SAME flight number, different time; populate originalDepartureTime + originalArrivalTime. ALSO populate originalDate (YYYY-MM-DD) when the flight was moved to a different calendar day.
     "Replacement Flight" → a new alternative routing (like the A ➔ C flight from the example above) that replaces the disrupted one.
     "Unused Replacement Flight" → replacement issued but also not boarded.
     "Flown" → passenger successfully completed this flight.

@@ -89,6 +89,27 @@ export function normalizeStatus(raw) {
   return String(raw || '').trim().toLowerCase();
 }
 
+export function formatMinutes(minutes) {
+  if (minutes === null || minutes === undefined || Number.isNaN(minutes)) return '';
+  const sign = minutes < 0 ? '-' : '+';
+  const abs = Math.abs(minutes);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  if (h && m) return `${sign}${h}h ${m}m`;
+  if (h) return `${sign}${h}h`;
+  return `${sign}${m}m`;
+}
+
+function rescheduleLabel(change) {
+  if (!change) return 'Rescheduled';
+  const dateOnly = change.dateChanged && !change.timeChanged;
+  const timeOnly = !change.dateChanged && change.timeChanged;
+  if (dateOnly) return 'Rescheduled - date change';
+  if (timeOnly) return 'Rescheduled - time change';
+  if (change.dateChanged && change.timeChanged) return 'Rescheduled - date & time change';
+  return 'Rescheduled';
+}
+
 export function getStatusBadge(flight) {
   const status = normalizeStatus(flight.flightStatus);
 
@@ -108,15 +129,16 @@ export function getStatusBadge(flight) {
     return { label: 'Unused replacement flight', tone: 'info', opacity: 0.65 };
   }
 
-  if (status === 'rescheduled') {
-    return { label: 'Rescheduled - time change', tone: 'warning', opacity: 1 };
+  if (status === 'rescheduled' || flight.rescheduleChange) {
+    return { label: rescheduleLabel(flight.rescheduleChange), tone: 'warning', opacity: 1 };
   }
 
   return null;
 }
 
 export function isRescheduled(flight) {
-  return normalizeStatus(flight.flightStatus) === 'rescheduled';
+  if (flight?.rescheduleChange) return true;
+  return normalizeStatus(flight?.flightStatus) === 'rescheduled';
 }
 
 export function getFlightNumbers(flight) {

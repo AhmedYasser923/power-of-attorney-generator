@@ -5938,7 +5938,10 @@
     "name": "Norse Atlantic Airways",
     "iata": "N0",
     "icao": "NBT",
-    "country": "Norway"
+    "country": "Norway",
+    "trackerSearchCodes": {
+      "flightStats": "NBT"
+    }
   },
   {
     "name": "Norse Atlantic UK",
@@ -8524,7 +8527,10 @@
     "country": "Spain",
     "reqs": "Boarding pass, ID",
     "claimNote": "PNR mandatory",
-    "oneTimeSubmission": true
+    "oneTimeSubmission": true,
+    "trackerSearchCodes": {
+      "flightStats": "VOE"
+    }
   },
   {
     "name": "VLM Airlines",
@@ -8670,7 +8676,19 @@
     "icao": "WMT",
     "country": "Malta",
     "reqs": "Wizz Air Denied Boarding Compensation Form",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "trackerSearchCodes": {
+      "flightStats": "WMT"
+    }
+  },
+  {
+    "name": "red sea airlines",
+    "iata": "4S",
+    "icao": "RSX",
+    "country": "Egypt",
+    "trackerSearchCodes": {
+      "flightStats": "RSX"
+    }
   },
   {
     "name": "Wizz Air UK",

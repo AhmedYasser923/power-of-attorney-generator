@@ -5,6 +5,7 @@ import {
   buildTrackerURLs,
   classifyDate,
   formatLimit,
+  formatMinutes,
   getCardId,
   getClaimValueBadge,
   getExpirationState,
@@ -165,16 +166,56 @@ function ClaimDocuments({ documents }) {
 }
 
 function PassengerTickets({ tickets }) {
+  const [copiedKey, setCopiedKey] = useState(null);
+
   if (!Array.isArray(tickets) || tickets.length === 0) return null;
 
+  const handleCopy = async (text, key) => {
+    if (!text) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), 1200);
+    } catch {
+      // ignore copy failures silently
+    }
+  };
+
   return (
-    <FlightCardDisclosure count={tickets.length} title="Ticket numbers used">
+    <FlightCardDisclosure count={tickets.length} title="Ticket numbers used (click to copy)">
       <div className="ta-ticket-list">
-        {tickets.map((ticket, index) => (
-          <span className="ta-ticket-number" key={`${ticket.passengerName}-${ticket.ticketNumber}-${index}`}>
-            <strong>{ticket.passengerName || 'Unknown'}:</strong> {ticket.ticketNumber || 'N/A'}
-          </span>
-        ))}
+        {tickets.map((ticket, index) => {
+          const key = `${ticket.passengerName}-${ticket.ticketNumber}-${index}`;
+          const passengerName = ticket.passengerName || 'Unknown';
+          const ticketNumber = ticket.ticketNumber || 'N/A';
+          const copyText = `${passengerName}: ${ticketNumber}`;
+          const isCopied = copiedKey === key;
+          const disabled = !ticket.ticketNumber && !ticket.passengerName;
+          return (
+            <button
+              type="button"
+              className={`ta-ticket-number${isCopied ? ' ta-ticket-number--copied' : ''}`}
+              key={key}
+              onClick={() => handleCopy(copyText, key)}
+              disabled={disabled}
+              title={disabled ? 'Nothing to copy' : `Copy "${copyText}"`}
+            >
+              <strong>{passengerName}:</strong> {ticketNumber}
+              {isCopied && <span className="ta-ticket-number__copied"> Copied!</span>}
+            </button>
+          );
+        })}
       </div>
     </FlightCardDisclosure>
   );
@@ -198,6 +239,59 @@ function EocStatus({ eoc }) {
   }
 
   return <span className="ta-eoc ta-eoc--clear">No EOC found</span>;
+}
+
+function RescheduleSummary({ flight }) {
+  const change = flight.rescheduleChange;
+  const legacyDep = !change && flight.originalDepartureTime && flight.originalDepartureTime !== '--:--'
+    ? `${flight.originalDepartureTime} → ${flight.departureTime || '--:--'}`
+    : null;
+  const legacyArr = !change && flight.originalArrivalTime && flight.originalArrivalTime !== '--:--'
+    ? `${flight.originalArrivalTime} → ${flight.arrivalTime || '--:--'}`
+    : null;
+
+  if (!change && !legacyDep && !legacyArr) return null;
+
+  if (!change) {
+    return (
+      <span className="ta-reschedule-summary ta-reschedule-summary--legacy">
+        {legacyDep && <span> Dep: {legacyDep}</span>}
+        {legacyArr && <span> Arr: {legacyArr}</span>}
+      </span>
+    );
+  }
+
+  const { before, after, dateChanged, depChanged, arrChanged, departureDelayMinutes, arrivalDelayMinutes, suspect } = change;
+  const depDelta = formatMinutes(departureDelayMinutes);
+  const arrDelta = formatMinutes(arrivalDelayMinutes);
+  const arrIsEC261 = arrivalDelayMinutes !== null && arrivalDelayMinutes >= 180;
+
+  return (
+    <span className="ta-reschedule-summary">
+      {dateChanged && before.d && after.d && (
+        <span className="ta-reschedule-row"> Date: {before.d} → {after.d}</span>
+      )}
+      {depChanged && before.t && after.t && (
+        <span className="ta-reschedule-row">
+          {' '}Dep: {before.t} → {after.t}
+          {depDelta && <span className="ta-reschedule-delta"> ({depDelta})</span>}
+        </span>
+      )}
+      {arrChanged && before.a && after.a && (
+        <span className="ta-reschedule-row">
+          {' '}Arr: {before.a} → {after.a}
+          {arrDelta && (
+            <span className={`ta-reschedule-delta ta-reschedule-delta--arrival${arrIsEC261 ? ' ta-reschedule-delta--ec261' : ''}`}>
+              {' '}({arrDelta}{arrIsEC261 ? ' · ≥3h — likely EC261 eligible' : ''})
+            </span>
+          )}
+        </span>
+      )}
+      {suspect && (
+        <span className="ta-reschedule-suspect"> Verify — large gap</span>
+      )}
+    </span>
+  );
 }
 
 function formatDistance(distance) {
@@ -369,16 +463,7 @@ export default function FlightCard({
       {statusBadge && (
         <div className={`ta-status-badge ta-status-badge--${statusBadge.tone}`}>
           {statusBadge.label}
-          {rescheduled && (
-            <span>
-              {flight.originalDepartureTime && flight.originalDepartureTime !== '--:--'
-                ? ` Dep: ${flight.originalDepartureTime} -> ${flight.departureTime || '--:--'}`
-                : ''}
-              {flight.originalArrivalTime && flight.originalArrivalTime !== '--:--'
-                ? ` Arr: ${flight.originalArrivalTime} -> ${flight.arrivalTime || '--:--'}`
-                : ''}
-            </span>
-          )}
+          {rescheduled && <RescheduleSummary flight={flight} />}
         </div>
       )}
 

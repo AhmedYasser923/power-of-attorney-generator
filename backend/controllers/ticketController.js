@@ -29,6 +29,129 @@ const {
 } = require('../utils/dataLoader');
 
 // ---------------------------------------------------------------------------
+// RESCHEDULE CLASSIFIER (deterministic, AI-independent)
+// ---------------------------------------------------------------------------
+const HHMM_RE   = /^\d{2}:\d{2}$/;
+const YMD_RE    = /^\d{4}-\d{2}-\d{2}$/;
+const TERMINAL_STATUSES = new Set([
+  'cancelled',
+  'unused / missed connection',
+  'replacement flight',
+  'unused replacement flight'
+]);
+
+function cleanHHMM(value) {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (s === '--:--' || s === '') return null;
+  if (HHMM_RE.test(s)) return s;
+  // Tolerate dirty inputs the time sanitizer would normally clean (ISO datetime,
+  // "HH:MM:SS"). Classifier runs before the sanitizer, so we mirror its rules.
+  const iso = s.match(/T(\d{2}:\d{2})/);
+  if (iso) return iso[1];
+  const sec = s.match(/^(\d{2}:\d{2}):\d{2}$/);
+  if (sec) return sec[1];
+  return null;
+}
+
+function cleanYMD(value) {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (YMD_RE.test(s)) return s;
+  // Tolerate ISO datetimes like "2026-03-29T11:59:00".
+  const iso = s.match(/^(\d{4}-\d{2}-\d{2})T/);
+  return iso ? iso[1] : null;
+}
+
+function computeDelta(beforeDate, beforeTime, afterDate, afterTime) {
+  const bd = beforeDate || afterDate;
+  const ad = afterDate  || beforeDate;
+  if (!bd || !ad || !beforeTime || !afterTime) return null;
+  const [bh, bm] = beforeTime.split(':').map(Number);
+  const [ah, am] = afterTime.split(':').map(Number);
+  const [by, bmo, bday] = bd.split('-').map(Number);
+  const [ay, amo, aday] = ad.split('-').map(Number);
+  const beforeMs = Date.UTC(by, bmo - 1, bday, bh, bm);
+  const afterMs  = Date.UTC(ay, amo - 1, aday, ah, am);
+  if (Number.isNaN(beforeMs) || Number.isNaN(afterMs)) return null;
+  return Math.round((afterMs - beforeMs) / 60000);
+}
+
+function classifyReschedule(leg) {
+  try {
+    const before = {
+      d: cleanYMD(leg.originalDate),
+      t: cleanHHMM(leg.originalDepartureTime),
+      a: cleanHHMM(leg.originalArrivalTime)
+    };
+    const after = {
+      d: cleanYMD(leg.date),
+      t: cleanHHMM(leg.departureTime),
+      a: cleanHHMM(leg.arrivalTime)
+    };
+
+    const rawStatus    = String(leg.flightStatus || '').trim();
+    const statusLc     = rawStatus.toLowerCase();
+    const isTerminal   = TERMINAL_STATUSES.has(statusLc);
+    const wasRescheduled = statusLc === 'rescheduled';
+
+    const datesDiffer = !!(before.d && after.d && before.d !== after.d);
+    const depDiffer   = !!(before.t && after.t && before.t !== after.t);
+    const arrDiffer   = !!(before.a && after.a && before.a !== after.a);
+    const hasBeforeSignal = !!(before.t || before.a || before.d);
+    const actuallyChanged = hasBeforeSignal && (datesDiffer || depDiffer || arrDiffer);
+
+    let rescheduleChange = null;
+    if (actuallyChanged) {
+      const departureDelayMinutes = computeDelta(before.d, before.t, after.d, after.t);
+      const arrivalDelayMinutes   = computeDelta(before.d, before.a, after.d, after.a);
+      const suspect = [departureDelayMinutes, arrivalDelayMinutes]
+        .some(m => m !== null && Math.abs(m) > 7 * 24 * 60);
+      rescheduleChange = {
+        dateChanged: datesDiffer,
+        timeChanged: depDiffer || arrDiffer,
+        depChanged: depDiffer,
+        arrChanged: arrDiffer,
+        before,
+        after,
+        departureDelayMinutes,
+        arrivalDelayMinutes,
+        suspect
+      };
+    }
+
+    // Promote / demote flightStatus (never override terminal statuses).
+    if (!isTerminal) {
+      if (wasRescheduled && !actuallyChanged) {
+        console.warn(`[RESCHEDULE CLASSIFIER] Demoting "Rescheduled" → "Scheduled" — no time/date diff detected. flightNumbers=${JSON.stringify(leg.flightNumbers)}`);
+        leg.flightStatus = 'Scheduled';
+      } else if (!wasRescheduled && actuallyChanged) {
+        leg.flightStatus = 'Rescheduled';
+      }
+    }
+
+    leg.rescheduleChange = rescheduleChange;
+
+    // Mirror arrival delay onto ec261Leg for the 3h EC261 threshold check.
+    leg.ec261Leg = leg.ec261Leg || {};
+    leg.ec261Leg.arrivalDelayMinutes = rescheduleChange?.arrivalDelayMinutes ?? null;
+  } catch (err) {
+    console.warn(`[RESCHEDULE CLASSIFIER] Skipped leg due to error: ${err.message}`);
+  }
+}
+
+function classifyJourneys(journeys) {
+  if (!Array.isArray(journeys)) return;
+  journeys.forEach(journey => {
+    if (!Array.isArray(journey.routes)) return;
+    journey.routes.forEach(route => {
+      if (!Array.isArray(route.legs)) return;
+      route.legs.forEach(classifyReschedule);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // ANALYZE TICKET
 // ---------------------------------------------------------------------------
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
@@ -121,6 +244,11 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   if (!Array.isArray(parsedJourneys) || parsedJourneys.length === 0) {
     return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, journeys: [] });
   }
+
+  // Deterministic reschedule classifier — must run BEFORE EC261 so the evaluator
+  // sees corrected flightStatus values. Safe-by-design (wrapped in try/catch
+  // per leg); a failure leaves the leg untouched.
+  classifyJourneys(parsedJourneys);
 
   // BUG 2 FIX: Run deterministic EC261 evaluator BEFORE per-leg post-processing.
   // This overwrites whatever the AI guessed with bullet-proof server-side logic.

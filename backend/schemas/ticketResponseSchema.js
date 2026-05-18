@@ -67,6 +67,7 @@ const TICKET_RESPONSE_SCHEMA = {
                   date:               { type: SchemaType.STRING },
                   originalDepartureTime: { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T11:59:00', output '11:59'." },
                   originalArrivalTime:   { type: SchemaType.STRING, description: "Time ONLY in HH:MM format (24-hour). Example: '11:59' or '14:44'. NEVER include date or timezone. Extract ONLY the time component from any datetime string. If you see '2026-03-29T11:59:00', output '11:59'." },
+                  originalDate:          { type: SchemaType.STRING, description: "Date ONLY in YYYY-MM-DD format. Populate ONLY when the flight was moved to a DIFFERENT calendar day (e.g. originally 2026-03-29, now 2026-03-30). Otherwise omit or leave empty. NEVER include time or timezone." },
                   passengerTickets: {
                     type: SchemaType.ARRAY,
                     description: "List of exactly which ticket numbers were used for this specific leg, mapped to each passenger's name.",

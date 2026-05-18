@@ -668,6 +668,40 @@
   color: var(--text-secondary);
 }
 
+.ta-reschedule-summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.ta-reschedule-row {
+  white-space: nowrap;
+}
+
+.ta-reschedule-delta {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+
+.ta-reschedule-delta--arrival {
+  font-weight: 700;
+  opacity: 1;
+}
+
+.ta-reschedule-delta--ec261 {
+  color: #fda4af;
+}
+
+.ta-reschedule-suspect {
+  margin-left: 6px;
+  font-size: 0.85em;
+  opacity: 0.7;
+  font-style: italic;
+}
+
 .ta-flight-card__route {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(104px, 138px) minmax(0, 1fr);
@@ -1227,6 +1261,31 @@
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 800;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.ta-ticket-number:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.ta-ticket-number:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.ta-ticket-number--copied,
+.ta-ticket-number--copied:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #6ee7a7;
+}
+
+.ta-ticket-number__copied {
+  margin-left: 4px;
+  font-family: var(--font-sans);
+  font-weight: 700;
 }
 
 .ta-ticket-number strong {
