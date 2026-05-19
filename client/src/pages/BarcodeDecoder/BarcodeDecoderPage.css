@@ -1,67 +1,174 @@
 .content__inner:has(.barcode-decoder) {
   width: 100%;
-  max-width: 980px;
+  max-width: 1120px;
 }
 
 .barcode-decoder {
   width: 100%;
   color: var(--text-primary);
+  outline: none;
 }
 
 .barcode-decoder__header {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .barcode-decoder__header h1 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.15;
 }
 
-.barcode-dropzone {
-  position: relative;
-  display: grid;
-  width: min(100%, 900px);
-  min-height: 230px;
-  place-items: center;
-  padding: 36px 22px;
-  border: 2px dashed var(--accent-border);
-  border-radius: var(--radius-lg);
-  background: var(--bg-card);
+.barcode-decoder__header p {
+  max-width: 620px;
+  margin: 8px 0 0;
   color: var(--text-secondary);
-  cursor: pointer;
-  text-align: center;
-  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.barcode-dropzone:hover,
-.barcode-dropzone:focus-visible,
-.barcode-dropzone.is-dragging {
-  border-color: var(--accent);
-  background: var(--accent-dim);
+.barcode-status-pill,
+.barcode-confidence,
+.barcode-format {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.barcode-scanner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.barcode-paste-target {
+  display: flex;
+  min-width: 0;
+  min-height: 94px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
   color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  text-align: left;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.barcode-paste-target:hover,
+.barcode-paste-target:focus-visible {
+  border-color: var(--accent-border);
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-focus);
   outline: none;
 }
 
-.barcode-dropzone__upload-icon {
+.barcode-paste-target__icon {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
   place-items: center;
-  margin-bottom: 14px;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--bg-input);
-  color: var(--accent-hover);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  background: var(--accent-dim);
+  color: #93c5fd;
 }
 
-.barcode-dropzone__upload-icon svg,
-.barcode-preview__decode svg {
-  width: 20px;
-  height: 20px;
+.barcode-paste-target strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.barcode-paste-target small {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.barcode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.barcode-action,
+.barcode-icon-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  transition: background var(--transition), border-color var(--transition), color var(--transition), opacity var(--transition);
+}
+
+.barcode-action:hover:not(:disabled),
+.barcode-icon-button:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.barcode-action--primary {
+  border-color: var(--accent-border);
+  background: var(--accent);
+  color: #fff;
+}
+
+.barcode-action--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+.barcode-action--danger:hover:not(:disabled),
+.barcode-icon-button--icon:hover:not(:disabled) {
+  border-color: var(--danger-border);
+  color: #fca5a5;
+}
+
+.barcode-action:disabled,
+.barcode-icon-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.barcode-paste-target svg,
+.barcode-action svg,
+.barcode-icon-button svg {
+  width: 18px;
+  height: 18px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -69,205 +176,325 @@
   stroke-width: 2;
 }
 
-.barcode-dropzone__title {
-  color: var(--text-primary);
-  font-size: 18px;
-  font-weight: 800;
+.barcode-icon-button--icon {
+  width: 36px;
+  flex: 0 0 auto;
+  padding: 0;
 }
 
-.barcode-dropzone__meta {
-  margin-top: 10px;
-  padding: 5px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.barcode-dropzone__input {
-  display: none;
-}
-
-.barcode-preview {
-  display: grid;
-  width: min(100%, 900px);
-  gap: 14px;
-  margin-top: 18px;
-}
-
-.barcode-preview__image {
-  display: grid;
-  min-height: 180px;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: #090d14;
-}
-
-.barcode-preview__image img {
-  display: block;
-  max-width: 100%;
-  max-height: 360px;
-  object-fit: contain;
-}
-
-.barcode-preview__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.barcode-preview__name {
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  padding: 8px 12px;
-  border: 1px solid var(--accent-border);
-  border-radius: 999px;
-  background: var(--accent-dim);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.barcode-preview__decode,
-.barcode-preview__clear {
-  display: inline-flex;
-  min-height: 38px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 14px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background var(--transition), border-color var(--transition), opacity var(--transition);
-}
-
-.barcode-preview__decode {
-  border: 1px solid var(--accent-border);
-  background: var(--accent);
-  color: #fff;
-}
-
-.barcode-preview__decode:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.barcode-preview__clear {
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-muted);
-}
-
-.barcode-preview__clear:hover:not(:disabled) {
-  border-color: var(--danger-border);
-  color: #fca5a5;
-}
-
-.barcode-preview__decode:disabled,
-.barcode-preview__clear:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.barcode-status,
-.barcode-error,
-.barcode-raw-result {
-  width: min(100%, 900px);
-  margin-top: 16px;
-}
-
-.barcode-status {
-  padding: 12px 14px;
+.barcode-notice {
+  margin-bottom: 14px;
+  padding: 10px 12px;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-md);
   background: var(--accent-dim);
   color: #bfdbfe;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
-.barcode-error {
+.barcode-queue {
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid var(--danger-border);
-  border-radius: var(--radius-md);
-  background: var(--danger-dim);
-  color: #fca5a5;
-  font-size: 13px;
+  gap: 14px;
 }
 
-.barcode-error strong {
-  color: #fecaca;
-}
-
-.barcode-error span {
-  color: #fca5a5;
-}
-
-.barcode-raw-result {
+.barcode-item {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
 }
 
-.barcode-result-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-size: 12px;
+.barcode-item.is-scanning {
+  border-color: var(--accent-border);
 }
 
-.barcode-result-meta strong {
-  color: var(--text-primary);
-  font-size: 13px;
+.barcode-item.is-decoded {
+  border-color: var(--success-border);
 }
 
-.barcode-result-meta span {
-  color: var(--text-muted);
+.barcode-item.is-failed {
+  border-color: var(--danger-border);
 }
 
-.barcode-result-meta.is-low strong {
-  color: #fbbf24;
+.barcode-item__preview {
+  position: relative;
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    #090d14;
+  background-size: 22px 22px;
 }
 
-.barcode-result-meta.is-medium strong {
+.barcode-item__preview.has-extracted {
+  align-items: stretch;
+  padding: 42px 12px 12px;
+}
+
+.barcode-item__preview img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.barcode-scanline {
+  position: absolute;
+  right: 0;
+  left: 0;
+  top: 0;
+  height: 3px;
+  background: #5eead4;
+  box-shadow: 0 0 20px rgba(94, 234, 212, 0.75), 0 0 54px rgba(61, 110, 250, 0.35);
+  opacity: 0.95;
+  animation: barcode-scanline 1.45s ease-in-out infinite;
+}
+
+.barcode-status-pill {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  background: rgba(8, 11, 22, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.barcode-status-pill.is-queued,
+.barcode-status-pill.is-scanning {
+  border-color: var(--accent-border);
   color: #93c5fd;
 }
 
-.barcode-result-meta.is-high strong {
+.barcode-status-pill.is-decoded {
+  border-color: var(--success-border);
   color: #86efac;
 }
 
-.barcode-raw-details summary {
-  padding: 12px 14px;
-  color: var(--text-secondary);
-  cursor: pointer;
+.barcode-status-pill.is-failed {
+  border-color: var(--danger-border);
+  color: #fca5a5;
+}
+
+.barcode-status-pill.is-canceled {
+  border-color: var(--warning-border);
+  color: #fcd34d;
+}
+
+.barcode-item__body {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 14px;
+  padding: 16px;
+}
+
+.barcode-item__top {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.barcode-item__title {
+  min-width: 0;
+}
+
+.barcode-item__title h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.barcode-item__title span {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: var(--text-muted);
   font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barcode-item__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.barcode-item__placeholder,
+.barcode-item__error {
+  padding: 12px;
+  border: 1px solid var(--border-inner);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.barcode-item__placeholder.is-active {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+  color: #bfdbfe;
+}
+
+.barcode-item__error {
+  display: grid;
+  gap: 5px;
+  border-color: var(--danger-border);
+  background: var(--danger-dim);
+}
+
+.barcode-item__error strong {
+  color: #fecaca;
+}
+
+.barcode-item__error span {
+  color: #fca5a5;
+}
+
+.barcode-result {
+  display: grid;
+  gap: 12px;
+}
+
+.barcode-result__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.barcode-confidence.is-low {
+  border-color: var(--warning-border);
+  background: var(--warning-dim);
+  color: #fcd34d;
+}
+
+.barcode-confidence.is-medium {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+  color: #93c5fd;
+}
+
+.barcode-confidence.is-high {
+  border-color: var(--success-border);
+  background: var(--success-dim);
+  color: #86efac;
+}
+
+.barcode-format {
+  border-color: var(--purple-border);
+  background: var(--purple-dim);
+  color: #c4b5fd;
+  font-family: var(--font-mono);
+}
+
+.barcode-result__note {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.barcode-extracted {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-md);
+  background: rgba(34, 197, 94, 0.08);
+  padding: 12px;
+  animation: barcode-result-fade 0.32s ease-out both;
+}
+
+.barcode-extracted__header {
+  display: grid;
+  gap: 8px;
+}
+
+.barcode-extracted__header strong {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.barcode-extracted__header div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.barcode-extracted__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.barcode-extracted__fields div,
+.barcode-extracted__fallback {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
+.barcode-extracted__fields dt {
+  margin: 0 0 5px;
+  color: var(--text-muted);
   font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.barcode-raw-details pre {
+.barcode-extracted__fields dd,
+.barcode-extracted__fallback {
+  overflow: hidden;
   margin: 0;
-  padding: 0 14px 14px;
-  overflow-x: auto;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barcode-extracted__fallback {
+  color: var(--text-secondary);
+}
+
+.barcode-result pre {
+  max-height: 180px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--border-inner);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
   color: var(--text-secondary);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -276,18 +503,67 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 640px) {
-  .barcode-dropzone {
-    min-height: 200px;
+@keyframes barcode-scanline {
+  0% {
+    transform: translateY(0);
   }
 
-  .barcode-preview__actions {
+  50% {
+    transform: translateY(216px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes barcode-result-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 860px) {
+  .barcode-scanner,
+  .barcode-item {
+    grid-template-columns: 1fr;
+  }
+
+  .barcode-item__preview {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 620px) {
+  .barcode-decoder__header h1 {
+    font-size: 24px;
+  }
+
+  .barcode-actions,
+  .barcode-item__actions,
+  .barcode-item__top,
+  .barcode-result__meta {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .barcode-preview__name {
+  .barcode-action,
+  .barcode-icon-button {
     width: 100%;
-    flex: none;
+  }
+
+  .barcode-icon-button--icon {
+    width: 100%;
+  }
+
+  .barcode-paste-target {
+    min-height: 82px;
   }
 }

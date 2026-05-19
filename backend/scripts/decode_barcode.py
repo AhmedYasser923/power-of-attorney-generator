@@ -72,8 +72,20 @@ def julian_to_date(julian_str):
 
 
 def extract_eticket(value):
-    match = re.search(r"(?<!\d)(\d{13})(?!\d)", value or "")
-    return match.group(1) if match else ""
+    text = value or ""
+    match = re.search(r"(?<!\d)(\d{13})(?!\d)", text)
+    if match:
+        return match.group(1)
+
+    extended_match = re.search(r"(?<!\d)(\d{14,16})(?!\d)", text)
+    if not extended_match:
+        return ""
+
+    run = extended_match.group(1)
+    candidate = run[:13]
+    if candidate.startswith("000") or len(set(candidate)) <= 1:
+        return ""
+    return candidate
 
 
 def is_bcbp(raw):
