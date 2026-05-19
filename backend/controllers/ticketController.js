@@ -10,6 +10,7 @@ const logUsage        = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 const genAI = require('../utils/geminiClient');
+const MODELS = require('../config/models');
 const flightStatusService = require('../services/flightStatusService');
 const eocService = require('../services/eocService');
 const TICKET_RESPONSE_SCHEMA = require('../schemas/ticketResponseSchema');
@@ -160,7 +161,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
 
   if (files.length === 0) return next(new AppError('No files uploaded', 400));
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+  const model = genAI.getGenerativeModel({ model: MODELS.ticketAnalysis });
 
   let yearDirective = '';
   if (journeyYear) {
@@ -226,8 +227,15 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   const processingTimeInSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
   let requestCostUSD = 0;
   let costData = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, costUSD: 0 };
+  const servedModel = result.response.modelVersion;
+  if (servedModel && servedModel !== MODELS.ticketAnalysis) {
+    console.warn(`⚠️  [MODEL CHECK] Requested "${MODELS.ticketAnalysis}" but API served "${servedModel}"`);
+  } else if (servedModel) {
+    console.log(`✓ [MODEL CHECK] Served by "${servedModel}"`);
+  }
+
   if (result.response.usageMetadata) {
-    costData = calculateCost('gemini-3-flash-preview', result.response.usageMetadata);
+    costData = calculateCost(MODELS.ticketAnalysis, result.response.usageMetadata);
     requestCostUSD = costData.costUSD;
     console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${costData.inputTokens.toLocaleString()} in / 📤 ${costData.outputTokens.toLocaleString()} out / 💭 ${costData.thinkingTokens.toLocaleString()} think | 💸 $${requestCostUSD.toFixed(6)}\n`);
   }
@@ -447,7 +455,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
   logUsage(req, {
     operationType: 'ticket_analysis',
-    model: 'gemini-3-flash-preview',
+    model: MODELS.ticketAnalysis,
     inputTokens: costData.inputTokens,
     outputTokens: costData.outputTokens + costData.thinkingTokens,
     costUSD: costData.costUSD,

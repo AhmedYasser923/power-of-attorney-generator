@@ -7,6 +7,7 @@ const AppError   = require('../utils/appError');
 const logUsage   = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
 const genAI = require('../utils/geminiClient');
+const MODELS = require('../config/models');
 const flightStatusService = require('../services/flightStatusService');
 const eocService = require('../services/eocService');
 
@@ -388,14 +389,14 @@ function logAiUsage(req, results, language, opType) {
     return acc;
   }, { iTok: 0, oTok: 0, tTok: 0 });
   const { iTok, oTok, tTok } = totals;
-  const costUSD = calculateCost('gemini-3.1-flash-lite', {
+  const costUSD = calculateCost(MODELS.emailBuilder, {
     promptTokenCount: iTok,
     candidatesTokenCount: oTok,
     thoughtsTokenCount: tTok,
   }).costUSD;
   logUsage(req, {
     operationType: opType || 'email_translation',
-    model: 'gemini-3.1-flash-lite',
+    model: MODELS.emailBuilder,
     inputTokens: iTok,
     outputTokens: oTok + tTok,
     costUSD,
@@ -415,7 +416,7 @@ exports.generateEmail = catchAsync(async (req, res, next) => {
   }
 
   const isEnglish = language === 'English';
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
+  const model = genAI.getGenerativeModel({ model: MODELS.emailBuilder });
   let generationResult = null;
   let translationResult = null;
   let outroResult = null;
@@ -557,7 +558,7 @@ exports.translateEmail = catchAsync(async (req, res, next) => {
   if (!text?.trim()) return next(new AppError('text is required', 400));
   if (!language) return next(new AppError('language is required', 400));
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
+  const model = genAI.getGenerativeModel({ model: MODELS.emailBuilder });
   try {
     const tr = await translateText(text, language, model);
     logAiUsage(req, [tr.result], language, 'email_translation_sync');
@@ -576,7 +577,7 @@ exports.refineEmailSection = catchAsync(async (req, res, next) => {
   const { section, context, language } = req.body;
   if (!section?.trim()) return next(new AppError('section is required', 400));
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
+  const model = genAI.getGenerativeModel({ model: MODELS.emailBuilder });
   const referenceContext = await getReferenceContext();
 
   const prompt = `You are a claims specialist at ReFly, a flight compensation company writing to a passenger.${referenceContext}\n\nGiven the following full email for context:\n---\n${context || ''}\n---\n\nRefine ONLY the following paragraph to be warm, professional, and contextually appropriate for a flight compensation claim email. Maintain consistency with the surrounding email tone. Output only the refined paragraph, nothing else.\n\n"${section.trim()}"`;

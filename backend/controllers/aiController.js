@@ -4,6 +4,7 @@ const logUsage = require('../utils/logUsage');
 const { calculateCost } = require('../utils/pricing');
 const { geminiQueue, isQuotaError } = require('../utils/geminiQueue');
 const genAI = require('../utils/geminiClient');
+const MODELS = require('../config/models');
 
 exports.extractData = catchAsync(async (req, res, next) => {
   const { messyText } = req.body;
@@ -13,7 +14,7 @@ exports.extractData = catchAsync(async (req, res, next) => {
   }
 
   // We use the fast 'flash' model for quick data extraction
-  const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+  const model = genAI.getGenerativeModel({ model: MODELS.textAutofill });
 
   // Strict instructions so Gemini returns an array of up to 4 passengers AND the flight route
   const prompt = `
@@ -59,10 +60,10 @@ exports.extractData = catchAsync(async (req, res, next) => {
   }
 
 
-  const aiCost = calculateCost('gemini-3.1-flash-lite', result.response.usageMetadata);
+  const aiCost = calculateCost(MODELS.textAutofill, result.response.usageMetadata);
   logUsage(req, {
     operationType: 'text_autofill',
-    model: 'gemini-3.1-flash-lite',
+    model: MODELS.textAutofill,
     inputTokens: aiCost.inputTokens,
     outputTokens: aiCost.outputTokens,
     costUSD: aiCost.costUSD,

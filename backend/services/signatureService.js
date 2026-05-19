@@ -11,11 +11,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const SIG_MODELS = {
-  'gemini-easy':   'gemini-2.5-flash-image',
-  'gemini-medium': 'gemini-3.1-flash-image-preview',
-  'gemini-hard':   'gemini-3-pro-image-preview',
-};
+const SIG_MODELS = require('../config/models').signature;
 
 /**
  * Unified Signature Processing Engine
