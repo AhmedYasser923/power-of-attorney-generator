@@ -6,7 +6,7 @@ function getFilesLabel(files) {
   return `${files.length} files ready`;
 }
 
-export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, onAnalyze, onClear }) {
+export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, modelTier, onAnalyze, onClear, onTierChange }) {
   const wasAnalyzing = useRef(false);
   const [completed, setCompleted] = useState(false);
 
@@ -44,6 +44,30 @@ export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, onA
         >
           x
         </button>
+        <div className="ticket-preview__tier" role="radiogroup" aria-label="Analysis model">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={modelTier === 'standard'}
+            className={`ticket-preview__tier-option${modelTier === 'standard' ? ' is-active' : ''}`}
+            onClick={() => onTierChange?.('standard')}
+            disabled={analyzing}
+            title="gemini-3-flash-preview — cheaper, for simple tickets"
+          >
+            gemini-3-flash-preview
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={modelTier === 'advanced'}
+            className={`ticket-preview__tier-option${modelTier === 'advanced' ? ' is-active' : ''}`}
+            onClick={() => onTierChange?.('advanced')}
+            disabled={analyzing}
+            title="gemini-3.5-flash — smarter, for complicated multi-document cases"
+          >
+            gemini-3.5-flash
+          </button>
+        </div>
         <button
           aria-label="Analyze ticket"
           className={`ticket-preview__gemini${analyzing ? ' is-analyzing' : ''}`}

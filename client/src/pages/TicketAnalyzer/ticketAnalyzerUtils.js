@@ -136,6 +136,51 @@ export function getStatusBadge(flight) {
   return null;
 }
 
+export function withAirportSuffix(name) {
+  const trimmed = String(name || '').trim();
+  if (!trimmed) return '';
+  return /airport|aeropuerto|aéroport|aeroporto|flughafen/i.test(trimmed)
+    ? trimmed
+    : `${trimmed} Airport`;
+}
+
+export function silentCopy(text) {
+  const value = String(text || '').trim();
+  if (!value) return;
+  try {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value).catch(() => {});
+      return;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  } catch {
+    // intentionally silent
+  }
+}
+
+export function getDateYearSource(flight) {
+  const raw = String(flight?.rawExtractedDate || '');
+  const normalized = String(flight?.date || '');
+  const hasYear = (s) => /\d{4}/.test(s);
+  if (hasYear(raw)) return 'document';
+  if (hasYear(normalized)) return 'fallback';
+  return 'missing';
+}
+
+export function getDateSourceBadge(flight) {
+  const source = getDateYearSource(flight);
+  if (source === 'document')  return { label: 'From document',   tone: 'neutral' };
+  if (source === 'fallback')  return { label: 'From year input', tone: 'warning' };
+  return { label: 'Year missing', tone: 'danger' };
+}
+
 export function isRescheduled(flight) {
   if (flight?.rescheduleChange) return true;
   return normalizeStatus(flight?.flightStatus) === 'rescheduled';

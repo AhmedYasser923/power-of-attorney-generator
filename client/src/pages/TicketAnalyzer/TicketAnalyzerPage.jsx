@@ -16,6 +16,7 @@ export default function TicketAnalyzerPage({ isActive = true }) {
   const timerRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [journeyYear, setJourneyYear] = useState('');
+  const [modelTier, setModelTier] = useState('standard');
   const [rawResult, setRawResult] = useState(null);
   const [error, setError] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
@@ -99,6 +100,7 @@ export default function TicketAnalyzerPage({ isActive = true }) {
       const result = await analyzeTicketFiles({
         files,
         journeyYear: isValidYear(journeyYear) ? journeyYear.trim() : '',
+        tier: modelTier,
         signal: abortRef.current.signal
       });
 
@@ -169,8 +171,10 @@ export default function TicketAnalyzerPage({ isActive = true }) {
         analyzing={analyzing}
         elapsedSeconds={elapsedSeconds}
         files={files}
+        modelTier={modelTier}
         onAnalyze={analyze}
         onClear={clearFiles}
+        onTierChange={setModelTier}
       />
 
       {error && (

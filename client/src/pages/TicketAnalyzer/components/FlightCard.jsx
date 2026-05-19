@@ -8,49 +8,93 @@ import {
   formatMinutes,
   getCardId,
   getClaimValueBadge,
+  getDateSourceBadge,
   getExpirationState,
   getFlightNumbers,
   getStatusBadge,
   hasFullDate,
-  isRescheduled
+  isRescheduled,
+  silentCopy,
+  withAirportSuffix
 } from '../ticketAnalyzerUtils.js';
 import FlightStatusResult from './FlightStatusResult.jsx';
+
+const CALENDAR_ICON = (
+  <svg aria-hidden="true" viewBox="0 0 24 24">
+    <path d="M8 2v4" />
+    <path d="M16 2v4" />
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18" />
+  </svg>
+);
+
+const CHECK_ICON = (
+  <svg aria-hidden="true" viewBox="0 0 24 24">
+    <path d="m5 12 4 4L19 6" />
+  </svg>
+);
+
+const X_ICON = (
+  <svg aria-hidden="true" viewBox="0 0 24 24">
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+);
 
 function DateControl({ dateValue, onDateChange }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(hasFullDate(dateValue) ? dateValue : '');
   const dateKind = classifyDate(dateValue);
+  const inputId = useId();
 
   useEffect(() => {
     if (!editing) setDraft(hasFullDate(dateValue) ? dateValue : '');
   }, [dateValue, editing]);
 
-  if (dateKind === 'missing') {
-    return (
-      <div className="ta-date-control ta-date-control--missing">
-        <span>No date</span>
-        <input onChange={(event) => setDraft(event.target.value)} type="date" value={draft} />
-        <button disabled={!draft} onClick={() => onDateChange(draft)} type="button">Set</button>
-      </div>
-    );
-  }
+  const startEditing = () => {
+    setDraft(hasFullDate(dateValue) ? dateValue : '');
+    setEditing(true);
+  };
+
+  const saveDraft = () => {
+    if (!draft) return;
+    onDateChange(draft);
+    setEditing(false);
+  };
 
   if (editing) {
     return (
       <div className="ta-date-control ta-date-control--editing">
-        <input onChange={(event) => setDraft(event.target.value)} type="date" value={draft} />
-        <button disabled={!draft} onClick={() => { onDateChange(draft); setEditing(false); }} type="button">
-          Confirm
-        </button>
-        <button onClick={() => setEditing(false)} type="button">Cancel</button>
+        <label htmlFor={inputId}>Date</label>
+        <div className="ta-date-control__body">
+          <input id={inputId} onChange={(event) => setDraft(event.target.value)} type="date" value={draft} />
+          <button aria-label="Save date" disabled={!draft} onClick={saveDraft} title="Save date" type="button">
+            {CHECK_ICON}
+          </button>
+          <button aria-label="Cancel date edit" onClick={() => setEditing(false)} title="Cancel" type="button">
+            {X_ICON}
+          </button>
+        </div>
       </div>
     );
   }
 
+  const dateLabel = dateKind === 'missing' ? 'No date' : dateValue || 'Unknown';
+
   return (
-    <div className={`ta-date-control${dateKind === 'partial' ? ' ta-date-control--partial' : ''}`}>
-      <span>{dateValue || 'Unknown'}</span>
-      <button onClick={() => setEditing(true)} title="Edit date" type="button">Edit</button>
+    <div className={`ta-date-control ta-date-control--${dateKind}`}>
+      <span>Date</span>
+      <div className="ta-date-control__body">
+        <strong>{dateLabel}</strong>
+        <button
+          aria-label={dateKind === 'missing' ? 'Set flight date' : 'Edit flight date'}
+          onClick={startEditing}
+          title={dateKind === 'missing' ? 'Set date' : 'Edit date'}
+          type="button"
+        >
+          {CALENDAR_ICON}
+        </button>
+      </div>
     </div>
   );
 }
@@ -62,20 +106,21 @@ function TrackerLinks({ dateValue, flightNumber }) {
 
   if (!urls.airportInfo) {
     return (
-      <span className="ta-tracker-links ta-tracker-links--disabled">
-        <span title="Set a complete date to enable">AirportInfo</span>
-        <span>FlightStats</span>
-        <span>Flightera</span>
+      <span className="ta-tracker-menu ta-tracker-menu--disabled" title="Set a complete date to enable trackers">
+        Trackers unavailable
       </span>
     );
   }
 
   return (
-    <span className="ta-tracker-links">
-      <a href={urls.airportInfo} rel="noopener noreferrer" target="_blank">AirportInfo</a>
-      <a href={urls.flightStats} rel="noopener noreferrer" target="_blank">FlightStats</a>
-      <a href={urls.flightera} rel="noopener noreferrer" target="_blank">Flightera</a>
-    </span>
+    <details className="ta-tracker-menu">
+      <summary>Trackers</summary>
+      <span className="ta-tracker-menu__links">
+        <a href={urls.airportInfo} rel="noopener noreferrer" target="_blank">AirportInfo</a>
+        <a href={urls.flightStats} rel="noopener noreferrer" target="_blank">FlightStats</a>
+        <a href={urls.flightera} rel="noopener noreferrer" target="_blank">Flightera</a>
+      </span>
+    </details>
   );
 }
 
@@ -115,13 +160,15 @@ function ClaimDocuments({ documents }) {
     const requirements = String(document.reqs || '').trim();
     return requirements && !isNoDocsRequired(document);
   }).length;
-  const meta = requiredDocumentCount > 0 ? `${requiredDocumentCount} required` : 'No docs required';
+  const documentLabel = documents.length === 1 ? 'document' : 'documents';
+  const meta = requiredDocumentCount > 0
+    ? `${requiredDocumentCount} of ${documents.length} required`
+    : `${documents.length} ${documentLabel} - no docs required`;
 
   return (
     <FlightCardDisclosure
-      count={documents.length}
       meta={meta}
-      title="Mandatory claim documents"
+      title="Claim documents"
       tone={requiredDocumentCount > 0 ? 'warning' : 'clear'}
     >
       <div className="ta-doc-list">
@@ -193,7 +240,7 @@ function PassengerTickets({ tickets }) {
   };
 
   return (
-    <FlightCardDisclosure count={tickets.length} title="Ticket numbers used (click to copy)">
+    <FlightCardDisclosure meta={`${tickets.length} ${tickets.length === 1 ? 'ticket' : 'tickets'}`} title="Ticket numbers">
       <div className="ta-ticket-list">
         {tickets.map((ticket, index) => {
           const key = `${ticket.passengerName}-${ticket.ticketNumber}-${index}`;
@@ -211,8 +258,11 @@ function PassengerTickets({ tickets }) {
               disabled={disabled}
               title={disabled ? 'Nothing to copy' : `Copy "${copyText}"`}
             >
-              <strong>{passengerName}:</strong> {ticketNumber}
-              {isCopied && <span className="ta-ticket-number__copied"> Copied!</span>}
+              <strong
+                className="ta-copy-target"
+                onClick={(event) => { event.stopPropagation(); silentCopy(passengerName); }}
+                title={`Copy passenger name "${passengerName}"`}
+              >{passengerName}:</strong> {ticketNumber}
             </button>
           );
         })}
@@ -244,10 +294,10 @@ function EocStatus({ eoc }) {
 function RescheduleSummary({ flight }) {
   const change = flight.rescheduleChange;
   const legacyDep = !change && flight.originalDepartureTime && flight.originalDepartureTime !== '--:--'
-    ? `${flight.originalDepartureTime} → ${flight.departureTime || '--:--'}`
+    ? `${flight.originalDepartureTime} -> ${flight.departureTime || '--:--'}`
     : null;
   const legacyArr = !change && flight.originalArrivalTime && flight.originalArrivalTime !== '--:--'
-    ? `${flight.originalArrivalTime} → ${flight.arrivalTime || '--:--'}`
+    ? `${flight.originalArrivalTime} -> ${flight.arrivalTime || '--:--'}`
     : null;
 
   if (!change && !legacyDep && !legacyArr) return null;
@@ -269,26 +319,26 @@ function RescheduleSummary({ flight }) {
   return (
     <span className="ta-reschedule-summary">
       {dateChanged && before.d && after.d && (
-        <span className="ta-reschedule-row"> Date: {before.d} → {after.d}</span>
+        <span className="ta-reschedule-row"> Date: {before.d} {'->'} {after.d}</span>
       )}
       {depChanged && before.t && after.t && (
         <span className="ta-reschedule-row">
-          {' '}Dep: {before.t} → {after.t}
+          {' '}Dep: {before.t} {'->'} {after.t}
           {depDelta && <span className="ta-reschedule-delta"> ({depDelta})</span>}
         </span>
       )}
       {arrChanged && before.a && after.a && (
         <span className="ta-reschedule-row">
-          {' '}Arr: {before.a} → {after.a}
+          {' '}Arr: {before.a} {'->'} {after.a}
           {arrDelta && (
             <span className={`ta-reschedule-delta ta-reschedule-delta--arrival${arrIsEC261 ? ' ta-reschedule-delta--ec261' : ''}`}>
-              {' '}({arrDelta}{arrIsEC261 ? ' · ≥3h — likely EC261 eligible' : ''})
+              {' '}({arrDelta}{arrIsEC261 ? ' - >=3h - likely EC261 eligible' : ''})
             </span>
           )}
         </span>
       )}
       {suspect && (
-        <span className="ta-reschedule-suspect"> Verify — large gap</span>
+        <span className="ta-reschedule-suspect"> Verify - large gap</span>
       )}
     </span>
   );
@@ -303,6 +353,28 @@ function formatDistance(distance) {
   return `${value} KM`;
 }
 
+function formatPnr(value) {
+  const pnr = String(value || '').trim();
+  const normalized = pnr.toLowerCase();
+
+  if (!pnr || normalized.includes('scan') || normalized === 'not provided' || normalized === 'unknown' || normalized === 'n/a') {
+    return '-';
+  }
+
+  return pnr.toUpperCase();
+}
+
+function formatPrintedReference(value) {
+  const reference = String(value || '').trim();
+  const normalized = reference.toLowerCase();
+
+  if (!reference || normalized === 'not provided' || normalized === 'unknown' || normalized === 'n/a') {
+    return '-';
+  }
+
+  return reference;
+}
+
 export default function FlightCard({
   animationIndex = 0,
   appliedYear,
@@ -310,7 +382,6 @@ export default function FlightCard({
   journeyIndex,
   legIndex,
   onSelectChange,
-  pnrColorClass,
   routeIndex,
   selected,
   yearApplySignal
@@ -321,11 +392,6 @@ export default function FlightCard({
     [flight, journeyIndex, legIndex, routeIndex]
   );
   const [dateValue, setDateValue] = useState(flight.date || '');
-  const [pnr, setPnr] = useState(
-    flight.pnr && !String(flight.pnr).toLowerCase().includes('scan') && flight.pnr !== 'Not Provided'
-      ? flight.pnr
-      : ''
-  );
   const [eoc, setEoc] = useState({ loading: false, events: [], incomplete: true });
   const [statusResults, setStatusResults] = useState({});
 
@@ -345,6 +411,9 @@ export default function FlightCard({
   const distanceLabel = formatDistance(flight.distanceKm);
   const originLimit = formatLimit(flight.ec261Leg?.claimExpiration?.originYears);
   const destinationLimit = formatLimit(flight.ec261Leg?.claimExpiration?.destinationYears);
+  const displayPnr = formatPnr(flight.pnr);
+  const printedReference = formatPrintedReference(flight.printedReference);
+  const showPrintedReference = printedReference !== '-' && printedReference.toUpperCase() !== displayPnr.toUpperCase();
   const selectedPayload = useMemo(() => ({
     date: dateValue,
     flightNumbers,
@@ -449,7 +518,7 @@ export default function FlightCard({
         animationDelay: `${animationIndex * 60}ms`
       }}
     >
-      <div className="ta-flight-card__topbar">
+      <div className="ta-flight-card__header">
         <label className="ta-flight-card__select">
           <input
             checked={selected}
@@ -458,14 +527,13 @@ export default function FlightCard({
           />
           <span>Select flight</span>
         </label>
+        {statusBadge && (
+          <div className={`ta-status-badge ta-status-badge--${statusBadge.tone}`}>
+            {statusBadge.label}
+            {rescheduled && <RescheduleSummary flight={flight} />}
+          </div>
+        )}
       </div>
-
-      {statusBadge && (
-        <div className={`ta-status-badge ta-status-badge--${statusBadge.tone}`}>
-          {statusBadge.label}
-          {rescheduled && <RescheduleSummary flight={flight} />}
-        </div>
-      )}
 
       {isStopover && (
         <div className="ta-stopover-warning">
@@ -476,8 +544,16 @@ export default function FlightCard({
       <div className="ta-flight-card__route">
         <div className="ta-route-point">
           <strong>{flight.originIata || '???'}</strong>
-          <span>{flight.originName || flight.originCity || ''}</span>
-          <small>{flight.originCity || ''}{flight.originCountry ? `, ${flight.originCountry}` : ''}</small>
+          {(() => {
+            const displayed = withAirportSuffix(flight.originName || flight.originCity);
+            return displayed ? (
+              <span className="ta-copy-target" onClick={() => silentCopy(displayed)}>{displayed}</span>
+            ) : <span />;
+          })()}
+          <small>
+            {flight.originCity || ''}
+            {flight.originCountry && <>{flight.originCity ? ', ' : ''}<span className="ta-copy-target" onClick={() => silentCopy(flight.originCountry)}>{flight.originCountry}</span></>}
+          </small>
         </div>
         <div className="ta-flight-card__route-line">
           {distanceLabel && <span>{distanceLabel}</span>}
@@ -485,8 +561,16 @@ export default function FlightCard({
         </div>
         <div className="ta-route-point">
           <strong>{flight.destinationIata || '???'}</strong>
-          <span>{flight.destinationName || flight.destinationCity || ''}</span>
-          <small>{flight.destinationCity || ''}{flight.destinationCountry ? `, ${flight.destinationCountry}` : ''}</small>
+          {(() => {
+            const displayed = withAirportSuffix(flight.destinationName || flight.destinationCity);
+            return displayed ? (
+              <span className="ta-copy-target" onClick={() => silentCopy(displayed)}>{displayed}</span>
+            ) : <span />;
+          })()}
+          <small>
+            {flight.destinationCity || ''}
+            {flight.destinationCountry && <>{flight.destinationCity ? ', ' : ''}<span className="ta-copy-target" onClick={() => silentCopy(flight.destinationCountry)}>{flight.destinationCountry}</span></>}
+          </small>
         </div>
       </div>
 
@@ -499,47 +583,60 @@ export default function FlightCard({
         </div>
       </div>
 
-      <div className="ta-flight-card__claim-limits">
-        <span className={originLimit === 'N/A' ? 'is-muted' : ''}>Limit: {originLimit}</span>
-        <span className={destinationLimit === 'N/A' ? 'is-muted' : ''}>Limit: {destinationLimit}</span>
+      <div className="ta-flight-card__claim-limits" aria-label="Claim limitation periods">
+        <span className={originLimit === 'N/A' ? 'is-muted' : ''}>
+          <strong>{originLimit}</strong>
+        </span>
+        <span className={destinationLimit === 'N/A' ? 'is-muted' : ''}>
+          <strong>{destinationLimit}</strong>
+        </span>
       </div>
 
-      <div className="ta-flight-card__date-row">
-        <DateControl dateValue={dateValue} onDateChange={setDateValue} />
+      <div className="ta-flight-card__claim-row">
+        <div className="ta-flight-card__date-cell">
+          <DateControl dateValue={dateValue} onDateChange={setDateValue} />
+          {(() => {
+            const dateSourceBadge = getDateSourceBadge(flight);
+            return (
+              <span
+                className={`ta-status-badge ta-status-badge--${dateSourceBadge.tone} ta-date-source-badge`}
+                title="Source of the year used for this date"
+              >
+                {dateSourceBadge.label}
+              </span>
+            );
+          })()}
+        </div>
+        <div className="ta-flight-card__claim-summary">
+          {flight.ec261Leg?.status && (
+            <span className={`ta-leg-status${legEligible ? ' ta-leg-status--eligible' : ' ta-leg-status--not-eligible'}`}>
+              {flight.ec261Leg.status}
+            </span>
+          )}
+          {claimValue && <span className="ta-claim-value">{claimValue}</span>}
+        </div>
       </div>
 
       <div className="ta-flight-card__details">
-        <div className="ta-detail">
-          <span>PNR</span>
-          <strong className={`ta-pnr ${pnrColorClass}`}>
-            <span
-              className="ta-pnr__editable"
-              contentEditable
-              onBlur={(event) => setPnr(event.currentTarget.textContent.trim())}
-              role="textbox"
-              spellCheck="false"
-              suppressContentEditableWarning
-            >
-              {pnr}
-            </span>
-          </strong>
-        </div>
         <div className="ta-detail ta-detail--airline">
           <span>Airline</span>
-          <strong className="ta-airline-summary">
-            <span className="ta-airline-summary__name">{marketingAirlineLabel}</span>
-            {flightNumbers.length > 0 ? flightNumbers.map((flightNumber) => (
-              <span className="ta-airline-summary__flight" key={flightNumber}>{flightNumber}</span>
-            )) : (
-              <span className="ta-airline-summary__flight">N/A</span>
-            )}
-          </strong>
-          {hasDifferentOperatingAirline && (
-            <small className="ta-airline-summary__operated">Operated by {operatingAirlineLabel}</small>
-          )}
+          <strong>{marketingAirlineLabel}</strong>
         </div>
-        {flight.printedReference && flight.printedReference !== 'Not Provided' && flight.printedReference !== pnr && (
-          <span className="ta-printed-ref">Printed Ref: {flight.printedReference}</span>
+        {hasDifferentOperatingAirline && (
+          <div className="ta-detail">
+            <span>Operated by</span>
+            <strong>{operatingAirlineLabel}</strong>
+          </div>
+        )}
+        <div className="ta-detail">
+          <span>PNR</span>
+          <strong className={displayPnr === '-' ? 'is-muted' : ''}>{displayPnr}</strong>
+        </div>
+        {showPrintedReference && (
+          <div className="ta-detail">
+            <span>Printed ref</span>
+            <strong>{printedReference}</strong>
+          </div>
         )}
       </div>
 
@@ -554,9 +651,11 @@ export default function FlightCard({
                     <small>{index === 0 ? 'Primary' : isStopover ? 'Stopover' : flight.isCodeshare ? 'Codeshare' : 'Additional'}</small>
                   )}
                 </span>
-                <button onClick={() => runStatusCheck(flightNumber)} type="button">
-                  Stats
-                </button>
+                <span className="ta-flight-action-row__disabled-action" title="API key expired">
+                  <button disabled type="button">
+                    Cirium API
+                  </button>
+                </span>
                 <TrackerLinks dateValue={dateValue} flightNumber={flightNumber} />
               </div>
             ))}
@@ -564,22 +663,16 @@ export default function FlightCard({
         </div>
       )}
 
-      <PassengerTickets tickets={flight.passengerTickets} />
-      <ClaimDocuments documents={flight.claimDocuments} />
+      <div className="ta-flight-card__evidence">
+        <PassengerTickets tickets={flight.passengerTickets} />
+        <ClaimDocuments documents={flight.claimDocuments} />
+      </div>
 
       <div className="ta-flight-card__footer">
         <EocStatus eoc={eoc} />
-        <div className="ta-flight-card__badges">
-          {flight.ec261Leg?.status && (
-            <span className={`ta-leg-status${legEligible ? ' ta-leg-status--eligible' : ' ta-leg-status--not-eligible'}`}>
-              {flight.ec261Leg.status}
-            </span>
-          )}
-          {claimValue && <span className="ta-claim-value">{claimValue}</span>}
-          <span className={`ta-expiration ta-expiration--${expiration.tone}`} title={expiration.title || ''}>
-            {expiration.label}
-          </span>
-        </div>
+        <span className={`ta-expiration ta-expiration--${expiration.tone}`} title={expiration.title || ''}>
+          {expiration.label}
+        </span>
       </div>
 
       {eoc.events?.length > 0 && (

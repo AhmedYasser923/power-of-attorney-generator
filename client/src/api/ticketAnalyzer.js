@@ -8,7 +8,7 @@ const parseJsonResponse = async (response) => {
   return payload;
 };
 
-export const analyzeTicketFiles = async ({ files, journeyYear, signal }) => {
+export const analyzeTicketFiles = async ({ files, journeyYear, tier, signal }) => {
   const body = new FormData();
 
   files.forEach((file) => {
@@ -17,6 +17,10 @@ export const analyzeTicketFiles = async ({ files, journeyYear, signal }) => {
 
   if (journeyYear) {
     body.append('journeyYear', journeyYear);
+  }
+
+  if (tier === 'advanced' || tier === 'standard') {
+    body.append('tier', tier);
   }
 
   const response = await fetch('/api/analyze-ticket', {

@@ -26,13 +26,14 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     2. "Issue Date" / "Booking Date" / "Printed Date" is NEVER the flight date. Ignore completely.
     3. If only day+month shown (e.g. "25 Mar"), output exactly that in rawExtractedDate.${journeyYear
       ? ` For the date field, you MUST use ${journeyYear} as the year → output "${journeyYear}-MM-DD". Do NOT guess or use any other year — ONLY the document year (if printed) or ${journeyYear}.`
-      : ' For the date field, output the partial as-is — NEVER assume, guess, or invent a year from context, current date, or any other source.'}
+      : ' For the date field, output the partial as-is — NEVER assume, guess, or invent a year from context, current date, or any other source. EXCEPTION: if another uploaded document shows the SAME flight number on the SAME route with a full year, propagate that year per the CROSS-DOCUMENT YEAR PROPAGATION rule above. NOTE: when only day+month is shown and no fallback year is available, rawExtractedDate and date will hold the SAME partial string — this is expected, not a bug.'}
 
     🚨 JOURNEY SPLITTING:
     RULE 1 - SELF-TRANSFER: if you see "Self-transfer" / "Separate tickets" → split at that layover, each chunk is an INDEPENDENT journey.
     RULE 2 - STANDARD CONNECTIONS: normal layovers without self-transfer keywords → keep in SAME journey.
     RULE 3 - ROUND TRIPS: A→B then B→A at later date → TWO journey objects (Outbound + Return).
-    RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey, PNR field = "PNR1 (Name) / PNR2 (Name)".
+    RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey. If multiple passengers carry different PNRs for the same leg, output them comma-separated in leg.pnr WITHOUT name labels (e.g. "SNMAUJ, XYZ123"). Per-passenger ticket numbers belong in passengerTickets — do NOT duplicate them inside the pnr field.
+    PRECEDENCE: Apply RULE 1 (self-transfer split) FIRST. Then classify each resulting independent journey as Outbound/Return. The "missed connections stay in Outbound" guidance above applies WITHIN a journey, not across self-transfer splits.
 
     🚨 CODESHARE RULE:
     When a document shows multiple flight numbers for the SAME physical flight (e.g. "BA494 / AA7041",
@@ -54,14 +55,14 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     → NOT two legs IBZ→MAD→OSL (Madrid was never mentioned!)
 
     FLIGHT STATUS RULES (mutually exclusive — pick the FIRST that matches):
-    "Cancelled" → airline unilaterally cancelled, flight never operated.
-    "Unused / Missed Connection" → flight operated but passenger didn't board. 🚨 DEDUCTIVE RULE: If a passenger has a ticket for A ➔ B, but the timeline shows them flying out of city A later on a different flight (A ➔ C), the original A ➔ B flight was obviously unused/replaced and MUST be tagged as "Unused / Missed Connection" or "Cancelled".
+    "Cancelled" → REQUIRES EXPLICIT DOCUMENT EVIDENCE: text such as "CANCELLED", "CANCELED", "FLIGHT CANCELLED", "CXLD", a visible cancellation stamp, or an airline cancellation notice attached to THIS specific leg. ⚠️ NEVER infer "Cancelled" from passenger behavior, timeline gaps, missing boarding pass, or the existence of a later replacement flight. Absence of evidence is NOT evidence of cancellation.
+    "Unused / Missed Connection" → passenger held a ticket for this leg but did not board it. 🚨 DEDUCTIVE RULE: If a passenger has a ticket for A ➔ B, but the timeline shows them flying out of city A later on a different flight (A ➔ C), the original A ➔ B flight MUST be tagged as "Unused / Missed Connection" — NEVER "Cancelled" (unless the document literally says so per the rule above).
     "Rescheduled" → SAME flight number, different time; populate originalDepartureTime + originalArrivalTime. ALSO populate originalDate (YYYY-MM-DD) when the flight was moved to a different calendar day.
     "Replacement Flight" → a new alternative routing (like the A ➔ C flight from the example above) that replaces the disrupted one.
     "Unused Replacement Flight" → replacement issued but also not boarded.
     "Flown" → passenger successfully completed this flight.
     "Scheduled" → default, no disruption evidence.
-    KEY: If the timeline proves A→B was abandoned for a reroute, tag A→B as "Unused / Missed Connection".
+    KEY: If the timeline proves A→B was abandoned for a reroute, tag A→B as "Unused / Missed Connection". Use "Cancelled" ONLY when the document literally says the flight was cancelled.
 
     🕐 CRITICAL TIME EXTRACTION RULES (MANDATORY):
 
@@ -197,6 +198,12 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     operatingAirlineCountry, marketingAirlineCountry.
 
     FLIGHT NUMBERS: Remove ALL spaces and hyphens within a number. "6E 2" → "6E2". Never split one number into two array items.
+
+    🏢 AIRPORT NAMES (originName / destinationName):
+    Always output the FULL official airport name. Do NOT abbreviate, shorten, or use the IATA code as a name.
+    ✅ CORRECT: "Zurich Airport", "John F. Kennedy International Airport", "Amsterdam Airport Schiphol", "Belgrade Nikola Tesla Airport", "Lisbon Humberto Delgado Airport"
+    ❌ WRONG: "JFK", "Schiphol", "Belgrade", "Zurich" (these are codes, city names, or partial names — give the full official airport name).
+    If the document only prints a code or a partial name, expand it to the full official name. The IATA code already lives in originIata/destinationIata — do NOT repeat it in originName.
 
      
   `;

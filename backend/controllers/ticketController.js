@@ -158,10 +158,12 @@ function classifyJourneys(journeys) {
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const files       = req.files && req.files.length > 0 ? req.files : [];
   const journeyYear = req.body.journeyYear;
+  const tier        = req.body.tier === 'advanced' ? 'advanced' : 'standard';
+  const selectedModel = MODELS.ticketAnalysis[tier] || MODELS.ticketAnalysis.standard;
 
   if (files.length === 0) return next(new AppError('No files uploaded', 400));
 
-  const model = genAI.getGenerativeModel({ model: MODELS.ticketAnalysis });
+  const model = genAI.getGenerativeModel({ model: selectedModel });
 
   let yearDirective = '';
   if (journeyYear) {
@@ -228,14 +230,14 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   let requestCostUSD = 0;
   let costData = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, costUSD: 0 };
   const servedModel = result.response.modelVersion;
-  if (servedModel && servedModel !== MODELS.ticketAnalysis) {
-    console.warn(`⚠️  [MODEL CHECK] Requested "${MODELS.ticketAnalysis}" but API served "${servedModel}"`);
+  if (servedModel && servedModel !== selectedModel) {
+    console.warn(`⚠️  [MODEL CHECK] Requested "${selectedModel}" (${tier}) but API served "${servedModel}"`);
   } else if (servedModel) {
-    console.log(`✓ [MODEL CHECK] Served by "${servedModel}"`);
+    console.log(`✓ [MODEL CHECK] Served by "${servedModel}" (${tier})`);
   }
 
   if (result.response.usageMetadata) {
-    costData = calculateCost(MODELS.ticketAnalysis, result.response.usageMetadata);
+    costData = calculateCost(selectedModel, result.response.usageMetadata);
     requestCostUSD = costData.costUSD;
     console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${costData.inputTokens.toLocaleString()} in / 📤 ${costData.outputTokens.toLocaleString()} out / 💭 ${costData.thinkingTokens.toLocaleString()} think | 💸 $${requestCostUSD.toFixed(6)}\n`);
   }
@@ -455,7 +457,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
   logUsage(req, {
     operationType: 'ticket_analysis',
-    model: MODELS.ticketAnalysis,
+    model: selectedModel,
     inputTokens: costData.inputTokens,
     outputTokens: costData.outputTokens + costData.thinkingTokens,
     costUSD: costData.costUSD,
