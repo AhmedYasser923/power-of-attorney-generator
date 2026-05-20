@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadTrackerOverrides } from '../../api/trackerOverrides.js';
 import { getFlightSearchData, parseDateFromDisplay, parseFlightNumber } from './flightToolsUtils.js';
 import './FlightToolsPage.css';
@@ -15,9 +15,35 @@ const initialTrackers = {
   flightera: true
 };
 
+function formatDateForDisplay(value) {
+  if (!value) return '';
+
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+function CalendarIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <rect height="18" rx="2" ry="2" width="18" x="3" y="4" />
+      <line x1="16" x2="16" y1="2" y2="6" />
+      <line x1="8" x2="8" y1="2" y2="6" />
+      <line x1="3" x2="21" y1="10" y2="10" />
+    </svg>
+  );
+}
+
 export default function FlightSearchPage() {
+  const datePickerRef = useRef(null);
   const [flightNumber, setFlightNumber] = useState('');
   const [date, setDate] = useState('');
+  const [dateDisplay, setDateDisplay] = useState('');
   const [trackers, setTrackers] = useState(initialTrackers);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -36,13 +62,33 @@ export default function FlightSearchPage() {
   const parsed = parseFlightNumber(flightNumber);
   const override = parsed ? overrides[parsed.airline] : null;
 
-  const handleDatePaste = (event) => {
-    const parsed = parseDateFromDisplay(event.clipboardData?.getData('text'));
+  const setSelectedDate = (nextDate) => {
+    setDate(nextDate);
+    setDateDisplay(formatDateForDisplay(nextDate));
+  };
 
-    if (parsed) {
+  const openDatePicker = () => {
+    const input = datePickerRef.current;
+    if (!input) return;
+
+    if (typeof input.showPicker === 'function') input.showPicker();
+    else input.click();
+  };
+
+  const handleDatePaste = (event) => {
+    const parsedDate = parseDateFromDisplay(event.clipboardData?.getData('text'));
+
+    if (parsedDate) {
       event.preventDefault();
-      setDate(parsed);
+      setSelectedDate(parsedDate);
     }
+  };
+
+  const handleDateTyping = (value) => {
+    setDateDisplay(value);
+
+    const parsedDate = parseDateFromDisplay(value);
+    if (parsedDate) setDate(parsedDate);
   };
 
   const toggleTracker = (key) => {
@@ -97,14 +143,32 @@ export default function FlightSearchPage() {
 
           <label className="flight-tools-field" htmlFor="flight-search-date">
             <span>Travel Date</span>
-            <input
-              className="flight-tools-input"
-              id="flight-search-date"
-              onChange={(event) => setDate(event.target.value)}
-              onPaste={handleDatePaste}
-              type="date"
-              value={date}
-            />
+            <div className="flight-tools-date-control">
+              <input
+                className="flight-tools-input"
+                id="flight-search-date"
+                onChange={(event) => handleDateTyping(event.target.value)}
+                onPaste={handleDatePaste}
+                placeholder="Select or paste a date..."
+                type="text"
+                value={dateDisplay}
+              />
+              <input
+                className="flight-tools-date-picker"
+                onChange={(event) => setSelectedDate(event.target.value)}
+                ref={datePickerRef}
+                type="date"
+                value={date}
+              />
+              <button
+                aria-label="Choose date"
+                className="flight-tools-date-trigger"
+                onClick={openDatePicker}
+                type="button"
+              >
+                <CalendarIcon />
+              </button>
+            </div>
           </label>
         </div>
 

@@ -92,6 +92,48 @@
   box-shadow: 0 0 0 2px rgba(61, 110, 250, 0.15);
 }
 
+.poa-date-control {
+  position: relative;
+}
+
+.poa-date-control .poa-react-input {
+  padding-right: 44px;
+}
+
+.poa-date-picker {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.poa-date-trigger {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 32px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.poa-date-trigger svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .poa-ai-box,
 .poa-react-form,
 .poa-react-panel,

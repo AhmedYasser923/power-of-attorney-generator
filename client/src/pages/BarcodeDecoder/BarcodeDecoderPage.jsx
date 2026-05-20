@@ -450,11 +450,13 @@ export default function BarcodeDecoderPage({ isActive = true }) {
           </span>
         </button>
 
-        <div className="barcode-actions" aria-label="Barcode queue actions">
-          <button className="barcode-action barcode-action--danger" disabled={items.length === 0} onClick={clearAll} type="button">
-            Clear
-          </button>
-        </div>
+        {items.length > 0 && (
+          <div className="barcode-actions" aria-label="Barcode queue actions">
+            <button className="barcode-action barcode-action--danger" onClick={clearAll} type="button">
+              Clear
+            </button>
+          </div>
+        )}
       </section>
 
       {notice && (

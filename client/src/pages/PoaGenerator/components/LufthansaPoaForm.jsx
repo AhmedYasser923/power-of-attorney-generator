@@ -1,5 +1,5 @@
 import { SIGNATURE_PROCESSING_OPTIONS } from '../poaConstants.js';
-import { Field, Select, TextArea, TextInput } from './Field.jsx';
+import { DateInput, Field, Select, TextArea, TextInput } from './Field.jsx';
 import SignatureDropzone from './SignatureDropzone.jsx';
 
 function getFilledPassengerCount(form) {
@@ -31,10 +31,10 @@ export default function LufthansaPoaForm({ form, onChange, onSignaturesChange, o
             />
           </Field>
           <Field label="Flight Date *">
-            <TextInput name="flightDate" onChange={onChange} required type="date" value={form.flightDate} />
+            <DateInput name="flightDate" onChange={onChange} required value={form.flightDate} />
           </Field>
           <Field label="Claim Submission Date *">
-            <TextInput name="claimDate" onChange={onChange} required type="date" value={form.claimDate} />
+            <DateInput name="claimDate" onChange={onChange} required value={form.claimDate} />
           </Field>
         </div>
 

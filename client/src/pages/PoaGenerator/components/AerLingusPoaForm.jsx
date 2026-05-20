@@ -1,5 +1,5 @@
 import { CLAIM_TYPE_OPTIONS, SIGNATURE_PROCESSING_OPTIONS } from '../poaConstants.js';
-import { Field, Select, TextInput } from './Field.jsx';
+import { DateInput, Field, Select, TextInput } from './Field.jsx';
 import SignatureDropzone from './SignatureDropzone.jsx';
 
 export default function AerLingusPoaForm({ form, onChange, onSignatureChange, onSubmit, signature, submitting }) {
@@ -41,7 +41,7 @@ export default function AerLingusPoaForm({ form, onChange, onSignatureChange, on
             <TextInput name="flightNumber" onChange={onChange} type="text" value={form.flightNumber} />
           </Field>
           <Field label="Flight Date *">
-            <TextInput name="flightDate" onChange={onChange} required type="date" value={form.flightDate} />
+            <DateInput name="flightDate" onChange={onChange} required value={form.flightDate} />
           </Field>
           <Field label="Route">
             <TextInput name="route" onChange={onChange} placeholder="e.g. DUB - JFK" type="text" value={form.route} />

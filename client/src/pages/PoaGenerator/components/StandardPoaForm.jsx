@@ -1,5 +1,5 @@
 import { LANGUAGE_OPTIONS, SIGNATURE_PROCESSING_OPTIONS } from '../poaConstants.js';
-import { Field, Select, TextInput } from './Field.jsx';
+import { DateInput, Field, Select, TextInput } from './Field.jsx';
 import SignatureDropzone from './SignatureDropzone.jsx';
 
 export default function StandardPoaForm({ form, onChange, onSignatureChange, onSubmit, signature, submitting }) {
@@ -41,7 +41,7 @@ export default function StandardPoaForm({ form, onChange, onSignatureChange, onS
 
         <div className="poa-react-grid poa-react-grid--2">
           <Field label="Date *">
-            <TextInput name="date" onChange={onChange} required type="date" value={form.date} />
+            <DateInput name="date" onChange={onChange} required value={form.date} />
           </Field>
           <Field label="Address *">
             <TextInput name="address" onChange={onChange} placeholder="Full address" required type="text" value={form.address} />
