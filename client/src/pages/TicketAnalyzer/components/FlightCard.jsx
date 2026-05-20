@@ -543,7 +543,11 @@ export default function FlightCard({
 
       <div className="ta-flight-card__route">
         <div className="ta-route-point">
-          <strong>{flight.originIata || '???'}</strong>
+          {flight.originIata ? (
+            <strong className="ta-copy-target" onClick={() => silentCopy(flight.originIata)} title={`Copy "${flight.originIata}"`}>{flight.originIata}</strong>
+          ) : (
+            <strong>???</strong>
+          )}
           {(() => {
             const displayed = withAirportSuffix(flight.originName || flight.originCity);
             return displayed ? (
@@ -560,7 +564,11 @@ export default function FlightCard({
           <div><b aria-hidden="true">AIR</b></div>
         </div>
         <div className="ta-route-point">
-          <strong>{flight.destinationIata || '???'}</strong>
+          {flight.destinationIata ? (
+            <strong className="ta-copy-target" onClick={() => silentCopy(flight.destinationIata)} title={`Copy "${flight.destinationIata}"`}>{flight.destinationIata}</strong>
+          ) : (
+            <strong>???</strong>
+          )}
           {(() => {
             const displayed = withAirportSuffix(flight.destinationName || flight.destinationCity);
             return displayed ? (

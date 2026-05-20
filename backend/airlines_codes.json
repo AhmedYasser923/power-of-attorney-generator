@@ -3013,13 +3013,7 @@
     "icao": "CHB",
     "country": "China"
   },
-  {
-    "name": "Air Dolomiti",
-    "iata": "NA",
-    "icao": "DLA",
-    "country": "Italy",
-    "reqs": "Ticket number"
-  },
+
   {
     "name": "Deutsche Luft Hansa",
     "iata": "DL",
