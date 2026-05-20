@@ -165,19 +165,22 @@ export function silentCopy(text) {
   }
 }
 
-export function getDateYearSource(flight) {
+export function getDateYearSource(flight, currentDate) {
   const raw = String(flight?.rawExtractedDate || '');
   const normalized = String(flight?.date || '');
+  const live = String(currentDate || '');
   const hasYear = (s) => /\d{4}/.test(s);
   if (hasYear(raw)) return 'document';
   if (hasYear(normalized)) return 'fallback';
+  if (hasYear(live)) return 'manual';
   return 'missing';
 }
 
-export function getDateSourceBadge(flight) {
-  const source = getDateYearSource(flight);
+export function getDateSourceBadge(flight, currentDate) {
+  const source = getDateYearSource(flight, currentDate);
   if (source === 'document')  return { label: 'From document',   tone: 'neutral' };
   if (source === 'fallback')  return { label: 'From year input', tone: 'warning' };
+  if (source === 'manual')    return { label: 'Manually set',    tone: 'neutral' };
   return { label: 'Year missing', tone: 'danger' };
 }
 

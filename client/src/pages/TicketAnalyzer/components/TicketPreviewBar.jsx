@@ -36,14 +36,6 @@ export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, mod
           </span>
           {analyzing && <div className="ticket-preview__progress" />}
         </div>
-        <button
-          aria-label="Clear all files"
-          className="ticket-preview__clear"
-          onClick={onClear}
-          type="button"
-        >
-          x
-        </button>
         <div className="ticket-preview__tier" role="radiogroup" aria-label="Analysis model">
           <button
             type="button"
@@ -76,6 +68,18 @@ export default function TicketPreviewBar({ analyzing, elapsedSeconds, files, mod
           type="button"
         >
           <img alt="" src="/images/gemini-color.svg" />
+        </button>
+        <button
+          aria-label="Clear all files"
+          className="ticket-preview__clear"
+          onClick={onClear}
+          title="Clear files"
+          type="button"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
         </button>
       </div>
     </div>

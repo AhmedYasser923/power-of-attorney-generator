@@ -308,18 +308,44 @@
 }
 
 .ticket-preview__clear {
-  width: 34px;
-  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 50%;
-  background: var(--bg-card);
+  background: transparent;
   color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 800;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.ticket-preview__clear svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .ticket-preview__clear:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
+  transform: rotate(90deg);
+}
+
+.ticket-preview__clear:active {
+  transform: rotate(90deg) scale(0.92);
+}
+
+.ticket-preview__clear:focus-visible {
+  outline: 2px solid rgba(239, 68, 68, 0.45);
+  outline-offset: 2px;
 }
 
 .ticket-preview__gemini {
@@ -1090,6 +1116,8 @@
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1, "ss01" 1;
 }
 
 .ta-flight-action-row__label small {
@@ -1342,6 +1370,34 @@
   opacity: 0.6;
 }
 
+.ta-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ta-ticket-number--missing {
+  border-style: dashed;
+  border-color: #303a4d;
+  background: transparent;
+}
+
+.ta-ticket-number--missing:disabled {
+  opacity: 1;
+}
+
+.ta-ticket-number__missing {
+  color: #6f7a8f;
+  font-style: italic;
+  font-weight: 600;
+}
+
 .ta-ticket-number--copied,
 .ta-ticket-number--copied:hover:not(:disabled) {
   animation: ta-ticket-copy-pulse 0.45s ease-out;
@@ -1396,9 +1452,22 @@
 
 .ta-doc-item__top {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+}
+
+.ta-doc-item__top > div:first-child {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.ta-doc-item__top .ta-doc-limit {
+  flex: 0 0 auto;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
 }
 
 .ta-doc-item strong {
@@ -1822,11 +1891,19 @@
   }
 }
 
+.ta-doc-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .ta-doc-item .ta-doc-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .ta-doc-item .ta-doc-chip {
@@ -1837,6 +1914,14 @@
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.ta-doc-item .ta-doc-chip--iata,
+.ta-doc-item .ta-doc-chip--icao {
+  font-family: var(--font-mono);
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1, "ss01" 1;
+  letter-spacing: 0.04em;
 }
 
 .ta-doc-item .ta-doc-chip--iata {
@@ -2184,15 +2269,25 @@
 }
 
 .ta-flight-action-row {
-  display: grid;
-  grid-template-columns: minmax(74px, 0.45fr) auto auto;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 0;
   border: 0;
   border-bottom: 1px solid #1b2230;
   border-radius: 0;
   background: transparent;
+}
+
+.ta-flight-action-row__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ta-flight-action-row__disabled-action,
+.ta-flight-action-row .ta-tracker-btn {
+  flex: 0 0 auto;
 }
 
 .ta-flight-action-row:last-child {
@@ -2209,82 +2304,53 @@
   white-space: nowrap;
 }
 
-.ta-tracker-menu {
-  position: relative;
-  display: inline-block;
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.ta-tracker-menu summary {
+.ta-tracker-btn {
   display: inline-flex;
-  min-height: 30px;
   align-items: center;
-  gap: 5px;
-  padding: 0 9px;
+  min-height: 30px;
+  padding: 0 10px;
   border: 1px solid #252c39;
   border-radius: 5px;
   background: #121720;
-  color: #8f98aa;
-  cursor: pointer;
-  list-style: none;
-  white-space: nowrap;
-}
-
-.ta-tracker-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.ta-tracker-menu summary::after {
-  content: "v";
-  color: #637086;
-  font-size: 8px;
-}
-
-.ta-tracker-menu[open] summary,
-.ta-tracker-menu summary:hover {
-  border-color: rgba(79, 124, 255, 0.34);
-  color: #b7c7eb;
-}
-
-.ta-tracker-menu__links {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 20;
-  display: grid;
-  min-width: 142px;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid #2a3242;
-  border-radius: 6px;
-  background: #0d121b;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
-}
-
-.ta-tracker-menu__links a {
-  padding: 7px 8px;
-  border-radius: 4px;
   color: #aeb9cb;
-  text-decoration: none;
-}
-
-.ta-tracker-menu__links a:hover {
-  background: rgba(79, 124, 255, 0.12);
-  color: #c7d7ff;
-}
-
-.ta-tracker-menu--disabled {
-  display: inline-flex;
-  min-height: 30px;
-  align-items: center;
-  padding: 0 9px;
-  border: 1px dashed #252c39;
-  border-radius: 5px;
-  color: #596579;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
   white-space: nowrap;
+  text-decoration: none;
+  transition: filter 0.12s ease, border-color 0.12s ease;
+}
+
+.ta-tracker-btn:hover {
+  filter: brightness(1.18);
+}
+
+.ta-tracker-btn--airportinfo {
+  border-color: rgba(79, 124, 255, 0.32);
+  background: rgba(79, 124, 255, 0.12);
+  color: #8eabff;
+}
+
+.ta-tracker-btn--flightstats {
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.12);
+  color: #74d496;
+}
+
+.ta-tracker-btn--flightera {
+  border-color: rgba(168, 85, 247, 0.32);
+  background: rgba(168, 85, 247, 0.14);
+  color: #c79bff;
+}
+
+.ta-tracker-btn--disabled {
+  border-style: dashed;
+  color: #596579;
+  cursor: not-allowed;
+}
+
+.ta-tracker-btn--disabled:hover {
+  filter: none;
 }
 
 .ta-flight-disclosure {
@@ -2332,17 +2398,6 @@
   }
 
   .ta-flight-card__header .ta-status-badge {
-    justify-self: start;
-  }
-
-  .ta-flight-action-row {
-    grid-template-columns: 1fr;
-  }
-
-  .ta-flight-action-row button,
-  .ta-tracker-menu,
-  .ta-tracker-menu summary,
-  .ta-tracker-menu--disabled {
     justify-self: start;
   }
 
@@ -2464,10 +2519,6 @@
   color: #687488;
 }
 
-.ta-flight-action-row {
-  grid-template-columns: minmax(74px, 1fr) auto auto;
-}
-
 .ta-flight-action-row button {
   width: max-content;
   min-width: 0;
@@ -2501,10 +2552,6 @@
     width: 100%;
   }
 
-  .ta-flight-action-row {
-    grid-template-columns: 1fr;
-  }
-
   .ta-detail {
     grid-template-columns: 82px minmax(0, 1fr);
   }
@@ -2512,7 +2559,7 @@
 
 .ta-flight-card__route,
 .ta-flight-card__times {
-  grid-template-columns: minmax(0, 1fr) minmax(82px, 112px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(56px, 88px) minmax(0, 2fr);
 }
 
 .ta-route-point span,
@@ -2520,7 +2567,9 @@
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .ta-route-point span {

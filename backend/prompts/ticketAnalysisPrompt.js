@@ -199,6 +199,15 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
 
     FLIGHT NUMBERS: Remove ALL spaces and hyphens within a number. "6E 2" → "6E2". Never split one number into two array items.
 
+    🔠 IATA PREFIX — GLYPH DISAMBIGUATION (CRITICAL):
+    Whenever you can identify the operating/marketing airline by name, you MUST verify the 2-character IATA prefix of every flight number against the canonical IATA code you know for that airline. If the OCR-extracted glyph and the canonical code disagree on a commonly-confused character pair, OVERWRITE the OCR with the canonical character. Pairs to watch:
+      • digit 0  ↔ letter O   (e.g. Norse Atlantic Airways is "N0…" not "NO…"; Norse Atlantic UK is "Z0…" not "ZO…")
+      • digit 1  ↔ letter I or letter l
+      • digit 5  ↔ letter S
+      • digit 8  ↔ letter B
+      • digit 2  ↔ letter Z
+    Rule of thumb: the airline NAME is the ground truth, not the visual glyph. If the document says "Norse Atlantic Airways" and the flight number looks like "NO379", output "N0379". Apply this to ALL airlines whose IATA code legitimately contains a digit/letter that OCR commonly misreads. Do NOT invent codes for airlines you cannot name — only correct when the name + canonical code are both certain.
+
     🏢 AIRPORT NAMES (originName / destinationName):
     Always output the FULL official airport name. Do NOT abbreviate, shorten, or use the IATA code as a name.
     ✅ CORRECT: "Zurich Airport", "John F. Kennedy International Airport", "Amsterdam Airport Schiphol", "Belgrade Nikola Tesla Airport", "Lisbon Humberto Delgado Airport"

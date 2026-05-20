@@ -65,9 +65,9 @@ function DateControl({ dateValue, onDateChange }) {
   if (editing) {
     return (
       <div className="ta-date-control ta-date-control--editing">
-        <label htmlFor={inputId}>Date</label>
+        <label className="ta-sr-only" htmlFor={inputId}>Date</label>
         <div className="ta-date-control__body">
-          <input id={inputId} onChange={(event) => setDraft(event.target.value)} type="date" value={draft} />
+          <input aria-label="Flight date" id={inputId} onChange={(event) => setDraft(event.target.value)} type="date" value={draft} />
           <button aria-label="Save date" disabled={!draft} onClick={saveDraft} title="Save date" type="button">
             {CHECK_ICON}
           </button>
@@ -83,7 +83,6 @@ function DateControl({ dateValue, onDateChange }) {
 
   return (
     <div className={`ta-date-control ta-date-control--${dateKind}`}>
-      <span>Date</span>
       <div className="ta-date-control__body">
         <strong>{dateLabel}</strong>
         <button
@@ -106,21 +105,18 @@ function TrackerLinks({ dateValue, flightNumber }) {
 
   if (!urls.airportInfo) {
     return (
-      <span className="ta-tracker-menu ta-tracker-menu--disabled" title="Set a complete date to enable trackers">
+      <span className="ta-tracker-btn ta-tracker-btn--disabled" title="Set a complete date to enable trackers">
         Trackers unavailable
       </span>
     );
   }
 
   return (
-    <details className="ta-tracker-menu">
-      <summary>Trackers</summary>
-      <span className="ta-tracker-menu__links">
-        <a href={urls.airportInfo} rel="noopener noreferrer" target="_blank">AirportInfo</a>
-        <a href={urls.flightStats} rel="noopener noreferrer" target="_blank">FlightStats</a>
-        <a href={urls.flightera} rel="noopener noreferrer" target="_blank">Flightera</a>
-      </span>
-    </details>
+    <>
+      <a className="ta-tracker-btn ta-tracker-btn--airportinfo" href={urls.airportInfo} rel="noopener noreferrer" target="_blank">AirportInfo</a>
+      <a className="ta-tracker-btn ta-tracker-btn--flightstats" href={urls.flightStats} rel="noopener noreferrer" target="_blank">FlightStats</a>
+      <a className="ta-tracker-btn ta-tracker-btn--flightera" href={urls.flightera} rel="noopener noreferrer" target="_blank">Flightera</a>
+    </>
   );
 }
 
@@ -160,16 +156,27 @@ function ClaimDocuments({ documents }) {
     const requirements = String(document.reqs || '').trim();
     return requirements && !isNoDocsRequired(document);
   }).length;
-  const documentLabel = documents.length === 1 ? 'document' : 'documents';
-  const meta = requiredDocumentCount > 0
-    ? `${requiredDocumentCount} of ${documents.length} required`
-    : `${documents.length} ${documentLabel} - no docs required`;
+  const buildMeta = () => {
+    const total = documents.length;
+    const required = requiredDocumentCount;
+
+    if (total === 1) {
+      return required === 1 ? 'Documents required' : 'No documents required';
+    }
+    if (required === 0) return `No documents required (${total} airlines)`;
+    if (required === total) {
+      return total === 2 ? 'Both airlines require docs' : `All ${total} airlines require docs`;
+    }
+    const verb = required === 1 ? 'requires' : 'require';
+    return `${required} of ${total} airlines ${verb} docs`;
+  };
+  const meta = buildMeta();
 
   return (
     <FlightCardDisclosure
       meta={meta}
       title="Claim documents"
-      tone={requiredDocumentCount > 0 ? 'warning' : 'clear'}
+      tone={requiredDocumentCount > 0 ? 'warning' : 'neutral'}
     >
       <div className="ta-doc-list">
         {documents.map((document, index) => {
@@ -179,19 +186,21 @@ function ClaimDocuments({ documents }) {
               <div className="ta-doc-item__top">
                 <div>
                   {document.role && <span className="ta-doc-role">{document.role}</span>}
-                  <strong>{document.airline}</strong>
-                  <div className="ta-doc-chips">
-                    {document.iata && <span className="ta-doc-chip ta-doc-chip--iata">IATA {document.iata}</span>}
-                    {document.icao && <span className="ta-doc-chip ta-doc-chip--icao">ICAO {document.icao}</span>}
-                    {document.ticketNumberCanReplacePnr && (
-                      <span className="ta-doc-chip ta-doc-chip--ticket-pnr">Ticket # replaces PNR</span>
-                    )}
-                    {document.oneTimeSubmission && (
-                      <span className="ta-doc-chip ta-doc-chip--one-time">One-time submission</span>
-                    )}
-                    {document.ceasedOperations && (
-                      <span className="ta-doc-chip ta-doc-chip--ceased">Ceased operations</span>
-                    )}
+                  <div className="ta-doc-headline">
+                    <strong>{document.airline}</strong>
+                    <div className="ta-doc-chips">
+                      {document.iata && <span className="ta-doc-chip ta-doc-chip--iata">IATA {document.iata}</span>}
+                      {document.icao && <span className="ta-doc-chip ta-doc-chip--icao">ICAO {document.icao}</span>}
+                      {document.ticketNumberCanReplacePnr && (
+                        <span className="ta-doc-chip ta-doc-chip--ticket-pnr">Ticket # replaces PNR</span>
+                      )}
+                      {document.oneTimeSubmission && (
+                        <span className="ta-doc-chip ta-doc-chip--one-time">One-time submission</span>
+                      )}
+                      {document.ceasedOperations && (
+                        <span className="ta-doc-chip ta-doc-chip--ceased">Ceased operations</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {document.hq && (
@@ -239,30 +248,44 @@ function PassengerTickets({ tickets }) {
     }
   };
 
+  const MISSING_TICKET_VALUES = new Set(['', 'not provided', 'n/a', 'unknown', '-', '--']);
+  const isMissingTicket = (value) => MISSING_TICKET_VALUES.has(String(value || '').trim().toLowerCase());
+
+  const missingCount = tickets.filter((ticket) => isMissingTicket(ticket.ticketNumber)).length;
+  const meta = missingCount > 0
+    ? `${tickets.length - missingCount} of ${tickets.length} provided`
+    : `${tickets.length} ${tickets.length === 1 ? 'ticket' : 'tickets'}`;
+
   return (
-    <FlightCardDisclosure meta={`${tickets.length} ${tickets.length === 1 ? 'ticket' : 'tickets'}`} title="Ticket numbers">
+    <FlightCardDisclosure meta={meta} tone={missingCount > 0 ? 'warning' : 'neutral'} title="Ticket numbers">
       <div className="ta-ticket-list">
         {tickets.map((ticket, index) => {
           const key = `${ticket.passengerName}-${ticket.ticketNumber}-${index}`;
           const passengerName = ticket.passengerName || 'Unknown';
-          const ticketNumber = ticket.ticketNumber || 'N/A';
-          const copyText = `${passengerName}: ${ticketNumber}`;
+          const missing = isMissingTicket(ticket.ticketNumber);
+          const ticketLabel = missing ? 'No ticket #' : ticket.ticketNumber;
+          const copyText = `${passengerName}: ${ticket.ticketNumber}`;
           const isCopied = copiedKey === key;
-          const disabled = !ticket.ticketNumber && !ticket.passengerName;
+          const className = [
+            'ta-ticket-number',
+            missing ? 'ta-ticket-number--missing' : '',
+            isCopied ? 'ta-ticket-number--copied' : ''
+          ].filter(Boolean).join(' ');
           return (
             <button
               type="button"
-              className={`ta-ticket-number${isCopied ? ' ta-ticket-number--copied' : ''}`}
+              className={className}
               key={key}
-              onClick={() => handleCopy(copyText, key)}
-              disabled={disabled}
-              title={disabled ? 'Nothing to copy' : `Copy "${copyText}"`}
+              onClick={() => !missing && handleCopy(copyText, key)}
+              disabled={missing}
+              title={missing ? 'No ticket number on file' : `Copy "${copyText}"`}
             >
               <strong
                 className="ta-copy-target"
                 onClick={(event) => { event.stopPropagation(); silentCopy(passengerName); }}
                 title={`Copy passenger name "${passengerName}"`}
-              >{passengerName}:</strong> {ticketNumber}
+              >{passengerName}:</strong>{' '}
+              <span className={missing ? 'ta-ticket-number__missing' : ''}>{ticketLabel}</span>
             </button>
           );
         })}
@@ -604,7 +627,7 @@ export default function FlightCard({
         <div className="ta-flight-card__date-cell">
           <DateControl dateValue={dateValue} onDateChange={setDateValue} />
           {(() => {
-            const dateSourceBadge = getDateSourceBadge(flight);
+            const dateSourceBadge = getDateSourceBadge(flight, dateValue);
             return (
               <span
                 className={`ta-status-badge ta-status-badge--${dateSourceBadge.tone} ta-date-source-badge`}
