@@ -6,7 +6,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd backend && npx nodemon app.js",
     "dev:client": "cd client && npm run dev",
-    "build:client": "cd client && npm run build"
+    "build:client": "cd client && npm run build",
+    "tunnel": "C:\\tools\\cloudflared.exe tunnel --url http://localhost:3000",
+    "share": "concurrently -k -n SERVER,TUNNEL -c blue,magenta \"npm start\" \"npm run tunnel\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

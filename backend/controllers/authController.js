@@ -11,22 +11,26 @@ const TOKEN_MAX_AGE_MS = TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: `${TOKEN_MAX_AGE_DAYS}d` });
 
-const cookieOptions = () => ({
+const isSecureRequest = (req) =>
+  Boolean(req && (req.secure || req.headers?.['x-forwarded-proto'] === 'https')) ||
+  process.env.NODE_ENV === 'production';
+
+const cookieOptions = (req) => ({
   expires: new Date(Date.now() + TOKEN_MAX_AGE_MS),
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: isSecureRequest(req),
   sameSite: 'lax'
 });
 
-const sendTokenCookie = (user, res) => {
-  res.cookie('jwt', signToken(user._id), cookieOptions());
+const sendTokenCookie = (user, res, req) => {
+  res.cookie('jwt', signToken(user._id), cookieOptions(req));
 };
 
-const clearTokenCookie = (res) => {
+const clearTokenCookie = (res, req) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecureRequest(req),
     sameSite: 'lax'
   });
 };
@@ -57,12 +61,12 @@ exports.bootstrapAdmin = async () => {
 };
 
 exports.logout = (req, res) => {
-  clearTokenCookie(res);
+  clearTokenCookie(res, req);
   res.redirect('/login');
 };
 
 exports.apiLogout = (req, res) => {
-  clearTokenCookie(res);
+  clearTokenCookie(res, req);
   res.status(200).json({ status: 'success' });
 };
 
@@ -101,7 +105,7 @@ exports.apiLogin = catchAsync(async (req, res, next) => {
     return res.status(403).json({ status: 'fail', message: 'Your account has been suspended. Contact an administrator.' });
   }
 
-  sendTokenCookie(user, res);
+  sendTokenCookie(user, res, req);
   User.findByIdAndUpdate(user._id, { lastSeen: new Date() }).exec();
 
   res.status(200).json({ status: 'success', data: { user: serializeUser(user) } });

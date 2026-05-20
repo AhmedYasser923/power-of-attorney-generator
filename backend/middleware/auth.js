@@ -48,7 +48,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // Sliding session: renew token if older than threshold
   const tokenAgeDays = (Date.now() / 1000 - decoded.iat) / 86400;
   if (tokenAgeDays > TOKEN_RENEW_AFTER_DAYS) {
-    sendTokenCookie(user, res);
+    sendTokenCookie(user, res, req);
   }
 
   req.user = user;
