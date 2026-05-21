@@ -8543,7 +8543,10 @@
     "iata": "UK",
     "icao": "VTI",
     "country": "India",
-    "reqs": "Merged with Air India. Send claim to Air India."
+    "reqs": "Merged with Air India. Send claim to Air India.",
+    "trackerSearchCodes": {
+      "flightStats": "VTI"
+    }
   },
   {
     "name": "Wasaya Airways",
