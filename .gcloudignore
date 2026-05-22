@@ -43,3 +43,5 @@ CLAUDE.md
 # OS noise
 .DS_Store
 Thumbs.db
+
+env.yaml
