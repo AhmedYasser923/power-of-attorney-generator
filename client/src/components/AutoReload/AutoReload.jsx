@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import './AutoReload.css';
 
-const POLL_INTERVAL_MS = 5000;
+const POLL_INTERVAL_MS = 60000;
 const CONFIRMS_REQUIRED = 3;
 const BANNER_VISIBLE_MS = 3000;
 

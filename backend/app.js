@@ -96,10 +96,11 @@ app.use('/api/auth/signup', signupLimiter);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 600,
   message: { status: 'fail', message: 'Too many requests. Please try again later.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req) => req.path === '/version' || req.path === '/health',
 });
 app.use('/api', apiLimiter);
 
