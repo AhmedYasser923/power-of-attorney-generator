@@ -1,0 +1,74 @@
+@keyframes auto-reload-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes auto-reload-bar {
+  from { width: 100%; }
+  to   { width: 0%;   }
+}
+
+.auto-reload-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+.auto-reload-overlay.is-visible {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.auto-reload-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 99999;
+  padding: 16px 24px;
+  border-radius: 14px;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #1e40af, #3D6EFA);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%) translateY(-120px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+  overflow: hidden;
+  min-width: 280px;
+}
+.auto-reload-toast.is-visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.auto-reload-toast__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auto-reload-toast__spinner {
+  flex-shrink: 0;
+  animation: auto-reload-spin 1.2s linear infinite;
+}
+
+.auto-reload-toast__title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.auto-reload-toast__subtitle {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 3px;
+}
+
+.auto-reload-toast__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 0 0 14px 14px;
+  animation: auto-reload-bar 3s linear forwards;
+}

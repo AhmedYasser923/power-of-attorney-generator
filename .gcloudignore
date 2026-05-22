@@ -1,0 +1,45 @@
+# gcloud-specific upload exclusions for `gcloud run deploy --source .`
+# When this file exists, gcloud stops auto-deriving from .gitignore, so list
+# anything we don't want uploaded to Cloud Build.
+
+# Honor common ignores too
+#!include:.gitignore
+
+# Node / build outputs
+node_modules/
+**/node_modules/
+client/dist/
+npm-debug.log
+*.log
+
+# Secrets — NEVER upload
+.env
+*.env
+config.env
+backend/config.env
+.flightstats_session.json
+
+# VCS / tooling
+.git/
+.github/
+.vscode/
+.idea/
+.claude/
+.specify/
+.opencode/
+.agent/
+
+# Dev/planning artifacts not needed in the image
+plans/
+orientation/
+specs/
+modifications/
+design_handoff_refly/
+announcments and email builder/
+overview.md
+design.md
+CLAUDE.md
+
+# OS noise
+.DS_Store
+Thumbs.db
