@@ -145,7 +145,7 @@ const spaFileExists = fs.existsSync(reactIndex);
 
 if (spaFileExists) {
   app.get('/{*path}', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/admin')) return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/admin/')) return next();
     res.sendFile(reactIndex);
   });
 }
