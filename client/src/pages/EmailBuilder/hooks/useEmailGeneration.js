@@ -21,8 +21,8 @@ const buildClipboardHtml = (text) => {
     .map((p) => escapeHtml(p).replace(/\n/g, '<br>'));
 
   const body = paragraphs
-    .map((content) => `<div dir="auto">${content}</div>`)
-    .join('<div dir="auto"><br></div>');
+    .map((content) => `<p dir="auto">${content}</p>`)
+    .join('<p dir="auto">&nbsp;</p>');
 
   return `<!doctype html><html><body>${body}</body></html>`;
 };
