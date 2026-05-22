@@ -18,13 +18,13 @@ const buildClipboardHtml = (text) => {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => {
-      const content = escapeHtml(p).replace(/\n/g, '<br>');
-      return `<p dir="auto" style="margin:0 0 12px;white-space:pre-wrap;">${content}</p>`;
-    })
-    .join('');
+    .map((p) => escapeHtml(p).replace(/\n/g, '<br>'));
 
-  return `<!doctype html><html><body>${paragraphs}</body></html>`;
+  const body = paragraphs
+    .map((content) => `<div dir="auto">${content}</div>`)
+    .join('<div dir="auto"><br></div>');
+
+  return `<!doctype html><html><body>${body}</body></html>`;
 };
 
 const copyTextWithHiddenTextarea = (text) => {
