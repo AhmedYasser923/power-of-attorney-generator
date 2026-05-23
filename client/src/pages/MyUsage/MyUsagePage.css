@@ -260,6 +260,48 @@
   color: #fbbf24;
 }
 
+.my-usage__op-pill[data-type="announcements"],
+.my-usage__op-pill[data-type="announcement_format"],
+.my-usage__op-pill[data-type="announcement_label"],
+.my-usage__op-pill[data-type="announcement_ask"] {
+  border-color: rgba(20, 184, 166, 0.27);
+  background: rgba(20, 184, 166, 0.08);
+  color: #5eead4;
+}
+
+.my-usage__op-pill[data-type="trackers"],
+.my-usage__op-pill[data-type="tracker_search"] {
+  border-color: rgba(236, 72, 153, 0.27);
+  background: rgba(236, 72, 153, 0.08);
+  color: #f9a8d4;
+}
+
+.my-usage__op-pill[data-type="doc_check"] {
+  border-color: rgba(251, 146, 60, 0.27);
+  background: rgba(251, 146, 60, 0.08);
+  color: #fdba74;
+}
+
+.my-usage__op-pill[data-type="iata_lookup"] {
+  border-color: rgba(56, 189, 248, 0.27);
+  background: rgba(56, 189, 248, 0.08);
+  color: #7dd3fc;
+}
+
+.my-usage__op-pill[data-type="jurisdiction"],
+.my-usage__op-pill[data-type="jurisdiction_check"] {
+  border-color: rgba(232, 121, 249, 0.27);
+  background: rgba(232, 121, 249, 0.08);
+  color: #f0abfc;
+}
+
+.my-usage__op-pill[data-type="ec261"],
+.my-usage__op-pill[data-type="ec261_calc"] {
+  border-color: rgba(163, 230, 53, 0.27);
+  background: rgba(163, 230, 53, 0.08);
+  color: #bef264;
+}
+
 .my-usage__op-pill[data-type="sig_processing"] {
   border-color: var(--accent-border);
   background: var(--accent-dim);

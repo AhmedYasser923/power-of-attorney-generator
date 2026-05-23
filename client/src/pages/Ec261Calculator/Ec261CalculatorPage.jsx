@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { searchAirports } from '../../api/ec261Calculator.js';
+import { logEc261Calc, searchAirports } from '../../api/ec261Calculator.js';
 import { calculateDistanceKm, getCompensation } from './ec261Utils.js';
 import './Ec261CalculatorPage.css';
 
@@ -166,11 +166,22 @@ export default function Ec261CalculatorPage() {
       destinationCountry: destination.country
     });
 
+    const originCode = (origin.iata || origin.value || '???').toUpperCase();
+    const destinationCode = (destination.iata || destination.value || '???').toUpperCase();
+
     setResult({
       ...compensation,
       distanceKm,
-      origin: (origin.iata || origin.value || '???').toUpperCase(),
-      destination: (destination.iata || destination.value || '???').toUpperCase()
+      origin: originCode,
+      destination: destinationCode
+    });
+
+    logEc261Calc({
+      origin: originCode,
+      destination: destinationCode,
+      distanceKm,
+      compensation: compensation?.amount || '',
+      band: compensation?.band || ''
     });
   };
 

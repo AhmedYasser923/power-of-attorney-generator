@@ -23,3 +23,12 @@ export async function loadTrackerOverrides() {
 export function getTrackerOverrides() {
   return cache || {};
 }
+
+export function logTrackerSearch({ flightNumber, date, trackers }) {
+  return fetch('/api/tools/log-tracker-search', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ flightNumber, date, trackers })
+  }).catch(() => {});
+}

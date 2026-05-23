@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   formatCountry,
   formatLimit,
@@ -6,6 +6,7 @@ import {
   JURISDICTION_LIMITS,
   normalizeCountry
 } from './jurisdictionData.js';
+import { logJurisdictionCheck } from '../../api/jurisdictionLog.js';
 import './JurisdictionCheckerPage.css';
 
 function JurisdictionResult({ query }) {
@@ -31,6 +32,21 @@ export default function JurisdictionCheckerPage() {
   const [country, setCountry] = useState('');
   const [open, setOpen] = useState(false);
   const matches = useMemo(() => getCountryMatches(country), [country]);
+  const lastLoggedRef = useRef(null);
+
+  useEffect(() => {
+    const normalized = normalizeCountry(country);
+    const hasResult = normalized && JURISDICTION_LIMITS[normalized] !== undefined;
+
+    if (!hasResult) {
+      lastLoggedRef.current = null;
+      return;
+    }
+    if (lastLoggedRef.current === normalized) return;
+
+    lastLoggedRef.current = normalized;
+    logJurisdictionCheck({ country: normalized });
+  }, [country]);
 
   const updateCountry = (value) => {
     setCountry(value);

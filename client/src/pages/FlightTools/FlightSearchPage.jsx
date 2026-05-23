@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { loadTrackerOverrides } from '../../api/trackerOverrides.js';
+import { loadTrackerOverrides, logTrackerSearch } from '../../api/trackerOverrides.js';
 import { getFlightSearchData, parseDateFromDisplay, parseFlightNumber } from './flightToolsUtils.js';
 import './FlightToolsPage.css';
 
@@ -114,6 +114,12 @@ export default function FlightSearchPage() {
 
     selectedTrackers.forEach((tracker) => {
       window.open(search.urls[tracker.key], '_blank', 'noopener');
+    });
+
+    logTrackerSearch({
+      flightNumber: search.flight.display,
+      date,
+      trackers: selectedTrackers.map((tracker) => tracker.key)
     });
 
     setMessage(`Opened ${selectedTrackers.map((tracker) => tracker.label).join(', ')} for ${search.flight.display}.`);

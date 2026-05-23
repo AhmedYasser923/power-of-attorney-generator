@@ -19,3 +19,12 @@ export const searchAirports = async ({ query, signal }) => {
 
   return parseJsonResponse(response);
 };
+
+export function logEc261Calc({ origin, destination, distanceKm, compensation, band }) {
+  return fetch('/api/tools/log-ec261-calc', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ origin, destination, distanceKm, compensation, band })
+  }).catch(() => {});
+}

@@ -3,18 +3,47 @@
 const {
   EMAIL_BUILDER_GROUP,
   EMAIL_BUILDER_OPERATION_TYPES,
+  ANNOUNCEMENT_GROUP,
+  ANNOUNCEMENT_OPERATION_TYPES,
+  TRACKERS_GROUP,
+  TRACKER_OPERATION_TYPES,
+  DOC_CHECK_GROUP,
+  DOC_CHECK_OPERATION_TYPES,
+  IATA_LOOKUP_GROUP,
+  IATA_LOOKUP_OPERATION_TYPES,
+  JURISDICTION_GROUP,
+  JURISDICTION_OPERATION_TYPES,
+  EC261_GROUP,
+  EC261_OPERATION_TYPES,
   OP_LABELS
 } = require('./constants');
 
-function addUsageGroupingFieldsStage() {
-  const isEmailBuilderUsage = { $in: ['$operationType', EMAIL_BUILDER_OPERATION_TYPES] };
+const USAGE_GROUPS = [
+  { group: EMAIL_BUILDER_GROUP, types: EMAIL_BUILDER_OPERATION_TYPES },
+  { group: ANNOUNCEMENT_GROUP, types: ANNOUNCEMENT_OPERATION_TYPES },
+  { group: TRACKERS_GROUP, types: TRACKER_OPERATION_TYPES },
+  { group: DOC_CHECK_GROUP, types: DOC_CHECK_OPERATION_TYPES },
+  { group: IATA_LOOKUP_GROUP, types: IATA_LOOKUP_OPERATION_TYPES },
+  { group: JURISDICTION_GROUP, types: JURISDICTION_OPERATION_TYPES },
+  { group: EC261_GROUP, types: EC261_OPERATION_TYPES }
+];
 
+const GROUP_NAMES = USAGE_GROUPS.map(({ group }) => group);
+const ALL_GROUPED_TYPES = USAGE_GROUPS.flatMap(({ types }) => types);
+
+function addUsageGroupingFieldsStage() {
   return {
     $addFields: {
       usageGroup: {
-        $cond: [isEmailBuilderUsage, EMAIL_BUILDER_GROUP, '$operationType']
+        $switch: {
+          branches: USAGE_GROUPS.map(({ group, types }) => ({
+            case: { $in: ['$operationType', types] },
+            then: group
+          })),
+          default: '$operationType'
+        }
       },
-      isEmailBuilderUsage
+      isGroupedUsage: { $in: ['$operationType', ALL_GROUPED_TYPES] }
     }
   };
 }
@@ -36,7 +65,7 @@ function getUsageBreakdownStages() {
 function getGroupedLogStages({ perUser = false } = {}) {
   const groupId = {
     usageGroup: '$usageGroup',
-    rawId: { $cond: ['$isEmailBuilderUsage', null, '$_id'] }
+    rawId: { $cond: ['$isGroupedUsage', null, '$_id'] }
   };
 
   if (perUser) {
@@ -70,10 +99,10 @@ function getGroupedLogStages({ perUser = false } = {}) {
       $project: {
         _id: {
           $cond: [
-            { $eq: ['$operationType', EMAIL_BUILDER_GROUP] },
+            { $in: ['$operationType', GROUP_NAMES] },
             {
               $concat: [
-                EMAIL_BUILDER_GROUP,
+                '$operationType',
                 ':',
                 { $toString: '$userId' },
                 ':',
@@ -100,7 +129,7 @@ function getGroupedLogStages({ perUser = false } = {}) {
         model: 1,
         metadata: {
           $cond: [
-            { $eq: ['$operationType', EMAIL_BUILDER_GROUP] },
+            { $in: ['$operationType', GROUP_NAMES] },
             {
               grouped: true,
               operationCount: '$operationCount',

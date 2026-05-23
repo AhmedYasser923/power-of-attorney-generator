@@ -24,7 +24,15 @@ const usageLogSchema = new mongoose.Schema({
       'barcode_decode',
       'sig_processing',
       'email_translation_sync',
-      'email_refinement'
+      'email_refinement',
+      'announcement_format',
+      'announcement_label',
+      'announcement_ask',
+      'tracker_search',
+      'doc_check',
+      'iata_lookup',
+      'jurisdiction_check',
+      'ec261_calc'
     ]
   },
   model: {

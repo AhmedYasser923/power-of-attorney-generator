@@ -24,9 +24,18 @@ const OP_LABELS = {
   email_translation: 'Email Translation',
   email_translation_sync: 'Email Translation Sync',
   email_refinement: 'Email Refinement',
+  announcements: 'Announcements',
   announcement_format: 'Announcement Format',
   announcement_label: 'Announcement Label',
   announcement_ask: 'Announcement Ask',
+  trackers: 'Trackers',
+  tracker_search: 'Tracker Search',
+  doc_check: 'Doc Check',
+  iata_lookup: 'IATA Lookup',
+  jurisdiction: 'Jurisdiction',
+  jurisdiction_check: 'Jurisdiction Check',
+  ec261: 'EC261 Calculator',
+  ec261_calc: 'EC261 Calculation',
   poa_standard: 'POA (Standard)',
   poa_lufthansa: 'POA (Lufthansa)',
   poa_aerlingus: 'POA (Aer Lingus)',
@@ -34,6 +43,16 @@ const OP_LABELS = {
   barcode_decode: 'Barcode Decode',
   sig_processing: 'Signature Processing'
 };
+
+const GROUPED_OPERATION_TYPES = new Set([
+  'email_builder',
+  'announcements',
+  'trackers',
+  'doc_check',
+  'iata_lookup',
+  'jurisdiction',
+  'ec261'
+]);
 
 function getEgyptDateParts(date = new Date()) {
   const egyptDate = new Date(date.getTime() + EGYPT_OFFSET_MS);
@@ -77,7 +96,7 @@ function formatOperationLabel(log) {
 function formatMetadata(log) {
   const metadata = log.metadata || {};
 
-  if (metadata.grouped || log.operationType === 'email_builder') {
+  if (metadata.grouped || GROUPED_OPERATION_TYPES.has(log.operationType)) {
     const groupedCount = Number(log.operationCount || metadata.operationCount || 1);
     return `${groupedCount} operation${groupedCount === 1 ? '' : 's'}`;
   }

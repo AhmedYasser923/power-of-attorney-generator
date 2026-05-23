@@ -16,7 +16,7 @@ const EmailReference   = require('../models/EmailReference');
 
 const MAX_REFERENCES = 3;
 const MAX_REFERENCE_WORDS = 2000;
-const ANNOUNCEMENT_MODEL = 'gemini-3-flash-preview';
+const ANNOUNCEMENT_MODEL = 'gemini-3.1-flash-lite';
 
 // ---------------------------------------------------------------------------
 // Template state builder — creates an optimized lookup structure
@@ -292,6 +292,11 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
     icao:    dbMatch?.icao    || 'N/A',
     country: dbMatch?.country || 'N/A',
   });
+
+  logUsage(req, {
+    operationType: 'doc_check',
+    metadata: { airline: displayAirline, hasDocs }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -345,6 +350,11 @@ exports.lookupIATA = (req, res, next) => {
     ].slice(0, 8);
 
     res.json(results);
+
+    logUsage(req, {
+      operationType: 'iata_lookup',
+      metadata: { query: q, resultCount: results.length }
+    });
   } catch (error) {
     next(error);
   }
@@ -377,6 +387,60 @@ const trackerOverridesMap = Object.fromEntries(
 exports.getTrackerOverrides = (req, res) => {
   res.json(trackerOverridesMap);
 };
+
+exports.logEc261Calc = catchAsync(async (req, res) => {
+  const origin = String(req.body.origin || '').trim().slice(0, 8);
+  const destination = String(req.body.destination || '').trim().slice(0, 8);
+  const distanceKm = Number(req.body.distanceKm);
+  const compensation = String(req.body.compensation || '').trim().slice(0, 32);
+  const band = String(req.body.band || '').trim().slice(0, 48);
+
+  if (!origin || !destination) return res.json({ success: true, logged: false });
+
+  await logUsage(req, {
+    operationType: 'ec261_calc',
+    metadata: {
+      origin,
+      destination,
+      distanceKm: Number.isFinite(distanceKm) ? distanceKm : null,
+      compensation: compensation || null,
+      band: band || null
+    }
+  });
+
+  res.json({ success: true, logged: true });
+});
+
+exports.logJurisdictionCheck = catchAsync(async (req, res) => {
+  const country = String(req.body.country || '').trim().slice(0, 64);
+  if (!country) return res.json({ success: true, logged: false });
+
+  await logUsage(req, {
+    operationType: 'jurisdiction_check',
+    metadata: { country }
+  });
+
+  res.json({ success: true, logged: true });
+});
+
+exports.logTrackerSearch = catchAsync(async (req, res) => {
+  const flightNumber = String(req.body.flightNumber || '').trim().slice(0, 16);
+  const date = String(req.body.date || '').trim().slice(0, 10);
+  const trackers = Array.isArray(req.body.trackers)
+    ? req.body.trackers.map((value) => String(value).trim()).filter(Boolean).slice(0, 12)
+    : [];
+
+  if (!flightNumber || !trackers.length) {
+    return res.json({ success: true, logged: false });
+  }
+
+  await logUsage(req, {
+    operationType: 'tracker_search',
+    metadata: { flightNumber, date, trackers, trackerCount: trackers.length }
+  });
+
+  res.json({ success: true, logged: true });
+});
 
 // ---------------------------------------------------------------------------
 // SMART EMAIL BUILDER
