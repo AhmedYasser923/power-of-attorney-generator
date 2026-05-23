@@ -16,7 +16,7 @@ const EmailReference   = require('../models/EmailReference');
 
 const MAX_REFERENCES = 3;
 const MAX_REFERENCE_WORDS = 2000;
-const ANNOUNCEMENT_MODEL = 'gemini-3.1-flash-lite';
+const ANNOUNCEMENT_MODEL = 'gemini-3-flash-preview';
 
 // ---------------------------------------------------------------------------
 // Template state builder — creates an optimized lookup structure
