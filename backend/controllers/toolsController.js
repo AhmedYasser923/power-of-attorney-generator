@@ -1,6 +1,7 @@
 'use strict';
 
 const airportsDatabase = require('../airports_data.json');
+const Announcement     = require('../models/Announcement');
 const EmailTemplate    = require('../models/EmailTemplate');
 const catchAsync = require('../utils/catchAsync');
 const AppError   = require('../utils/appError');
@@ -15,6 +16,7 @@ const EmailReference   = require('../models/EmailReference');
 
 const MAX_REFERENCES = 3;
 const MAX_REFERENCE_WORDS = 2000;
+const ANNOUNCEMENT_MODEL = 'gemini-3.1-flash-lite';
 
 // ---------------------------------------------------------------------------
 // Template state builder — creates an optimized lookup structure
@@ -380,7 +382,7 @@ exports.getTrackerOverrides = (req, res) => {
 // SMART EMAIL BUILDER
 // ---------------------------------------------------------------------------
 
-function logAiUsage(req, results, language, opType) {
+function collectGeminiUsage(results) {
   const totals = results.reduce((acc, r) => {
     const meta = r?.response?.usageMetadata || {};
     acc.iTok += meta.promptTokenCount || 0;
@@ -388,20 +390,123 @@ function logAiUsage(req, results, language, opType) {
     acc.tTok += meta.thoughtsTokenCount || 0;
     return acc;
   }, { iTok: 0, oTok: 0, tTok: 0 });
+
+  return totals;
+}
+
+function logGeminiUsage(req, results, operationType, modelName, metadata = {}) {
+  const totals = collectGeminiUsage(results);
   const { iTok, oTok, tTok } = totals;
-  const costUSD = calculateCost(MODELS.emailBuilder, {
+  const costUSD = calculateCost(modelName, {
     promptTokenCount: iTok,
     candidatesTokenCount: oTok,
     thoughtsTokenCount: tTok,
   }).costUSD;
   logUsage(req, {
-    operationType: opType || 'email_translation',
-    model: MODELS.emailBuilder,
+    operationType,
+    model: modelName,
     inputTokens: iTok,
     outputTokens: oTok + tTok,
     costUSD,
-    metadata: { language }
+    metadata
   });
+}
+
+function logAiUsage(req, results, language, opType) {
+  logGeminiUsage(
+    req,
+    results,
+    opType || 'email_translation',
+    MODELS.emailBuilder,
+    language ? { language } : {}
+  );
+}
+
+function stripCodeFence(value) {
+  return String(value || '').trim().replace(/^```[\w-]*\s*/, '').replace(/\s*```$/, '').trim();
+}
+
+function stripAnnouncementHtml(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanAnnouncementLabel(value) {
+  const label = stripAnnouncementHtml(value)
+    .replace(/^["']|["']$/g, '')
+    .replace(/[.]+$/g, '')
+    .trim();
+
+  return label && label.length <= 40 ? label : 'General';
+}
+
+function announcementSource(doc) {
+  return {
+    id: String(doc._id),
+    subject: doc.subject,
+    date: doc.date,
+    announcer: doc.announcer
+  };
+}
+
+function fallbackAnnouncementAnswer(answer = "Sorry, I couldn't generate an answer.") {
+  return {
+    answer,
+    sources: [],
+    supersededIds: [],
+    contradictions: [],
+    noMatch: true
+  };
+}
+
+function normalizeAnnouncementAskPayload(payload, announcements) {
+  if (!payload || typeof payload !== 'object') {
+    return fallbackAnnouncementAnswer();
+  }
+
+  const byId = new Map(announcements.map((a) => [String(a._id), a]));
+  const toKnownId = (value) => {
+    const id = typeof value === 'string' ? value : (value?.id || value?._id);
+    const normalized = String(id || '').trim();
+    return byId.has(normalized) ? normalized : '';
+  };
+  const uniqueKnownIds = (values) => [...new Set((Array.isArray(values) ? values : []).map(toKnownId).filter(Boolean))];
+
+  const noMatch = payload.noMatch === true;
+  const sourceIds = noMatch ? [] : uniqueKnownIds(payload.sources);
+  const sources = sourceIds.map((id) => announcementSource(byId.get(id)));
+  const supersededIds = uniqueKnownIds(payload.supersededIds);
+  const contradictions = (Array.isArray(payload.contradictions) ? payload.contradictions : [])
+    .map((item) => ({
+      summary: String(item?.summary || '').trim(),
+      ids: uniqueKnownIds(item?.ids)
+    }))
+    .filter((item) => item.summary || item.ids.length);
+  const answer = String(payload.answer || '').trim();
+
+  if (!answer) return fallbackAnnouncementAnswer();
+  if (noMatch) {
+    return {
+      answer,
+      sources: [],
+      supersededIds: [],
+      contradictions: [],
+      noMatch: true
+    };
+  }
+  if (!noMatch && !sources.length) return fallbackAnnouncementAnswer();
+
+  return {
+    answer,
+    sources,
+    supersededIds,
+    contradictions,
+    noMatch
+  };
 }
 
 exports.generateEmail = catchAsync(async (req, res, next) => {
@@ -693,6 +798,164 @@ exports.deleteEmailReference = catchAsync(async (req, res, next) => {
 
   const refs = await EmailReference.find().sort({ createdAt: -1 }).lean();
   res.json({ success: true, references: refs });
+});
+
+// ---------------------------------------------------------------------------
+// ANNOUNCEMENTS KNOWLEDGE BASE
+// ---------------------------------------------------------------------------
+
+exports.getAnnouncements = catchAsync(async (req, res) => {
+  const announcements = await Announcement.find().sort({ date: -1, createdAt: -1 }).lean();
+  res.json({ success: true, announcements });
+});
+
+exports.addAnnouncement = catchAsync(async (req, res, next) => {
+  const announcer = String(req.body.announcer || '').trim();
+  const date = String(req.body.date || '').trim();
+  const content = String(req.body.content || '').trim();
+
+  if (!announcer || !date || !content) {
+    return next(new AppError('announcer, date, and content are required', 400));
+  }
+
+  const model = genAI.getGenerativeModel({ model: ANNOUNCEMENT_MODEL });
+  const formatPrompt = `You are a text formatter. Your ONLY job is to add HTML formatting to the announcement text below.
+
+STRICT RULES:
+1. Do not change, add, or remove words. Every original word must appear exactly as written.
+2. Return only inner HTML. No <html>, <body>, <p>, markdown, or code fences.
+3. Allowed tags only: <strong>, <ul>, <li>, <br>, <span style="color:...">.
+4. Use <strong> for key names, deadlines, action items, or important phrases.
+5. If the text has multiple distinct points or steps, convert them into a <ul><li> list.
+6. Use <span style="color:#dc2626;font-weight:600"> for urgent or critical items.
+7. Use <span style="color:#2563eb"> for reference numbers, codes, dates, or technical terms.
+8. If the text is a single sentence with nothing to highlight, return it unchanged.
+
+Announcement text:
+"""
+${content}
+"""`;
+
+  let formatResult;
+  try {
+    formatResult = await geminiQueue.run(() => model.generateContent(formatPrompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Announcement formatting failed: ${err.message}`, 502));
+  }
+  logGeminiUsage(req, [formatResult], 'announcement_format', ANNOUNCEMENT_MODEL, { contentLength: content.length });
+
+  const formattedContent = stripCodeFence(formatResult.response.text()) || content;
+
+  const existingSubjects = await Announcement.distinct('subject');
+  const labelPrompt = `You are a categorization assistant. Given the announcement text below and the list of existing labels, assign this announcement to the best matching existing label OR create a short new one if none fit.
+
+EXISTING LABELS: ${existingSubjects.length ? existingSubjects.join(', ') : 'None yet'}
+
+ANNOUNCEMENT:
+"""
+${content}
+"""
+
+RULES:
+- Return ONLY the label text, no quotes, explanation, punctuation, or markdown.
+- Prefer reusing an existing label if the topic is close enough.
+- If creating a new label, use 1-3 words in Title Case.
+- Keep labels generic enough to apply to future similar announcements.
+- Examples: Policy Update, Schedule Change, System Maintenance, HR Notice, Training, Safety Alert`;
+
+  let labelResult;
+  try {
+    labelResult = await geminiQueue.run(() => model.generateContent(labelPrompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Announcement labeling failed: ${err.message}`, 502));
+  }
+  logGeminiUsage(req, [labelResult], 'announcement_label', ANNOUNCEMENT_MODEL, { contentLength: content.length });
+
+  const subject = cleanAnnouncementLabel(labelResult.response.text());
+  const announcement = await Announcement.create({ announcer, subject, date, content: formattedContent });
+
+  res.status(201).json({ success: true, announcement });
+});
+
+exports.askAnnouncements = catchAsync(async (req, res, next) => {
+  const question = String(req.body.question || '').trim();
+  if (!question) return next(new AppError('Question is required', 400));
+
+  const announcements = await Announcement.find().sort({ date: -1, createdAt: -1 }).lean();
+  if (!announcements.length) {
+    return res.json({
+      success: true,
+      ...fallbackAnnouncementAnswer('There are no announcements logged yet.')
+    });
+  }
+
+  const context = announcements
+    .map((a) => `${String(a._id)} | ${a.date} | ${a.announcer} | ${a.subject} | ${stripAnnouncementHtml(a.content)}`)
+    .join('\n');
+
+  const prompt = `You are an internal knowledge-base assistant for ReFly employees.
+
+Answer the user's question using ONLY the announcements below. The announcements are sorted newest-first and each line is:
+id | date | announcer | subject | content
+
+ANNOUNCEMENTS:
+${context}
+
+QUESTION:
+${question}
+
+Return STRICT JSON only. Do not include markdown fences or explanatory text outside JSON.
+
+JSON contract:
+{
+  "answer": "Plain-text answer redrafted for clarity.",
+  "sources": [
+    { "id": "<announcement id>", "subject": "...", "date": "YYYY-MM-DD", "announcer": "..." }
+  ],
+  "supersededIds": ["<older announcement id>"],
+  "contradictions": [
+    { "summary": "Earlier policy said X; updated policy says Y.", "ids": ["<old id>", "<new id>"] }
+  ],
+  "noMatch": false
+}
+
+Rules:
+- Use only facts present in the announcements. Do not infer policy beyond them.
+- If nothing relevant answers the question, set noMatch to true, use an apologetic one-sentence answer, and return empty sources, supersededIds, and contradictions.
+- If announcements conflict, prefer the newest relevant announcement and list older superseded announcement ids in supersededIds.
+- Every non-noMatch answer must cite at least one announcement in sources.
+- Source ids and contradiction ids must be exact ids from the announcement list.`;
+
+  const model = genAI.getGenerativeModel({ model: ANNOUNCEMENT_MODEL });
+  let result;
+  try {
+    result = await geminiQueue.run(() => model.generateContent(prompt));
+  } catch (err) {
+    if (isQuotaError(err)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
+    return next(new AppError(`Announcement answer failed: ${err.message}`, 502));
+  }
+  logGeminiUsage(req, [result], 'announcement_ask', ANNOUNCEMENT_MODEL, { questionLength: question.length });
+
+  let payload;
+  try {
+    payload = JSON.parse(stripCodeFence(result.response.text()));
+  } catch (_) {
+    payload = fallbackAnnouncementAnswer();
+  }
+
+  res.json({
+    success: true,
+    ...normalizeAnnouncementAskPayload(payload, announcements)
+  });
+});
+
+exports.deleteAnnouncement = catchAsync(async (req, res, next) => {
+  const deleted = await Announcement.findByIdAndDelete(req.params.id);
+  if (!deleted) return next(new AppError('Announcement not found', 404));
+
+  res.json({ success: true });
 });
 
 // ---------------------------------------------------------------------------

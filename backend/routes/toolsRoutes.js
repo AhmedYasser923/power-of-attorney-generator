@@ -23,6 +23,10 @@ router.delete('/api/tools/email-templates/:key',   restrictTo('admin'), toolsCon
 router.get('/api/tools/email-references',          toolsController.getEmailReferences);
 router.post('/api/tools/email-references',         restrictTo('admin'), toolsController.createEmailReference);
 router.delete('/api/tools/email-references/:id',   restrictTo('admin'), toolsController.deleteEmailReference);
+router.get('/api/tools/announcements',             toolsController.getAnnouncements);
+router.post('/api/tools/announcements',            restrictTo('admin'), userRateLimit, toolsController.addAnnouncement);
+router.delete('/api/tools/announcements/:id',      restrictTo('admin'), toolsController.deleteAnnouncement);
+router.post('/api/tools/announcements/ask',        userRateLimit, toolsController.askAnnouncements);
 router.post('/api/tools/sync-eoc',                 restrictTo('admin'), toolsController.syncEOC);
 
 module.exports = router;

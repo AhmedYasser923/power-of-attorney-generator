@@ -4,6 +4,7 @@ import reflyLogo from '../../assets/refly-logo.png';
 import './Sidebar.css';
 
 const toolItems = [
+  { href: '/tools#announcements', panel: 'announcements', icon: '\uD83D\uDCE2', label: 'Announcements' },
   { href: '/tools#ticket-analyzer', panel: 'ticket-analyzer', icon: '\uD83C\uDFAB', label: 'Ticket Analyzer' },
   { href: '/tools#barcode-decoder', panel: 'barcode-decoder', icon: <BarcodeIcon />, label: 'Barcode Decoder' },
   { href: '/tools#poa', panel: 'poa', icon: '\uD83D\uDCC4', label: 'POA Generator' },
