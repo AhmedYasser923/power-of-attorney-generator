@@ -277,7 +277,7 @@ export default function EocRadarPage() {
   return (
     <section className="eoc-radar" aria-labelledby="eoc-radar-title">
       <header className="eoc-radar__header">
-        <h1 id="eoc-radar-title">ROC Radar</h1>
+        <h1 id="eoc-radar-title">EOC Radar</h1>
         <p>Scan extraordinary circumstance records by flight date and route.</p>
       </header>
 

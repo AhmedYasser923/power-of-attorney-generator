@@ -9,7 +9,7 @@ const toolItems = [
   { href: '/tools#barcode-decoder', panel: 'barcode-decoder', icon: <BarcodeIcon />, label: 'Barcode Decoder' },
   { href: '/tools#poa', panel: 'poa', icon: '\uD83D\uDCC4', label: 'POA Generator' },
   { href: '/tools#flight-search', panel: 'flight-search', icon: '\u2708', label: 'External Trackers' },
-  { href: '/tools#eoc', panel: 'eoc', icon: '\u25CE', label: 'ROC Radar' },
+  { href: '/tools#eoc', panel: 'eoc', icon: '\u25CE', label: 'EOC Radar' },
   { href: '/tools#doc-check', panel: 'doc-check', icon: <DocCheckIcon />, label: 'Doc Check' },
   { href: '/tools#jurisdiction', panel: 'jurisdiction', icon: '\u2696', label: 'Jurisdiction' },
   { href: '/tools#iata', panel: 'iata', icon: <GlobeIcon />, label: 'IATA Lookup' },
