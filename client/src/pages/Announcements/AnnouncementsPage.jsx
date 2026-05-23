@@ -169,7 +169,6 @@ export default function AnnouncementsPage() {
       setAnswer({
         answer: payload.answer || '',
         sources: payload.sources || [],
-        supersededIds: payload.supersededIds || [],
         contradictions: payload.contradictions || [],
         noMatch: !!payload.noMatch
       });
@@ -223,18 +222,6 @@ export default function AnnouncementsPage() {
       setDeletingId('');
     }
   };
-
-  const supersededSources = (answer?.supersededIds || []).map((id) => {
-    const announcement = announcementsById.get(id);
-    return announcement
-      ? {
-          id,
-          subject: announcement.subject,
-          date: announcement.date,
-          announcer: announcement.announcer
-        }
-      : { id, subject: 'Superseded announcement', date: '', announcer: '' };
-  });
 
   return (
     <section className="announcements-page" aria-labelledby="announcements-title">
@@ -296,22 +283,6 @@ export default function AnnouncementsPage() {
                   <h3>Sources</h3>
                   <div>
                     {answer.sources.map((source) => (
-                      <SourceChip
-                        disabled={!announcementsById.has(source.id)}
-                        key={source.id}
-                        onClick={focusAnnouncement}
-                        source={source}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {supersededSources.length > 0 && (
-                <div className="announcement-superseded">
-                  <strong>Superseded by newer announcement</strong>
-                  <div>
-                    {supersededSources.map((source) => (
                       <SourceChip
                         disabled={!announcementsById.has(source.id)}
                         key={source.id}
