@@ -32,7 +32,7 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     RULE 1 - SELF-TRANSFER: if you see "Self-transfer" / "Separate tickets" → split at that layover, each chunk is an INDEPENDENT journey.
     RULE 2 - STANDARD CONNECTIONS: normal layovers without self-transfer keywords → keep in SAME journey.
     RULE 3 - ROUND TRIPS: A→B then B→A at later date → TWO journey objects (Outbound + Return).
-    RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey. If multiple passengers carry different PNRs for the same leg, output them comma-separated in leg.pnr WITHOUT name labels (e.g. "SNMAUJ, XYZ123"). Per-passenger ticket numbers belong in passengerTickets — do NOT duplicate them inside the pnr field.
+    RULE 4 - PASSENGER GROUPING: same flights, different PNRs → ONE journey. If multiple passengers carry different PNRs for the same leg, output them comma-separated in leg.pnr WITHOUT name labels (e.g. "SNMAUJ, XYZ123"). Per-passenger ticket numbers AND passenger-specific PNRs belong in passengerTickets; leg.pnr is only the leg-level summary.
     PRECEDENCE: Apply RULE 1 (self-transfer split) FIRST. Then classify each resulting independent journey as Outbound/Return. The "missed connections stay in Outbound" guidance above applies WITHIN a journey, not across self-transfer splits.
 
     🚨 CODESHARE RULE:
@@ -185,6 +185,8 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     PASSENGER & TICKET EXTRACTION:
        - Passengers Array: Extract each passenger and map their *primary/original* 13-digit e-ticket number in the top-level passenger array. E-tickets are universally 13 digits and purely numeric.
        - 🚨 PER-LEG TICKETS (CRITICAL): During reroutes or disruptions, airlines reissue new ticket numbers for specific flight legs! For EVERY SINGLE leg in the 'legs' array, you MUST populate 'passengerTickets' mapping each passenger's name to the exact 13-digit ticket number physically printed on the document for THAT specific leg. This ensures we track exactly which ticket got them on which plane.
+       - 🚨 PER-PASSENGER PNRs (CRITICAL): Each passengerTickets item MUST include passengerName, ticketNumber, and pnr. If three passengers are on the same flight but each has a different PNR, assign each PNR to the matching passenger in passengerTickets[].pnr. Do this even when ticketNumber is "Not Provided" so the frontend can still show/copy the passenger's PNR.
+       - If both ticketNumber and pnr are present for a passenger, they will be displayed/copied as "Passenger Name / Ticket Number / PNR". Keep those values separate in JSON; do not combine them into one field.
 
     🚨 PNR EXTRACTION & JOURNEY GROUPING (CRITICAL) : 
     - TRUE PNR: A standard airline PNR is usually 5 to 6 alphanumeric characters (or 7 for EasyJet). 

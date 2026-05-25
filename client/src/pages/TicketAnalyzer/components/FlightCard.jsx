@@ -221,7 +221,44 @@ function ClaimDocuments({ documents }) {
   );
 }
 
-function PassengerTickets({ tickets }) {
+const MISSING_TICKET_VALUES = new Set(['', 'not provided', 'n/a', 'unknown', '-', '--']);
+const CARRIER_PREFIXED_PNR_RE = /^[A-Za-z0-9]{2,3}\s*\/\s*[A-Za-z0-9]+$/;
+
+function isMissingTicket(value) {
+  return MISSING_TICKET_VALUES.has(String(value || '').trim().toLowerCase());
+}
+
+function normalizeTicketPnr(value) {
+  const formatted = formatPnr(value);
+  return formatted === '-' ? '' : formatted.replace(/^[A-Za-z0-9]{2,3}\s*\/\s*/, '');
+}
+
+function getPassengerPnrFallbacks(legPnr, passengerCount) {
+  if (passengerCount <= 0) return [];
+
+  const raw = String(legPnr || '').trim();
+  if (!normalizeTicketPnr(raw)) return [];
+
+  const rawTokens = raw
+    .split(/[,;]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  const tokens = rawTokens.length > 0 ? rawTokens : [raw];
+  const carrierPrefixedCount = tokens.filter((token) => CARRIER_PREFIXED_PNR_RE.test(token)).length;
+  if (tokens.length > 1 && carrierPrefixedCount > 0) return [];
+
+  const pnrs = tokens
+    .map(normalizeTicketPnr)
+    .filter(Boolean);
+
+  if (pnrs.length === 1) return Array(passengerCount).fill(pnrs[0]);
+  if (pnrs.length === passengerCount) return pnrs;
+
+  return [];
+}
+
+function PassengerTickets({ legPnr, tickets }) {
   const [copiedKey, setCopiedKey] = useState(null);
 
   if (!Array.isArray(tickets) || tickets.length === 0) return null;
@@ -248,27 +285,53 @@ function PassengerTickets({ tickets }) {
     }
   };
 
-  const MISSING_TICKET_VALUES = new Set(['', 'not provided', 'n/a', 'unknown', '-', '--']);
-  const isMissingTicket = (value) => MISSING_TICKET_VALUES.has(String(value || '').trim().toLowerCase());
+  const pnrFallbacks = getPassengerPnrFallbacks(legPnr, tickets.length);
+  const resolvedTickets = tickets.map((ticket, index) => {
+    const passengerName = String(ticket.passengerName || 'Unknown').trim() || 'Unknown';
+    const ticketNumber = String(ticket.ticketNumber || '').trim();
+    const ticketPnr = normalizeTicketPnr(ticket.pnr) || pnrFallbacks[index] || '';
+    const missing = isMissingTicket(ticket.ticketNumber);
 
-  const missingCount = tickets.filter((ticket) => isMissingTicket(ticket.ticketNumber)).length;
-  const meta = missingCount > 0
-    ? `${tickets.length - missingCount} of ${tickets.length} provided`
+    return {
+      passengerName,
+      ticketNumber,
+      ticketPnr,
+      missing,
+      ticketLabel: missing ? '' : ticketNumber
+    };
+  });
+  const passengerPnrs = resolvedTickets
+    .map((ticket) => ticket.ticketPnr)
+    .filter(Boolean);
+  const distinctPassengerPnrs = new Set(passengerPnrs);
+  const showPassengerPnrs = resolvedTickets.length > 1 && distinctPassengerPnrs.size > 1;
+  const missingCount = resolvedTickets.filter((ticket) => ticket.missing).length;
+  const pnrCount = passengerPnrs.length;
+  const ticketCount = tickets.length - missingCount;
+  const ticketMeta = missingCount > 0
+    ? `${ticketCount}/${tickets.length} tickets`
     : `${tickets.length} ${tickets.length === 1 ? 'ticket' : 'tickets'}`;
+  const meta = showPassengerPnrs
+    ? `${ticketMeta}, ${pnrCount}/${tickets.length} PNRs`
+    : ticketMeta;
+  const hasMissingPnr = showPassengerPnrs && pnrCount < tickets.length;
 
   return (
-    <FlightCardDisclosure meta={meta} tone={missingCount > 0 ? 'warning' : 'neutral'} title="Ticket numbers">
+    <FlightCardDisclosure meta={meta} tone={missingCount > 0 || hasMissingPnr ? 'warning' : 'neutral'} title="Ticket numbers">
       <div className="ta-ticket-list">
-        {tickets.map((ticket, index) => {
-          const key = `${ticket.passengerName}-${ticket.ticketNumber}-${index}`;
-          const passengerName = ticket.passengerName || 'Unknown';
-          const missing = isMissingTicket(ticket.ticketNumber);
-          const ticketLabel = missing ? 'No ticket #' : ticket.ticketNumber;
-          const copyText = `${passengerName}: ${ticket.ticketNumber}`;
+        {resolvedTickets.map((ticket, index) => {
+          const { passengerName, ticketNumber, ticketPnr, ticketLabel } = ticket;
+          const key = `${passengerName}-${ticketNumber}-${ticketPnr}-${showPassengerPnrs}-${index}`;
+          const displayItems = [passengerName];
+          if (ticketLabel) displayItems.push(ticketLabel);
+          if (showPassengerPnrs && ticketPnr) displayItems.push(ticketPnr);
+          const copyText = displayItems.join(' / ');
+          const copyable = displayItems.length > 1;
+          const disabledTitle = showPassengerPnrs ? 'No ticket number or PNR on file' : 'No ticket number on file';
           const isCopied = copiedKey === key;
           const className = [
             'ta-ticket-number',
-            missing ? 'ta-ticket-number--missing' : '',
+            !copyable ? 'ta-ticket-number--missing' : '',
             isCopied ? 'ta-ticket-number--copied' : ''
           ].filter(Boolean).join(' ');
           return (
@@ -276,16 +339,27 @@ function PassengerTickets({ tickets }) {
               type="button"
               className={className}
               key={key}
-              onClick={() => !missing && handleCopy(copyText, key)}
-              disabled={missing}
-              title={missing ? 'No ticket number on file' : `Copy "${copyText}"`}
+              onClick={() => copyable && handleCopy(copyText, key)}
+              disabled={!copyable}
+              title={copyable ? `Copy "${copyText}"` : disabledTitle}
             >
-              <strong
-                className="ta-copy-target"
-                onClick={(event) => { event.stopPropagation(); silentCopy(passengerName); }}
-                title={`Copy passenger name "${passengerName}"`}
-              >{passengerName}:</strong>{' '}
-              <span className={missing ? 'ta-ticket-number__missing' : ''}>{ticketLabel}</span>
+              <strong className="ta-ticket-number__passenger">{passengerName}</strong>
+              <span className="ta-ticket-number__separator">/</span>
+              {ticketLabel ? (
+                <span>{ticketLabel}</span>
+              ) : (
+                <span className="ta-ticket-number__missing">No ticket #</span>
+              )}
+              {showPassengerPnrs && (
+                <>
+                  <span className="ta-ticket-number__separator">/</span>
+                  {ticketPnr ? (
+                    <span className="ta-ticket-number__pnr">{ticketPnr}</span>
+                  ) : (
+                    <span className="ta-ticket-number__missing">No PNR</span>
+                  )}
+                </>
+              )}
             </button>
           );
         })}
@@ -695,7 +769,7 @@ export default function FlightCard({
       )}
 
       <div className="ta-flight-card__evidence">
-        <PassengerTickets tickets={flight.passengerTickets} />
+        <PassengerTickets legPnr={flight.pnr} tickets={flight.passengerTickets} />
         <ClaimDocuments documents={flight.claimDocuments} />
       </div>
 

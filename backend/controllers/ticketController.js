@@ -152,6 +152,60 @@ function classifyJourneys(journeys) {
   });
 }
 
+const MISSING_PNR_VALUES = new Set(['', 'not provided', 'unknown', 'n/a', 'none', 'null', '-', '--']);
+const CARRIER_PREFIXED_PNR_RE = /^[A-Za-z0-9]{2,3}\s*\/\s*[A-Za-z0-9]+$/;
+
+function isMissingPnr(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return MISSING_PNR_VALUES.has(normalized) || normalized.includes('scan');
+}
+
+function normalizePnrValue(value) {
+  const trimmed = String(value || '').trim();
+  if (isMissingPnr(trimmed)) return '';
+
+  return trimmed
+    .replace(/^[A-Za-z0-9]{2,3}\s*\/\s*/, '')
+    .toUpperCase();
+}
+
+function getPassengerPnrFallbacks(legPnr, passengerCount) {
+  if (isMissingPnr(legPnr) || passengerCount <= 0) return [];
+
+  const rawTokens = String(legPnr)
+    .split(/[,;]+/)
+    .map(token => token.trim())
+    .filter(Boolean);
+
+  if (rawTokens.length === 0) return [];
+
+  const carrierPrefixedCount = rawTokens.filter(token => CARRIER_PREFIXED_PNR_RE.test(token)).length;
+  if (rawTokens.length > 1 && carrierPrefixedCount > 0) return [];
+
+  const pnrs = rawTokens
+    .map(normalizePnrValue)
+    .filter(Boolean);
+
+  if (pnrs.length === 1) return Array(passengerCount).fill(pnrs[0]);
+  if (pnrs.length === passengerCount) return pnrs;
+
+  return [];
+}
+
+function normalizePassengerTicketPnrs(leg) {
+  if (!Array.isArray(leg.passengerTickets) || leg.passengerTickets.length === 0) return;
+
+  const fallbacks = getPassengerPnrFallbacks(leg.pnr, leg.passengerTickets.length);
+
+  leg.passengerTickets.forEach((ticket, index) => {
+    if (!ticket || typeof ticket !== 'object') return;
+
+    const existingPnr = normalizePnrValue(ticket.pnr);
+    const fallbackPnr = fallbacks[index] || '';
+    ticket.pnr = existingPnr || fallbackPnr || 'Not Provided';
+  });
+}
+
 // ---------------------------------------------------------------------------
 // ANALYZE TICKET
 // ---------------------------------------------------------------------------
@@ -272,6 +326,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     journey.routes.forEach(route => {
       if (!route.legs) return;
       route.legs.forEach(leg => {
+        normalizePassengerTicketPnrs(leg);
 
         // BUG FIX: Strip dates from time fields if AI contaminated them
         const timeFields = ['departureTime', 'arrivalTime', 'originalDepartureTime', 'originalArrivalTime'];

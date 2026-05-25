@@ -70,14 +70,15 @@ const TICKET_RESPONSE_SCHEMA = {
                   originalDate:          { type: SchemaType.STRING, description: "Date ONLY in YYYY-MM-DD format. Populate ONLY when the flight was moved to a DIFFERENT calendar day (e.g. originally 2026-03-29, now 2026-03-30). Otherwise omit or leave empty. NEVER include time or timezone." },
                   passengerTickets: {
                     type: SchemaType.ARRAY,
-                    description: "List of exactly which ticket numbers were used for this specific leg, mapped to each passenger's name.",
+                    description: "List of exactly which ticket numbers and PNRs were used for this specific leg, mapped to each passenger's name. Include one entry for each passenger on this leg even when the ticket number is missing.",
                     items: {
                       type: SchemaType.OBJECT,
                       properties: {
                         passengerName: { type: SchemaType.STRING },
-                        ticketNumber: { type: SchemaType.STRING }
+                        ticketNumber: { type: SchemaType.STRING },
+                        pnr: { type: SchemaType.STRING, description: 'Passenger-specific PNR for this leg. If multiple passengers have different PNRs on the same flight, map the exact PNR to the matching passenger. Output "Not Provided" if missing.' }
                       },
-                      required: ['passengerName', 'ticketNumber']
+                      required: ['passengerName', 'ticketNumber', 'pnr']
                     }
                   },
                   ec261Leg: {
