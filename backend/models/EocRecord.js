@@ -13,5 +13,7 @@ const eocRecordSchema = new mongoose.Schema({
 eocRecordSchema.index({ location: 1, date: 1 });
 // Index for date-only queries (ongoing issues)
 eocRecordSchema.index({ date: 1 });
+// Cursor pagination for the full EOC records list
+eocRecordSchema.index({ date: -1, _id: -1 });
 
 module.exports = mongoose.model('EocRecord', eocRecordSchema);

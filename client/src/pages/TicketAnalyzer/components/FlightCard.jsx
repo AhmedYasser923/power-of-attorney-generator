@@ -387,6 +387,29 @@ function EocStatus({ eoc }) {
   return <span className="ta-eoc ta-eoc--clear">No EOC found</span>;
 }
 
+function EocLifecycleRows({ event }) {
+  if (!/ongoing/i.test(String(event?.category || ''))) return null;
+
+  const startDate = event.lifecycle?.startDate || event.startDate || event.date || '';
+  const endDate = event.lifecycle?.endDate || event.endDate || '';
+  const note = event.lifecycle?.note || '';
+
+  return (
+    <>
+      <dt>Started</dt>
+      <dd>{startDate || 'Unknown'}</dd>
+      <dt>Status</dt>
+      <dd>{endDate ? `Ended ${endDate}` : 'Still ongoing'}</dd>
+      {note && (
+        <>
+          <dt>Closure note</dt>
+          <dd>{note}</dd>
+        </>
+      )}
+    </>
+  );
+}
+
 function RescheduleSummary({ flight }) {
   const change = flight.rescheduleChange;
   const legacyDep = !change && flight.originalDepartureTime && flight.originalDepartureTime !== '--:--'
@@ -787,6 +810,7 @@ export default function FlightCard({
               <dd>{event.location}</dd>
               <dt>Decision</dt>
               <dd>{event.decision}</dd>
+              <EocLifecycleRows event={event} />
             </dl>
           ))}
         </div>

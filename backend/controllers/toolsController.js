@@ -190,7 +190,13 @@ async function getReferenceContext() {
 }
 
 const EocRecord            = require('../models/EocRecord');
+const EocOngoingOverride   = require('../models/EocOngoingOverride');
 const { syncEocFromSheet } = require('../utils/syncEoc');
+const {
+  buildOngoingOverrideDocument,
+  buildOngoingOverrideKey,
+  isValidYmd,
+} = require('../utils/eocOverrideKey');
 
 // --- Shared data helpers (jurisdiction + airline docs) ---
 const {
@@ -225,6 +231,103 @@ exports.checkEOC = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.listEOCRecords = catchAsync(async (req, res) => {
+  const result = await eocService.listEOCRecords(req.query);
+  res.json(result);
+});
+
+function validateOngoingOverrideBody(body, requireEndDate) {
+  if (body.category && !/ongoing/i.test(String(body.category))) {
+    throw new AppError('Only ongoing EOC issues can be closed or reopened.', 400);
+  }
+
+  const doc = buildOngoingOverrideDocument(body);
+  if (!isValidYmd(doc.startDate)) {
+    throw new AppError('A valid ongoing issue start date is required.', 400);
+  }
+  if (!doc.locationKey || !doc.eventKey || !doc.decisionKey) {
+    throw new AppError('Ongoing issue location, event, and decision are required.', 400);
+  }
+
+  const endDate = String(body.endDate || '').trim();
+  if (requireEndDate) {
+    if (!isValidYmd(endDate)) {
+      throw new AppError('A valid end date is required.', 400);
+    }
+    if (endDate < doc.startDate) {
+      throw new AppError('End date cannot be before the ongoing issue start date.', 400);
+    }
+  }
+
+  return { doc, endDate };
+}
+
+function serializeEocOverride(doc) {
+  const override = doc?.toObject ? doc.toObject() : doc;
+
+  return {
+    startDate: override.startDate,
+    location: override.location,
+    event: override.event,
+    decision: override.decision,
+    endDate: override.endDate || '',
+    note: override.note || '',
+    closedAt: override.closedAt || null,
+    closedByName: override.closedByName || '',
+    reopenedAt: override.reopenedAt || null,
+  };
+}
+
+exports.closeEocOngoingIssue = catchAsync(async (req, res) => {
+  const { doc, endDate } = validateOngoingOverrideBody(req.body, true);
+  const note = String(req.body.note || '').trim();
+  const filter = buildOngoingOverrideKey(doc);
+
+  const override = await EocOngoingOverride.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        ...doc,
+        endDate,
+        note,
+        closedBy: req.user._id,
+        closedByName: req.user.name || '',
+        closedByEmail: req.user.email || '',
+        closedAt: new Date(),
+        reopenedAt: null,
+      },
+    },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+
+  res.json({ success: true, override: serializeEocOverride(override) });
+});
+
+exports.reopenEocOngoingIssue = catchAsync(async (req, res) => {
+  const { doc } = validateOngoingOverrideBody(req.body, false);
+  const note = String(req.body.note || '').trim();
+  const filter = buildOngoingOverrideKey(doc);
+
+  const override = await EocOngoingOverride.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        ...doc,
+        endDate: '',
+        note,
+        closedBy: null,
+        closedByName: '',
+        closedByEmail: '',
+        closedAt: null,
+        reopenedAt: new Date(),
+      },
+    },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+
+  res.json({ success: true, override: serializeEocOverride(override) });
+});
 
 // AIRPORT SEARCH
 // ---------------------------------------------------------------------------

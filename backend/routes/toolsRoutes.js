@@ -8,6 +8,7 @@ router.use('/api/tools', protect);
 
 router.get('/api/tools/flight-status',   toolsController.checkFlightStatus);
 router.get('/api/tools/check-eoc',       toolsController.checkEOC);
+router.get('/api/tools/eoc-records',     toolsController.listEOCRecords);
 router.get('/api/tools/search-airports', toolsController.searchAirports);
 router.get('/api/tools/check-docs',      toolsController.checkDocs);
 router.get('/api/tools/search-airlines', toolsController.searchAirlines);
@@ -31,5 +32,7 @@ router.post('/api/tools/announcements',            restrictTo('admin'), userRate
 router.delete('/api/tools/announcements/:id',      restrictTo('admin'), toolsController.deleteAnnouncement);
 router.post('/api/tools/announcements/ask',        userRateLimit, toolsController.askAnnouncements);
 router.post('/api/tools/sync-eoc',                 restrictTo('admin'), toolsController.syncEOC);
+router.put('/api/tools/eoc-ongoing-override',      restrictTo('admin'), toolsController.closeEocOngoingIssue);
+router.delete('/api/tools/eoc-ongoing-override',   restrictTo('admin'), toolsController.reopenEocOngoingIssue);
 
 module.exports = router;
