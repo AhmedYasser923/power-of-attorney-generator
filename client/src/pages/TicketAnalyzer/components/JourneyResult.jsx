@@ -52,14 +52,13 @@ function Ec261Summary({ journey }) {
 }
 
 export default function JourneyResult({
-  appliedYear,
   journey,
   journeyIndex,
+  onDateChange,
   onSelectChange,
   pnrColorMap,
   selectedFlights,
-  totalJourneys,
-  yearApplySignal
+  totalJourneys
 }) {
   let cardCounter = 0;
 
@@ -81,16 +80,15 @@ export default function JourneyResult({
             return (
               <FlightCard
                 animationIndex={animationIndex}
-                appliedYear={appliedYear}
                 flight={flight}
                 journeyIndex={journeyIndex}
                 key={cardId}
                 legIndex={legIndex}
+                onDateChange={onDateChange}
                 onSelectChange={onSelectChange}
                 pnrColorClass={pnrColorClass}
                 routeIndex={routeIndex}
                 selected={selectedFlights.has(cardId)}
-                yearApplySignal={yearApplySignal}
               />
             );
           })}

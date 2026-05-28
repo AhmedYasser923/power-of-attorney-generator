@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { checkEoc, checkFlightStatus } from '../../../api/ticketAnalyzer.js';
 import {
-  buildFullDate,
   buildTrackerURLs,
   classifyDate,
   formatLimit,
@@ -474,21 +473,20 @@ function formatPrintedReference(value) {
 
 export default function FlightCard({
   animationIndex = 0,
-  appliedYear,
   flight,
   journeyIndex,
   legIndex,
+  onDateChange,
   onSelectChange,
   routeIndex,
-  selected,
-  yearApplySignal
+  selected
 }) {
   const flightNumbers = useMemo(() => getFlightNumbers(flight), [flight]);
   const cardId = useMemo(
     () => getCardId({ journeyIndex, routeIndex, legIndex, flight }),
     [flight, journeyIndex, legIndex, routeIndex]
   );
-  const [dateValue, setDateValue] = useState(flight.date || '');
+  const dateValue = flight.date || '';
   const [eoc, setEoc] = useState({ loading: false, events: [], incomplete: true });
   const [statusResults, setStatusResults] = useState({});
 
@@ -516,13 +514,6 @@ export default function FlightCard({
     flightNumbers,
     id: cardId
   }), [cardId, dateValue, flightNumbers]);
-
-  useEffect(() => {
-    if (!yearApplySignal || !appliedYear || classifyDate(dateValue) !== 'partial') return;
-
-    const fullDate = buildFullDate(dateValue, appliedYear);
-    if (fullDate) setDateValue(fullDate);
-  }, [appliedYear, dateValue, yearApplySignal]);
 
   useEffect(() => {
     if (selected) {
@@ -699,9 +690,12 @@ export default function FlightCard({
 
       <div className="ta-flight-card__claim-row">
         <div className="ta-flight-card__date-cell">
-          <DateControl dateValue={dateValue} onDateChange={setDateValue} />
+          <DateControl
+            dateValue={dateValue}
+            onDateChange={(nextDate) => onDateChange(journeyIndex, routeIndex, legIndex, nextDate)}
+          />
           {(() => {
-            const dateSourceBadge = getDateSourceBadge(flight, dateValue);
+            const dateSourceBadge = getDateSourceBadge(flight);
             return (
               <span
                 className={`ta-status-badge ta-status-badge--${dateSourceBadge.tone} ta-date-source-badge`}

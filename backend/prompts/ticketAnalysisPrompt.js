@@ -5,12 +5,22 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
     You are an expert aviation data extractor. Analyze ALL the attached travel document(s). Try not to exceed 40s.
     ${yearDirective}
 
+    PDF VISUAL LAYOUT AUTHORITY:
+    Some booking confirmations and boarding passes are graphical PDFs. They may include extracted helper text, but
+    that text can be in the wrong order because PDF extraction flattens columns and left/right layout. When a PDF
+    visual attachment is present, treat the visible PDF layout as authoritative for origin/destination direction,
+    departure/arrival times, dates, PNRs, seats, and flight numbers. Use helper text only to search exact strings.
+    If helper text says "AUH MAD" but the visible layout shows MAD on the left/departure side and AUH on the
+    right/arrival side, output origin MAD and destination AUH.
+
     🚨 CROSS-DOCUMENT YEAR PROPAGATION (CRITICAL):
-    When multiple documents describe the SAME flight leg (same flight number + same route):
+    When multiple documents describe the SAME flight leg (same flight number + same route) OR the same passenger/PNR itinerary:
     - If one document shows a complete date WITH year (e.g. "25 Mar 2024") and another shows the SAME leg
       with only day/month (e.g. "25 Mar"), you MUST output the full YYYY-MM-DD date for that leg everywhere.
     - Scan ALL uploaded documents first, build a map of "flight number → full date", then use that map
       to fill in missing years across all documents before outputting JSON.
+    - For New Year trips, keep the itinerary chronological. Example: "28 Dec 2025" followed by "04 Jan"
+      should become 2025-12-28 and 2026-01-04.
 
   🧠 *THE ANALYTICAL FRAMEWORK (CHAIN OF THOUGHT)*
     Before populating the rest of the JSON, you must mentally process the documents using this exact sequence inside the _chronology_scratchpad field:

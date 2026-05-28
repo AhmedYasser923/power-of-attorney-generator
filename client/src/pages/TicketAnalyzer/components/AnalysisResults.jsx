@@ -8,12 +8,11 @@ import GroupSearchBar from './GroupSearchBar.jsx';
 import JourneyResult from './JourneyResult.jsx';
 
 export default function AnalysisResults({
-  appliedYear,
+  onDateChange,
   onClearSelection,
   onSelectChange,
   rawResult,
-  selectedFlights,
-  yearApplySignal
+  selectedFlights
 }) {
   const journeys = useMemo(() => normalizeJourneys(rawResult), [rawResult]);
   const pnrColorMap = useMemo(() => assignPnrColors(journeys), [journeys]);
@@ -57,15 +56,14 @@ export default function AnalysisResults({
 
       {journeys.map((journey, journeyIndex) => (
         <JourneyResult
-          appliedYear={appliedYear}
           journey={journey}
           journeyIndex={journeyIndex}
           key={`journey-${journeyIndex}`}
+          onDateChange={onDateChange}
           onSelectChange={onSelectChange}
           pnrColorMap={pnrColorMap}
           selectedFlights={selectedFlights}
           totalJourneys={journeys.length}
-          yearApplySignal={yearApplySignal}
         />
       ))}
 

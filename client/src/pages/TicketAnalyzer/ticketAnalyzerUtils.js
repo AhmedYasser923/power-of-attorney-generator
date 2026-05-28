@@ -62,6 +62,55 @@ export function hasFullDate(raw) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(raw || '').trim());
 }
 
+function makeIsoDate(year, month, day) {
+  const y = Number.parseInt(year, 10);
+  const m = Number.parseInt(month, 10);
+  const d = Number.parseInt(day, 10);
+
+  if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return null;
+  if (m < 1 || m > 12 || d < 1) return null;
+
+  const candidate = new Date(Date.UTC(y, m - 1, d));
+  if (
+    candidate.getUTCFullYear() !== y ||
+    candidate.getUTCMonth() !== m - 1 ||
+    candidate.getUTCDate() !== d
+  ) {
+    return null;
+  }
+
+  return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+function getMonthDayParts(raw) {
+  const value = String(raw || '').trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
+  if (!value || hasFullDate(value)) return null;
+
+  const dayMonth = value.match(/^(\d{1,2})\s+([A-Za-z]+)(?:\s+\d{4})?$/);
+  if (dayMonth && MONTH_LOOKUP[dayMonth[2].toLowerCase()]) {
+    return {
+      month: Number.parseInt(MONTH_LOOKUP[dayMonth[2].toLowerCase()], 10),
+      day: Number.parseInt(dayMonth[1], 10)
+    };
+  }
+
+  const monthDay = value.match(/^([A-Za-z]+)\s+(\d{1,2})(?:\s+\d{4})?$/);
+  if (monthDay && MONTH_LOOKUP[monthDay[1].toLowerCase()]) {
+    return {
+      month: Number.parseInt(MONTH_LOOKUP[monthDay[1].toLowerCase()], 10),
+      day: Number.parseInt(monthDay[2], 10)
+    };
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return {
+    month: parsed.getMonth() + 1,
+    day: parsed.getDate()
+  };
+}
+
 export function buildFullDate(partial, year) {
   const value = String(partial || '').trim();
   const y = String(year || '').trim();
@@ -165,22 +214,24 @@ export function silentCopy(text) {
   }
 }
 
-export function getDateYearSource(flight, currentDate) {
+export function getDateYearSource(flight) {
+  const source = String(flight?.dateYearSource || '').trim();
+  if (source) return source;
+
   const raw = String(flight?.rawExtractedDate || '');
   const normalized = String(flight?.date || '');
-  const live = String(currentDate || '');
   const hasYear = (s) => /\d{4}/.test(s);
   if (hasYear(raw)) return 'document';
-  if (hasYear(normalized)) return 'fallback';
-  if (hasYear(live)) return 'manual';
-  return 'missing';
+  if (hasYear(normalized)) return 'user-input';
+  return 'unresolved';
 }
 
-export function getDateSourceBadge(flight, currentDate) {
-  const source = getDateYearSource(flight, currentDate);
-  if (source === 'document')  return { label: 'From document',   tone: 'neutral' };
-  if (source === 'fallback')  return { label: 'From year input', tone: 'warning' };
-  if (source === 'manual')    return { label: 'Manually set',    tone: 'neutral' };
+export function getDateSourceBadge(flight) {
+  const source = getDateYearSource(flight);
+  if (source === 'document') return { label: 'From document', tone: 'neutral' };
+  if (source === 'document-propagated') return { label: 'From another document', tone: 'info' };
+  if (source === 'user-input') return { label: 'From year input', tone: 'warning' };
+  if (source === 'manual') return { label: 'Manually set', tone: 'neutral' };
   return { label: 'Year missing', tone: 'danger' };
 }
 
@@ -272,9 +323,77 @@ export function getPnrDiagnostics(journeys) {
 export function hasPartialDates(journeys) {
   return journeys.some((journey) =>
     (journey.routes || []).some((route) =>
-      (route.legs || []).some((leg) => classifyDate(leg.date) === 'partial')
+      (route.legs || []).some((leg) => leg.dateYearSource === 'unresolved' || classifyDate(leg.date) === 'partial')
     )
   );
+}
+
+function cloneJourneys(journeys) {
+  return journeys.map((journey) => ({
+    ...journey,
+    passengers: Array.isArray(journey.passengers)
+      ? journey.passengers.map((passenger) => ({ ...passenger }))
+      : journey.passengers,
+    routes: (journey.routes || []).map((route) => ({
+      ...route,
+      legs: (route.legs || []).map((leg) => ({ ...leg }))
+    }))
+  }));
+}
+
+function monthDayKey(parts) {
+  return parts.month * 100 + parts.day;
+}
+
+function getLegMonthDay(leg) {
+  return getMonthDayParts(leg.rawExtractedDate) || getMonthDayParts(leg.date);
+}
+
+export function applyYearToJourneys(journeys, year) {
+  const y = String(year || '').trim();
+  if (!/^\d{4}$/.test(y)) {
+    return { journeys, changed: false, unresolved: hasPartialDates(journeys) };
+  }
+
+  const nextJourneys = cloneJourneys(journeys);
+  const candidates = [];
+
+  nextJourneys.forEach((journey, journeyIndex) => {
+    (journey.routes || []).forEach((route, routeIndex) => {
+      (route.legs || []).forEach((leg, legIndex) => {
+        if (leg.dateYearSource !== 'unresolved' && classifyDate(leg.date) !== 'partial') return;
+
+        const parts = getLegMonthDay(leg);
+        candidates.push({ journeyIndex, routeIndex, legIndex, leg, parts });
+      });
+    });
+  });
+
+  let currentYear = Number.parseInt(y, 10);
+  let previousParts = null;
+  let changed = false;
+
+  candidates.forEach((candidate) => {
+    if (!candidate.parts) return;
+    if (previousParts && monthDayKey(candidate.parts) < monthDayKey(previousParts)) {
+      currentYear += 1;
+    }
+
+    const fullDate = makeIsoDate(currentYear, candidate.parts.month, candidate.parts.day);
+    if (!fullDate) return;
+
+    candidate.leg.date = fullDate;
+    candidate.leg.dateYearSource = 'user-input';
+    candidate.leg.dateYearApplied = String(currentYear);
+    changed = true;
+    previousParts = candidate.parts;
+  });
+
+  return {
+    journeys: nextJourneys,
+    changed,
+    unresolved: hasPartialDates(nextJourneys)
+  };
 }
 
 export function getPnrColorClass(pnr, pnrColorMap) {

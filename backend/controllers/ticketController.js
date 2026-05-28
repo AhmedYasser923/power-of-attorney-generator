@@ -1,9 +1,5 @@
 'use strict';
 
-const sharp    = require('sharp');
-const { PDFExtract } = require('pdf.js-extract');
-const pdfExtract = new PDFExtract();
-
 const catchAsync      = require('../utils/catchAsync');
 const AppError        = require('../utils/appError');
 const logUsage        = require('../utils/logUsage');
@@ -15,6 +11,8 @@ const flightStatusService = require('../services/flightStatusService');
 const eocService = require('../services/eocService');
 const TICKET_RESPONSE_SCHEMA = require('../schemas/ticketResponseSchema');
 const { buildTicketAnalysisPrompt } = require('../prompts/ticketAnalysisPrompt');
+const { resolveJourneyYears } = require('../utils/dateYearResolver');
+const { buildTicketDocumentParts } = require('../utils/ticketDocumentParts');
 const {
   isEUCountry,
   evaluateEC261Deterministic,
@@ -124,7 +122,7 @@ function classifyReschedule(leg) {
     // Promote / demote flightStatus (never override terminal statuses).
     if (!isTerminal) {
       if (wasRescheduled && !actuallyChanged) {
-        console.warn(`[RESCHEDULE CLASSIFIER] Demoting "Rescheduled" → "Scheduled" — no time/date diff detected. flightNumbers=${JSON.stringify(leg.flightNumbers)}`);
+        console.warn(`[RESCHEDULE CLASSIFIER] Demoting "Rescheduled" -> "Scheduled" - no time/date diff detected. flightNumbers=${JSON.stringify(leg.flightNumbers)}`);
         leg.flightStatus = 'Scheduled';
       } else if (!wasRescheduled && actuallyChanged) {
         leg.flightStatus = 'Rescheduled';
@@ -211,7 +209,8 @@ function normalizePassengerTicketPnrs(leg) {
 // ---------------------------------------------------------------------------
 exports.analyzeTicket = catchAsync(async (req, res, next) => {
   const files       = req.files && req.files.length > 0 ? req.files : [];
-  const journeyYear = req.body.journeyYear;
+  const rawJourneyYear = String(req.body.journeyYear || '').trim();
+  const journeyYear = /^\d{4}$/.test(rawJourneyYear) ? rawJourneyYear : '';
   const tier        = req.body.tier === 'advanced' ? 'advanced' : 'standard';
   const selectedModel = MODELS.ticketAnalysis[tier] || MODELS.ticketAnalysis.standard;
 
@@ -222,7 +221,7 @@ exports.analyzeTicket = catchAsync(async (req, res, next) => {
   let yearDirective = '';
   if (journeyYear) {
     yearDirective = `
-🚨 FALLBACK YEAR PROVIDED BY USER: ${journeyYear}
+FALLBACK YEAR PROVIDED BY USER: ${journeyYear}
 CRITICAL PRIORITY RULE:
 1. If the flight date EXPLICITLY shows a 4-digit year, use the year FROM THE DOCUMENT. NEVER replace it with ${journeyYear}.
 2. If the flight date shows ONLY day and month with NO year, THEN use ${journeyYear} and output "${journeyYear}-MM-DD".
@@ -232,28 +231,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
   const rawPrompt = buildTicketAnalysisPrompt(yearDirective, journeyYear);
   const prompt = rawPrompt.replace(/\s+/g, ' ').trim();
-  const documentParts = [];
-
-  for (const file of files) {
-    if (file.mimetype === 'application/pdf') {
-      try {
-        const data = await pdfExtract.extractBuffer(file.buffer);
-        const text = data.pages.map(p => p.content.map(i => i.str).join(' ')).join('\n').trim();
-        if (text.length > 100) {
-          console.log(`[PDF] Digital (${text.length} chars) → text part.`);
-          documentParts.push({ text: `[PDF text content]\n${text}` });
-        } else throw new Error(`Insufficient text (${text.length} chars)`);
-      } catch (pdfErr) {
-        console.log(`[PDF] Scanned → inlineData.`);
-        documentParts.push({ inlineData: { data: file.buffer.toString('base64'), mimeType: 'application/pdf' } });
-      }
-    } else if (file.mimetype.startsWith('image/')) {
-      const processed = await sharp(file.buffer).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 75 }).toBuffer();
-      documentParts.push({ inlineData: { data: processed.toString('base64'), mimeType: 'image/jpeg' } });
-    } else {
-      documentParts.push({ inlineData: { data: file.buffer.toString('base64'), mimeType: file.mimetype } });
-    }
-  }
+  const documentParts = await buildTicketDocumentParts(files);
 
   const startTime = Date.now();
   let result;
@@ -261,21 +239,21 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`⏳ Gemini API attempt ${attempt + 1}...`);
+      console.log(`Gemini API attempt ${attempt + 1}...`);
       result = await geminiQueue.run(() => model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }, ...documentParts] }],
         generationConfig: { responseMimeType: 'application/json', responseSchema: TICKET_RESPONSE_SCHEMA },
       }));
-      console.log('✅ Gemini response received.');
+      console.log('Gemini response received.');
       break;
     } catch (apiError) {
       if (attempt === maxRetries) {
-        console.error('🔥 GEMINI API CRASHED:', apiError);
+        console.error('GEMINI API CRASHED:', apiError);
         if (isQuotaError(apiError)) return next(new AppError('AI service is temporarily at capacity. Please try again in a moment.', 503));
         return next(new AppError(`AI Processing Failed after 3 attempts: ${apiError.message}`, 500));
       }
       const wait = (attempt + 1) * 2000;
-      console.warn(`[Gemini] ${apiError.message} — retry in ${wait/1000}s`);
+      console.warn(`[Gemini] ${apiError.message} - retry in ${wait/1000}s`);
       await new Promise(r => setTimeout(r, wait));
     }
   }
@@ -285,15 +263,15 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
   let costData = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, costUSD: 0 };
   const servedModel = result.response.modelVersion;
   if (servedModel && servedModel !== selectedModel) {
-    console.warn(`⚠️  [MODEL CHECK] Requested "${selectedModel}" (${tier}) but API served "${servedModel}"`);
+    console.warn(`[MODEL CHECK] Requested "${selectedModel}" (${tier}) but API served "${servedModel}"`);
   } else if (servedModel) {
-    console.log(`✓ [MODEL CHECK] Served by "${servedModel}" (${tier})`);
+    console.log(`[MODEL CHECK] Served by "${servedModel}" (${tier})`);
   }
 
   if (result.response.usageMetadata) {
     costData = calculateCost(selectedModel, result.response.usageMetadata);
     requestCostUSD = costData.costUSD;
-    console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | 📥 ${costData.inputTokens.toLocaleString()} in / 📤 ${costData.outputTokens.toLocaleString()} out / 💭 ${costData.thinkingTokens.toLocaleString()} think | 💸 $${requestCostUSD.toFixed(6)}\n`);
+    console.log(`\n========= ANALYZED IN ${processingTimeInSeconds}s | ${costData.inputTokens.toLocaleString()} in / ${costData.outputTokens.toLocaleString()} out / ${costData.thinkingTokens.toLocaleString()} think | $${requestCostUSD.toFixed(6)}\n`);
   }
 
   const formattedCostUSD = `$${requestCostUSD.toFixed(6)}`;
@@ -309,9 +287,12 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
     return res.json({ noFlightData: true, processingTime: processingTimeInSeconds, costUSD: formattedCostUSD, journeys: [] });
   }
 
-  // Deterministic reschedule classifier — must run BEFORE EC261 so the evaluator
-  // sees corrected flightStatus values. Safe-by-design (wrapped in try/catch
-  // per leg); a failure leaves the leg untouched.
+  // Resolve missing years deterministically before downstream date-dependent
+  // classification and claim-expiry calculations.
+  resolveJourneyYears(parsedJourneys, journeyYear);
+
+  // Deterministic reschedule classifier runs before EC261 so the evaluator sees
+  // corrected flightStatus values.
   classifyJourneys(parsedJourneys);
 
   // BUG 2 FIX: Run deterministic EC261 evaluator BEFORE per-leg post-processing.
@@ -338,9 +319,9 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
           // Detect ISO datetime format (e.g., "2026-03-29T11:59:00")
           const isoMatch = val.match(/T(\d{2}:\d{2})/);
           if (isoMatch) {
-            console.warn(`⚠️  [TIME SANITIZER] Detected ISO datetime in ${field}: "${val}"`);
+            console.warn(`[TIME SANITIZER] Detected ISO datetime in ${field}: "${val}"`);
             leg[field] = isoMatch[1];  // Extract time portion
-            console.warn(`    → Cleaned to: "${leg[field]}"`);
+            console.warn(`    -> Cleaned to: "${leg[field]}"`);
             return;
           }
 
@@ -356,7 +337,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
           const dateTimeMatch = val.match(/(\d{1,2}:\d{2})\s*(AM|PM)?$/i);
           if (dateTimeMatch && val.length > 10) {
             // If string is long and contains time at the end, extract just the time
-            console.warn(`⚠️  [TIME SANITIZER] Detected date+time mix in ${field}: "${val}"`);
+            console.warn(`[TIME SANITIZER] Detected date+time mix in ${field}: "${val}"`);
             let cleanTime = dateTimeMatch[1];
 
             // Handle AM/PM conversion if needed
@@ -370,7 +351,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
             }
 
             leg[field] = cleanTime;
-            console.warn(`    → Cleaned to: "${leg[field]}"`);
+            console.warn(`    -> Cleaned to: "${leg[field]}"`);
           }
         });
 
@@ -397,7 +378,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
           const dist = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
           leg.distanceKm = `${dist} km`;
           const isIntra = isEUCountry(leg.originCountry) && isEUCountry(leg.destinationCountry);
-          leg.ec261Leg.estimatedClaimValue = dist <= 1500 ? '€250' : (isIntra || dist <= 3500) ? '€400' : '€600';
+          leg.ec261Leg.estimatedClaimValue = dist <= 1500 ? '\u20ac250' : (isIntra || dist <= 3500) ? '\u20ac400' : '\u20ac600';
         } else { leg.distanceKm = 'Unknown'; leg.ec261Leg.estimatedClaimValue = 'N/A'; }
 
         const marketing = leg.marketingAirline || 'Unknown';
@@ -484,7 +465,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
           if (best > 0) {
             leg.ec261Leg.claimExpiration.bestYears   = best;
             leg.ec261Leg.claimExpiration.bestCountry = bestName;
-            if (leg.date && leg.date !== 'Unknown') {
+            if (leg.date && leg.date !== 'Unknown' && YMD_RE.test(String(leg.date).trim())) {
               const fd = new Date(leg.date);
               if (!isNaN(fd.getTime())) {
                 fd.setFullYear(fd.getFullYear() + best);
@@ -495,7 +476,7 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
                 leg.ec261Leg.claimExpiration.isExpired      = false;
               }
             } else {
-              // Date missing — expiry deferred to frontend date editor
+              // Date missing - expiry deferred to frontend date editor
               leg.ec261Leg.claimExpiration.expirationDate = 'N/A';
               leg.ec261Leg.claimExpiration.isExpired      = false;
             }
@@ -535,7 +516,7 @@ exports.checkEOC = async (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
-// FLIGHT STATUS (Cirium) — unchanged
+// FLIGHT STATUS (Cirium) - unchanged
 // ---------------------------------------------------------------------------
 exports.checkFlightStatus = async (req, res, next) => {
   const result = await flightStatusService.getFlightStatus(req.query);

@@ -4,11 +4,21 @@ import { loadTrackerOverrides } from '../../api/trackerOverrides.js';
 import AnalysisResults from './components/AnalysisResults.jsx';
 import TicketDropzone from './components/TicketDropzone.jsx';
 import TicketPreviewBar from './components/TicketPreviewBar.jsx';
-import { hasPartialDates, normalizeJourneys } from './ticketAnalyzerUtils.js';
+import {
+  applyYearToJourneys,
+  hasFullDate,
+  hasPartialDates,
+  normalizeJourneys
+} from './ticketAnalyzerUtils.js';
 import './TicketAnalyzerPage.css';
 
 function isValidYear(year) {
   return /^\d{4}$/.test(String(year || '').trim());
+}
+
+function withJourneys(rawResult, journeys) {
+  if (Array.isArray(rawResult)) return journeys;
+  return { ...rawResult, journeys };
 }
 
 export default function TicketAnalyzerPage({ isActive = true }) {
@@ -22,8 +32,6 @@ export default function TicketAnalyzerPage({ isActive = true }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [selectedFlights, setSelectedFlights] = useState(new Map());
-  const [appliedYear, setAppliedYear] = useState('');
-  const [yearApplySignal, setYearApplySignal] = useState(0);
   const [showApplyYear, setShowApplyYear] = useState(false);
 
   const journeys = useMemo(() => normalizeJourneys(rawResult), [rawResult]);
@@ -60,8 +68,6 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     setAnalyzing(false);
     setElapsedSeconds(0);
     setShowApplyYear(false);
-    setAppliedYear('');
-    setYearApplySignal(0);
   };
 
   const startTimer = () => {
@@ -92,8 +98,6 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     setSelectedFlights(new Map());
     setAnalyzing(true);
     setShowApplyYear(false);
-    setAppliedYear('');
-    setYearApplySignal(0);
     startTimer();
 
     try {
@@ -122,10 +126,50 @@ export default function TicketAnalyzerPage({ isActive = true }) {
     }
 
     setError('');
-    setAppliedYear(journeyYear.trim());
-    setYearApplySignal((current) => current + 1);
-    setShowApplyYear(false);
+    if (!rawResult || rawResult.noFlightData) return;
+
+    const result = applyYearToJourneys(journeys, journeyYear.trim());
+    if (result.changed) {
+      setRawResult(withJourneys(rawResult, result.journeys));
+    }
+
+    setShowApplyYear(result.unresolved);
+    if (!result.changed && result.unresolved) {
+      setError('Could not apply that year to one or more partial dates. Set those dates manually.');
+    }
   };
+
+  const updateFlightDate = useCallback((journeyIndex, routeIndex, legIndex, date) => {
+    setRawResult((current) => {
+      if (!current || current.noFlightData) return current;
+
+      const nextJourneys = normalizeJourneys(current).map((journey, currentJourneyIndex) => ({
+        ...journey,
+        routes: (journey.routes || []).map((route, currentRouteIndex) => ({
+          ...route,
+          legs: (route.legs || []).map((leg, currentLegIndex) => {
+            if (
+              currentJourneyIndex !== journeyIndex ||
+              currentRouteIndex !== routeIndex ||
+              currentLegIndex !== legIndex
+            ) {
+              return leg;
+            }
+
+            const nextDate = String(date || '').trim();
+            return {
+              ...leg,
+              date: nextDate,
+              dateYearSource: hasFullDate(nextDate) ? 'manual' : 'unresolved',
+              dateYearApplied: hasFullDate(nextDate) ? nextDate.slice(0, 4) : ''
+            };
+          })
+        }))
+      }));
+
+      return withJourneys(current, nextJourneys);
+    });
+  }, []);
 
   const updateSelection = useCallback((item, checked) => {
     setSelectedFlights((current) => {
@@ -184,12 +228,11 @@ export default function TicketAnalyzerPage({ isActive = true }) {
       )}
 
       <AnalysisResults
-        appliedYear={appliedYear}
+        onDateChange={updateFlightDate}
         onClearSelection={() => setSelectedFlights(new Map())}
         onSelectChange={updateSelection}
         rawResult={rawResult}
         selectedFlights={selectedFlights}
-        yearApplySignal={yearApplySignal}
       />
     </section>
   );
