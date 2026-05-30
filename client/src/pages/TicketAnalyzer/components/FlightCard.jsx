@@ -190,6 +190,9 @@ function ClaimDocuments({ documents }) {
                     <div className="ta-doc-chips">
                       {document.iata && <span className="ta-doc-chip ta-doc-chip--iata">IATA {document.iata}</span>}
                       {document.icao && <span className="ta-doc-chip ta-doc-chip--icao">ICAO {document.icao}</span>}
+                      {document.ticketPrefix && (
+                        <span className="ta-doc-chip ta-doc-chip--ticket-prefix">Ticket prefix {document.ticketPrefix}</span>
+                      )}
                       {document.ticketNumberCanReplacePnr && (
                         <span className="ta-doc-chip ta-doc-chip--ticket-pnr">Ticket # replaces PNR</span>
                       )}

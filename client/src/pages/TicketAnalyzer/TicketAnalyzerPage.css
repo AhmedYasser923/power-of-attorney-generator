@@ -1957,6 +1957,11 @@
   color: #c4b5fd;
 }
 
+.ta-doc-item .ta-doc-chip--ticket-prefix {
+  background: rgba(14, 165, 233, 0.15);
+  color: #67e8f9;
+}
+
 .ta-doc-item .ta-doc-chip--ticket-pnr {
   background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;

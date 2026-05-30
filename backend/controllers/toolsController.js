@@ -387,6 +387,7 @@ exports.checkDocs = catchAsync(async (req, res, next) => {
     airline: displayAirline,
     hasDocs,
     reqs: docInfo.reqs,
+    ticketPrefix: docInfo.ticketPrefix,
     ticketNumberCanReplacePnr: docInfo.ticketNumberCanReplacePnr,
     claimNote: docInfo.claimNote,
     oneTimeSubmission: docInfo.oneTimeSubmission,

@@ -21,6 +21,11 @@ function DocumentResult({ result }) {
           <div className="document-check-badges">
             <span className="document-check-badge document-check-badge--iata">IATA {result.iata || 'N/A'}</span>
             <span className="document-check-badge document-check-badge--icao">ICAO {result.icao || 'N/A'}</span>
+            {result.ticketPrefix && (
+              <span className="document-check-badge document-check-badge--ticket-prefix">
+                Ticket prefix {result.ticketPrefix}
+              </span>
+            )}
             {result.ticketNumberCanReplacePnr && (
               <span className="document-check-badge document-check-badge--ticket-pnr">
                 Ticket number can replace PNR

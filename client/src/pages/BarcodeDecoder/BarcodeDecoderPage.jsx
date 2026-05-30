@@ -85,6 +85,50 @@ const formatFileSize = (value) => {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const formatAirlineLabel = (airline) => {
+  if (!airline?.name) return '';
+  const code = airline.iata || airline.icao || '';
+  return [code, airline.name].filter(Boolean).join(' - ');
+};
+
+const formatTicketIssuer = (issuer) => {
+  if (!issuer?.prefix) return '';
+  if (!issuer.matchFound || !issuer.airlines?.length) return `${issuer.prefix} - Unknown prefix`;
+
+  const names = issuer.airlines
+    .map(formatAirlineLabel)
+    .filter(Boolean);
+
+  return `${issuer.prefix} - ${names.slice(0, 2).join(' / ')}${names.length > 2 ? ` +${names.length - 2}` : ''}`;
+};
+
+const formatPossibleYears = (dateCandidates) => {
+  const years = dateCandidates?.possibleYears;
+  if (!Array.isArray(years) || years.length === 0) return '';
+  return years.join(', ');
+};
+
+const formatMonthDay = (monthDay) => {
+  const match = String(monthDay || '').match(/^(\d{2})-(\d{2})$/);
+  if (!match) return '';
+
+  const date = new Date(Date.UTC(2001, Number(match[1]) - 1, Number(match[2])));
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' });
+};
+
+const formatDisplayDate = (parsed) => {
+  const dateCandidates = parsed?.dateCandidates;
+  const monthDay = formatMonthDay(dateCandidates?.visibleMonthDay);
+
+  if (monthDay && dateCandidates?.julianDate) {
+    return `${monthDay} / day ${dateCandidates.julianDate}`;
+  }
+
+  return parsed?.flightDate || '';
+};
+
 const extractTicketNumber = (result) => {
   if (result?.parsed?.eTicketNumber) return result.parsed.eTicketNumber;
 
@@ -107,14 +151,22 @@ const parsedFields = (result) => {
   const flight = [parsed.operatingCarrier, parsed.flightNumber].filter(Boolean).join(' ');
   const route = parsed.fromAirport && parsed.toAirport ? `${parsed.fromAirport}-${parsed.toAirport}` : '';
   const ticketNumber = extractTicketNumber(result);
+  const operatingAirline = formatAirlineLabel(parsed.operatingAirline);
+  const ticketIssuer = formatTicketIssuer(parsed.ticketIssuer);
+  const possibleYears = formatPossibleYears(parsed.dateCandidates);
+  const displayDate = formatDisplayDate(parsed);
 
   return [
     ['PNR', parsed.pnr],
     ['Passenger', parsed.passengerName],
     ['Route', route],
     ['Flight', flight],
-    ['Date', parsed.flightDate],
+    ['Airline', operatingAirline],
+    ['Date', displayDate],
+    ['Possible years', possibleYears],
     ['Ticket', ticketNumber],
+    ['Ticket issuer', ticketIssuer],
+    ['Ticket note', parsed.ticketExtraction?.warning],
   ].filter(([, value]) => value);
 };
 

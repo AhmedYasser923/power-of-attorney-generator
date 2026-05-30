@@ -21,7 +21,7 @@ const path = require('path');
 /** @type {Array<{country: string, years: number|null, note?: string}>} */
 const jurisdictionData = require(path.join(__dirname, '../jurisdiction_data.json'));
 
-/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string, oneTimeSubmission?: boolean, ceasedOperations?: boolean, trackerSearchCodes?: {airportInfo?: string, flightStats?: string, flightera?: string}}>} */
+/** @type {Array<{name: string, iata: string, icao: string, country: string, reqs?: string, ticketPrefix?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string, oneTimeSubmission?: boolean, ceasedOperations?: boolean, trackerSearchCodes?: {airportInfo?: string, flightStats?: string, flightera?: string}}>} */
 // The first entry of airlines_codes.json may be an in-file schema reference
 // (`__schema: true`). Filter it out so consumers see only real airline rows.
 const airlinesCodesData = require(path.join(__dirname, '../airlines_codes.json'))
@@ -125,7 +125,7 @@ function extractIataCandidates(flightNumbers) {
  *   3. Airline name contains the query (min 4 chars)
  *
  * @param {string} airlineName
- * @returns {{name: string, iata: string, icao: string, country: string, reqs?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string, oneTimeSubmission?: boolean, ceasedOperations?: boolean}|undefined}
+ * @returns {{name: string, iata: string, icao: string, country: string, reqs?: string, ticketPrefix?: string, ticketNumberCanReplacePnr?: boolean, claimNote?: string, oneTimeSubmission?: boolean, ceasedOperations?: boolean}|undefined}
  */
 function findAirlineDocRecord(airlineName) {
   if (!airlineName || airlineName === 'Unknown') return undefined;
@@ -225,7 +225,7 @@ function getAirlineReqs(airlineName) {
  *
  * @param {string} airlineName
  * @param {{flightNumbers?: string[], country?: string}} [options]
- * @returns {{reqs: string, ticketNumberCanReplacePnr: boolean, claimNote: string, oneTimeSubmission: boolean, ceasedOperations: boolean, iata: string, icao: string, country: string}}
+ * @returns {{reqs: string, ticketPrefix: string, ticketNumberCanReplacePnr: boolean, claimNote: string, oneTimeSubmission: boolean, ceasedOperations: boolean, iata: string, icao: string, country: string}}
  */
 function getAirlineDocInfo(airlineName, options) {
   const match = options && options.flightNumbers
@@ -234,6 +234,7 @@ function getAirlineDocInfo(airlineName, options) {
 
   return {
     reqs: match?.reqs || 'No documents required',
+    ticketPrefix: match?.ticketPrefix || '',
     ticketNumberCanReplacePnr: !!match?.ticketNumberCanReplacePnr,
     claimNote: match?.claimNote || '',
     oneTimeSubmission: !!match?.oneTimeSubmission,

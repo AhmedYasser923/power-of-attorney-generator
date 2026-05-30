@@ -8,6 +8,7 @@ const path = require('path');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const logUsage = require('../utils/logUsage');
+const { enrichBarcodeResult } = require('../utils/barcodeTicketEnrichment');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'decode_barcode.py');
 const DECODER_TIMEOUT_MS = Number(process.env.BARCODE_DECODER_TIMEOUT_MS || 30000);
@@ -80,7 +81,7 @@ exports.decodeBarcode = catchAsync(async (req, res, next) => {
 
   try {
     await fs.writeFile(tmpPath, req.file.buffer);
-    const result = await runDecoder(tmpPath);
+    const result = enrichBarcodeResult(await runDecoder(tmpPath));
     logUsage(req, {
       operationType: 'barcode_decode',
       costUSD: 0,
@@ -88,6 +89,8 @@ exports.decodeBarcode = catchAsync(async (req, res, next) => {
         success: Boolean(result.success),
         barcodeType: result.barcodeType || null,
         confidence: result.confidence || null,
+        ticketExtractionConfidence: result.parsed?.ticketExtraction?.confidence || null,
+        ticketPrefix: result.parsed?.ticketPrefix || null,
         reason: result.reason || null,
         attempts: result.diagnostics?.attempts || null,
         candidateCount: result.diagnostics?.candidateCount || null,
