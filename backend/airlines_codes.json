@@ -3208,7 +3208,10 @@
     "name": "Discover Airlines / Eurowings Discover",
     "iata": "4Y",
     "icao": "OCN",
-    "country": "Germany"
+    "country": "Germany",
+    "trackerSearchCodes": {
+      "flightStats": "4Y*"
+    }
   },
   {
     "name": "Discovery Airways",
@@ -5205,8 +5208,8 @@
     "name": "LATAM Brasil",
     "iata": "JJ",
     "icao": "TAM",
-    "country": "Brazil",
-    "reqs": "ID / Passport"
+    "country": "Brazil"
+   
   },
   {
     "name": "LATAM Chile",
@@ -5445,7 +5448,10 @@
     "icao": "LOG",
     "country": "United Kingdom",
     "claimNote": "PNR mandatory",
-    "ticketPrefix": "682"
+    "ticketPrefix": "682",
+    "trackerSearchCodes": {
+      "flightStats": "LOG"
+    }
   },
   {
     "name": "Longhao Airlines",
@@ -5479,14 +5485,10 @@
     "iata": "CL",
     "icao": "CLH",
     "country": "Germany",
-    "reqs": "Lufthansa POA (Ticket & Boarding pass needed later)"
-  },
-  {
-    "name": "Lufthansa Systems",
-    "iata": "L1",
-    "icao": "NA",
-    "country": "Germany",
-    "reqs": "Lufthansa POA (Ticket & Boarding pass needed later)"
+    "reqs": "Lufthansa POA (Ticket & Boarding pass needed later)",
+     "trackerSearchCodes": {
+      "flightStats": "LHX"
+    }
   },
   {
     "name": "Lufttransport",

@@ -28,27 +28,54 @@ const MONTH_LOOKUP = {
   january: 1,
   feb: 2,
   february: 2,
+  fev: 2,
+  fevr: 2,
+  fevrier: 2,
   mar: 3,
   march: 3,
+  mars: 3,
   apr: 4,
   april: 4,
+  avr: 4,
+  avril: 4,
   may: 5,
+  mai: 5,
   jun: 6,
   june: 6,
+  juin: 6,
   jul: 7,
   july: 7,
+  juil: 7,
+  juillet: 7,
   aug: 8,
   august: 8,
+  aout: 8,
   sep: 9,
   sept: 9,
   september: 9,
+  septembre: 9,
   oct: 10,
   october: 10,
+  octobre: 10,
   nov: 11,
   november: 11,
+  novembre: 11,
   dec: 12,
-  december: 12
+  december: 12,
+  decembre: 12
 };
+
+const MONTH_TOKEN_RE = '([\\p{L}.]+)';
+const DATE_PART_SEPARATOR_RE = '[\\s/.-]+';
+
+function normalizeMonthName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\./g, '');
+}
 
 function cleanValue(value) {
   return String(value || '')
@@ -96,7 +123,7 @@ function partsFromNumeric(year, month, day) {
 }
 
 function partsFromText(day, monthName, year) {
-  const month = MONTH_LOOKUP[String(monthName || '').toLowerCase()];
+  const month = MONTH_LOOKUP[normalizeMonthName(monthName)];
   if (!month) return null;
 
   const parsedDay = Number.parseInt(day, 10);
@@ -120,22 +147,22 @@ function parseDateParts(value) {
   let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T.*)?$/);
   if (match) return partsFromNumeric(match[1], match[2], match[3]);
 
-  match = text.match(/^(\d{4})[/.](\d{1,2})[/.](\d{1,2})$/);
+  match = text.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
   if (match) return partsFromNumeric(match[1], match[2], match[3]);
 
-  match = text.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/);
+  match = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
   if (match) return partsFromNumeric(match[3], match[2], match[1]);
 
-  match = text.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+  match = text.match(new RegExp(`^(\\d{1,2})${DATE_PART_SEPARATOR_RE}${MONTH_TOKEN_RE}${DATE_PART_SEPARATOR_RE}(\\d{4})$`, 'u'));
   if (match) return partsFromText(match[1], match[2], match[3]);
 
-  match = text.match(/^([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})$/);
+  match = text.match(new RegExp(`^${MONTH_TOKEN_RE}${DATE_PART_SEPARATOR_RE}(\\d{1,2})${DATE_PART_SEPARATOR_RE}(\\d{4})$`, 'u'));
   if (match) return partsFromText(match[2], match[1], match[3]);
 
-  match = text.match(/^(\d{1,2})\s+([A-Za-z]+)$/);
+  match = text.match(new RegExp(`^(\\d{1,2})${DATE_PART_SEPARATOR_RE}${MONTH_TOKEN_RE}$`, 'u'));
   if (match) return partsFromText(match[1], match[2]);
 
-  match = text.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+  match = text.match(new RegExp(`^${MONTH_TOKEN_RE}${DATE_PART_SEPARATOR_RE}(\\d{1,2})$`, 'u'));
   if (match) return partsFromText(match[2], match[1]);
 
   return null;

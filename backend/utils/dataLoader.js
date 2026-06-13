@@ -225,7 +225,7 @@ function getAirlineReqs(airlineName) {
  *
  * @param {string} airlineName
  * @param {{flightNumbers?: string[], country?: string}} [options]
- * @returns {{reqs: string, ticketPrefix: string, ticketNumberCanReplacePnr: boolean, claimNote: string, oneTimeSubmission: boolean, ceasedOperations: boolean, iata: string, icao: string, country: string}}
+ * @returns {{name: string, reqs: string, ticketPrefix: string, ticketNumberCanReplacePnr: boolean, claimNote: string, oneTimeSubmission: boolean, ceasedOperations: boolean, iata: string, icao: string, country: string}}
  */
 function getAirlineDocInfo(airlineName, options) {
   const match = options && options.flightNumbers
@@ -233,6 +233,7 @@ function getAirlineDocInfo(airlineName, options) {
     : findAirlineDocRecord(airlineName);
 
   return {
+    name: match?.name || airlineName || '',
     reqs: match?.reqs || 'No documents required',
     ticketPrefix: match?.ticketPrefix || '',
     ticketNumberCanReplacePnr: !!match?.ticketNumberCanReplacePnr,

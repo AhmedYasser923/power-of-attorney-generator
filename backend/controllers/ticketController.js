@@ -13,6 +13,7 @@ const TICKET_RESPONSE_SCHEMA = require('../schemas/ticketResponseSchema');
 const { buildTicketAnalysisPrompt } = require('../prompts/ticketAnalysisPrompt');
 const { resolveJourneyYears } = require('../utils/dateYearResolver');
 const { buildTicketDocumentParts } = require('../utils/ticketDocumentParts');
+const { buildClaimDocuments } = require('../utils/claimDocuments');
 const {
   isEUCountry,
   evaluateEC261Deterministic,
@@ -23,8 +24,6 @@ const airportsDatabase = require('../airports_data.json');
 
 const {
   getJurisdictionLimit,
-  getJurisdictionYears,
-  getAirlineDocInfo,
 } = require('../utils/dataLoader');
 
 // ---------------------------------------------------------------------------
@@ -385,63 +384,8 @@ The user-supplied year ${journeyYear} is a safety net, NOT an override. Document
         const operating = leg.operatingAirline || marketing;
         const opCo = (leg.operatingAirlineCountry||'').toLowerCase().trim(), opLimRaw = getJurisdictionLimit(opCo);
         const mktCo = (leg.marketingAirlineCountry||'').toLowerCase().trim(), mktLimRaw = getJurisdictionLimit(mktCo);
-        const dispOp  = leg.operatingAirlineCountry && leg.operatingAirlineCountry !== 'Unknown' ? leg.operatingAirlineCountry : 'Unknown HQ';
-        const dispMkt = leg.marketingAirlineCountry && leg.marketingAirlineCountry !== 'Unknown' ? leg.marketingAirlineCountry : 'Unknown HQ';
 
-        const mktInfo = getAirlineDocInfo(marketing, {
-          flightNumbers: leg.flightNumbers,
-          country: leg.marketingAirlineCountry,
-        });
-        const opInfo  = getAirlineDocInfo(operating, {
-          flightNumbers: leg.flightNumbers,
-          country: leg.operatingAirlineCountry,
-        });
-
-        leg.claimDocuments = marketing === operating
-          ? [{
-              airline: marketing,
-              role: '',
-              reqs: mktInfo.reqs,
-              hq: dispOp,
-              limit: opLimRaw !== 'N/A' ? `${opLimRaw} years` : 'N/A',
-              iata: mktInfo.iata,
-              icao: mktInfo.icao,
-              ticketPrefix: mktInfo.ticketPrefix,
-              ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
-              claimNote: mktInfo.claimNote,
-              oneTimeSubmission: mktInfo.oneTimeSubmission,
-              ceasedOperations: mktInfo.ceasedOperations,
-            }]
-          : [
-              {
-                airline: marketing,
-                role: 'Booked',
-                reqs: mktInfo.reqs,
-                hq: dispMkt,
-                limit: mktLimRaw !== 'N/A' ? `${mktLimRaw} years` : 'N/A',
-                iata: mktInfo.iata,
-                icao: mktInfo.icao,
-                ticketPrefix: mktInfo.ticketPrefix,
-                ticketNumberCanReplacePnr: mktInfo.ticketNumberCanReplacePnr,
-                claimNote: mktInfo.claimNote,
-                oneTimeSubmission: mktInfo.oneTimeSubmission,
-                ceasedOperations: mktInfo.ceasedOperations,
-              },
-              {
-                airline: operating,
-                role: 'Operated',
-                reqs: opInfo.reqs,
-                hq: dispOp,
-                limit: opLimRaw  !== 'N/A' ? `${opLimRaw} years`  : 'N/A',
-                iata: opInfo.iata,
-                icao: opInfo.icao,
-                ticketPrefix: opInfo.ticketPrefix,
-                ticketNumberCanReplacePnr: opInfo.ticketNumberCanReplacePnr,
-                claimNote: opInfo.claimNote,
-                oneTimeSubmission: opInfo.oneTimeSubmission,
-                ceasedOperations: opInfo.ceasedOperations,
-              },
-            ];
+        leg.claimDocuments = buildClaimDocuments(leg);
 
         if (leg.ec261Leg?.claimExpiration) {
           const oL = getJurisdictionLimit((leg.originCountry||'').toLowerCase().trim());

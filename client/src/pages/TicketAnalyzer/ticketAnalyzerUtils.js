@@ -17,26 +17,58 @@ const MONTH_LOOKUP = {
   january: '01',
   feb: '02',
   february: '02',
+  fev: '02',
+  fevr: '02',
+  fevrier: '02',
   mar: '03',
   march: '03',
+  mars: '03',
   apr: '04',
   april: '04',
+  avr: '04',
+  avril: '04',
   may: '05',
+  mai: '05',
   jun: '06',
   june: '06',
+  juin: '06',
   jul: '07',
   july: '07',
+  juil: '07',
+  juillet: '07',
   aug: '08',
   august: '08',
+  aout: '08',
   sep: '09',
+  sept: '09',
   september: '09',
+  septembre: '09',
   oct: '10',
   october: '10',
+  octobre: '10',
   nov: '11',
   november: '11',
+  novembre: '11',
   dec: '12',
-  december: '12'
+  december: '12',
+  decembre: '12'
 };
+
+const MONTH_TOKEN_RE = '([\\p{L}.]+)';
+const DATE_PART_SEPARATOR_RE = '[\\s/.-]+';
+
+function normalizeMonthName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\./g, '');
+}
+
+function lookupMonth(value) {
+  return MONTH_LOOKUP[normalizeMonthName(value)];
+}
 
 const VALID_PNR_MISSING = new Set(['not provided', 'unknown']);
 
@@ -44,16 +76,16 @@ export function normalizeJourneys(raw) {
   const payload = raw?.journeys || raw;
 
   if (!payload) return [];
-  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload)) return normalizeJourneyDates(payload);
 
-  return [payload];
+  return normalizeJourneyDates([payload]);
 }
 
 export function classifyDate(raw) {
   const value = String(raw || '').trim();
 
   if (MISSING_DATE_VALUES.has(value.toLowerCase())) return 'missing';
-  if (/\d{4}/.test(value)) return 'full';
+  if (hasFullDate(value) || normalizeDateToIso(value)) return 'full';
 
   return 'partial';
 }
@@ -82,22 +114,53 @@ function makeIsoDate(year, month, day) {
   return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-function getMonthDayParts(raw) {
+function getDateParts(raw) {
   const value = String(raw || '').trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
-  if (!value || hasFullDate(value)) return null;
+  if (!value || MISSING_DATE_VALUES.has(value.toLowerCase())) return null;
 
-  const dayMonth = value.match(/^(\d{1,2})\s+([A-Za-z]+)(?:\s+\d{4})?$/);
-  if (dayMonth && MONTH_LOOKUP[dayMonth[2].toLowerCase()]) {
+  let match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T.*)?$/);
+  if (match) {
     return {
-      month: Number.parseInt(MONTH_LOOKUP[dayMonth[2].toLowerCase()], 10),
+      year: Number.parseInt(match[1], 10),
+      month: Number.parseInt(match[2], 10),
+      day: Number.parseInt(match[3], 10)
+    };
+  }
+
+  match = value.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
+  if (match) {
+    return {
+      year: Number.parseInt(match[1], 10),
+      month: Number.parseInt(match[2], 10),
+      day: Number.parseInt(match[3], 10)
+    };
+  }
+
+  match = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (match) {
+    return {
+      year: Number.parseInt(match[3], 10),
+      month: Number.parseInt(match[2], 10),
+      day: Number.parseInt(match[1], 10)
+    };
+  }
+
+  const dayMonth = value.match(new RegExp(`^(\\d{1,2})${DATE_PART_SEPARATOR_RE}${MONTH_TOKEN_RE}(?:${DATE_PART_SEPARATOR_RE}(\\d{4}))?$`, 'u'));
+  const dayMonthValue = dayMonth ? lookupMonth(dayMonth[2]) : null;
+  if (dayMonthValue) {
+    return {
+      year: dayMonth[3] ? Number.parseInt(dayMonth[3], 10) : null,
+      month: Number.parseInt(dayMonthValue, 10),
       day: Number.parseInt(dayMonth[1], 10)
     };
   }
 
-  const monthDay = value.match(/^([A-Za-z]+)\s+(\d{1,2})(?:\s+\d{4})?$/);
-  if (monthDay && MONTH_LOOKUP[monthDay[1].toLowerCase()]) {
+  const monthDay = value.match(new RegExp(`^${MONTH_TOKEN_RE}${DATE_PART_SEPARATOR_RE}(\\d{1,2})(?:${DATE_PART_SEPARATOR_RE}(\\d{4}))?$`, 'u'));
+  const monthDayValue = monthDay ? lookupMonth(monthDay[1]) : null;
+  if (monthDayValue) {
     return {
-      month: Number.parseInt(MONTH_LOOKUP[monthDay[1].toLowerCase()], 10),
+      year: monthDay[3] ? Number.parseInt(monthDay[3], 10) : null,
+      month: Number.parseInt(monthDayValue, 10),
       day: Number.parseInt(monthDay[2], 10)
     };
   }
@@ -106,9 +169,52 @@ function getMonthDayParts(raw) {
   if (Number.isNaN(parsed.getTime())) return null;
 
   return {
+    year: null,
     month: parsed.getMonth() + 1,
     day: parsed.getDate()
   };
+}
+
+function getMonthDayParts(raw) {
+  const parts = getDateParts(raw);
+  if (!parts) return null;
+
+  return parts;
+}
+
+export function normalizeDateToIso(raw, fallbackYear = null) {
+  const parts = getDateParts(raw);
+  if (!parts) return null;
+
+  const resolvedYear = parts.year || fallbackYear;
+  if (!resolvedYear) return null;
+
+  return makeIsoDate(resolvedYear, parts.month, parts.day);
+}
+
+function normalizeJourneyDates(journeys) {
+  return journeys.map((journey) => ({
+    ...journey,
+    routes: (journey.routes || []).map((route) => ({
+      ...route,
+      legs: (route.legs || []).map((leg) => {
+        const dateIso = normalizeDateToIso(leg.date);
+        const rawIso = normalizeDateToIso(leg.rawExtractedDate);
+        const iso = dateIso || rawIso;
+
+        if (!iso) return leg;
+
+        const source = String(leg.dateYearSource || '').trim();
+        const next = { ...leg, date: iso };
+        if (!source || source === 'unresolved') {
+          next.dateYearSource = 'document';
+          next.dateYearApplied = iso.slice(0, 4);
+        }
+
+        return next;
+      })
+    }))
+  }));
 }
 
 export function buildFullDate(partial, year) {
@@ -118,15 +224,8 @@ export function buildFullDate(partial, year) {
   if (!value || !/^\d{4}$/.test(y)) return null;
   if (hasFullDate(value)) return value;
 
-  const dayMonth = value.match(/^(\d{1,2})\s+([A-Za-z]+)$/);
-  if (dayMonth && MONTH_LOOKUP[dayMonth[2].toLowerCase()]) {
-    return `${y}-${MONTH_LOOKUP[dayMonth[2].toLowerCase()]}-${dayMonth[1].padStart(2, '0')}`;
-  }
-
-  const monthDay = value.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
-  if (monthDay && MONTH_LOOKUP[monthDay[1].toLowerCase()]) {
-    return `${y}-${MONTH_LOOKUP[monthDay[1].toLowerCase()]}-${monthDay[2].padStart(2, '0')}`;
-  }
+  const normalized = normalizeDateToIso(value, y);
+  if (normalized) return normalized;
 
   const parsed = new Date(`${value} ${y}`);
   if (Number.isNaN(parsed.getTime())) return null;
@@ -216,13 +315,14 @@ export function silentCopy(text) {
 
 export function getDateYearSource(flight) {
   const source = String(flight?.dateYearSource || '').trim();
-  if (source) return source;
-
   const raw = String(flight?.rawExtractedDate || '');
   const normalized = String(flight?.date || '');
-  const hasYear = (s) => /\d{4}/.test(s);
-  if (hasYear(raw)) return 'document';
-  if (hasYear(normalized)) return 'user-input';
+  const rawIso = normalizeDateToIso(raw);
+  const normalizedIso = normalizeDateToIso(normalized);
+
+  if (source && source !== 'unresolved') return source;
+  if (rawIso || normalizedIso) return 'document';
+  if (source) return source;
   return 'unresolved';
 }
 
@@ -257,11 +357,13 @@ export function buildTrackerURLs(flightNumber, date, overrideCodes) {
   const rawNumber = match[2];
   const cleanNumber = String(Number.parseInt(rawNumber, 10));
 
-  if (!hasFullDate(date)) {
+  const isoDate = normalizeDateToIso(date);
+
+  if (!isoDate) {
     return { airportInfo: null, flightStats: null, flightera: null };
   }
 
-  const [year, month, day] = date.split('-');
+  const [year, month, day] = isoDate.split('-');
   const codes = overrideCodes || getTrackerOverrides()[airline]?.codes;
   const codeFor = (key) => (codes && codes[key]) || airline;
   const aiCode = codeFor('airportInfo');
@@ -269,7 +371,7 @@ export function buildTrackerURLs(flightNumber, date, overrideCodes) {
   const feCode = codeFor('flightera');
 
   return {
-    airportInfo: `https://airportinfo.live/flight/${(aiCode + rawNumber).toLowerCase()}?d=${date}`,
+    airportInfo: `https://airportinfo.live/flight/${(aiCode + rawNumber).toLowerCase()}?d=${isoDate}`,
     flightStats: `https://www.flightstats.com/v2/historical-flight/${fsCode}/${cleanNumber}/${year}/${Number.parseInt(month, 10)}/${Number.parseInt(day, 10)}`,
     flightera: `https://www.flightera.net/en/flight/${feCode}${cleanNumber}/${TRACKER_MONTHS[Number.parseInt(month, 10) - 1]}-${year}#flight_list`
   };
@@ -379,13 +481,15 @@ export function applyYearToJourneys(journeys, year) {
       currentYear += 1;
     }
 
-    const fullDate = makeIsoDate(currentYear, candidate.parts.month, candidate.parts.day);
+    const resolvedYear = candidate.parts.year || currentYear;
+    const fullDate = makeIsoDate(resolvedYear, candidate.parts.month, candidate.parts.day);
     if (!fullDate) return;
 
     candidate.leg.date = fullDate;
-    candidate.leg.dateYearSource = 'user-input';
-    candidate.leg.dateYearApplied = String(currentYear);
+    candidate.leg.dateYearSource = candidate.parts.year ? 'document' : 'user-input';
+    candidate.leg.dateYearApplied = String(resolvedYear);
     changed = true;
+    currentYear = resolvedYear;
     previousParts = candidate.parts;
   });
 
@@ -424,7 +528,8 @@ export function getExpirationState(flight, date) {
     return { label: 'Jurisdiction limit unknown', tone: 'neutral', expired: false };
   }
 
-  const flightDate = new Date(date);
+  const isoDate = normalizeDateToIso(date);
+  const flightDate = isoDate ? new Date(`${isoDate}T00:00:00Z`) : new Date(date);
   if (Number.isNaN(flightDate.getTime())) {
     return { label: 'Cannot calculate expiry', tone: 'warning', expired: false };
   }

@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { resolveJourneyYears } = require('../utils/dateYearResolver');
+const { parseDateParts, resolveJourneyYears } = require('../utils/dateYearResolver');
 
 function leg(rawExtractedDate, date, extra = {}) {
   return {
@@ -96,6 +96,91 @@ function journey(legs, extra = {}) {
   assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'document');
   assert.equal(journeys[0].routes[0].legs[1].date, '2024-03-27');
   assert.equal(journeys[0].routes[0].legs[1].dateYearSource, 'document-propagated');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('22 mars 2026', '22 mars 2026'),
+      leg('23 mars 2026', '23 mars 2026')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '');
+
+  assert.equal(journeys[0].routes[0].legs[0].date, '2026-03-22');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'document');
+  assert.equal(journeys[0].routes[0].legs[1].date, '2026-03-23');
+  assert.equal(journeys[0].routes[0].legs[1].dateYearSource, 'document');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('08 d\u00e9cembre 2025', '08 d\u00e9cembre 2025')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '');
+
+  assert.equal(journeys[0].routes[0].legs[0].date, '2025-12-08');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'document');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('05/mar./2026', '05/mar./2026'),
+      leg('10/Mar/2026', '10/Mar/2026')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '');
+
+  assert.equal(journeys[0].routes[0].legs[0].date, '2026-03-05');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'document');
+  assert.equal(journeys[0].routes[0].legs[1].date, '2026-03-10');
+  assert.equal(journeys[0].routes[0].legs[1].dateYearSource, 'document');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('05/mar.', '05/mar.')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '2026');
+
+  assert.equal(journeys[0].routes[0].legs[0].date, '2026-03-05');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'user-input');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('10/Mar/2026', '10/Mar/2026')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '2025');
+
+  assert.equal(journeys[0].routes[0].legs[0].date, '2026-03-10');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'document');
+}
+
+{
+  const journeys = [
+    journey([
+      leg('31/Feb/2026', '31/Feb/2026')
+    ])
+  ];
+
+  resolveJourneyYears(journeys, '');
+
+  assert.equal(parseDateParts('31/Feb/2026'), null);
+  assert.equal(journeys[0].routes[0].legs[0].date, '31/Feb/2026');
+  assert.equal(journeys[0].routes[0].legs[0].dateYearSource, 'unresolved');
 }
 
 console.log('dateYearResolver tests passed');

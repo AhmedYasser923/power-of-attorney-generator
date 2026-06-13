@@ -33,6 +33,7 @@ function buildTicketAnalysisPrompt(yearDirective, journeyYear) {
 
     CRITICAL DATE RULES:
     1. Every flight has its own unique date — extract it from the document, put it in rawExtractedDate.
+    1a. Convert every visible flight date to ISO YYYY-MM-DD in the date field, including non-English month names and separator formats. Examples: "22 mars 2026" -> "2026-03-22", "05/mar./2026" -> "2026-03-05", "10/Mar/2026" -> "2026-03-10".
     2. "Issue Date" / "Booking Date" / "Printed Date" is NEVER the flight date. Ignore completely.
     3. If only day+month shown (e.g. "25 Mar"), output exactly that in rawExtractedDate.${journeyYear
       ? ` For the date field, you MUST use ${journeyYear} as the year → output "${journeyYear}-MM-DD". Do NOT guess or use any other year — ONLY the document year (if printed) or ${journeyYear}.`
