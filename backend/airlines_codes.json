@@ -147,7 +147,10 @@
     "name": "AJet",
     "iata": "VF",
     "icao": "TKJ",
-    "country": "Turkey"
+    "country": "Turkey",
+      "trackerSearchCodes": {
+      "flightStats": "AJA"
+    }
   },
   {
     "name": "Aeroflot",
@@ -230,7 +233,11 @@
     "iata": "A2",
     "icao": "AWG",
     "country": "Romania",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": {
+      "flightStats": "AWG"
+    }
+    
   },
   {
     "name": "Avion Express",
@@ -1890,7 +1897,10 @@
     "icao": "AEZ",
     "country": "Italy",
     "reqs": "ID",
-    "ceasedOperations": true
+    "trackerSearchCodes": {
+      "flightStats": "AEZ"
+    }
+    
   },
   {
     "name": "AeroRepública",
@@ -1908,7 +1918,10 @@
     "name": "Aero-Service",
     "iata": "BF",
     "icao": "RSR",
-    "country": "Republic of the Congo"
+    "country": "Republic of the Congo",
+    "trackerSearchCodes": {
+      "flightStats": "BF*"
+    }
   },
   {
     "name": "AeroSur",
@@ -3464,7 +3477,10 @@
     "iata": "E4",
     "icao": "ENT",
     "country": "Poland",
-    "reqs": "Birth certificate required for minors"
+    "reqs": "Birth certificate required for minors",
+    "trackerSearchCodes": {
+      "flightStats": "ENT"
+    }
   },
   {
     "name": "Eos Airlines",
@@ -3911,13 +3927,27 @@
     "icao": "FIA",
     "country": "Moldova",
     "claimNote": "PNR mandatory",
-    "ticketPrefix": "130"
+    "ticketPrefix": "130",
+      "trackerSearchCodes": {
+      "flightStats": "FOE"
+    }
   },
   {
     "name": "FlyOne Armenia",
     "iata": "3F",
     "icao": "FIE",
+    "claimNote": "PNR mandatory",
     "country": "Armenia"
+  },
+  {
+    "name": "FlyOne Romania",
+    "iata": "OE",
+    "icao": "FOE",
+    "claimNote": "PNR mandatory",
+    "country": "Romania",
+    "trackerSearchCodes": {
+      "flightStats": "FOE"
+    }
   },
   {
     "name": "Freebird Airlines",
@@ -4322,7 +4352,10 @@
     "iata": "H4",
     "icao": "HYS",
     "country": "Romania",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+      "trackerSearchCodes": {
+      "flightStats": "HYS"
+    }
   },
   {
     "name": "Hola Airlines",
@@ -4450,7 +4483,10 @@
     "iata": "Q4",
     "icao": "ELE",
     "country": "Spain",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": {
+      "flightStats": "Q4*"
+    }
   },
   {
     "name": "GP Aviation",
@@ -6934,6 +6970,7 @@
     "ticketNumberCanReplacePnr": true,
     "claimNote": "Ticket number and PNR mandatory",
     "ticketPrefix": "147"
+    
   },
   {
     "name": "Royal Air Philippines",
@@ -7140,7 +7177,7 @@
     "country": "Samoa"
   },
   {
-    "name": "SATA International",
+    "name": "SATA Azores",
     "iata": "S4",
     "icao": "RZO",
     "country": "Portugal",
@@ -7214,7 +7251,10 @@
     "iata": "2W",
     "icao": "WFL",
     "country": "Spain",
-    "reqs": "ID/Passport number mandatory"
+    "reqs": "ID/Passport number mandatory",
+    "trackerSearchCodes": {
+      "flightStats": "WFL"
+    }
   },
   {
     "name": "SkyBahamas",
@@ -8031,7 +8071,10 @@
     "name": "Tailwind Airlines",
     "iata": "TI",
     "icao": "TWI",
-    "country": "Turkey"
+    "country": "Turkey",
+      "trackerSearchCodes": {
+      "flightStats": "TWI"
+    }
   },
   {
     "name": "TAM Mercosur",
@@ -8393,7 +8436,10 @@
     "iata": "TB",
     "icao": "JAF",
     "country": "Belgium",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": {
+      "flightStats": "JAF"
+    }
   },
   {
     "name": "TUI fly Deutschland",
@@ -8517,17 +8563,15 @@
     "country": "Russia",
     "ticketPrefix": "262"
   },
-  {
-    "name": "Uganda Airlines (1976–2001)",
-    "iata": "QU",
-    "icao": "UGA",
-    "country": "Uganda"
-  },
+ 
   {
     "name": "Uganda Airlines",
     "iata": "UR",
     "icao": "UGD",
-    "country": "Uganda"
+    "country": "Uganda",
+      "trackerSearchCodes": {
+      "flightStats": "UR*"
+    }
   },
   {
     "name": "UM Airlines",
@@ -8958,7 +9002,10 @@
     "icao": "WUK",
     "country": "United Kingdom",
     "reqs": "Wizz Air Denied Boarding Compensation Form",
-    "claimNote": "PNR mandatory"
+    "claimNote": "PNR mandatory",
+    "trackerSearchCodes": {
+      "flightStats": "W9A"
+    }
   },
   {
     "name": "World Airways",
