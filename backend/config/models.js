@@ -9,8 +9,8 @@ const pick = (envKey, fallback) => process.env[envKey]?.trim() || fallback;
 
 module.exports = {
   ticketAnalysis: {
-    standard: pick('GEMINI_MODEL_TICKET_STANDARD', 'gemini-3-flash-preview'),
-    advanced: pick('GEMINI_MODEL_TICKET_ADVANCED', 'gemini-3.5-flash'),
+    standard: pick('GEMINI_MODEL_TICKET_STANDARD', 'gemini-3.6-flash'),
+    advanced: pick('GEMINI_MODEL_TICKET_ADVANCED', 'gemini-3.7-flash'),
   },
   textAutofill:   pick('GEMINI_MODEL_TEXT_AUTOFILL', 'gemini-3.1-flash-lite'),
   emailBuilder:   pick('GEMINI_MODEL_EMAIL',         'gemini-3.1-flash-lite'),

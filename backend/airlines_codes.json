@@ -4455,8 +4455,8 @@
     "iata": "IB",
     "icao": "IBE",
     "country": "Spain",
-    "reqs": "Ticket number, Passport / National ID / Spanish Residence card",
-    "claimNote": "Ticket number and PNR mandatory",
+    "reqs": "Ticket number, passport number",
+    "claimNote": "can proceed without ticket number / Not without passport number",
     "ticketPrefix": "075"
   },
   {
@@ -8429,7 +8429,10 @@
     "icao": "TOM",
     "country": "United Kingdom",
     "reqs": "DOB, Mobile number",
-    "ticketNumberCanReplacePnr": true
+    "ticketNumberCanReplacePnr": true,
+    "trackerSearchCodes": {
+      "flightStats": "TOM"
+    }
   },
   {
     "name": "TUI fly Belgium",

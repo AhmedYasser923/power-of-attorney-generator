@@ -11,6 +11,9 @@ const MODEL_PRICING = {
   'gemini-3-pro-image-preview': { input: 2.00, output: 120.00 },
   'gemini-3.1-flash-image-preview': { input: 0.50, output: 60.00 },
   'gemini-3.1-flash-lite': { input: 0.25, output: 1.50 },
+  'gemini-3.6-flash': { input: 0.75, output: 3.75 },
+  'gemini-3.7-flash': { input: 0.75, output: 3.75 },
+  'gemini-3.5-flash-lite': { input: 0.30, output: 2.50},
 };
 
 /**
